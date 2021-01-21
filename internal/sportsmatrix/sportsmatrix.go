@@ -27,16 +27,13 @@ type Config struct {
 }
 
 func DefaultConfig() Config {
+	dCfg := rgb.DefaultConfig
+	dCfg.Rows = 64
+	dCfg.Cols = 32
+	dCfg.Brightness = 60
 	return Config{
-		RotationDelay: 5 * time.Second,
-		HardwareConfig: &rgb.HardwareConfig{
-			Rows:        64,
-			Cols:        32,
-			Brightness:  60,
-			ChainLength: 1,
-			Parallel:    1,
-			PWMBits:     11,
-		},
+		RotationDelay:  5 * time.Second,
+		HardwareConfig: &dCfg,
 	}
 }
 
@@ -80,6 +77,9 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 		}
 	INNER:
 		for _, b := range s.boards {
+			if s.anyPriorities() && !b.HasPriority() {
+				continue
+			}
 			if b.HasPriority() {
 				fmt.Printf("Rendering board '%s' as priority\n", b.Name())
 				err := b.Render(ctx, s.matrix, s.cfg.RotationDelay)
@@ -96,6 +96,16 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 			b.Cleanup()
 		}
 	}
+}
+
+func (s *SportsMatrix) anyPriorities() bool {
+	for _, b := range s.boards {
+		if b.HasPriority() {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (s *SportsMatrix) Close() {

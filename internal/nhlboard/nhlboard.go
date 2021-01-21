@@ -38,6 +38,11 @@ func (b *scoreBoard) Name() string {
 func (b *scoreBoard) Cleanup() {}
 
 func (b *scoreBoard) Render(ctx context.Context, matrix rgb.Matrix, rotationDelay time.Duration) error {
+	select {
+	case <-ctx.Done():
+	case <-time.After(rotationDelay):
+	}
+
 	return nil
 }
 

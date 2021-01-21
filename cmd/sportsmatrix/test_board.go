@@ -40,7 +40,10 @@ func (t *testBoard) Render(ctx context.Context, matrix rgb.Matrix, rotationDelay
 		return err
 	}
 
-	time.Sleep(rotationDelay)
+	select {
+	case <-ctx.Done():
+	case <-time.After(rotationDelay):
+	}
 
 	return nil
 }
