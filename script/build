@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euo pipefail
+
+ROOT=$(git rev-parse --show-toplevel)
+cd "${ROOT}"
+
+#CGO_ENABLED=1 go build -mod=vendor -o sportsmatrix.bin ./cmd/sportsmatrix/
+
+set -x
+docker run -t --rm \
+  -u $(id -u):$(id -g) \
+  -v "${ROOT}":/src \
+  -w /src \
+  -e CGO_ENABLED=1 \
+  -e GOCACHE=/src/.cache \
+  pibuilder \
+  go build -mod=vendor -o sportsmatrix.bin ./cmd/sportsmatrix

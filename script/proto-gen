@@ -1,0 +1,21 @@
+#!/bin/bash
+set -euo pipefail
+
+ROOT=$(git rev-parse --show-toplevel)
+cd "${ROOT}"
+
+img="proto-gen-go"
+if ! docker images | grep $img; then
+  docker build -t $img -f Dockerfile.proto .
+fi
+
+for f in `echo proto/*`; do
+  gof="$(echo $f | cut -f1 -d.)"
+  [ ! -d internal/${gof} ] && mkdir -p internal/${gof}
+  docker run --rm \
+    -u $(id -u):$(id -g) \
+    -v ${ROOT}:/src \
+    -w /src \
+    $img \
+    protoc -I ./proto --go_out=plugins=grpc:internal/${gof} ${f}
+done
