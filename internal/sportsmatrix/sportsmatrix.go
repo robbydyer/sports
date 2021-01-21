@@ -4,8 +4,6 @@ import (
 	"context"
 	"image"
 	_ "image/png"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/gobuffalo/packr/v2"
@@ -65,15 +63,11 @@ func (s *SportsMatrix) Close() {
 }
 
 func (s *SportsMatrix) RenderGoal() error {
-	p, err := filepath.Abs("images/goal_light.png")
+	f, err := s.imageBox.Open("goal_light.png")
 	if err != nil {
 		return err
 	}
-	r, err := os.Open(p)
-	if err != nil {
-		return err
-	}
-	img, _, err := image.Decode(r)
+	img, _, err := image.Decode(f)
 	if err != nil {
 		return err
 	}

@@ -69,6 +69,39 @@ func (e *Env) Defer(f func()) {
 	e.ts.Defer(f)
 }
 
+// Getenv retrieves the value of the environment variable named by the key. It
+// returns the value, which will be empty if the variable is not present.
+func (e *Env) Getenv(key string) string {
+	key = envvarname(key)
+	for i := len(e.Vars) - 1; i >= 0; i-- {
+		if pair := strings.SplitN(e.Vars[i], "=", 2); len(pair) == 2 && envvarname(pair[0]) == key {
+			return pair[1]
+		}
+	}
+	return ""
+}
+
+// Setenv sets the value of the environment variable named by the key. It
+// panics if key is invalid.
+func (e *Env) Setenv(key, value string) {
+	if key == "" || strings.IndexByte(key, '=') != -1 {
+		panic(fmt.Errorf("invalid environment variable key %q", key))
+	}
+	e.Vars = append(e.Vars, key+"="+value)
+}
+
+// T returns the t argument passed to the current test by the T.Run method.
+// Note that if the tests were started by calling Run,
+// the returned value will implement testing.TB.
+// Note that, despite that, the underlying value will not be of type
+// *testing.T because *testing.T does not implement T.
+//
+// If Cleanup is called on the returned value, the function will run
+// after any functions passed to Env.Defer.
+func (e *Env) T() T {
+	return e.ts.t
+}
+
 // Params holds parameters for a call to Run.
 type Params struct {
 	// Dir holds the name of the directory holding the scripts.
@@ -110,10 +143,10 @@ type Params struct {
 	// error will be ignored.
 	IgnoreMissedCoverage bool
 
-	// UpdateScripts specifies that if a `cmp` command fails and
-	// its first argument is `stdout` or `stderr` and its second argument
-	// refers to a file inside the testscript file, the command will succeed
-	// and the testscript file will be updated to reflect the actual output.
+	// UpdateScripts specifies that if a `cmp` command fails and its second
+	// argument refers to a file inside the testscript file, the command will
+	// succeed and the testscript file will be updated to reflect the actual
+	// content (which could be stdout, stderr or a real file).
 	//
 	// The content will be quoted with txtar.Quote if needed;
 	// a manual change will be needed if it is not unquoted in the
@@ -264,6 +297,7 @@ func (ts *TestScript) setup() string {
 			homeEnvName() + "=/no-home",
 			tempEnvName() + "=" + filepath.Join(ts.workdir, "tmp"),
 			"devnull=" + os.DevNull,
+			"/=" + string(os.PathSeparator),
 			":=" + string(os.PathListSeparator),
 		},
 		WorkDir: ts.workdir,

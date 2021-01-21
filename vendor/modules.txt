@@ -34,10 +34,9 @@ github.com/golang/protobuf/internal/gengogrpc
 github.com/golang/protobuf/protoc-gen-go
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
-# github.com/karrick/godirwalk v1.15.8
+# github.com/karrick/godirwalk v1.16.1
+## explicit
 github.com/karrick/godirwalk
-# github.com/konsorten/go-windows-terminal-sequences v1.0.2
-github.com/konsorten/go-windows-terminal-sequences
 # github.com/markbates/errx v1.1.0
 github.com/markbates/errx
 # github.com/markbates/oncer v1.0.0
@@ -48,14 +47,18 @@ github.com/markbates/safe
 ## explicit
 github.com/robbydyer/rgbmatrix-rpi
 github.com/robbydyer/rgbmatrix-rpi/emulator
-# github.com/sirupsen/logrus v1.4.2
+# github.com/rogpeppe/go-internal v1.7.0
+## explicit
+# github.com/sirupsen/logrus v1.7.0
+## explicit
 github.com/sirupsen/logrus
 # github.com/spf13/cobra v1.1.1
 ## explicit
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
-# golang.org/x/crypto v0.0.0-20191122220453-ac88ee75c92c
+# golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
+## explicit
 golang.org/x/crypto/ssh/terminal
 # golang.org/x/exp v0.0.0-20201229011636-eab1b5eb1a03
 ## explicit
@@ -86,11 +89,19 @@ golang.org/x/mobile/event/paint
 golang.org/x/mobile/event/size
 golang.org/x/mobile/geom
 golang.org/x/mobile/gl
+# golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
+## explicit
 # golang.org/x/sys v0.0.0-20210119212857-b64e53b001e4
 ## explicit
 golang.org/x/sys/internal/unsafeheader
+golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
+# golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf
+## explicit
+golang.org/x/term
+# golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
+## explicit
 # google.golang.org/protobuf v1.25.0
 ## explicit
 google.golang.org/protobuf/cmd/protoc-gen-go/internal_gengo

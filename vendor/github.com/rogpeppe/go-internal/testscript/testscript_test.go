@@ -5,6 +5,7 @@
 package testscript
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -83,6 +84,51 @@ func TestCRLFInput(t *testing.T) {
 	})
 }
 
+func TestEnv(t *testing.T) {
+	e := &Env{
+		Vars: []string{
+			"HOME=/no-home",
+			"PATH=/usr/bin",
+			"PATH=/usr/bin:/usr/local/bin",
+			"INVALID",
+		},
+	}
+
+	if got, want := e.Getenv("HOME"), "/no-home"; got != want {
+		t.Errorf("e.Getenv(\"HOME\") == %q, want %q", got, want)
+	}
+
+	e.Setenv("HOME", "/home/user")
+	if got, want := e.Getenv("HOME"), "/home/user"; got != want {
+		t.Errorf(`e.Getenv("HOME") == %q, want %q`, got, want)
+	}
+
+	if got, want := e.Getenv("PATH"), "/usr/bin:/usr/local/bin"; got != want {
+		t.Errorf(`e.Getenv("PATH") == %q, want %q`, got, want)
+	}
+
+	if got, want := e.Getenv("INVALID"), ""; got != want {
+		t.Errorf(`e.Getenv("INVALID") == %q, want %q`, got, want)
+	}
+
+	for _, key := range []string{
+		"",
+		"=",
+		"key=invalid",
+	} {
+		var panicValue interface{}
+		func() {
+			defer func() {
+				panicValue = recover()
+			}()
+			e.Setenv(key, "")
+		}()
+		if panicValue == nil {
+			t.Errorf("e.Setenv(%q) did not panic, want panic", key)
+		}
+	}
+}
+
 func TestScripts(t *testing.T) {
 	// TODO set temp directory.
 	testDeferCount := 0
@@ -112,6 +158,12 @@ func TestScripts(t *testing.T) {
 			"test-values": func(ts *TestScript, neg bool, args []string) {
 				if ts.Value("somekey") != 1234 {
 					ts.Fatalf("test-values did not see expected value")
+				}
+				if ts.Value("t").(T) != ts.t {
+					ts.Fatalf("test-values did not see expected t")
+				}
+				if _, ok := ts.Value("t").(testing.TB); !ok {
+					ts.Fatalf("test-values t does not implement testing.TB")
 				}
 			},
 			"testreadfile": func(ts *TestScript, neg bool, args []string) {
@@ -165,6 +217,7 @@ func TestScripts(t *testing.T) {
 			}
 			env.Values["setupFilenames"] = setupFilenames
 			env.Values["somekey"] = 1234
+			env.Values["t"] = env.T()
 			env.Vars = append(env.Vars,
 				"GONOSUMDB=*",
 			)
@@ -252,6 +305,24 @@ func TestBadDir(t *testing.T) {
 	wantMsg := regexp.MustCompile(`no scripts found matching glob: thiswillnevermatch[/\\]\*\.txt`)
 	if got := ft.failMsgs[0]; !wantMsg.MatchString(got) {
 		t.Fatalf("expected msg to match `%v`; got:\n%v", wantMsg, got)
+	}
+}
+
+func TestUNIX2DOS(t *testing.T) {
+	for data, want := range map[string]string{
+		"":         "",           // Preserve empty files.
+		"\n":       "\r\n",       // Convert LF to CRLF in a file containing a single empty line.
+		"\r\n":     "\r\n",       // Preserve CRLF in a single line file.
+		"a":        "a\r\n",      // Append CRLF to a single line file with no line terminator.
+		"a\n":      "a\r\n",      // Convert LF to CRLF in a file containing a single non-empty line.
+		"a\r\n":    "a\r\n",      // Preserve CRLF in a file containing a single non-empty line.
+		"a\nb\n":   "a\r\nb\r\n", // Convert LF to CRLF in multiline UNIX file.
+		"a\r\nb\n": "a\r\nb\r\n", // Convert LF to CRLF in a file containing a mix of UNIX and DOS lines.
+		"a\nb\r\n": "a\r\nb\r\n", // Convert LF to CRLF in a file containing a mix of UNIX and DOS lines.
+	} {
+		if got, err := unix2DOS([]byte(data)); err != nil || !bytes.Equal(got, []byte(want)) {
+			t.Errorf("unix2DOS(%q) == %q, %v, want %q, nil", data, got, err, want)
+		}
 	}
 }
 

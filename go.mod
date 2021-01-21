@@ -8,7 +8,6 @@ require (
 	github.com/gobuffalo/packr/v2 v2.8.1
 	github.com/golang/protobuf v1.4.1
 	github.com/karrick/godirwalk v1.16.1 // indirect
-	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/robbydyer/rgbmatrix-rpi v0.5.0
 	github.com/rogpeppe/go-internal v1.7.0 // indirect
 	github.com/sirupsen/logrus v1.7.0 // indirect
@@ -19,6 +18,6 @@ require (
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a // indirect
 	golang.org/x/sys v0.0.0-20210119212857-b64e53b001e4 // indirect
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
-	golang.org/x/tools v0.1.0 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 )
