@@ -8,16 +8,13 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"math/rand"
 	"reflect"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -29,92 +26,21 @@ import (
 
 	pb "github.com/google/go-cmp/cmp/internal/testprotos"
 	ts "github.com/google/go-cmp/cmp/internal/teststructs"
-	foo1 "github.com/google/go-cmp/cmp/internal/teststructs/foo1"
-	foo2 "github.com/google/go-cmp/cmp/internal/teststructs/foo2"
 )
 
 func init() {
 	flags.Deterministic = true
 }
 
-var update = flag.Bool("update", false, "update golden test files")
-
-const goldenHeaderPrefix = "<<< "
-const goldenFooterPrefix = ">>> "
-
-/// mustParseGolden parses a file as a set of key-value pairs.
-//
-// The syntax is simple and looks something like:
-//
-//	<<< Key1
-//	value1a
-//	value1b
-//	>>> Key1
-//	<<< Key2
-//	value2
-//	>>> Key2
-//
-// It is the user's responsibility to choose a sufficiently unique key name
-// such that it never appears in the body of the value itself.
-func mustParseGolden(path string) map[string]string {
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
-	s := string(b)
-
-	out := map[string]string{}
-	for len(s) > 0 {
-		// Identify the next header.
-		i := strings.Index(s, "\n") + len("\n")
-		header := s[:i]
-		if !strings.HasPrefix(header, goldenHeaderPrefix) {
-			panic(fmt.Sprintf("invalid header: %q", header))
-		}
-
-		// Locate the next footer.
-		footer := goldenFooterPrefix + header[len(goldenHeaderPrefix):]
-		j := strings.Index(s, footer)
-		if j < 0 {
-			panic(fmt.Sprintf("missing footer: %q", footer))
-		}
-
-		// Store the name and data.
-		name := header[len(goldenHeaderPrefix) : len(header)-len("\n")]
-		if _, ok := out[name]; ok {
-			panic(fmt.Sprintf("duplicate name: %q", name))
-		}
-		out[name] = s[len(header):j]
-		s = s[j+len(footer):]
-	}
-	return out
-}
-func mustFormatGolden(path string, in []struct{ Name, Data string }) {
-	var b []byte
-	for _, v := range in {
-		b = append(b, goldenHeaderPrefix+v.Name+"\n"...)
-		b = append(b, v.Data...)
-		b = append(b, goldenFooterPrefix+v.Name+"\n"...)
-	}
-	if err := ioutil.WriteFile(path, b, 0664); err != nil {
-		panic(err)
-	}
-}
-
 var now = time.Date(2009, time.November, 10, 23, 00, 00, 00, time.UTC)
 
-func newInt(n int) *int { return &n }
-
-type Stringer string
-
-func newStringer(s string) fmt.Stringer { return (*Stringer)(&s) }
-func (s Stringer) String() string       { return string(s) }
+func intPtr(n int) *int { return &n }
 
 type test struct {
 	label     string       // Test name
 	x, y      interface{}  // Input values to compare
 	opts      []cmp.Option // Input options
-	wantEqual bool         // Whether any difference is expected
+	wantDiff  string       // The exact difference string
 	wantPanic string       // Sub-string of an expected panic message
 	reason    string       // The reason for the expected outcome
 }
@@ -123,24 +49,17 @@ func TestDiff(t *testing.T) {
 	var tests []test
 	tests = append(tests, comparerTests()...)
 	tests = append(tests, transformerTests()...)
-	tests = append(tests, reporterTests()...)
 	tests = append(tests, embeddedTests()...)
 	tests = append(tests, methodTests()...)
-	tests = append(tests, cycleTests()...)
 	tests = append(tests, project1Tests()...)
 	tests = append(tests, project2Tests()...)
 	tests = append(tests, project3Tests()...)
 	tests = append(tests, project4Tests()...)
 
-	const goldenFile = "testdata/diffs"
-	gotDiffs := []struct{ Name, Data string }{}
-	wantDiffs := mustParseGolden(goldenFile)
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.label, func(t *testing.T) {
-			if !*update {
-				t.Parallel()
-			}
+			t.Parallel()
 			var gotDiff, gotPanic string
 			func() {
 				defer func() {
@@ -154,40 +73,21 @@ func TestDiff(t *testing.T) {
 				}()
 				gotDiff = cmp.Diff(tt.x, tt.y, tt.opts...)
 			}()
-
-			switch {
-			case strings.Contains(t.Name(), "#"):
-				panic("unique test name must be provided")
-			case tt.reason == "":
-				panic("reason must be provided")
-			case tt.wantPanic == "":
+			// TODO: Require every test case to provide a reason.
+			if tt.wantPanic == "" {
 				if gotPanic != "" {
 					t.Fatalf("unexpected panic message: %s\nreason: %v", gotPanic, tt.reason)
 				}
-				if *update {
-					if gotDiff != "" {
-						gotDiffs = append(gotDiffs, struct{ Name, Data string }{t.Name(), gotDiff})
-					}
-				} else {
-					wantDiff := wantDiffs[t.Name()]
-					if diff := cmp.Diff(wantDiff, gotDiff); diff != "" {
-						t.Fatalf("Diff:\ngot:\n%s\nwant:\n%s\ndiff: (-want +got)\n%s\nreason: %v", gotDiff, wantDiff, diff, tt.reason)
-					}
+				tt.wantDiff = strings.TrimPrefix(tt.wantDiff, "\n")
+				if gotDiff != tt.wantDiff {
+					t.Fatalf("difference message:\ngot:\n%s\nwant:\n%s\nreason: %v", gotDiff, tt.wantDiff, tt.reason)
 				}
-				gotEqual := gotDiff == ""
-				if gotEqual != tt.wantEqual {
-					t.Fatalf("Equal = %v, want %v\nreason: %v", gotEqual, tt.wantEqual, tt.reason)
-				}
-			default:
+			} else {
 				if !strings.Contains(gotPanic, tt.wantPanic) {
 					t.Fatalf("panic message:\ngot:  %s\nwant: %s\nreason: %v", gotPanic, tt.wantPanic, tt.reason)
 				}
 			}
 		})
-	}
-
-	if *update {
-		mustFormatGolden(goldenFile, gotDiffs)
 	}
 }
 
@@ -219,10 +119,6 @@ func comparerTests() []test {
 		Xattrs     map[string]string
 	}
 
-	type namedWithUnexported struct {
-		unexported string
-	}
-
 	makeTarHeaders := func(tf byte) (hs []tarHeader) {
 		for i := 0; i < 5; i++ {
 			hs = append(hs, tarHeader{
@@ -237,40 +133,33 @@ func comparerTests() []test {
 	}
 
 	return []test{{
-		label:     label + "/Nil",
-		x:         nil,
-		y:         nil,
-		wantEqual: true,
-		reason:    "nils are equal",
+		label: label,
+		x:     nil,
+		y:     nil,
 	}, {
-		label:     label + "/Integer",
-		x:         1,
-		y:         1,
-		wantEqual: true,
-		reason:    "identical integers are equal",
+		label: label,
+		x:     1,
+		y:     1,
 	}, {
-		label:     label + "/UnfilteredIgnore",
+		label:     label,
 		x:         1,
 		y:         1,
 		opts:      []cmp.Option{cmp.Ignore()},
 		wantPanic: "cannot use an unfiltered option",
-		reason:    "unfiltered options are functionally useless",
 	}, {
-		label:     label + "/UnfilteredCompare",
+		label:     label,
 		x:         1,
 		y:         1,
 		opts:      []cmp.Option{cmp.Comparer(func(_, _ interface{}) bool { return true })},
 		wantPanic: "cannot use an unfiltered option",
-		reason:    "unfiltered options are functionally useless",
 	}, {
-		label:     label + "/UnfilteredTransform",
+		label:     label,
 		x:         1,
 		y:         1,
 		opts:      []cmp.Option{cmp.Transformer("λ", func(x interface{}) interface{} { return x })},
 		wantPanic: "cannot use an unfiltered option",
-		reason:    "unfiltered options are functionally useless",
 	}, {
-		label: label + "/AmbiguousOptions",
+		label: label,
 		x:     1,
 		y:     1,
 		opts: []cmp.Option{
@@ -278,9 +167,8 @@ func comparerTests() []test {
 			cmp.Transformer("λ", func(x int) float64 { return float64(x) }),
 		},
 		wantPanic: "ambiguous set of applicable options",
-		reason:    "both options apply on int, leading to ambiguity",
 	}, {
-		label: label + "/IgnorePrecedence",
+		label: label,
 		x:     1,
 		y:     1,
 		opts: []cmp.Option{
@@ -290,115 +178,108 @@ func comparerTests() []test {
 			cmp.Comparer(func(x, y int) bool { return true }),
 			cmp.Transformer("λ", func(x int) float64 { return float64(x) }),
 		},
-		wantEqual: true,
-		reason:    "ignore takes precedence over other options",
 	}, {
-		label:     label + "/UnknownOption",
+		label:     label,
 		opts:      []cmp.Option{struct{ cmp.Option }{}},
 		wantPanic: "unknown option",
-		reason:    "use of unknown option should panic",
 	}, {
-		label:     label + "/StructEqual",
-		x:         struct{ A, B, C int }{1, 2, 3},
-		y:         struct{ A, B, C int }{1, 2, 3},
-		wantEqual: true,
-		reason:    "struct comparison with all equal fields",
+		label: label,
+		x:     struct{ A, B, C int }{1, 2, 3},
+		y:     struct{ A, B, C int }{1, 2, 3},
 	}, {
-		label:     label + "/StructInequal",
-		x:         struct{ A, B, C int }{1, 2, 3},
-		y:         struct{ A, B, C int }{1, 2, 4},
-		wantEqual: false,
-		reason:    "struct comparison with inequal C field",
+		label: label,
+		x:     struct{ A, B, C int }{1, 2, 3},
+		y:     struct{ A, B, C int }{1, 2, 4},
+		wantDiff: `
+  struct{ A int; B int; C int }{
+  	A: 1,
+  	B: 2,
+- 	C: 3,
++ 	C: 4,
+  }
+`,
 	}, {
-		label:     label + "/StructUnexported",
+		label:     label,
 		x:         struct{ a, b, c int }{1, 2, 3},
 		y:         struct{ a, b, c int }{1, 2, 4},
 		wantPanic: "cannot handle unexported field",
-		reason:    "unexported fields result in a panic by default",
 	}, {
-		label:     label + "/PointerStructEqual",
-		x:         &struct{ A *int }{newInt(4)},
-		y:         &struct{ A *int }{newInt(4)},
-		wantEqual: true,
-		reason:    "comparison of pointer to struct with equal A field",
+		label: label,
+		x:     &struct{ A *int }{intPtr(4)},
+		y:     &struct{ A *int }{intPtr(4)},
 	}, {
-		label:     label + "/PointerStructInequal",
-		x:         &struct{ A *int }{newInt(4)},
-		y:         &struct{ A *int }{newInt(5)},
-		wantEqual: false,
-		reason:    "comparison of pointer to struct with inequal A field",
+		label: label,
+		x:     &struct{ A *int }{intPtr(4)},
+		y:     &struct{ A *int }{intPtr(5)},
+		wantDiff: `
+  &struct{ A *int }{
+- 	A: &4,
++ 	A: &5,
+  }
+`,
 	}, {
-		label: label + "/PointerStructTrueComparer",
-		x:     &struct{ A *int }{newInt(4)},
-		y:     &struct{ A *int }{newInt(5)},
+		label: label,
+		x:     &struct{ A *int }{intPtr(4)},
+		y:     &struct{ A *int }{intPtr(5)},
 		opts: []cmp.Option{
 			cmp.Comparer(func(x, y int) bool { return true }),
 		},
-		wantEqual: true,
-		reason:    "comparison of pointer to struct with inequal A field, but treated as equal with always equal comparer",
 	}, {
-		label: label + "/PointerStructNonNilComparer",
-		x:     &struct{ A *int }{newInt(4)},
-		y:     &struct{ A *int }{newInt(5)},
+		label: label,
+		x:     &struct{ A *int }{intPtr(4)},
+		y:     &struct{ A *int }{intPtr(5)},
 		opts: []cmp.Option{
 			cmp.Comparer(func(x, y *int) bool { return x != nil && y != nil }),
 		},
-		wantEqual: true,
-		reason:    "comparison of pointer to struct with inequal A field, but treated as equal with comparer checking pointers for nilness",
 	}, {
-		label:     label + "/StructNestedPointerEqual",
-		x:         &struct{ R *bytes.Buffer }{},
-		y:         &struct{ R *bytes.Buffer }{},
-		wantEqual: true,
-		reason:    "equal since both pointers in R field are nil",
+		label: label,
+		x:     &struct{ R *bytes.Buffer }{},
+		y:     &struct{ R *bytes.Buffer }{},
 	}, {
-		label:     label + "/StructNestedPointerInequal",
-		x:         &struct{ R *bytes.Buffer }{new(bytes.Buffer)},
-		y:         &struct{ R *bytes.Buffer }{},
-		wantEqual: false,
-		reason:    "inequal since R field is inequal",
+		label: label,
+		x:     &struct{ R *bytes.Buffer }{new(bytes.Buffer)},
+		y:     &struct{ R *bytes.Buffer }{},
+		wantDiff: `
+  &struct{ R *bytes.Buffer }{
+- 	R: s"",
++ 	R: nil,
+  }
+`,
 	}, {
-		label: label + "/StructNestedPointerTrueComparer",
+		label: label,
 		x:     &struct{ R *bytes.Buffer }{new(bytes.Buffer)},
 		y:     &struct{ R *bytes.Buffer }{},
 		opts: []cmp.Option{
 			cmp.Comparer(func(x, y io.Reader) bool { return true }),
 		},
-		wantEqual: true,
-		reason:    "equal despite inequal R field values since the comparer always reports true",
 	}, {
-		label:     label + "/StructNestedValueUnexportedPanic1",
+		label:     label,
 		x:         &struct{ R bytes.Buffer }{},
 		y:         &struct{ R bytes.Buffer }{},
 		wantPanic: "cannot handle unexported field",
-		reason:    "bytes.Buffer contains unexported fields",
 	}, {
-		label: label + "/StructNestedValueUnexportedPanic2",
+		label: label,
 		x:     &struct{ R bytes.Buffer }{},
 		y:     &struct{ R bytes.Buffer }{},
 		opts: []cmp.Option{
 			cmp.Comparer(func(x, y io.Reader) bool { return true }),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "bytes.Buffer value does not implement io.Reader",
 	}, {
-		label: label + "/StructNestedValueEqual",
+		label: label,
 		x:     &struct{ R bytes.Buffer }{},
 		y:     &struct{ R bytes.Buffer }{},
 		opts: []cmp.Option{
 			cmp.Transformer("Ref", func(x bytes.Buffer) *bytes.Buffer { return &x }),
 			cmp.Comparer(func(x, y io.Reader) bool { return true }),
 		},
-		wantEqual: true,
-		reason:    "bytes.Buffer pointer due to shallow copy does implement io.Reader",
 	}, {
-		label:     label + "/RegexpUnexportedPanic",
+		label:     label,
 		x:         []*regexp.Regexp{nil, regexp.MustCompile("a*b*c*")},
 		y:         []*regexp.Regexp{nil, regexp.MustCompile("a*b*c*")},
 		wantPanic: "cannot handle unexported field",
-		reason:    "regexp.Regexp contains unexported fields",
 	}, {
-		label: label + "/RegexpEqual",
+		label: label,
 		x:     []*regexp.Regexp{nil, regexp.MustCompile("a*b*c*")},
 		y:     []*regexp.Regexp{nil, regexp.MustCompile("a*b*c*")},
 		opts: []cmp.Option{cmp.Comparer(func(x, y *regexp.Regexp) bool {
@@ -407,10 +288,8 @@ func comparerTests() []test {
 			}
 			return x.String() == y.String()
 		})},
-		wantEqual: true,
-		reason:    "comparer for *regexp.Regexp applied with equal regexp strings",
 	}, {
-		label: label + "/RegexpInequal",
+		label: label,
 		x:     []*regexp.Regexp{nil, regexp.MustCompile("a*b*c*")},
 		y:     []*regexp.Regexp{nil, regexp.MustCompile("a*b*d*")},
 		opts: []cmp.Option{cmp.Comparer(func(x, y *regexp.Regexp) bool {
@@ -419,10 +298,15 @@ func comparerTests() []test {
 			}
 			return x.String() == y.String()
 		})},
-		wantEqual: false,
-		reason:    "comparer for *regexp.Regexp applied with inequal regexp strings",
+		wantDiff: `
+  []*regexp.Regexp{
+  	nil,
+- 	s"a*b*c*",
++ 	s"a*b*d*",
+  }
+`,
 	}, {
-		label: label + "/TriplePointerEqual",
+		label: label,
 		x: func() ***int {
 			a := 0
 			b := &a
@@ -435,10 +319,8 @@ func comparerTests() []test {
 			c := &b
 			return &c
 		}(),
-		wantEqual: true,
-		reason:    "three layers of pointers to the same value",
 	}, {
-		label: label + "/TriplePointerInequal",
+		label: label,
 		x: func() ***int {
 			a := 0
 			b := &a
@@ -451,48 +333,111 @@ func comparerTests() []test {
 			c := &b
 			return &c
 		}(),
-		wantEqual: false,
-		reason:    "three layers of pointers to different values",
+		wantDiff: `
+  &&&int(
+- 	0,
++ 	1,
+  )
+`,
 	}, {
-		label:     label + "/SliceWithDifferingCapacity",
-		x:         []int{1, 2, 3, 4, 5}[:3],
-		y:         []int{1, 2, 3},
-		wantEqual: true,
-		reason:    "elements past the slice length are not compared",
+		label: label,
+		x:     []int{1, 2, 3, 4, 5}[:3],
+		y:     []int{1, 2, 3},
 	}, {
-		label:     label + "/StringerEqual",
-		x:         struct{ fmt.Stringer }{bytes.NewBufferString("hello")},
-		y:         struct{ fmt.Stringer }{regexp.MustCompile("hello")},
-		opts:      []cmp.Option{cmp.Comparer(func(x, y fmt.Stringer) bool { return x.String() == y.String() })},
-		wantEqual: true,
-		reason:    "comparer for fmt.Stringer used to compare differing types with same string",
+		label: label,
+		x:     struct{ fmt.Stringer }{bytes.NewBufferString("hello")},
+		y:     struct{ fmt.Stringer }{regexp.MustCompile("hello")},
+		opts:  []cmp.Option{cmp.Comparer(func(x, y fmt.Stringer) bool { return x.String() == y.String() })},
 	}, {
-		label:     label + "/StringerInequal",
-		x:         struct{ fmt.Stringer }{bytes.NewBufferString("hello")},
-		y:         struct{ fmt.Stringer }{regexp.MustCompile("hello2")},
-		opts:      []cmp.Option{cmp.Comparer(func(x, y fmt.Stringer) bool { return x.String() == y.String() })},
-		wantEqual: false,
-		reason:    "comparer for fmt.Stringer used to compare differing types with different strings",
+		label: label,
+		x:     struct{ fmt.Stringer }{bytes.NewBufferString("hello")},
+		y:     struct{ fmt.Stringer }{regexp.MustCompile("hello2")},
+		opts:  []cmp.Option{cmp.Comparer(func(x, y fmt.Stringer) bool { return x.String() == y.String() })},
+		wantDiff: `
+  struct{ fmt.Stringer }(
+- 	s"hello",
++ 	s"hello2",
+  )
+`,
 	}, {
-		label:     label + "/DifferingHash",
-		x:         md5.Sum([]byte{'a'}),
-		y:         md5.Sum([]byte{'b'}),
-		wantEqual: false,
-		reason:    "hash differs",
+		label: label,
+		x:     md5.Sum([]byte{'a'}),
+		y:     md5.Sum([]byte{'b'}),
+		wantDiff: `
+  [16]uint8{
+- 	0x0c, 0xc1, 0x75, 0xb9, 0xc0, 0xf1, 0xb6, 0xa8, 0x31, 0xc3, 0x99, 0xe2, 0x69, 0x77, 0x26, 0x61,
++ 	0x92, 0xeb, 0x5f, 0xfe, 0xe6, 0xae, 0x2f, 0xec, 0x3a, 0xd7, 0x1c, 0x77, 0x75, 0x31, 0x57, 0x8f,
+  }
+`,
 	}, {
-		label:     label + "/NilStringer",
-		x:         new(fmt.Stringer),
-		y:         nil,
-		wantEqual: false,
-		reason:    "by default differing types are always inequal",
+		label: label,
+		x:     new(fmt.Stringer),
+		y:     nil,
+		wantDiff: `
+  interface{}(
+- 	&fmt.Stringer(nil),
+  )
+`,
 	}, {
-		label:     label + "/TarHeaders",
-		x:         makeTarHeaders('0'),
-		y:         makeTarHeaders('\x00'),
-		wantEqual: false,
-		reason:    "type flag differs between the headers",
+		label: label,
+		x:     makeTarHeaders('0'),
+		y:     makeTarHeaders('\x00'),
+		wantDiff: `
+  []cmp_test.tarHeader{
+  	{
+  		... // 4 identical fields
+  		Size:     1,
+  		ModTime:  s"2009-11-10 23:00:00 +0000 UTC",
+- 		Typeflag: 0x30,
++ 		Typeflag: 0x00,
+  		Linkname: "",
+  		Uname:    "user",
+  		... // 6 identical fields
+  	},
+  	{
+  		... // 4 identical fields
+  		Size:     2,
+  		ModTime:  s"2009-11-11 00:00:00 +0000 UTC",
+- 		Typeflag: 0x30,
++ 		Typeflag: 0x00,
+  		Linkname: "",
+  		Uname:    "user",
+  		... // 6 identical fields
+  	},
+  	{
+  		... // 4 identical fields
+  		Size:     4,
+  		ModTime:  s"2009-11-11 01:00:00 +0000 UTC",
+- 		Typeflag: 0x30,
++ 		Typeflag: 0x00,
+  		Linkname: "",
+  		Uname:    "user",
+  		... // 6 identical fields
+  	},
+  	{
+  		... // 4 identical fields
+  		Size:     8,
+  		ModTime:  s"2009-11-11 02:00:00 +0000 UTC",
+- 		Typeflag: 0x30,
++ 		Typeflag: 0x00,
+  		Linkname: "",
+  		Uname:    "user",
+  		... // 6 identical fields
+  	},
+  	{
+  		... // 4 identical fields
+  		Size:     16,
+  		ModTime:  s"2009-11-11 03:00:00 +0000 UTC",
+- 		Typeflag: 0x30,
++ 		Typeflag: 0x00,
+  		Linkname: "",
+  		Uname:    "user",
+  		... // 6 identical fields
+  	},
+  }
+`,
 	}, {
-		label: label + "/NonDeterministicComparer",
+		label: label,
 		x:     make([]int, 1000),
 		y:     make([]int, 1000),
 		opts: []cmp.Option{
@@ -501,9 +446,8 @@ func comparerTests() []test {
 			}),
 		},
 		wantPanic: "non-deterministic or non-symmetric function detected",
-		reason:    "non-deterministic comparer",
 	}, {
-		label: label + "/NonDeterministicFilter",
+		label: label,
 		x:     make([]int, 1000),
 		y:     make([]int, 1000),
 		opts: []cmp.Option{
@@ -512,9 +456,8 @@ func comparerTests() []test {
 			}, cmp.Ignore()),
 		},
 		wantPanic: "non-deterministic or non-symmetric function detected",
-		reason:    "non-deterministic filter",
 	}, {
-		label: label + "/AssymetricComparer",
+		label: label,
 		x:     []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 		y:     []int{10, 9, 8, 7, 6, 5, 4, 3, 2, 1},
 		opts: []cmp.Option{
@@ -523,9 +466,8 @@ func comparerTests() []test {
 			}),
 		},
 		wantPanic: "non-deterministic or non-symmetric function detected",
-		reason:    "asymmetric comparer",
 	}, {
-		label: label + "/NonDeterministicTransformer",
+		label: label,
 		x:     make([]string, 1000),
 		y:     make([]string, 1000),
 		opts: []cmp.Option{
@@ -534,9 +476,10 @@ func comparerTests() []test {
 			}),
 		},
 		wantPanic: "non-deterministic function detected",
-		reason:    "non-deterministic transformer",
 	}, {
-		label: label + "/IrreflexiveComparison",
+		// Make sure the dynamic checks don't raise a false positive for
+		// non-reflexive comparisons.
+		label: label,
 		x:     make([]int, 10),
 		y:     make([]int, 10),
 		opts: []cmp.Option{
@@ -544,21 +487,52 @@ func comparerTests() []test {
 				return math.NaN()
 			}),
 		},
-		wantEqual: false,
-		reason:    "dynamic checks should not panic for non-reflexive comparisons",
+		wantDiff: `
+  []int{
+- 	Inverse(λ, float64(NaN)),
++ 	Inverse(λ, float64(NaN)),
+- 	Inverse(λ, float64(NaN)),
++ 	Inverse(λ, float64(NaN)),
+- 	Inverse(λ, float64(NaN)),
++ 	Inverse(λ, float64(NaN)),
+- 	Inverse(λ, float64(NaN)),
++ 	Inverse(λ, float64(NaN)),
+- 	Inverse(λ, float64(NaN)),
++ 	Inverse(λ, float64(NaN)),
+- 	Inverse(λ, float64(NaN)),
++ 	Inverse(λ, float64(NaN)),
+- 	Inverse(λ, float64(NaN)),
++ 	Inverse(λ, float64(NaN)),
+- 	Inverse(λ, float64(NaN)),
++ 	Inverse(λ, float64(NaN)),
+- 	Inverse(λ, float64(NaN)),
++ 	Inverse(λ, float64(NaN)),
+- 	Inverse(λ, float64(NaN)),
++ 	Inverse(λ, float64(NaN)),
+  }
+`,
 	}, {
-		label:     label + "/StringerMapKey",
-		x:         map[*pb.Stringer]*pb.Stringer{{"hello"}: {"world"}},
-		y:         map[*pb.Stringer]*pb.Stringer(nil),
-		wantEqual: false,
-		reason:    "stringer should be used to format the map key",
+		// Ensure reasonable Stringer formatting of map keys.
+		label: label,
+		x:     map[*pb.Stringer]*pb.Stringer{{"hello"}: {"world"}},
+		y:     map[*pb.Stringer]*pb.Stringer(nil),
+		wantDiff: `
+  map[*testprotos.Stringer]*testprotos.Stringer(
+- 	{⟪0xdeadf00f⟫: s"world"},
++ 	nil,
+  )
+`,
 	}, {
-		label:     label + "/StringerBacktick",
-		x:         []*pb.Stringer{{`multi\nline\nline\nline`}},
-		wantEqual: false,
-		reason:    "stringer should use backtick quoting if more readable",
+		// Ensure Stringer avoids double-quote escaping if possible.
+		label: label,
+		x:     []*pb.Stringer{{`multi\nline\nline\nline`}},
+		wantDiff: strings.Replace(`
+  interface{}(
+- 	[]*testprotos.Stringer{s'multi\nline\nline\nline'},
+  )
+`, "'", "`", -1),
 	}, {
-		label: label + "/AvoidPanicAssignableConverter",
+		label: label,
 		x:     struct{ I Iface2 }{},
 		y:     struct{ I Iface2 }{},
 		opts: []cmp.Option{
@@ -566,10 +540,8 @@ func comparerTests() []test {
 				return x == nil && y == nil
 			}),
 		},
-		wantEqual: true,
-		reason:    "function call using Go reflection should automatically convert assignable interfaces; see https://golang.org/issues/22143",
 	}, {
-		label: label + "/AvoidPanicAssignableTransformer",
+		label: label,
 		x:     struct{ I Iface2 }{},
 		y:     struct{ I Iface2 }{},
 		opts: []cmp.Option{
@@ -577,10 +549,8 @@ func comparerTests() []test {
 				return v == nil
 			}),
 		},
-		wantEqual: true,
-		reason:    "function call using Go reflection should automatically convert assignable interfaces; see https://golang.org/issues/22143",
 	}, {
-		label: label + "/AvoidPanicAssignableFilter",
+		label: label,
 		x:     struct{ I Iface2 }{},
 		y:     struct{ I Iface2 }{},
 		opts: []cmp.Option{
@@ -588,26 +558,56 @@ func comparerTests() []test {
 				return x == nil && y == nil
 			}, cmp.Ignore()),
 		},
-		wantEqual: true,
-		reason:    "function call using Go reflection should automatically convert assignable interfaces; see https://golang.org/issues/22143",
 	}, {
-		label:     label + "/DynamicMap",
-		x:         []interface{}{map[string]interface{}{"avg": 0.278, "hr": 65, "name": "Mark McGwire"}, map[string]interface{}{"avg": 0.288, "hr": 63, "name": "Sammy Sosa"}},
-		y:         []interface{}{map[string]interface{}{"avg": 0.278, "hr": 65.0, "name": "Mark McGwire"}, map[string]interface{}{"avg": 0.288, "hr": 63.0, "name": "Sammy Sosa"}},
-		wantEqual: false,
-		reason:    "dynamic map with differing types (but semantically equivalent values) should be inequal",
+		label: label,
+		x:     []interface{}{map[string]interface{}{"avg": 0.278, "hr": 65, "name": "Mark McGwire"}, map[string]interface{}{"avg": 0.288, "hr": 63, "name": "Sammy Sosa"}},
+		y:     []interface{}{map[string]interface{}{"avg": 0.278, "hr": 65.0, "name": "Mark McGwire"}, map[string]interface{}{"avg": 0.288, "hr": 63.0, "name": "Sammy Sosa"}},
+		wantDiff: `
+  []interface{}{
+  	map[string]interface{}{
+  		"avg":  float64(0.278),
+- 		"hr":   int(65),
++ 		"hr":   float64(65),
+  		"name": string("Mark McGwire"),
+  	},
+  	map[string]interface{}{
+  		"avg":  float64(0.288),
+- 		"hr":   int(63),
++ 		"hr":   float64(63),
+  		"name": string("Sammy Sosa"),
+  	},
+  }
+`,
 	}, {
-		label: label + "/MapKeyPointer",
+		label: label,
 		x: map[*int]string{
 			new(int): "hello",
 		},
 		y: map[*int]string{
 			new(int): "world",
 		},
-		wantEqual: false,
-		reason:    "map keys should use shallow (rather than deep) pointer comparison",
+		wantDiff: `
+  map[*int]string{
+- 	⟪0xdeadf00f⟫: "hello",
++ 	⟪0xdeadf00f⟫: "world",
+  }
+`,
 	}, {
-		label: label + "/IgnoreSliceElements",
+		label: label,
+		x:     intPtr(0),
+		y:     intPtr(0),
+		opts: []cmp.Option{
+			cmp.Comparer(func(x, y *int) bool { return x == y }),
+		},
+		// TODO: This output is unhelpful and should show the address.
+		wantDiff: `
+  (*int)(
+- 	&0,
++ 	&0,
+  )
+`,
+	}, {
+		label: label,
 		x: [2][]int{
 			{0, 0, 0, 1, 2, 3, 0, 0, 4, 5, 6, 7, 8, 0, 9, 0, 0},
 			{0, 1, 0, 0, 0, 20},
@@ -628,10 +628,20 @@ func comparerTests() []test {
 				return false
 			}, cmp.Ignore()),
 		},
-		wantEqual: false,
-		reason:    "all zero slice elements are ignored (even if missing)",
+		wantDiff: `
+  [2][]int{
+  	{..., 1, 2, 3, ..., 4, 5, 6, 7, ..., 8, ..., 9, ...},
+  	{
+  		... // 6 ignored and 1 identical elements
+- 		20,
++ 		2,
+  		... // 3 ignored elements
+  	},
+  }
+`,
+		reason: "all zero slice elements are ignored (even if missing)",
 	}, {
-		label: label + "/IgnoreMapEntries",
+		label: label,
 		x: [2]map[string]int{
 			{"ignore1": 0, "ignore2": 0, "keep1": 1, "keep2": 2, "KEEP3": 3, "IGNORE3": 0},
 			{"keep1": 1, "ignore1": 0},
@@ -652,49 +662,17 @@ func comparerTests() []test {
 				return false
 			}, cmp.Ignore()),
 		},
-		wantEqual: false,
-		reason:    "all zero map entries are ignored (even if missing)",
-	}, {
-		label:     label + "/PanicUnexportedNamed",
-		x:         namedWithUnexported{},
-		y:         namedWithUnexported{},
-		wantPanic: strconv.Quote(reflect.TypeOf(namedWithUnexported{}).PkgPath()) + ".namedWithUnexported",
-		reason:    "panic on named struct type with unexported field",
-	}, {
-		label:     label + "/PanicUnexportedUnnamed",
-		x:         struct{ a int }{},
-		y:         struct{ a int }{},
-		wantPanic: strconv.Quote(reflect.TypeOf(namedWithUnexported{}).PkgPath()) + ".(struct { a int })",
-		reason:    "panic on unnamed struct type with unexported field",
-	}, {
-		label: label + "/UnaddressableStruct",
-		x:     struct{ s fmt.Stringer }{new(bytes.Buffer)},
-		y:     struct{ s fmt.Stringer }{nil},
-		opts: []cmp.Option{
-			cmp.AllowUnexported(struct{ s fmt.Stringer }{}),
-			cmp.FilterPath(func(p cmp.Path) bool {
-				if _, ok := p.Last().(cmp.StructField); !ok {
-					return false
-				}
-
-				t := p.Index(-1).Type()
-				vx, vy := p.Index(-1).Values()
-				pvx, pvy := p.Index(-2).Values()
-				switch {
-				case vx.Type() != t:
-					panic(fmt.Sprintf("inconsistent type: %v != %v", vx.Type(), t))
-				case vy.Type() != t:
-					panic(fmt.Sprintf("inconsistent type: %v != %v", vy.Type(), t))
-				case vx.CanAddr() != pvx.CanAddr():
-					panic(fmt.Sprintf("inconsistent addressability: %v != %v", vx.CanAddr(), pvx.CanAddr()))
-				case vy.CanAddr() != pvy.CanAddr():
-					panic(fmt.Sprintf("inconsistent addressability: %v != %v", vy.CanAddr(), pvy.CanAddr()))
-				}
-				return true
-			}, cmp.Ignore()),
-		},
-		wantEqual: true,
-		reason:    "verify that exporter does not leak implementation details",
+		wantDiff: `
+  [2]map[string]int{
+  	{"KEEP3": 3, "keep1": 1, "keep2": 2, ...},
+  	{
+  		... // 2 ignored entries
+  		"keep1": 1,
++ 		"keep2": 2,
+  	},
+  }
+`,
+		reason: "all zero map entries are ignored (even if missing)",
 	}}
 }
 
@@ -719,7 +697,7 @@ func transformerTests() []test {
 	}
 
 	return []test{{
-		label: label + "/Uints",
+		label: label,
 		x:     uint8(0),
 		y:     uint8(1),
 		opts: []cmp.Option{
@@ -727,10 +705,14 @@ func transformerTests() []test {
 			cmp.Transformer("λ", func(in uint16) uint32 { return uint32(in) }),
 			cmp.Transformer("λ", func(in uint32) uint64 { return uint64(in) }),
 		},
-		wantEqual: false,
-		reason:    "transform uint8 -> uint16 -> uint32 -> uint64",
+		wantDiff: `
+  uint8(Inverse(λ, uint16(Inverse(λ, uint32(Inverse(λ, uint64(
+- 	0x00,
++ 	0x01,
+  )))))))
+`,
 	}, {
-		label: label + "/Ambiguous",
+		label: label,
 		x:     0,
 		y:     1,
 		opts: []cmp.Option{
@@ -738,9 +720,8 @@ func transformerTests() []test {
 			cmp.Transformer("λ", func(in int) int { return in }),
 		},
 		wantPanic: "ambiguous set of applicable options",
-		reason:    "both transformers apply on int",
 	}, {
-		label: label + "/Filtered",
+		label: label,
 		x:     []int{0, -5, 0, -1},
 		y:     []int{1, 3, 0, -5},
 		opts: []cmp.Option{
@@ -753,10 +734,18 @@ func transformerTests() []test {
 				cmp.Transformer("λ", func(in int) int64 { return int64(in) }),
 			),
 		},
-		wantEqual: false,
-		reason:    "disjoint transformers filtered based on the values",
+		wantDiff: `
+  []int{
+  	Inverse(λ, int64(0)),
+- 	Inverse(λ, int64(-5)),
++ 	Inverse(λ, int64(3)),
+  	Inverse(λ, int64(0)),
+- 	Inverse(λ, int64(-1)),
++ 	Inverse(λ, int64(-5)),
+  }
+`,
 	}, {
-		label: label + "/DisjointOutput",
+		label: label,
 		x:     0,
 		y:     1,
 		opts: []cmp.Option{
@@ -767,10 +756,14 @@ func transformerTests() []test {
 				return float64(in)
 			}),
 		},
-		wantEqual: false,
-		reason:    "output type differs based on input value",
+		wantDiff: `
+  int(Inverse(λ, interface{}(
+- 	string("zero"),
++ 	float64(1),
+  )))
+`,
 	}, {
-		label: label + "/JSON",
+		label: label,
 		x: `{
 		  "firstName": "John",
 		  "lastName": "Smith",
@@ -807,38 +800,80 @@ func transformerTests() []test {
 				return m
 			}),
 		},
-		wantEqual: false,
-		reason:    "transformer used to parse JSON input",
+		wantDiff: `
+  string(Inverse(ParseJSON, map[string]interface{}{
+  	"address": map[string]interface{}{
+- 		"city":          string("Los Angeles"),
++ 		"city":          string("New York"),
+  		"postalCode":    string("10021-3100"),
+- 		"state":         string("CA"),
++ 		"state":         string("NY"),
+  		"streetAddress": string("21 2nd Street"),
+  	},
+  	"age":       float64(25),
+  	"children":  []interface{}{},
+  	"firstName": string("John"),
+  	"isAlive":   bool(true),
+  	"lastName":  string("Smith"),
+  	"phoneNumbers": []interface{}{
+  		map[string]interface{}{
+- 			"number": string("212 555-4321"),
++ 			"number": string("212 555-1234"),
+  			"type":   string("home"),
+  		},
+  		map[string]interface{}{"number": string("646 555-4567"), "type": string("office")},
+  		map[string]interface{}{"number": string("123 456-7890"), "type": string("mobile")},
+  	},
++ 	"spouse": nil,
+  }))
+`,
 	}, {
-		label: label + "/AcyclicString",
+		label: label,
 		x:     StringBytes{String: "some\nmulti\nLine\nstring", Bytes: []byte("some\nmulti\nline\nbytes")},
 		y:     StringBytes{String: "some\nmulti\nline\nstring", Bytes: []byte("some\nmulti\nline\nBytes")},
 		opts: []cmp.Option{
 			transformOnce("SplitString", func(s string) []string { return strings.Split(s, "\n") }),
 			transformOnce("SplitBytes", func(b []byte) [][]byte { return bytes.Split(b, []byte("\n")) }),
 		},
-		wantEqual: false,
-		reason:    "string -> []string and []byte -> [][]byte transformer only applied once",
+		wantDiff: `
+  cmp_test.StringBytes{
+  	String: Inverse(SplitString, []string{
+  		"some",
+  		"multi",
+- 		"Line",
++ 		"line",
+  		"string",
+  	}),
+  	Bytes: []uint8(Inverse(SplitBytes, [][]uint8{
+  		{0x73, 0x6f, 0x6d, 0x65},
+  		{0x6d, 0x75, 0x6c, 0x74, 0x69},
+  		{0x6c, 0x69, 0x6e, 0x65},
+  		{
+- 			0x62,
++ 			0x42,
+  			0x79,
+  			0x74,
+  			... // 2 identical elements
+  		},
+  	})),
+  }
+`,
 	}, {
-		label: label + "/CyclicString",
-		x:     "a\nb\nc\n",
-		y:     "a\nb\nc\n",
+		x: "a\nb\nc\n",
+		y: "a\nb\nc\n",
 		opts: []cmp.Option{
 			cmp.Transformer("SplitLines", func(s string) []string { return strings.Split(s, "\n") }),
 		},
 		wantPanic: "recursive set of Transformers detected",
-		reason:    "cyclic transformation from string -> []string -> string",
 	}, {
-		label: label + "/CyclicComplex",
-		x:     complex64(0),
-		y:     complex64(0),
+		x: complex64(0),
+		y: complex64(0),
 		opts: []cmp.Option{
 			cmp.Transformer("T1", func(x complex64) complex128 { return complex128(x) }),
 			cmp.Transformer("T2", func(x complex128) [2]float64 { return [2]float64{real(x), imag(x)} }),
 			cmp.Transformer("T3", func(x float64) complex64 { return complex64(complex(x, 0)) }),
 		},
 		wantPanic: "recursive set of Transformers detected",
-		reason:    "cyclic transformation from complex64 -> complex128 -> [2]float64 -> complex64",
 	}}
 }
 
@@ -874,132 +909,53 @@ func reporterTests() []test {
 	)
 
 	return []test{{
-		label:     label + "/AmbiguousType",
-		x:         foo1.Bar{},
-		y:         foo2.Bar{},
-		wantEqual: false,
-		reason:    "reporter should display the qualified type name to disambiguate between the two values",
+		label: label,
+		x:     MyComposite{IntsA: []int8{11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29}},
+		y:     MyComposite{IntsA: []int8{10, 11, 21, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29}},
+		wantDiff: `
+  cmp_test.MyComposite{
+  	... // 3 identical fields
+  	BytesB: nil,
+  	BytesC: nil,
+  	IntsA: []int8{
++ 		10,
+  		11,
+- 		12,
++ 		21,
+  		13,
+  		14,
+  		... // 15 identical elements
+  	},
+  	IntsB: nil,
+  	IntsC: nil,
+  	... // 6 identical fields
+  }
+`,
+		reason: "unbatched diffing desired since few elements differ",
 	}, {
-		label: label + "/AmbiguousPointer",
-		x:     newInt(0),
-		y:     newInt(0),
-		opts: []cmp.Option{
-			cmp.Comparer(func(x, y *int) bool { return x == y }),
-		},
-		wantEqual: false,
-		reason:    "reporter should display the address to disambiguate between the two values",
-	}, {
-		label: label + "/AmbiguousPointerStruct",
-		x:     struct{ I *int }{newInt(0)},
-		y:     struct{ I *int }{newInt(0)},
-		opts: []cmp.Option{
-			cmp.Comparer(func(x, y *int) bool { return x == y }),
-		},
-		wantEqual: false,
-		reason:    "reporter should display the address to disambiguate between the two struct fields",
-	}, {
-		label: label + "/AmbiguousPointerSlice",
-		x:     []*int{newInt(0)},
-		y:     []*int{newInt(0)},
-		opts: []cmp.Option{
-			cmp.Comparer(func(x, y *int) bool { return x == y }),
-		},
-		wantEqual: false,
-		reason:    "reporter should display the address to disambiguate between the two slice elements",
-	}, {
-		label: label + "/AmbiguousPointerMap",
-		x:     map[string]*int{"zero": newInt(0)},
-		y:     map[string]*int{"zero": newInt(0)},
-		opts: []cmp.Option{
-			cmp.Comparer(func(x, y *int) bool { return x == y }),
-		},
-		wantEqual: false,
-		reason:    "reporter should display the address to disambiguate between the two map values",
-	}, {
-		label:     label + "/AmbiguousStringer",
-		x:         Stringer("hello"),
-		y:         newStringer("hello"),
-		wantEqual: false,
-		reason:    "reporter should avoid calling String to disambiguate between the two values",
-	}, {
-		label:     label + "/AmbiguousStringerStruct",
-		x:         struct{ S fmt.Stringer }{Stringer("hello")},
-		y:         struct{ S fmt.Stringer }{newStringer("hello")},
-		wantEqual: false,
-		reason:    "reporter should avoid calling String to disambiguate between the two struct fields",
-	}, {
-		label:     label + "/AmbiguousStringerSlice",
-		x:         []fmt.Stringer{Stringer("hello")},
-		y:         []fmt.Stringer{newStringer("hello")},
-		wantEqual: false,
-		reason:    "reporter should avoid calling String to disambiguate between the two slice elements",
-	}, {
-		label:     label + "/AmbiguousStringerMap",
-		x:         map[string]fmt.Stringer{"zero": Stringer("hello")},
-		y:         map[string]fmt.Stringer{"zero": newStringer("hello")},
-		wantEqual: false,
-		reason:    "reporter should avoid calling String to disambiguate between the two map values",
-	}, {
-		label: label + "/AmbiguousSliceHeader",
-		x:     make([]int, 0, 5),
-		y:     make([]int, 0, 1000),
-		opts: []cmp.Option{
-			cmp.Comparer(func(x, y []int) bool { return cap(x) == cap(y) }),
-		},
-		wantEqual: false,
-		reason:    "reporter should display the slice header to disambiguate between the two slice values",
-	}, {
-		label: label + "/AmbiguousStringerMapKey",
-		x: map[interface{}]string{
-			nil:               "nil",
-			Stringer("hello"): "goodbye",
-			foo1.Bar{"fizz"}:  "buzz",
-		},
-		y: map[interface{}]string{
-			newStringer("hello"): "goodbye",
-			foo2.Bar{"fizz"}:     "buzz",
-		},
-		wantEqual: false,
-		reason:    "reporter should avoid calling String to disambiguate between the two map keys",
-	}, {
-		label:     label + "/NonAmbiguousStringerMapKey",
-		x:         map[interface{}]string{Stringer("hello"): "goodbye"},
-		y:         map[interface{}]string{newStringer("fizz"): "buzz"},
-		wantEqual: false,
-		reason:    "reporter should call String as there is no ambiguity between the two map keys",
-	}, {
-		label:     label + "/InvalidUTF8",
-		x:         MyString("\xed\xa0\x80"),
-		wantEqual: false,
-		reason:    "invalid UTF-8 should format as quoted string",
-	}, {
-		label:     label + "/UnbatchedSlice",
-		x:         MyComposite{IntsA: []int8{11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29}},
-		y:         MyComposite{IntsA: []int8{10, 11, 21, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29}},
-		wantEqual: false,
-		reason:    "unbatched diffing desired since few elements differ",
-	}, {
-		label:     label + "/BatchedSlice",
-		x:         MyComposite{IntsA: []int8{10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29}},
-		y:         MyComposite{IntsA: []int8{12, 29, 13, 27, 22, 23, 17, 18, 19, 20, 21, 10, 26, 16, 25, 28, 11, 15, 24, 14}},
-		wantEqual: false,
-		reason:    "batched diffing desired since many elements differ",
-	}, {
-		label:     label + "/BatchedWithComparer",
-		x:         MyComposite{BytesA: []byte{10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29}},
-		y:         MyComposite{BytesA: []byte{12, 29, 13, 27, 22, 23, 17, 18, 19, 20, 21, 10, 26, 16, 25, 28, 11, 15, 24, 14}},
-		wantEqual: false,
-		opts: []cmp.Option{
-			cmp.Comparer(bytes.Equal),
-		},
+		label: label,
+		x:     MyComposite{IntsA: []int8{10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29}},
+		y:     MyComposite{IntsA: []int8{12, 29, 13, 27, 22, 23, 17, 18, 19, 20, 21, 10, 26, 16, 25, 28, 11, 15, 24, 14}},
+		wantDiff: `
+  cmp_test.MyComposite{
+  	... // 3 identical fields
+  	BytesB: nil,
+  	BytesC: nil,
+  	IntsA: []int8{
+- 		10, 11, 12, 13, 14, 15, 16,
++ 		12, 29, 13, 27, 22, 23,
+  		17, 18, 19, 20, 21,
+- 		22, 23, 24, 25, 26, 27, 28, 29,
++ 		10, 26, 16, 25, 28, 11, 15, 24, 14,
+  	},
+  	IntsB: nil,
+  	IntsC: nil,
+  	... // 6 identical fields
+  }
+`,
 		reason: "batched diffing desired since many elements differ",
 	}, {
-		label:     label + "/BatchedLong",
-		x:         MyComposite{IntsA: []int8{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127}},
-		wantEqual: false,
-		reason:    "batched output desired for a single slice of primitives unique to one of the inputs",
-	}, {
-		label: label + "/BatchedNamedAndUnnamed",
+		label: label,
 		x: MyComposite{
 			BytesA:  []byte{1, 2, 3},
 			BytesB:  []MyByte{4, 5, 6},
@@ -1028,128 +984,143 @@ func reporterTests() []test {
 			FloatsB: []MyFloat{6.5, 5.5, 4.5},
 			FloatsC: MyFloats{9.5, 8.5, 7.5},
 		},
-		wantEqual: false,
-		reason:    "batched diffing available for both named and unnamed slices",
+		wantDiff: `
+  cmp_test.MyComposite{
+  	StringA: "",
+  	StringB: "",
+  	BytesA: []uint8{
+- 		0x01, 0x02, 0x03, // -|...|
++ 		0x03, 0x02, 0x01, // +|...|
+  	},
+  	BytesB: []cmp_test.MyByte{
+- 		0x04, 0x05, 0x06,
++ 		0x06, 0x05, 0x04,
+  	},
+  	BytesC: cmp_test.MyBytes{
+- 		0x07, 0x08, 0x09, // -|...|
++ 		0x09, 0x08, 0x07, // +|...|
+  	},
+  	IntsA: []int8{
+- 		-1, -2, -3,
++ 		-3, -2, -1,
+  	},
+  	IntsB: []cmp_test.MyInt{
+- 		-4, -5, -6,
++ 		-6, -5, -4,
+  	},
+  	IntsC: cmp_test.MyInts{
+- 		-7, -8, -9,
++ 		-9, -8, -7,
+  	},
+  	UintsA: []uint16{
+- 		0x03e8, 0x07d0, 0x0bb8,
++ 		0x0bb8, 0x07d0, 0x03e8,
+  	},
+  	UintsB: []cmp_test.MyUint{
+- 		4000, 5000, 6000,
++ 		6000, 5000, 4000,
+  	},
+  	UintsC: cmp_test.MyUints{
+- 		7000, 8000, 9000,
++ 		9000, 8000, 7000,
+  	},
+  	FloatsA: []float32{
+- 		1.5, 2.5, 3.5,
++ 		3.5, 2.5, 1.5,
+  	},
+  	FloatsB: []cmp_test.MyFloat{
+- 		4.5, 5.5, 6.5,
++ 		6.5, 5.5, 4.5,
+  	},
+  	FloatsC: cmp_test.MyFloats{
+- 		7.5, 8.5, 9.5,
++ 		9.5, 8.5, 7.5,
+  	},
+  }
+`,
+		reason: "batched diffing available for both named and unnamed slices",
 	}, {
-		label:     label + "/BinaryHexdump",
-		x:         MyComposite{BytesA: []byte("\xf3\x0f\x8a\xa4\xd3\x12R\t$\xbeX\x95A\xfd$fX\x8byT\xac\r\xd8qwp\x20j\\s\u007f\x8c\x17U\xc04\xcen\xf7\xaaG\xee2\x9d\xc5\xca\x1eX\xaf\x8f'\xf3\x02J\x90\xedi.p2\xb4\xab0 \xb6\xbd\\b4\x17\xb0\x00\xbbO~'G\x06\xf4.f\xfdc\xd7\x04ݷ0\xb7\xd1U~{\xf6\xb3~\x1dWi \x9e\xbc\xdf\xe1M\xa9\xef\xa2\xd2\xed\xb4Gx\xc9\xc9'\xa4\xc6\xce\xecDp]")},
-		y:         MyComposite{BytesA: []byte("\xf3\x0f\x8a\xa4\xd3\x12R\t$\xbeT\xac\r\xd8qwp\x20j\\s\u007f\x8c\x17U\xc04\xcen\xf7\xaaG\xee2\x9d\xc5\xca\x1eX\xaf\x8f'\xf3\x02J\x90\xedi.p2\xb4\xab0 \xb6\xbd\\b4\x17\xb0\x00\xbbO~'G\x06\xf4.f\xfdc\xd7\x04ݷ0\xb7\xd1u-[]]\xf6\xb3haha~\x1dWI \x9e\xbc\xdf\xe1M\xa9\xef\xa2\xd2\xed\xb4Gx\xc9\xc9'\xa4\xc6\xce\xecDp]")},
-		wantEqual: false,
-		reason:    "binary diff in hexdump form since data is binary data",
+		label: label,
+		x:     MyComposite{BytesA: []byte("\xf3\x0f\x8a\xa4\xd3\x12R\t$\xbeX\x95A\xfd$fX\x8byT\xac\r\xd8qwp\x20j\\s\u007f\x8c\x17U\xc04\xcen\xf7\xaaG\xee2\x9d\xc5\xca\x1eX\xaf\x8f'\xf3\x02J\x90\xedi.p2\xb4\xab0 \xb6\xbd\\b4\x17\xb0\x00\xbbO~'G\x06\xf4.f\xfdc\xd7\x04ݷ0\xb7\xd1U~{\xf6\xb3~\x1dWi \x9e\xbc\xdf\xe1M\xa9\xef\xa2\xd2\xed\xb4Gx\xc9\xc9'\xa4\xc6\xce\xecDp]")},
+		y:     MyComposite{BytesA: []byte("\xf3\x0f\x8a\xa4\xd3\x12R\t$\xbeT\xac\r\xd8qwp\x20j\\s\u007f\x8c\x17U\xc04\xcen\xf7\xaaG\xee2\x9d\xc5\xca\x1eX\xaf\x8f'\xf3\x02J\x90\xedi.p2\xb4\xab0 \xb6\xbd\\b4\x17\xb0\x00\xbbO~'G\x06\xf4.f\xfdc\xd7\x04ݷ0\xb7\xd1u-[]]\xf6\xb3haha~\x1dWI \x9e\xbc\xdf\xe1M\xa9\xef\xa2\xd2\xed\xb4Gx\xc9\xc9'\xa4\xc6\xce\xecDp]")},
+		wantDiff: `
+  cmp_test.MyComposite{
+  	StringA: "",
+  	StringB: "",
+  	BytesA: []uint8{
+  		0xf3, 0x0f, 0x8a, 0xa4, 0xd3, 0x12, 0x52, 0x09, 0x24, 0xbe,                                     //  |......R.$.|
+- 		0x58, 0x95, 0x41, 0xfd, 0x24, 0x66, 0x58, 0x8b, 0x79,                                           // -|X.A.$fX.y|
+  		0x54, 0xac, 0x0d, 0xd8, 0x71, 0x77, 0x70, 0x20, 0x6a, 0x5c, 0x73, 0x7f, 0x8c, 0x17, 0x55, 0xc0, //  |T...qwp j\s...U.|
+  		0x34, 0xce, 0x6e, 0xf7, 0xaa, 0x47, 0xee, 0x32, 0x9d, 0xc5, 0xca, 0x1e, 0x58, 0xaf, 0x8f, 0x27, //  |4.n..G.2....X..'|
+  		0xf3, 0x02, 0x4a, 0x90, 0xed, 0x69, 0x2e, 0x70, 0x32, 0xb4, 0xab, 0x30, 0x20, 0xb6, 0xbd, 0x5c, //  |..J..i.p2..0 ..\|
+  		0x62, 0x34, 0x17, 0xb0, 0x00, 0xbb, 0x4f, 0x7e, 0x27, 0x47, 0x06, 0xf4, 0x2e, 0x66, 0xfd, 0x63, //  |b4....O~'G...f.c|
+  		0xd7, 0x04, 0xdd, 0xb7, 0x30, 0xb7, 0xd1,                                                       //  |....0..|
+- 		0x55, 0x7e, 0x7b, 0xf6, 0xb3, 0x7e, 0x1d, 0x57, 0x69,                                           // -|U~{..~.Wi|
++ 		0x75, 0x2d, 0x5b, 0x5d, 0x5d, 0xf6, 0xb3, 0x68, 0x61, 0x68, 0x61, 0x7e, 0x1d, 0x57, 0x49,       // +|u-[]]..haha~.WI|
+  		0x20, 0x9e, 0xbc, 0xdf, 0xe1, 0x4d, 0xa9, 0xef, 0xa2, 0xd2, 0xed, 0xb4, 0x47, 0x78, 0xc9, 0xc9, //  | ....M......Gx..|
+  		0x27, 0xa4, 0xc6, 0xce, 0xec, 0x44, 0x70, 0x5d,                                                 //  |'....Dp]|
+  	},
+  	BytesB: nil,
+  	BytesC: nil,
+  	... // 9 identical fields
+  }
+`,
+		reason: "binary diff in hexdump form since data is binary data",
 	}, {
-		label:     label + "/StringHexdump",
-		x:         MyComposite{StringB: MyString("readme.txt\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x000000600\x000000000\x000000000\x0000000000046\x0000000000000\x00011173\x00 0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00ustar\x0000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x000000000\x000000000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")},
-		y:         MyComposite{StringB: MyString("gopher.txt\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x000000600\x000000000\x000000000\x0000000000043\x0000000000000\x00011217\x00 0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00ustar\x0000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x000000000\x000000000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")},
-		wantEqual: false,
-		reason:    "binary diff desired since string looks like binary data",
+		label: label,
+		x:     MyComposite{StringB: MyString("readme.txt\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x000000600\x000000000\x000000000\x0000000000046\x0000000000000\x00011173\x00 0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00ustar\x0000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x000000000\x000000000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")},
+		y:     MyComposite{StringB: MyString("gopher.txt\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x000000600\x000000000\x000000000\x0000000000043\x0000000000000\x00011217\x00 0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00ustar\x0000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x000000000\x000000000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")},
+		wantDiff: `
+  cmp_test.MyComposite{
+  	StringA: "",
+  	StringB: cmp_test.MyString{
+- 		0x72, 0x65, 0x61, 0x64, 0x6d, 0x65,                                                             // -|readme|
++ 		0x67, 0x6f, 0x70, 0x68, 0x65, 0x72,                                                             // +|gopher|
+  		0x2e, 0x74, 0x78, 0x74, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //  |.txt............|
+  		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //  |................|
+  		... // 64 identical bytes
+  		0x30, 0x30, 0x36, 0x30, 0x30, 0x00, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x00, 0x30, 0x30, //  |00600.0000000.00|
+  		0x30, 0x30, 0x30, 0x30, 0x30, 0x00, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x34, //  |00000.0000000004|
+- 		0x36,                                                                                           // -|6|
++ 		0x33,                                                                                           // +|3|
+  		0x00, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x00, 0x30, 0x31, 0x31, //  |.00000000000.011|
+- 		0x31, 0x37, 0x33,                                                                               // -|173|
++ 		0x32, 0x31, 0x37,                                                                               // +|217|
+  		0x00, 0x20, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //  |. 0.............|
+  		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //  |................|
+  		... // 326 identical bytes
+  	},
+  	BytesA: nil,
+  	BytesB: nil,
+  	... // 10 identical fields
+  }
+`,
+		reason: "binary diff desired since string looks like binary data",
 	}, {
-		label:     label + "/BinaryString",
-		x:         MyComposite{BytesA: []byte(`{"firstName":"John","lastName":"Smith","isAlive":true,"age":27,"address":{"streetAddress":"314 54th Avenue","city":"New York","state":"NY","postalCode":"10021-3100"},"phoneNumbers":[{"type":"home","number":"212 555-1234"},{"type":"office","number":"646 555-4567"},{"type":"mobile","number":"123 456-7890"}],"children":[],"spouse":null}`)},
-		y:         MyComposite{BytesA: []byte(`{"firstName":"John","lastName":"Smith","isAlive":true,"age":27,"address":{"streetAddress":"21 2nd Street","city":"New York","state":"NY","postalCode":"10021-3100"},"phoneNumbers":[{"type":"home","number":"212 555-1234"},{"type":"office","number":"646 555-4567"},{"type":"mobile","number":"123 456-7890"}],"children":[],"spouse":null}`)},
-		wantEqual: false,
-		reason:    "batched textual diff desired since bytes looks like textual data",
+		label: label,
+		x:     MyComposite{BytesA: []byte(`{"firstName":"John","lastName":"Smith","isAlive":true,"age":27,"address":{"streetAddress":"314 54th Avenue","city":"New York","state":"NY","postalCode":"10021-3100"},"phoneNumbers":[{"type":"home","number":"212 555-1234"},{"type":"office","number":"646 555-4567"},{"type":"mobile","number":"123 456-7890"}],"children":[],"spouse":null}`)},
+		y:     MyComposite{BytesA: []byte(`{"firstName":"John","lastName":"Smith","isAlive":true,"age":27,"address":{"streetAddress":"21 2nd Street","city":"New York","state":"NY","postalCode":"10021-3100"},"phoneNumbers":[{"type":"home","number":"212 555-1234"},{"type":"office","number":"646 555-4567"},{"type":"mobile","number":"123 456-7890"}],"children":[],"spouse":null}`)},
+		wantDiff: strings.Replace(`
+  cmp_test.MyComposite{
+  	StringA: "",
+  	StringB: "",
+  	BytesA: bytes.Join({
+  		'{"firstName":"John","lastName":"Smith","isAlive":true,"age":27,"',
+  		'address":{"streetAddress":"',
+- 		"314 54th Avenue",
++ 		"21 2nd Street",
+  		'","city":"New York","state":"NY","postalCode":"10021-3100"},"pho',
+  		'neNumbers":[{"type":"home","number":"212 555-1234"},{"type":"off',
+  		... // 101 identical bytes
+  	}, ""),
+  	BytesB: nil,
+  	BytesC: nil,
+  	... // 9 identical fields
+  }
+`, "'", "`", -1),
+		reason: "batched textual diff desired since bytes looks like textual data",
 	}, {
-		label:     label + "/TripleQuote",
-		x:         MyComposite{StringA: "aaa\nbbb\nccc\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nRRR\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n"},
-		y:         MyComposite{StringA: "aaa\nbbb\nCCC\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nrrr\nSSS\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n"},
-		wantEqual: false,
-		reason:    "use triple-quote syntax",
-	}, {
-		label: label + "/TripleQuoteSlice",
-		x: []string{
-			"aaa\nbbb\nccc\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nRRR\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n",
-			"aaa\nbbb\nccc\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nRRR\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n",
-		},
-		y: []string{
-			"aaa\nbbb\nccc\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nRRR\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\n",
-			"aaa\nbbb\nccc\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nRRR\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n",
-		},
-		wantEqual: false,
-		reason:    "use triple-quote syntax for slices of strings",
-	}, {
-		label: label + "/TripleQuoteNamedTypes",
-		x: MyComposite{
-			StringB: MyString("aaa\nbbb\nccc\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nRRR\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz"),
-			BytesC:  MyBytes("aaa\nbbb\nccc\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nRRR\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz"),
-		},
-		y: MyComposite{
-			StringB: MyString("aaa\nbbb\nCCC\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nrrr\nSSS\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz"),
-			BytesC:  MyBytes("aaa\nbbb\nCCC\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nrrr\nSSS\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz"),
-		},
-		wantEqual: false,
-		reason:    "use triple-quote syntax for named types",
-	}, {
-		label: label + "/TripleQuoteSliceNamedTypes",
-		x: []MyString{
-			"aaa\nbbb\nccc\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nRRR\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n",
-			"aaa\nbbb\nccc\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nRRR\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n",
-		},
-		y: []MyString{
-			"aaa\nbbb\nccc\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nRRR\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\n",
-			"aaa\nbbb\nccc\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nRRR\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n",
-		},
-		wantEqual: false,
-		reason:    "use triple-quote syntax for slices of named strings",
-	}, {
-		label:     label + "/TripleQuoteEndlines",
-		x:         "aaa\nbbb\nccc\nddd\neee\nfff\nggg\r\nhhh\n\riii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nRRR\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n\r",
-		y:         "aaa\nbbb\nCCC\nddd\neee\nfff\nggg\r\nhhh\n\riii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nrrr\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz",
-		wantEqual: false,
-		reason:    "use triple-quote syntax",
-	}, {
-		label:     label + "/AvoidTripleQuoteAmbiguousQuotes",
-		x:         "aaa\nbbb\nccc\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nRRR\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n",
-		y:         "aaa\nbbb\nCCC\nddd\neee\n\"\"\"\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nrrr\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n",
-		wantEqual: false,
-		reason:    "avoid triple-quote syntax due to presence of ambiguous triple quotes",
-	}, {
-		label:     label + "/AvoidTripleQuoteAmbiguousEllipsis",
-		x:         "aaa\nbbb\nccc\n...\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nRRR\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n",
-		y:         "aaa\nbbb\nCCC\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nrrr\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n",
-		wantEqual: false,
-		reason:    "avoid triple-quote syntax due to presence of ambiguous ellipsis",
-	}, {
-		label:     label + "/AvoidTripleQuoteNonPrintable",
-		x:         "aaa\nbbb\nccc\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nRRR\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n",
-		y:         "aaa\nbbb\nCCC\nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\no\roo\nppp\nqqq\nrrr\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n",
-		wantEqual: false,
-		reason:    "use triple-quote syntax",
-	}, {
-		label:     label + "/AvoidTripleQuoteIdenticalWhitespace",
-		x:         "aaa\nbbb\nccc\n ddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nRRR\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n",
-		y:         "aaa\nbbb\nccc \nddd\neee\nfff\nggg\nhhh\niii\njjj\nkkk\nlll\nmmm\nnnn\nooo\nppp\nqqq\nrrr\nsss\nttt\nuuu\nvvv\nwww\nxxx\nyyy\nzzz\n",
-		wantEqual: false,
-		reason:    "avoid triple-quote syntax due to visual equivalence of differences",
-	}, {
-		label:     label + "/LimitMaximumBytesDiffs",
-		x:         []byte("\xcd====\x06\x1f\xc2\xcc\xc2-S=====\x1d\xdfa\xae\x98\x9fH======ǰ\xb7=======\xef====:\\\x94\xe6J\xc7=====\xb4======\n\n\xf7\x94===========\xf2\x9c\xc0f=====4\xf6\xf1\xc3\x17\x82======n\x16`\x91D\xc6\x06=======\x1cE====.===========\xc4\x18=======\x8a\x8d\x0e====\x87\xb1\xa5\x8e\xc3=====z\x0f1\xaeU======G,=======5\xe75\xee\x82\xf4\xce====\x11r===========\xaf]=======z\x05\xb3\x91\x88%\xd2====\n1\x89=====i\xb7\x055\xe6\x81\xd2=============\x883=@̾====\x14\x05\x96%^t\x04=====\xe7Ȉ\x90\x1d============="),
-		y:         []byte("\\====|\x96\xe7SB\xa0\xab=====\xf0\xbd\xa5q\xab\x17;======\xabP\x00=======\xeb====\xa5\x14\xe6O(\xe4=====(======/c@?===========\xd9x\xed\x13=====J\xfc\x918B\x8d======a8A\xebs\x04\xae=======\aC====\x1c===========\x91\"=======uؾ====s\xec\x845\a=====;\xabS9t======\x1f\x1b=======\x80\xab/\xed+:;====\xeaI===========\xabl=======\xb9\xe9\xfdH\x93\x8e\u007f====ח\xe5=====Ig\x88m\xf5\x01V=============\xf7+4\xb0\x92E====\x9fj\xf8&\xd0h\xf9=====\xeeΨ\r\xbf============="),
-		wantEqual: false,
-		reason:    "total bytes difference output is truncated due to excessive number of differences",
-	}, {
-		label:     label + "/LimitMaximumStringDiffs",
-		x:         "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz\nA\nB\nC\nD\nE\nF\nG\nH\nI\nJ\nK\nL\nM\nN\nO\nP\nQ\nR\nS\nT\nU\nV\nW\nX\nY\nZ\n",
-		y:         "aa\nb\ncc\nd\nee\nf\ngg\nh\nii\nj\nkk\nl\nmm\nn\noo\np\nqq\nr\nss\nt\nuu\nv\nww\nx\nyy\nz\nAA\nB\nCC\nD\nEE\nF\nGG\nH\nII\nJ\nKK\nL\nMM\nN\nOO\nP\nQQ\nR\nSS\nT\nUU\nV\nWW\nX\nYY\nZ\n",
-		wantEqual: false,
-		reason:    "total string difference output is truncated due to excessive number of differences",
-	}, {
-		label: label + "/LimitMaximumSliceDiffs",
-		x: func() (out []struct{ S string }) {
-			for _, s := range strings.Split("a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz\nA\nB\nC\nD\nE\nF\nG\nH\nI\nJ\nK\nL\nM\nN\nO\nP\nQ\nR\nS\nT\nU\nV\nW\nX\nY\nZ\n", "\n") {
-				out = append(out, struct{ S string }{s})
-			}
-			return out
-		}(),
-		y: func() (out []struct{ S string }) {
-			for _, s := range strings.Split("aa\nb\ncc\nd\nee\nf\ngg\nh\nii\nj\nkk\nl\nmm\nn\noo\np\nqq\nr\nss\nt\nuu\nv\nww\nx\nyy\nz\nAA\nB\nCC\nD\nEE\nF\nGG\nH\nII\nJ\nKK\nL\nMM\nN\nOO\nP\nQQ\nR\nSS\nT\nUU\nV\nWW\nX\nYY\nZ\n", "\n") {
-				out = append(out, struct{ S string }{s})
-			}
-			return out
-		}(),
-		wantEqual: false,
-		reason:    "total slice difference output is truncated due to excessive number of differences",
-	}, {
-		label: label + "/MultilineString",
+		label: label,
 		x: MyComposite{
 			StringA: strings.TrimPrefix(`
 Package cmp determines equality of values.
@@ -1197,51 +1168,38 @@ fields are not compared by default; they result in panics unless suppressed
 by using an Ignore option (see cmpopts.IgnoreUnexported) or explicitly compared
 using the AllowUnexported option.`, "\n"),
 		},
-		wantEqual: false,
-		reason:    "batched per-line diff desired since string looks like multi-line textual data",
-	}, {
-		label: label + "/Slices",
-		x: MyComposite{
-			BytesA:  []byte{1, 2, 3},
-			BytesB:  []MyByte{4, 5, 6},
-			BytesC:  MyBytes{7, 8, 9},
-			IntsA:   []int8{-1, -2, -3},
-			IntsB:   []MyInt{-4, -5, -6},
-			IntsC:   MyInts{-7, -8, -9},
-			UintsA:  []uint16{1000, 2000, 3000},
-			UintsB:  []MyUint{4000, 5000, 6000},
-			UintsC:  MyUints{7000, 8000, 9000},
-			FloatsA: []float32{1.5, 2.5, 3.5},
-			FloatsB: []MyFloat{4.5, 5.5, 6.5},
-			FloatsC: MyFloats{7.5, 8.5, 9.5},
-		},
-		y:         MyComposite{},
-		wantEqual: false,
-		reason:    "batched diffing for non-nil slices and nil slices",
-	}, {
-		label: label + "/EmptySlices",
-		x: MyComposite{
-			BytesA:  []byte{},
-			BytesB:  []MyByte{},
-			BytesC:  MyBytes{},
-			IntsA:   []int8{},
-			IntsB:   []MyInt{},
-			IntsC:   MyInts{},
-			UintsA:  []uint16{},
-			UintsB:  []MyUint{},
-			UintsC:  MyUints{},
-			FloatsA: []float32{},
-			FloatsB: []MyFloat{},
-			FloatsC: MyFloats{},
-		},
-		y:         MyComposite{},
-		wantEqual: false,
-		reason:    "batched diffing for empty slices and nil slices",
+		wantDiff: `
+  cmp_test.MyComposite{
+  	StringA: strings.Join({
+- 		"Package cmp determines equality of values.",
++ 		"Package cmp determines equality of value.",
+  		"",
+  		"This package is intended to be a more powerful and safer alternative to",
+  		... // 6 identical lines
+  		"For example, an equality function may report floats as equal so long as they",
+  		"are within some tolerance of each other.",
+- 		"",
+- 		"• Types that have an Equal method may use that method to determine equality.",
+- 		"This allows package authors to determine the equality operation for the types",
+- 		"that they define.",
+  		"",
+  		"• If no custom equality functions are used and no Equal method is defined,",
+  		... // 3 identical lines
+  		"by using an Ignore option (see cmpopts.IgnoreUnexported) or explicitly compared",
+  		"using the AllowUnexported option.",
+- 		"",
+  	}, "\n"),
+  	StringB: "",
+  	BytesA:  nil,
+  	... // 11 identical fields
+  }
+`,
+		reason: "batched per-line diff desired since string looks like multi-line textual data",
 	}}
 }
 
 func embeddedTests() []test {
-	const label = "EmbeddedStruct"
+	const label = "EmbeddedStruct/"
 
 	privateStruct := *new(ts.ParentStructA).PrivateStruct()
 
@@ -1333,7 +1291,7 @@ func embeddedTests() []test {
 		return s
 	}
 
-	// TODO(≥go1.10): Workaround for reflect bug (https://golang.org/issue/21122).
+	// TODO(dsnet): Workaround for reflect bug (https://golang.org/issue/21122).
 	wantPanicNotGo110 := func(s string) string {
 		if !flags.AtLeastGo110 {
 			return ""
@@ -1342,504 +1300,562 @@ func embeddedTests() []test {
 	}
 
 	return []test{{
-		label:     label + "/ParentStructA/PanicUnexported1",
+		label:     label + "ParentStructA",
 		x:         ts.ParentStructA{},
 		y:         ts.ParentStructA{},
 		wantPanic: "cannot handle unexported field",
-		reason:    "ParentStructA has an unexported field",
 	}, {
-		label: label + "/ParentStructA/Ignored",
+		label: label + "ParentStructA",
 		x:     ts.ParentStructA{},
 		y:     ts.ParentStructA{},
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructA{}),
 		},
-		wantEqual: true,
-		reason:    "the only field (which is unexported) of ParentStructA is ignored",
 	}, {
-		label: label + "/ParentStructA/PanicUnexported2",
+		label: label + "ParentStructA",
 		x:     createStructA(0),
 		y:     createStructA(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructA{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "privateStruct also has unexported fields",
 	}, {
-		label: label + "/ParentStructA/Equal",
+		label: label + "ParentStructA",
 		x:     createStructA(0),
 		y:     createStructA(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructA{}, privateStruct),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of both ParentStructA and privateStruct are allowed",
 	}, {
-		label: label + "/ParentStructA/Inequal",
+		label: label + "ParentStructA",
 		x:     createStructA(0),
 		y:     createStructA(1),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructA{}, privateStruct),
 		},
-		wantEqual: false,
-		reason:    "the two values differ on some fields",
+		wantDiff: `
+  teststructs.ParentStructA{
+  	privateStruct: teststructs.privateStruct{
+- 		Public:  1,
++ 		Public:  2,
+- 		private: 2,
++ 		private: 3,
+  	},
+  }
+`,
 	}, {
-		label: label + "/ParentStructB/PanicUnexported1",
+		label: label + "ParentStructB",
 		x:     ts.ParentStructB{},
 		y:     ts.ParentStructB{},
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructB{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "PublicStruct has an unexported field",
 	}, {
-		label: label + "/ParentStructB/Ignored",
+		label: label + "ParentStructB",
 		x:     ts.ParentStructB{},
 		y:     ts.ParentStructB{},
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructB{}),
 			cmpopts.IgnoreUnexported(ts.PublicStruct{}),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of both ParentStructB and PublicStruct are ignored",
 	}, {
-		label: label + "/ParentStructB/PanicUnexported2",
+		label: label + "ParentStructB",
 		x:     createStructB(0),
 		y:     createStructB(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructB{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "PublicStruct also has unexported fields",
 	}, {
-		label: label + "/ParentStructB/Equal",
+		label: label + "ParentStructB",
 		x:     createStructB(0),
 		y:     createStructB(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructB{}, ts.PublicStruct{}),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of both ParentStructB and PublicStruct are allowed",
 	}, {
-		label: label + "/ParentStructB/Inequal",
+		label: label + "ParentStructB",
 		x:     createStructB(0),
 		y:     createStructB(1),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructB{}, ts.PublicStruct{}),
 		},
-		wantEqual: false,
-		reason:    "the two values differ on some fields",
+		wantDiff: `
+  teststructs.ParentStructB{
+  	PublicStruct: teststructs.PublicStruct{
+- 		Public:  1,
++ 		Public:  2,
+- 		private: 2,
++ 		private: 3,
+  	},
+  }
+`,
 	}, {
-		label:     label + "/ParentStructC/PanicUnexported1",
+		label:     label + "ParentStructC",
 		x:         ts.ParentStructC{},
 		y:         ts.ParentStructC{},
 		wantPanic: "cannot handle unexported field",
-		reason:    "ParentStructC has unexported fields",
 	}, {
-		label: label + "/ParentStructC/Ignored",
+		label: label + "ParentStructC",
 		x:     ts.ParentStructC{},
 		y:     ts.ParentStructC{},
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructC{}),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of ParentStructC are ignored",
 	}, {
-		label: label + "/ParentStructC/PanicUnexported2",
+		label: label + "ParentStructC",
 		x:     createStructC(0),
 		y:     createStructC(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructC{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "privateStruct also has unexported fields",
 	}, {
-		label: label + "/ParentStructC/Equal",
+		label: label + "ParentStructC",
 		x:     createStructC(0),
 		y:     createStructC(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructC{}, privateStruct),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of both ParentStructC and privateStruct are allowed",
 	}, {
-		label: label + "/ParentStructC/Inequal",
+		label: label + "ParentStructC",
 		x:     createStructC(0),
 		y:     createStructC(1),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructC{}, privateStruct),
 		},
-		wantEqual: false,
-		reason:    "the two values differ on some fields",
+		wantDiff: `
+  teststructs.ParentStructC{
+  	privateStruct: teststructs.privateStruct{
+- 		Public:  1,
++ 		Public:  2,
+- 		private: 2,
++ 		private: 3,
+  	},
+- 	Public:  3,
++ 	Public:  4,
+- 	private: 4,
++ 	private: 5,
+  }
+`,
 	}, {
-		label: label + "/ParentStructD/PanicUnexported1",
+		label: label + "ParentStructD",
 		x:     ts.ParentStructD{},
 		y:     ts.ParentStructD{},
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructD{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "ParentStructD has unexported fields",
 	}, {
-		label: label + "/ParentStructD/Ignored",
+		label: label + "ParentStructD",
 		x:     ts.ParentStructD{},
 		y:     ts.ParentStructD{},
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructD{}),
 			cmpopts.IgnoreUnexported(ts.PublicStruct{}),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of ParentStructD and PublicStruct are ignored",
 	}, {
-		label: label + "/ParentStructD/PanicUnexported2",
+		label: label + "ParentStructD",
 		x:     createStructD(0),
 		y:     createStructD(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructD{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "PublicStruct also has unexported fields",
 	}, {
-		label: label + "/ParentStructD/Equal",
+		label: label + "ParentStructD",
 		x:     createStructD(0),
 		y:     createStructD(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructD{}, ts.PublicStruct{}),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of both ParentStructD and PublicStruct are allowed",
 	}, {
-		label: label + "/ParentStructD/Inequal",
+		label: label + "ParentStructD",
 		x:     createStructD(0),
 		y:     createStructD(1),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructD{}, ts.PublicStruct{}),
 		},
-		wantEqual: false,
-		reason:    "the two values differ on some fields",
+		wantDiff: `
+  teststructs.ParentStructD{
+  	PublicStruct: teststructs.PublicStruct{
+- 		Public:  1,
++ 		Public:  2,
+- 		private: 2,
++ 		private: 3,
+  	},
+- 	Public:  3,
++ 	Public:  4,
+- 	private: 4,
++ 	private: 5,
+  }
+`,
 	}, {
-		label: label + "/ParentStructE/PanicUnexported1",
+		label: label + "ParentStructE",
 		x:     ts.ParentStructE{},
 		y:     ts.ParentStructE{},
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructE{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "ParentStructE has unexported fields",
 	}, {
-		label: label + "/ParentStructE/Ignored",
+		label: label + "ParentStructE",
 		x:     ts.ParentStructE{},
 		y:     ts.ParentStructE{},
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructE{}),
 			cmpopts.IgnoreUnexported(ts.PublicStruct{}),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of ParentStructE and PublicStruct are ignored",
 	}, {
-		label: label + "/ParentStructE/PanicUnexported2",
+		label: label + "ParentStructE",
 		x:     createStructE(0),
 		y:     createStructE(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructE{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "PublicStruct and privateStruct also has unexported fields",
 	}, {
-		label: label + "/ParentStructE/PanicUnexported3",
+		label: label + "ParentStructE",
 		x:     createStructE(0),
 		y:     createStructE(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructE{}, ts.PublicStruct{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "privateStruct also has unexported fields",
 	}, {
-		label: label + "/ParentStructE/Equal",
+		label: label + "ParentStructE",
 		x:     createStructE(0),
 		y:     createStructE(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructE{}, ts.PublicStruct{}, privateStruct),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of both ParentStructE, PublicStruct, and privateStruct are allowed",
 	}, {
-		label: label + "/ParentStructE/Inequal",
+		label: label + "ParentStructE",
 		x:     createStructE(0),
 		y:     createStructE(1),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructE{}, ts.PublicStruct{}, privateStruct),
 		},
-		wantEqual: false,
-		reason:    "the two values differ on some fields",
+		wantDiff: `
+  teststructs.ParentStructE{
+  	privateStruct: teststructs.privateStruct{
+- 		Public:  1,
++ 		Public:  2,
+- 		private: 2,
++ 		private: 3,
+  	},
+  	PublicStruct: teststructs.PublicStruct{
+- 		Public:  3,
++ 		Public:  4,
+- 		private: 4,
++ 		private: 5,
+  	},
+  }
+`,
 	}, {
-		label: label + "/ParentStructF/PanicUnexported1",
+		label: label + "ParentStructF",
 		x:     ts.ParentStructF{},
 		y:     ts.ParentStructF{},
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructF{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "ParentStructF has unexported fields",
 	}, {
-		label: label + "/ParentStructF/Ignored",
+		label: label + "ParentStructF",
 		x:     ts.ParentStructF{},
 		y:     ts.ParentStructF{},
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructF{}),
 			cmpopts.IgnoreUnexported(ts.PublicStruct{}),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of ParentStructF and PublicStruct are ignored",
 	}, {
-		label: label + "/ParentStructF/PanicUnexported2",
+		label: label + "ParentStructF",
 		x:     createStructF(0),
 		y:     createStructF(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructF{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "PublicStruct and privateStruct also has unexported fields",
 	}, {
-		label: label + "/ParentStructF/PanicUnexported3",
+		label: label + "ParentStructF",
 		x:     createStructF(0),
 		y:     createStructF(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructF{}, ts.PublicStruct{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "privateStruct also has unexported fields",
 	}, {
-		label: label + "/ParentStructF/Equal",
+		label: label + "ParentStructF",
 		x:     createStructF(0),
 		y:     createStructF(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructF{}, ts.PublicStruct{}, privateStruct),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of both ParentStructF, PublicStruct, and privateStruct are allowed",
 	}, {
-		label: label + "/ParentStructF/Inequal",
+		label: label + "ParentStructF",
 		x:     createStructF(0),
 		y:     createStructF(1),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructF{}, ts.PublicStruct{}, privateStruct),
 		},
-		wantEqual: false,
-		reason:    "the two values differ on some fields",
+		wantDiff: `
+  teststructs.ParentStructF{
+  	privateStruct: teststructs.privateStruct{
+- 		Public:  1,
++ 		Public:  2,
+- 		private: 2,
++ 		private: 3,
+  	},
+  	PublicStruct: teststructs.PublicStruct{
+- 		Public:  3,
++ 		Public:  4,
+- 		private: 4,
++ 		private: 5,
+  	},
+- 	Public:  5,
++ 	Public:  6,
+- 	private: 6,
++ 	private: 7,
+  }
+`,
 	}, {
-		label:     label + "/ParentStructG/PanicUnexported1",
+		label:     label + "ParentStructG",
 		x:         ts.ParentStructG{},
 		y:         ts.ParentStructG{},
 		wantPanic: wantPanicNotGo110("cannot handle unexported field"),
-		wantEqual: !flags.AtLeastGo110,
-		reason:    "ParentStructG has unexported fields",
 	}, {
-		label: label + "/ParentStructG/Ignored",
+		label: label + "ParentStructG",
 		x:     ts.ParentStructG{},
 		y:     ts.ParentStructG{},
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructG{}),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of ParentStructG are ignored",
 	}, {
-		label: label + "/ParentStructG/PanicUnexported2",
+		label: label + "ParentStructG",
 		x:     createStructG(0),
 		y:     createStructG(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructG{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "privateStruct also has unexported fields",
 	}, {
-		label: label + "/ParentStructG/Equal",
+		label: label + "ParentStructG",
 		x:     createStructG(0),
 		y:     createStructG(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructG{}, privateStruct),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of both ParentStructG and privateStruct are allowed",
 	}, {
-		label: label + "/ParentStructG/Inequal",
+		label: label + "ParentStructG",
 		x:     createStructG(0),
 		y:     createStructG(1),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructG{}, privateStruct),
 		},
-		wantEqual: false,
-		reason:    "the two values differ on some fields",
+		wantDiff: `
+  &teststructs.ParentStructG{
+  	privateStruct: &teststructs.privateStruct{
+- 		Public:  1,
++ 		Public:  2,
+- 		private: 2,
++ 		private: 3,
+  	},
+  }
+`,
 	}, {
-		label:     label + "/ParentStructH/EqualNil",
-		x:         ts.ParentStructH{},
-		y:         ts.ParentStructH{},
-		wantEqual: true,
-		reason:    "PublicStruct is not compared because the pointer is nil",
+		label: label + "ParentStructH",
+		x:     ts.ParentStructH{},
+		y:     ts.ParentStructH{},
 	}, {
-		label:     label + "/ParentStructH/PanicUnexported1",
+		label:     label + "ParentStructH",
 		x:         createStructH(0),
 		y:         createStructH(0),
 		wantPanic: "cannot handle unexported field",
-		reason:    "PublicStruct has unexported fields",
 	}, {
-		label: label + "/ParentStructH/Ignored",
+		label: label + "ParentStructH",
 		x:     ts.ParentStructH{},
 		y:     ts.ParentStructH{},
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructH{}),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of ParentStructH are ignored (it has none)",
 	}, {
-		label: label + "/ParentStructH/PanicUnexported2",
+		label: label + "ParentStructH",
 		x:     createStructH(0),
 		y:     createStructH(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructH{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "PublicStruct also has unexported fields",
 	}, {
-		label: label + "/ParentStructH/Equal",
+		label: label + "ParentStructH",
 		x:     createStructH(0),
 		y:     createStructH(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructH{}, ts.PublicStruct{}),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of both ParentStructH and PublicStruct are allowed",
 	}, {
-		label: label + "/ParentStructH/Inequal",
+		label: label + "ParentStructH",
 		x:     createStructH(0),
 		y:     createStructH(1),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructH{}, ts.PublicStruct{}),
 		},
-		wantEqual: false,
-		reason:    "the two values differ on some fields",
+		wantDiff: `
+  &teststructs.ParentStructH{
+  	PublicStruct: &teststructs.PublicStruct{
+- 		Public:  1,
++ 		Public:  2,
+- 		private: 2,
++ 		private: 3,
+  	},
+  }
+`,
 	}, {
-		label:     label + "/ParentStructI/PanicUnexported1",
+		label:     label + "ParentStructI",
 		x:         ts.ParentStructI{},
 		y:         ts.ParentStructI{},
 		wantPanic: wantPanicNotGo110("cannot handle unexported field"),
-		wantEqual: !flags.AtLeastGo110,
-		reason:    "ParentStructI has unexported fields",
 	}, {
-		label: label + "/ParentStructI/Ignored1",
+		label: label + "ParentStructI",
 		x:     ts.ParentStructI{},
 		y:     ts.ParentStructI{},
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructI{}),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of ParentStructI are ignored",
 	}, {
-		label: label + "/ParentStructI/PanicUnexported2",
+		label: label + "ParentStructI",
 		x:     createStructI(0),
 		y:     createStructI(0),
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructI{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "PublicStruct and privateStruct also has unexported fields",
 	}, {
-		label: label + "/ParentStructI/Ignored2",
+		label: label + "ParentStructI",
 		x:     createStructI(0),
 		y:     createStructI(0),
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructI{}, ts.PublicStruct{}),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of ParentStructI and PublicStruct are ignored",
 	}, {
-		label: label + "/ParentStructI/PanicUnexported3",
+		label: label + "ParentStructI",
 		x:     createStructI(0),
 		y:     createStructI(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructI{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "PublicStruct and privateStruct also has unexported fields",
 	}, {
-		label: label + "/ParentStructI/Equal",
+		label: label + "ParentStructI",
 		x:     createStructI(0),
 		y:     createStructI(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructI{}, ts.PublicStruct{}, privateStruct),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of both ParentStructI, PublicStruct, and privateStruct are allowed",
 	}, {
-		label: label + "/ParentStructI/Inequal",
+		label: label + "ParentStructI",
 		x:     createStructI(0),
 		y:     createStructI(1),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructI{}, ts.PublicStruct{}, privateStruct),
 		},
-		wantEqual: false,
-		reason:    "the two values differ on some fields",
+		wantDiff: `
+  &teststructs.ParentStructI{
+  	privateStruct: &teststructs.privateStruct{
+- 		Public:  1,
++ 		Public:  2,
+- 		private: 2,
++ 		private: 3,
+  	},
+  	PublicStruct: &teststructs.PublicStruct{
+- 		Public:  3,
++ 		Public:  4,
+- 		private: 4,
++ 		private: 5,
+  	},
+  }
+`,
 	}, {
-		label:     label + "/ParentStructJ/PanicUnexported1",
+		label:     label + "ParentStructJ",
 		x:         ts.ParentStructJ{},
 		y:         ts.ParentStructJ{},
 		wantPanic: "cannot handle unexported field",
-		reason:    "ParentStructJ has unexported fields",
 	}, {
-		label: label + "/ParentStructJ/PanicUnexported2",
+		label: label + "ParentStructJ",
 		x:     ts.ParentStructJ{},
 		y:     ts.ParentStructJ{},
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructJ{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "PublicStruct and privateStruct also has unexported fields",
 	}, {
-		label: label + "/ParentStructJ/Ignored",
+		label: label + "ParentStructJ",
 		x:     ts.ParentStructJ{},
 		y:     ts.ParentStructJ{},
 		opts: []cmp.Option{
 			cmpopts.IgnoreUnexported(ts.ParentStructJ{}, ts.PublicStruct{}),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of ParentStructJ and PublicStruct are ignored",
 	}, {
-		label: label + "/ParentStructJ/PanicUnexported3",
+		label: label + "ParentStructJ",
 		x:     createStructJ(0),
 		y:     createStructJ(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructJ{}, ts.PublicStruct{}),
 		},
 		wantPanic: "cannot handle unexported field",
-		reason:    "privateStruct also has unexported fields",
 	}, {
-		label: label + "/ParentStructJ/Equal",
+		label: label + "ParentStructJ",
 		x:     createStructJ(0),
 		y:     createStructJ(0),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructJ{}, ts.PublicStruct{}, privateStruct),
 		},
-		wantEqual: true,
-		reason:    "unexported fields of both ParentStructJ, PublicStruct, and privateStruct are allowed",
 	}, {
-		label: label + "/ParentStructJ/Inequal",
+		label: label + "ParentStructJ",
 		x:     createStructJ(0),
 		y:     createStructJ(1),
 		opts: []cmp.Option{
 			cmp.AllowUnexported(ts.ParentStructJ{}, ts.PublicStruct{}, privateStruct),
 		},
-		wantEqual: false,
-		reason:    "the two values differ on some fields",
+		wantDiff: `
+  &teststructs.ParentStructJ{
+  	privateStruct: &teststructs.privateStruct{
+- 		Public:  1,
++ 		Public:  2,
+- 		private: 2,
++ 		private: 3,
+  	},
+  	PublicStruct: &teststructs.PublicStruct{
+- 		Public:  3,
++ 		Public:  4,
+- 		private: 4,
++ 		private: 5,
+  	},
+  	Public: teststructs.PublicStruct{
+- 		Public:  7,
++ 		Public:  8,
+- 		private: 8,
++ 		private: 9,
+  	},
+  	private: teststructs.privateStruct{
+- 		Public:  5,
++ 		Public:  6,
+- 		private: 6,
++ 		private: 7,
+  	},
+  }
+`,
 	}}
 }
 
 func methodTests() []test {
-	const label = "EqualMethod"
+	const label = "EqualMethod/"
 
 	// A common mistake that the Equal method is on a pointer receiver,
 	// but only a non-pointer value is present in the struct.
 	// A transform can be used to forcibly reference the value.
-	addrTransform := cmp.FilterPath(func(p cmp.Path) bool {
+	derefTransform := cmp.FilterPath(func(p cmp.Path) bool {
 		if len(p) == 0 {
 			return false
 		}
@@ -1853,7 +1869,7 @@ func methodTests() []test {
 				tf.In(0).AssignableTo(tf.In(1)) && tf.Out(0) == reflect.TypeOf(true)
 		}
 		return false
-	}, cmp.Transformer("Addr", func(x interface{}) interface{} {
+	}, cmp.Transformer("Ref", func(x interface{}) interface{} {
 		v := reflect.ValueOf(x)
 		vp := reflect.New(v.Type())
 		vp.Elem().Set(v)
@@ -1864,535 +1880,341 @@ func methodTests() []test {
 	// returns true, while the underlying data are fundamentally different.
 	// Since the method should be called, these are expected to be equal.
 	return []test{{
-		label:     label + "/StructA/ValueEqual",
-		x:         ts.StructA{X: "NotEqual"},
-		y:         ts.StructA{X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructA value called",
+		label: label + "StructA",
+		x:     ts.StructA{X: "NotEqual"},
+		y:     ts.StructA{X: "not_equal"},
 	}, {
-		label:     label + "/StructA/PointerEqual",
-		x:         &ts.StructA{X: "NotEqual"},
-		y:         &ts.StructA{X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructA pointer called",
+		label: label + "StructA",
+		x:     &ts.StructA{X: "NotEqual"},
+		y:     &ts.StructA{X: "not_equal"},
 	}, {
-		label:     label + "/StructB/ValueInequal",
-		x:         ts.StructB{X: "NotEqual"},
-		y:         ts.StructB{X: "not_equal"},
-		wantEqual: false,
-		reason:    "Equal method on StructB value not called",
+		label: label + "StructB",
+		x:     ts.StructB{X: "NotEqual"},
+		y:     ts.StructB{X: "not_equal"},
+		wantDiff: `
+  teststructs.StructB{
+- 	X: "NotEqual",
++ 	X: "not_equal",
+  }
+`,
 	}, {
-		label:     label + "/StructB/ValueAddrEqual",
-		x:         ts.StructB{X: "NotEqual"},
-		y:         ts.StructB{X: "not_equal"},
-		opts:      []cmp.Option{addrTransform},
-		wantEqual: true,
-		reason:    "Equal method on StructB pointer called due to shallow copy transform",
+		label: label + "StructB",
+		x:     ts.StructB{X: "NotEqual"},
+		y:     ts.StructB{X: "not_equal"},
+		opts:  []cmp.Option{derefTransform},
 	}, {
-		label:     label + "/StructB/PointerEqual",
-		x:         &ts.StructB{X: "NotEqual"},
-		y:         &ts.StructB{X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructB pointer called",
+		label: label + "StructB",
+		x:     &ts.StructB{X: "NotEqual"},
+		y:     &ts.StructB{X: "not_equal"},
 	}, {
-		label:     label + "/StructC/ValueEqual",
-		x:         ts.StructC{X: "NotEqual"},
-		y:         ts.StructC{X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructC value called",
+		label: label + "StructC",
+		x:     ts.StructC{X: "NotEqual"},
+		y:     ts.StructC{X: "not_equal"},
 	}, {
-		label:     label + "/StructC/PointerEqual",
-		x:         &ts.StructC{X: "NotEqual"},
-		y:         &ts.StructC{X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructC pointer called",
+		label: label + "StructC",
+		x:     &ts.StructC{X: "NotEqual"},
+		y:     &ts.StructC{X: "not_equal"},
 	}, {
-		label:     label + "/StructD/ValueInequal",
-		x:         ts.StructD{X: "NotEqual"},
-		y:         ts.StructD{X: "not_equal"},
-		wantEqual: false,
-		reason:    "Equal method on StructD value not called",
+		label: label + "StructD",
+		x:     ts.StructD{X: "NotEqual"},
+		y:     ts.StructD{X: "not_equal"},
+		wantDiff: `
+  teststructs.StructD{
+- 	X: "NotEqual",
++ 	X: "not_equal",
+  }
+`,
 	}, {
-		label:     label + "/StructD/ValueAddrEqual",
-		x:         ts.StructD{X: "NotEqual"},
-		y:         ts.StructD{X: "not_equal"},
-		opts:      []cmp.Option{addrTransform},
-		wantEqual: true,
-		reason:    "Equal method on StructD pointer called due to shallow copy transform",
+		label: label + "StructD",
+		x:     ts.StructD{X: "NotEqual"},
+		y:     ts.StructD{X: "not_equal"},
+		opts:  []cmp.Option{derefTransform},
 	}, {
-		label:     label + "/StructD/PointerEqual",
-		x:         &ts.StructD{X: "NotEqual"},
-		y:         &ts.StructD{X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructD pointer called",
+		label: label + "StructD",
+		x:     &ts.StructD{X: "NotEqual"},
+		y:     &ts.StructD{X: "not_equal"},
 	}, {
-		label:     label + "/StructE/ValueInequal",
-		x:         ts.StructE{X: "NotEqual"},
-		y:         ts.StructE{X: "not_equal"},
-		wantEqual: false,
-		reason:    "Equal method on StructE value not called",
+		label: label + "StructE",
+		x:     ts.StructE{X: "NotEqual"},
+		y:     ts.StructE{X: "not_equal"},
+		wantDiff: `
+  teststructs.StructE{
+- 	X: "NotEqual",
++ 	X: "not_equal",
+  }
+`,
 	}, {
-		label:     label + "/StructE/ValueAddrEqual",
-		x:         ts.StructE{X: "NotEqual"},
-		y:         ts.StructE{X: "not_equal"},
-		opts:      []cmp.Option{addrTransform},
-		wantEqual: true,
-		reason:    "Equal method on StructE pointer called due to shallow copy transform",
+		label: label + "StructE",
+		x:     ts.StructE{X: "NotEqual"},
+		y:     ts.StructE{X: "not_equal"},
+		opts:  []cmp.Option{derefTransform},
 	}, {
-		label:     label + "/StructE/PointerEqual",
-		x:         &ts.StructE{X: "NotEqual"},
-		y:         &ts.StructE{X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructE pointer called",
+		label: label + "StructE",
+		x:     &ts.StructE{X: "NotEqual"},
+		y:     &ts.StructE{X: "not_equal"},
 	}, {
-		label:     label + "/StructF/ValueInequal",
-		x:         ts.StructF{X: "NotEqual"},
-		y:         ts.StructF{X: "not_equal"},
-		wantEqual: false,
-		reason:    "Equal method on StructF value not called",
+		label: label + "StructF",
+		x:     ts.StructF{X: "NotEqual"},
+		y:     ts.StructF{X: "not_equal"},
+		wantDiff: `
+  teststructs.StructF{
+- 	X: "NotEqual",
++ 	X: "not_equal",
+  }
+`,
 	}, {
-		label:     label + "/StructF/PointerEqual",
-		x:         &ts.StructF{X: "NotEqual"},
-		y:         &ts.StructF{X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructF pointer called",
+		label: label + "StructF",
+		x:     &ts.StructF{X: "NotEqual"},
+		y:     &ts.StructF{X: "not_equal"},
 	}, {
-		label:     label + "/StructA1/ValueEqual",
-		x:         ts.StructA1{StructA: ts.StructA{X: "NotEqual"}, X: "equal"},
-		y:         ts.StructA1{StructA: ts.StructA{X: "not_equal"}, X: "equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructA value called with equal X field",
+		label: label + "StructA1",
+		x:     ts.StructA1{StructA: ts.StructA{X: "NotEqual"}, X: "equal"},
+		y:     ts.StructA1{StructA: ts.StructA{X: "not_equal"}, X: "equal"},
 	}, {
-		label:     label + "/StructA1/ValueInequal",
-		x:         ts.StructA1{StructA: ts.StructA{X: "NotEqual"}, X: "NotEqual"},
-		y:         ts.StructA1{StructA: ts.StructA{X: "not_equal"}, X: "not_equal"},
-		wantEqual: false,
-		reason:    "Equal method on StructA value called, but inequal X field",
+		label: label + "StructA1",
+		x:     ts.StructA1{StructA: ts.StructA{X: "NotEqual"}, X: "NotEqual"},
+		y:     ts.StructA1{StructA: ts.StructA{X: "not_equal"}, X: "not_equal"},
+		wantDiff: `
+  teststructs.StructA1{
+  	StructA: teststructs.StructA{X: "NotEqual"},
+- 	X:       "NotEqual",
++ 	X:       "not_equal",
+  }
+`,
 	}, {
-		label:     label + "/StructA1/PointerEqual",
-		x:         &ts.StructA1{StructA: ts.StructA{X: "NotEqual"}, X: "equal"},
-		y:         &ts.StructA1{StructA: ts.StructA{X: "not_equal"}, X: "equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructA value called with equal X field",
+		label: label + "StructA1",
+		x:     &ts.StructA1{StructA: ts.StructA{X: "NotEqual"}, X: "equal"},
+		y:     &ts.StructA1{StructA: ts.StructA{X: "not_equal"}, X: "equal"},
 	}, {
-		label:     label + "/StructA1/PointerInequal",
-		x:         &ts.StructA1{StructA: ts.StructA{X: "NotEqual"}, X: "NotEqual"},
-		y:         &ts.StructA1{StructA: ts.StructA{X: "not_equal"}, X: "not_equal"},
-		wantEqual: false,
-		reason:    "Equal method on StructA value called, but inequal X field",
+		label: label + "StructA1",
+		x:     &ts.StructA1{StructA: ts.StructA{X: "NotEqual"}, X: "NotEqual"},
+		y:     &ts.StructA1{StructA: ts.StructA{X: "not_equal"}, X: "not_equal"},
+		wantDiff: `
+  &teststructs.StructA1{
+  	StructA: teststructs.StructA{X: "NotEqual"},
+- 	X:       "NotEqual",
++ 	X:       "not_equal",
+  }
+`,
 	}, {
-		label:     label + "/StructB1/ValueEqual",
-		x:         ts.StructB1{StructB: ts.StructB{X: "NotEqual"}, X: "equal"},
-		y:         ts.StructB1{StructB: ts.StructB{X: "not_equal"}, X: "equal"},
-		opts:      []cmp.Option{addrTransform},
-		wantEqual: true,
-		reason:    "Equal method on StructB pointer called due to shallow copy transform with equal X field",
+		label: label + "StructB1",
+		x:     ts.StructB1{StructB: ts.StructB{X: "NotEqual"}, X: "equal"},
+		y:     ts.StructB1{StructB: ts.StructB{X: "not_equal"}, X: "equal"},
+		opts:  []cmp.Option{derefTransform},
 	}, {
-		label:     label + "/StructB1/ValueInequal",
-		x:         ts.StructB1{StructB: ts.StructB{X: "NotEqual"}, X: "NotEqual"},
-		y:         ts.StructB1{StructB: ts.StructB{X: "not_equal"}, X: "not_equal"},
-		opts:      []cmp.Option{addrTransform},
-		wantEqual: false,
-		reason:    "Equal method on StructB pointer called due to shallow copy transform, but inequal X field",
+		label: label + "StructB1",
+		x:     ts.StructB1{StructB: ts.StructB{X: "NotEqual"}, X: "NotEqual"},
+		y:     ts.StructB1{StructB: ts.StructB{X: "not_equal"}, X: "not_equal"},
+		opts:  []cmp.Option{derefTransform},
+		wantDiff: `
+  teststructs.StructB1{
+  	StructB: teststructs.StructB(Inverse(Ref, &teststructs.StructB{X: "NotEqual"})),
+- 	X:       "NotEqual",
++ 	X:       "not_equal",
+  }
+`,
 	}, {
-		label:     label + "/StructB1/PointerEqual",
-		x:         &ts.StructB1{StructB: ts.StructB{X: "NotEqual"}, X: "equal"},
-		y:         &ts.StructB1{StructB: ts.StructB{X: "not_equal"}, X: "equal"},
-		opts:      []cmp.Option{addrTransform},
-		wantEqual: true,
-		reason:    "Equal method on StructB pointer called due to shallow copy transform with equal X field",
+		label: label + "StructB1",
+		x:     &ts.StructB1{StructB: ts.StructB{X: "NotEqual"}, X: "equal"},
+		y:     &ts.StructB1{StructB: ts.StructB{X: "not_equal"}, X: "equal"},
+		opts:  []cmp.Option{derefTransform},
 	}, {
-		label:     label + "/StructB1/PointerInequal",
-		x:         &ts.StructB1{StructB: ts.StructB{X: "NotEqual"}, X: "NotEqual"},
-		y:         &ts.StructB1{StructB: ts.StructB{X: "not_equal"}, X: "not_equal"},
-		opts:      []cmp.Option{addrTransform},
-		wantEqual: false,
-		reason:    "Equal method on StructB pointer called due to shallow copy transform, but inequal X field",
+		label: label + "StructB1",
+		x:     &ts.StructB1{StructB: ts.StructB{X: "NotEqual"}, X: "NotEqual"},
+		y:     &ts.StructB1{StructB: ts.StructB{X: "not_equal"}, X: "not_equal"},
+		opts:  []cmp.Option{derefTransform},
+		wantDiff: `
+  &teststructs.StructB1{
+  	StructB: teststructs.StructB(Inverse(Ref, &teststructs.StructB{X: "NotEqual"})),
+- 	X:       "NotEqual",
++ 	X:       "not_equal",
+  }
+`,
 	}, {
-		label:     label + "/StructC1/ValueEqual",
-		x:         ts.StructC1{StructC: ts.StructC{X: "NotEqual"}, X: "NotEqual"},
-		y:         ts.StructC1{StructC: ts.StructC{X: "not_equal"}, X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructC1 value called",
+		label: label + "StructC1",
+		x:     ts.StructC1{StructC: ts.StructC{X: "NotEqual"}, X: "NotEqual"},
+		y:     ts.StructC1{StructC: ts.StructC{X: "not_equal"}, X: "not_equal"},
 	}, {
-		label:     label + "/StructC1/PointerEqual",
-		x:         &ts.StructC1{StructC: ts.StructC{X: "NotEqual"}, X: "NotEqual"},
-		y:         &ts.StructC1{StructC: ts.StructC{X: "not_equal"}, X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructC1 pointer called",
+		label: label + "StructC1",
+		x:     &ts.StructC1{StructC: ts.StructC{X: "NotEqual"}, X: "NotEqual"},
+		y:     &ts.StructC1{StructC: ts.StructC{X: "not_equal"}, X: "not_equal"},
 	}, {
-		label:     label + "/StructD1/ValueInequal",
-		x:         ts.StructD1{StructD: ts.StructD{X: "NotEqual"}, X: "NotEqual"},
-		y:         ts.StructD1{StructD: ts.StructD{X: "not_equal"}, X: "not_equal"},
-		wantEqual: false,
-		reason:    "Equal method on StructD1 value not called",
+		label: label + "StructD1",
+		x:     ts.StructD1{StructD: ts.StructD{X: "NotEqual"}, X: "NotEqual"},
+		y:     ts.StructD1{StructD: ts.StructD{X: "not_equal"}, X: "not_equal"},
+		wantDiff: `
+  teststructs.StructD1{
+- 	StructD: teststructs.StructD{X: "NotEqual"},
++ 	StructD: teststructs.StructD{X: "not_equal"},
+- 	X:       "NotEqual",
++ 	X:       "not_equal",
+  }
+`,
 	}, {
-		label:     label + "/StructD1/PointerAddrEqual",
-		x:         ts.StructD1{StructD: ts.StructD{X: "NotEqual"}, X: "NotEqual"},
-		y:         ts.StructD1{StructD: ts.StructD{X: "not_equal"}, X: "not_equal"},
-		opts:      []cmp.Option{addrTransform},
-		wantEqual: true,
-		reason:    "Equal method on StructD1 pointer called due to shallow copy transform",
+		label: label + "StructD1",
+		x:     ts.StructD1{StructD: ts.StructD{X: "NotEqual"}, X: "NotEqual"},
+		y:     ts.StructD1{StructD: ts.StructD{X: "not_equal"}, X: "not_equal"},
+		opts:  []cmp.Option{derefTransform},
 	}, {
-		label:     label + "/StructD1/PointerEqual",
-		x:         &ts.StructD1{StructD: ts.StructD{X: "NotEqual"}, X: "NotEqual"},
-		y:         &ts.StructD1{StructD: ts.StructD{X: "not_equal"}, X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructD1 pointer called",
+		label: label + "StructD1",
+		x:     &ts.StructD1{StructD: ts.StructD{X: "NotEqual"}, X: "NotEqual"},
+		y:     &ts.StructD1{StructD: ts.StructD{X: "not_equal"}, X: "not_equal"},
 	}, {
-		label:     label + "/StructE1/ValueInequal",
-		x:         ts.StructE1{StructE: ts.StructE{X: "NotEqual"}, X: "NotEqual"},
-		y:         ts.StructE1{StructE: ts.StructE{X: "not_equal"}, X: "not_equal"},
-		wantEqual: false,
-		reason:    "Equal method on StructE1 value not called",
+		label: label + "StructE1",
+		x:     ts.StructE1{StructE: ts.StructE{X: "NotEqual"}, X: "NotEqual"},
+		y:     ts.StructE1{StructE: ts.StructE{X: "not_equal"}, X: "not_equal"},
+		wantDiff: `
+  teststructs.StructE1{
+- 	StructE: teststructs.StructE{X: "NotEqual"},
++ 	StructE: teststructs.StructE{X: "not_equal"},
+- 	X:       "NotEqual",
++ 	X:       "not_equal",
+  }
+`,
 	}, {
-		label:     label + "/StructE1/ValueAddrEqual",
-		x:         ts.StructE1{StructE: ts.StructE{X: "NotEqual"}, X: "NotEqual"},
-		y:         ts.StructE1{StructE: ts.StructE{X: "not_equal"}, X: "not_equal"},
-		opts:      []cmp.Option{addrTransform},
-		wantEqual: true,
-		reason:    "Equal method on StructE1 pointer called due to shallow copy transform",
+		label: label + "StructE1",
+		x:     ts.StructE1{StructE: ts.StructE{X: "NotEqual"}, X: "NotEqual"},
+		y:     ts.StructE1{StructE: ts.StructE{X: "not_equal"}, X: "not_equal"},
+		opts:  []cmp.Option{derefTransform},
 	}, {
-		label:     label + "/StructE1/PointerEqual",
-		x:         &ts.StructE1{StructE: ts.StructE{X: "NotEqual"}, X: "NotEqual"},
-		y:         &ts.StructE1{StructE: ts.StructE{X: "not_equal"}, X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructE1 pointer called",
+		label: label + "StructE1",
+		x:     &ts.StructE1{StructE: ts.StructE{X: "NotEqual"}, X: "NotEqual"},
+		y:     &ts.StructE1{StructE: ts.StructE{X: "not_equal"}, X: "not_equal"},
 	}, {
-		label:     label + "/StructF1/ValueInequal",
-		x:         ts.StructF1{StructF: ts.StructF{X: "NotEqual"}, X: "NotEqual"},
-		y:         ts.StructF1{StructF: ts.StructF{X: "not_equal"}, X: "not_equal"},
-		wantEqual: false,
-		reason:    "Equal method on StructF1 value not called",
+		label: label + "StructF1",
+		x:     ts.StructF1{StructF: ts.StructF{X: "NotEqual"}, X: "NotEqual"},
+		y:     ts.StructF1{StructF: ts.StructF{X: "not_equal"}, X: "not_equal"},
+		wantDiff: `
+  teststructs.StructF1{
+- 	StructF: teststructs.StructF{X: "NotEqual"},
++ 	StructF: teststructs.StructF{X: "not_equal"},
+- 	X:       "NotEqual",
++ 	X:       "not_equal",
+  }
+`,
 	}, {
-		label:     label + "/StructF1/PointerEqual",
-		x:         &ts.StructF1{StructF: ts.StructF{X: "NotEqual"}, X: "NotEqual"},
-		y:         &ts.StructF1{StructF: ts.StructF{X: "not_equal"}, X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructF1 pointer called",
+		label: label + "StructF1",
+		x:     &ts.StructF1{StructF: ts.StructF{X: "NotEqual"}, X: "NotEqual"},
+		y:     &ts.StructF1{StructF: ts.StructF{X: "not_equal"}, X: "not_equal"},
 	}, {
-		label:     label + "/StructA2/ValueEqual",
-		x:         ts.StructA2{StructA: &ts.StructA{X: "NotEqual"}, X: "equal"},
-		y:         ts.StructA2{StructA: &ts.StructA{X: "not_equal"}, X: "equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructA pointer called with equal X field",
+		label: label + "StructA2",
+		x:     ts.StructA2{StructA: &ts.StructA{X: "NotEqual"}, X: "equal"},
+		y:     ts.StructA2{StructA: &ts.StructA{X: "not_equal"}, X: "equal"},
 	}, {
-		label:     label + "/StructA2/ValueInequal",
-		x:         ts.StructA2{StructA: &ts.StructA{X: "NotEqual"}, X: "NotEqual"},
-		y:         ts.StructA2{StructA: &ts.StructA{X: "not_equal"}, X: "not_equal"},
-		wantEqual: false,
-		reason:    "Equal method on StructA pointer called, but inequal X field",
+		label: label + "StructA2",
+		x:     ts.StructA2{StructA: &ts.StructA{X: "NotEqual"}, X: "NotEqual"},
+		y:     ts.StructA2{StructA: &ts.StructA{X: "not_equal"}, X: "not_equal"},
+		wantDiff: `
+  teststructs.StructA2{
+  	StructA: &teststructs.StructA{X: "NotEqual"},
+- 	X:       "NotEqual",
++ 	X:       "not_equal",
+  }
+`,
 	}, {
-		label:     label + "/StructA2/PointerEqual",
-		x:         &ts.StructA2{StructA: &ts.StructA{X: "NotEqual"}, X: "equal"},
-		y:         &ts.StructA2{StructA: &ts.StructA{X: "not_equal"}, X: "equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructA pointer called with equal X field",
+		label: label + "StructA2",
+		x:     &ts.StructA2{StructA: &ts.StructA{X: "NotEqual"}, X: "equal"},
+		y:     &ts.StructA2{StructA: &ts.StructA{X: "not_equal"}, X: "equal"},
 	}, {
-		label:     label + "/StructA2/PointerInequal",
-		x:         &ts.StructA2{StructA: &ts.StructA{X: "NotEqual"}, X: "NotEqual"},
-		y:         &ts.StructA2{StructA: &ts.StructA{X: "not_equal"}, X: "not_equal"},
-		wantEqual: false,
-		reason:    "Equal method on StructA pointer called, but inequal X field",
+		label: label + "StructA2",
+		x:     &ts.StructA2{StructA: &ts.StructA{X: "NotEqual"}, X: "NotEqual"},
+		y:     &ts.StructA2{StructA: &ts.StructA{X: "not_equal"}, X: "not_equal"},
+		wantDiff: `
+  &teststructs.StructA2{
+  	StructA: &teststructs.StructA{X: "NotEqual"},
+- 	X:       "NotEqual",
++ 	X:       "not_equal",
+  }
+`,
 	}, {
-		label:     label + "/StructB2/ValueEqual",
-		x:         ts.StructB2{StructB: &ts.StructB{X: "NotEqual"}, X: "equal"},
-		y:         ts.StructB2{StructB: &ts.StructB{X: "not_equal"}, X: "equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructB pointer called with equal X field",
+		label: label + "StructB2",
+		x:     ts.StructB2{StructB: &ts.StructB{X: "NotEqual"}, X: "equal"},
+		y:     ts.StructB2{StructB: &ts.StructB{X: "not_equal"}, X: "equal"},
 	}, {
-		label:     label + "/StructB2/ValueInequal",
-		x:         ts.StructB2{StructB: &ts.StructB{X: "NotEqual"}, X: "NotEqual"},
-		y:         ts.StructB2{StructB: &ts.StructB{X: "not_equal"}, X: "not_equal"},
-		wantEqual: false,
-		reason:    "Equal method on StructB pointer called, but inequal X field",
+		label: label + "StructB2",
+		x:     ts.StructB2{StructB: &ts.StructB{X: "NotEqual"}, X: "NotEqual"},
+		y:     ts.StructB2{StructB: &ts.StructB{X: "not_equal"}, X: "not_equal"},
+		wantDiff: `
+  teststructs.StructB2{
+  	StructB: &teststructs.StructB{X: "NotEqual"},
+- 	X:       "NotEqual",
++ 	X:       "not_equal",
+  }
+`,
 	}, {
-		label:     label + "/StructB2/PointerEqual",
-		x:         &ts.StructB2{StructB: &ts.StructB{X: "NotEqual"}, X: "equal"},
-		y:         &ts.StructB2{StructB: &ts.StructB{X: "not_equal"}, X: "equal"},
-		wantEqual: true,
-		reason:    "Equal method on StructB pointer called with equal X field",
+		label: label + "StructB2",
+		x:     &ts.StructB2{StructB: &ts.StructB{X: "NotEqual"}, X: "equal"},
+		y:     &ts.StructB2{StructB: &ts.StructB{X: "not_equal"}, X: "equal"},
 	}, {
-		label:     label + "/StructB2/PointerInequal",
-		x:         &ts.StructB2{StructB: &ts.StructB{X: "NotEqual"}, X: "NotEqual"},
-		y:         &ts.StructB2{StructB: &ts.StructB{X: "not_equal"}, X: "not_equal"},
-		wantEqual: false,
-		reason:    "Equal method on StructB pointer called, but inequal X field",
+		label: label + "StructB2",
+		x:     &ts.StructB2{StructB: &ts.StructB{X: "NotEqual"}, X: "NotEqual"},
+		y:     &ts.StructB2{StructB: &ts.StructB{X: "not_equal"}, X: "not_equal"},
+		wantDiff: `
+  &teststructs.StructB2{
+  	StructB: &teststructs.StructB{X: "NotEqual"},
+- 	X:       "NotEqual",
++ 	X:       "not_equal",
+  }
+`,
 	}, {
-		label:     label + "/StructC2/ValueEqual",
-		x:         ts.StructC2{StructC: &ts.StructC{X: "NotEqual"}, X: "NotEqual"},
-		y:         ts.StructC2{StructC: &ts.StructC{X: "not_equal"}, X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method called on StructC2 value due to forwarded StructC pointer",
+		label: label + "StructC2",
+		x:     ts.StructC2{StructC: &ts.StructC{X: "NotEqual"}, X: "NotEqual"},
+		y:     ts.StructC2{StructC: &ts.StructC{X: "not_equal"}, X: "not_equal"},
 	}, {
-		label:     label + "/StructC2/PointerEqual",
-		x:         &ts.StructC2{StructC: &ts.StructC{X: "NotEqual"}, X: "NotEqual"},
-		y:         &ts.StructC2{StructC: &ts.StructC{X: "not_equal"}, X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method called on StructC2 pointer due to forwarded StructC pointer",
+		label: label + "StructC2",
+		x:     &ts.StructC2{StructC: &ts.StructC{X: "NotEqual"}, X: "NotEqual"},
+		y:     &ts.StructC2{StructC: &ts.StructC{X: "not_equal"}, X: "not_equal"},
 	}, {
-		label:     label + "/StructD2/ValueEqual",
-		x:         ts.StructD2{StructD: &ts.StructD{X: "NotEqual"}, X: "NotEqual"},
-		y:         ts.StructD2{StructD: &ts.StructD{X: "not_equal"}, X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method called on StructD2 value due to forwarded StructD pointer",
+		label: label + "StructD2",
+		x:     ts.StructD2{StructD: &ts.StructD{X: "NotEqual"}, X: "NotEqual"},
+		y:     ts.StructD2{StructD: &ts.StructD{X: "not_equal"}, X: "not_equal"},
 	}, {
-		label:     label + "/StructD2/PointerEqual",
-		x:         &ts.StructD2{StructD: &ts.StructD{X: "NotEqual"}, X: "NotEqual"},
-		y:         &ts.StructD2{StructD: &ts.StructD{X: "not_equal"}, X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method called on StructD2 pointer due to forwarded StructD pointer",
+		label: label + "StructD2",
+		x:     &ts.StructD2{StructD: &ts.StructD{X: "NotEqual"}, X: "NotEqual"},
+		y:     &ts.StructD2{StructD: &ts.StructD{X: "not_equal"}, X: "not_equal"},
 	}, {
-		label:     label + "/StructE2/ValueEqual",
-		x:         ts.StructE2{StructE: &ts.StructE{X: "NotEqual"}, X: "NotEqual"},
-		y:         ts.StructE2{StructE: &ts.StructE{X: "not_equal"}, X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method called on StructE2 value due to forwarded StructE pointer",
+		label: label + "StructE2",
+		x:     ts.StructE2{StructE: &ts.StructE{X: "NotEqual"}, X: "NotEqual"},
+		y:     ts.StructE2{StructE: &ts.StructE{X: "not_equal"}, X: "not_equal"},
 	}, {
-		label:     label + "/StructE2/PointerEqual",
-		x:         &ts.StructE2{StructE: &ts.StructE{X: "NotEqual"}, X: "NotEqual"},
-		y:         &ts.StructE2{StructE: &ts.StructE{X: "not_equal"}, X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method called on StructE2 pointer due to forwarded StructE pointer",
+		label: label + "StructE2",
+		x:     &ts.StructE2{StructE: &ts.StructE{X: "NotEqual"}, X: "NotEqual"},
+		y:     &ts.StructE2{StructE: &ts.StructE{X: "not_equal"}, X: "not_equal"},
 	}, {
-		label:     label + "/StructF2/ValueEqual",
-		x:         ts.StructF2{StructF: &ts.StructF{X: "NotEqual"}, X: "NotEqual"},
-		y:         ts.StructF2{StructF: &ts.StructF{X: "not_equal"}, X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method called on StructF2 value due to forwarded StructF pointer",
+		label: label + "StructF2",
+		x:     ts.StructF2{StructF: &ts.StructF{X: "NotEqual"}, X: "NotEqual"},
+		y:     ts.StructF2{StructF: &ts.StructF{X: "not_equal"}, X: "not_equal"},
 	}, {
-		label:     label + "/StructF2/PointerEqual",
-		x:         &ts.StructF2{StructF: &ts.StructF{X: "NotEqual"}, X: "NotEqual"},
-		y:         &ts.StructF2{StructF: &ts.StructF{X: "not_equal"}, X: "not_equal"},
-		wantEqual: true,
-		reason:    "Equal method called on StructF2 pointer due to forwarded StructF pointer",
+		label: label + "StructF2",
+		x:     &ts.StructF2{StructF: &ts.StructF{X: "NotEqual"}, X: "NotEqual"},
+		y:     &ts.StructF2{StructF: &ts.StructF{X: "not_equal"}, X: "not_equal"},
 	}, {
-		label:     label + "/StructNo/Inequal",
-		x:         ts.StructNo{X: "NotEqual"},
-		y:         ts.StructNo{X: "not_equal"},
-		wantEqual: false,
-		reason:    "Equal method not called since StructNo is not assignable to InterfaceA",
+		label: label + "StructNo",
+		x:     ts.StructNo{X: "NotEqual"},
+		y:     ts.StructNo{X: "not_equal"},
+		wantDiff: `
+  teststructs.StructNo{
+- 	X: "NotEqual",
++ 	X: "not_equal",
+  }
+`,
 	}, {
-		label:     label + "/AssignA/Equal",
-		x:         ts.AssignA(func() int { return 0 }),
-		y:         ts.AssignA(func() int { return 1 }),
-		wantEqual: true,
-		reason:    "Equal method called since named func is assignable to unnamed func",
+		label: label + "AssignA",
+		x:     ts.AssignA(func() int { return 0 }),
+		y:     ts.AssignA(func() int { return 1 }),
 	}, {
-		label:     label + "/AssignB/Equal",
-		x:         ts.AssignB(struct{ A int }{0}),
-		y:         ts.AssignB(struct{ A int }{1}),
-		wantEqual: true,
-		reason:    "Equal method called since named struct is assignable to unnamed struct",
+		label: label + "AssignB",
+		x:     ts.AssignB(struct{ A int }{0}),
+		y:     ts.AssignB(struct{ A int }{1}),
 	}, {
-		label:     label + "/AssignC/Equal",
-		x:         ts.AssignC(make(chan bool)),
-		y:         ts.AssignC(make(chan bool)),
-		wantEqual: true,
-		reason:    "Equal method called since named channel is assignable to unnamed channel",
+		label: label + "AssignC",
+		x:     ts.AssignC(make(chan bool)),
+		y:     ts.AssignC(make(chan bool)),
 	}, {
-		label:     label + "/AssignD/Equal",
-		x:         ts.AssignD(make(chan bool)),
-		y:         ts.AssignD(make(chan bool)),
-		wantEqual: true,
-		reason:    "Equal method called since named channel is assignable to unnamed channel",
+		label: label + "AssignD",
+		x:     ts.AssignD(make(chan bool)),
+		y:     ts.AssignD(make(chan bool)),
 	}}
-}
-
-type (
-	CycleAlpha struct {
-		Name   string
-		Bravos map[string]*CycleBravo
-	}
-	CycleBravo struct {
-		ID     int
-		Name   string
-		Mods   int
-		Alphas map[string]*CycleAlpha
-	}
-)
-
-func cycleTests() []test {
-	const label = "Cycle"
-
-	type (
-		P *P
-		S []S
-		M map[int]M
-	)
-
-	makeGraph := func() map[string]*CycleAlpha {
-		v := map[string]*CycleAlpha{
-			"Foo": &CycleAlpha{
-				Name: "Foo",
-				Bravos: map[string]*CycleBravo{
-					"FooBravo": &CycleBravo{
-						Name: "FooBravo",
-						ID:   101,
-						Mods: 100,
-						Alphas: map[string]*CycleAlpha{
-							"Foo": nil, // cyclic reference
-						},
-					},
-				},
-			},
-			"Bar": &CycleAlpha{
-				Name: "Bar",
-				Bravos: map[string]*CycleBravo{
-					"BarBuzzBravo": &CycleBravo{
-						Name: "BarBuzzBravo",
-						ID:   102,
-						Mods: 2,
-						Alphas: map[string]*CycleAlpha{
-							"Bar":  nil, // cyclic reference
-							"Buzz": nil, // cyclic reference
-						},
-					},
-					"BuzzBarBravo": &CycleBravo{
-						Name: "BuzzBarBravo",
-						ID:   103,
-						Mods: 0,
-						Alphas: map[string]*CycleAlpha{
-							"Bar":  nil, // cyclic reference
-							"Buzz": nil, // cyclic reference
-						},
-					},
-				},
-			},
-			"Buzz": &CycleAlpha{
-				Name: "Buzz",
-				Bravos: map[string]*CycleBravo{
-					"BarBuzzBravo": nil, // cyclic reference
-					"BuzzBarBravo": nil, // cyclic reference
-				},
-			},
-		}
-		v["Foo"].Bravos["FooBravo"].Alphas["Foo"] = v["Foo"]
-		v["Bar"].Bravos["BarBuzzBravo"].Alphas["Bar"] = v["Bar"]
-		v["Bar"].Bravos["BarBuzzBravo"].Alphas["Buzz"] = v["Buzz"]
-		v["Bar"].Bravos["BuzzBarBravo"].Alphas["Bar"] = v["Bar"]
-		v["Bar"].Bravos["BuzzBarBravo"].Alphas["Buzz"] = v["Buzz"]
-		v["Buzz"].Bravos["BarBuzzBravo"] = v["Bar"].Bravos["BarBuzzBravo"]
-		v["Buzz"].Bravos["BuzzBarBravo"] = v["Bar"].Bravos["BuzzBarBravo"]
-		return v
-	}
-
-	var tests []test
-	type XY struct{ x, y interface{} }
-	for _, tt := range []struct {
-		label     string
-		in        XY
-		wantEqual bool
-		reason    string
-	}{{
-		label: "PointersEqual",
-		in: func() XY {
-			x := new(P)
-			*x = x
-			y := new(P)
-			*y = y
-			return XY{x, y}
-		}(),
-		wantEqual: true,
-		reason:    "equal pair of single-node pointers",
-	}, {
-		label: "PointersInequal",
-		in: func() XY {
-			x := new(P)
-			*x = x
-			y1, y2 := new(P), new(P)
-			*y1 = y2
-			*y2 = y1
-			return XY{x, y1}
-		}(),
-		wantEqual: false,
-		reason:    "inequal pair of single-node and double-node pointers",
-	}, {
-		label: "SlicesEqual",
-		in: func() XY {
-			x := S{nil}
-			x[0] = x
-			y := S{nil}
-			y[0] = y
-			return XY{x, y}
-		}(),
-		wantEqual: true,
-		reason:    "equal pair of single-node slices",
-	}, {
-		label: "SlicesInequal",
-		in: func() XY {
-			x := S{nil}
-			x[0] = x
-			y1, y2 := S{nil}, S{nil}
-			y1[0] = y2
-			y2[0] = y1
-			return XY{x, y1}
-		}(),
-		wantEqual: false,
-		reason:    "inequal pair of single-node and double node slices",
-	}, {
-		label: "MapsEqual",
-		in: func() XY {
-			x := M{0: nil}
-			x[0] = x
-			y := M{0: nil}
-			y[0] = y
-			return XY{x, y}
-		}(),
-		wantEqual: true,
-		reason:    "equal pair of single-node maps",
-	}, {
-		label: "MapsInequal",
-		in: func() XY {
-			x := M{0: nil}
-			x[0] = x
-			y1, y2 := M{0: nil}, M{0: nil}
-			y1[0] = y2
-			y2[0] = y1
-			return XY{x, y1}
-		}(),
-		wantEqual: false,
-		reason:    "inequal pair of single-node and double-node maps",
-	}, {
-		label:     "GraphEqual",
-		in:        XY{makeGraph(), makeGraph()},
-		wantEqual: true,
-		reason:    "graphs are equal since they have identical forms",
-	}, {
-		label: "GraphInequalZeroed",
-		in: func() XY {
-			x := makeGraph()
-			y := makeGraph()
-			y["Foo"].Bravos["FooBravo"].ID = 0
-			y["Bar"].Bravos["BarBuzzBravo"].ID = 0
-			y["Bar"].Bravos["BuzzBarBravo"].ID = 0
-			return XY{x, y}
-		}(),
-		wantEqual: false,
-		reason:    "graphs are inequal because the ID fields are different",
-	}, {
-		label: "GraphInequalStruct",
-		in: func() XY {
-			x := makeGraph()
-			y := makeGraph()
-			x["Buzz"].Bravos["BuzzBarBravo"] = &CycleBravo{
-				Name: "BuzzBarBravo",
-				ID:   103,
-			}
-			return XY{x, y}
-		}(),
-		wantEqual: false,
-		reason:    "graphs are inequal because they differ on a map element",
-	}} {
-		tests = append(tests, test{
-			label:     label + "/" + tt.label,
-			x:         tt.in.x,
-			y:         tt.in.y,
-			wantEqual: tt.wantEqual,
-			reason:    tt.reason,
-		})
-	}
-	return tests
 }
 
 func project1Tests() []test {
@@ -2421,7 +2243,7 @@ func project1Tests() []test {
 						Target: "corporation",
 						Immutable: &ts.GoatImmutable{
 							ID:      "southbay",
-							State:   (*pb.Goat_States)(newInt(5)),
+							State:   (*pb.Goat_States)(intPtr(5)),
 							Started: now,
 						},
 					},
@@ -2449,13 +2271,13 @@ func project1Tests() []test {
 			Immutable: &ts.EagleImmutable{
 				ID:          "eagleID",
 				Birthday:    now,
-				MissingCall: (*pb.Eagle_MissingCalls)(newInt(55)),
+				MissingCall: (*pb.Eagle_MissingCalls)(intPtr(55)),
 			},
 		}
 	}
 
 	return []test{{
-		label: label + "/PanicUnexported",
+		label: label,
 		x: ts.Eagle{Slaps: []ts.Slap{{
 			Args: &pb.MetaData{Stringer: pb.Stringer{X: "metadata"}},
 		}}},
@@ -2463,42 +2285,60 @@ func project1Tests() []test {
 			Args: &pb.MetaData{Stringer: pb.Stringer{X: "metadata"}},
 		}}},
 		wantPanic: "cannot handle unexported field",
-		reason:    "struct contains unexported fields",
 	}, {
-		label: label + "/ProtoEqual",
+		label: label,
 		x: ts.Eagle{Slaps: []ts.Slap{{
 			Args: &pb.MetaData{Stringer: pb.Stringer{X: "metadata"}},
 		}}},
 		y: ts.Eagle{Slaps: []ts.Slap{{
 			Args: &pb.MetaData{Stringer: pb.Stringer{X: "metadata"}},
 		}}},
-		opts:      []cmp.Option{cmp.Comparer(pb.Equal)},
-		wantEqual: true,
-		reason:    "simulated protobuf messages contain the same values",
+		opts: []cmp.Option{cmp.Comparer(pb.Equal)},
 	}, {
-		label: label + "/ProtoInequal",
+		label: label,
 		x: ts.Eagle{Slaps: []ts.Slap{{}, {}, {}, {}, {
 			Args: &pb.MetaData{Stringer: pb.Stringer{X: "metadata"}},
 		}}},
 		y: ts.Eagle{Slaps: []ts.Slap{{}, {}, {}, {}, {
 			Args: &pb.MetaData{Stringer: pb.Stringer{X: "metadata2"}},
 		}}},
-		opts:      []cmp.Option{cmp.Comparer(pb.Equal)},
-		wantEqual: false,
-		reason:    "simulated protobuf messages contain different values",
+		opts: []cmp.Option{cmp.Comparer(pb.Equal)},
+		wantDiff: `
+  teststructs.Eagle{
+  	... // 4 identical fields
+  	Dreamers: nil,
+  	Prong:    0,
+  	Slaps: []teststructs.Slap{
+  		... // 2 identical elements
+  		{},
+  		{},
+  		{
+  			Name:     "",
+  			Desc:     "",
+  			DescLong: "",
+- 			Args:     s"metadata",
++ 			Args:     s"metadata2",
+  			Tense:    0,
+  			Interval: 0,
+  			... // 3 identical fields
+  		},
+  	},
+  	StateGoverner: "",
+  	PrankRating:   "",
+  	... // 2 identical fields
+  }
+`,
 	}, {
-		label:     label + "/Equal",
-		x:         createEagle(),
-		y:         createEagle(),
-		opts:      []cmp.Option{ignoreUnexported, cmp.Comparer(pb.Equal)},
-		wantEqual: true,
-		reason:    "equal because values are the same",
+		label: label,
+		x:     createEagle(),
+		y:     createEagle(),
+		opts:  []cmp.Option{ignoreUnexported, cmp.Comparer(pb.Equal)},
 	}, {
-		label: label + "/Inequal",
+		label: label,
 		x: func() ts.Eagle {
 			eg := createEagle()
 			eg.Dreamers[1].Animal[0].(ts.Goat).Immutable.ID = "southbay2"
-			eg.Dreamers[1].Animal[0].(ts.Goat).Immutable.State = (*pb.Goat_States)(newInt(6))
+			eg.Dreamers[1].Animal[0].(ts.Goat).Immutable.State = (*pb.Goat_States)(intPtr(6))
 			eg.Slaps[0].Immutable.MildSlap = false
 			return eg
 		}(),
@@ -2508,9 +2348,80 @@ func project1Tests() []test {
 			eg.Slaps[0].Immutable.LoveRadius.Summer.Summary.Devices = devs[:1]
 			return eg
 		}(),
-		opts:      []cmp.Option{ignoreUnexported, cmp.Comparer(pb.Equal)},
-		wantEqual: false,
-		reason:    "inequal because some values are different",
+		opts: []cmp.Option{ignoreUnexported, cmp.Comparer(pb.Equal)},
+		wantDiff: `
+  teststructs.Eagle{
+  	... // 2 identical fields
+  	Desc:     "some description",
+  	DescLong: "",
+  	Dreamers: []teststructs.Dreamer{
+  		{},
+  		{
+  			... // 4 identical fields
+  			ContSlaps:         nil,
+  			ContSlapsInterval: 0,
+  			Animal: []interface{}{
+  				teststructs.Goat{
+  					Target:     "corporation",
+  					Slaps:      nil,
+  					FunnyPrank: "",
+  					Immutable: &teststructs.GoatImmutable{
+- 						ID:      "southbay2",
++ 						ID:      "southbay",
+- 						State:   &6,
++ 						State:   &5,
+  						Started: s"2009-11-10 23:00:00 +0000 UTC",
+  						Stopped: s"0001-01-01 00:00:00 +0000 UTC",
+  						... // 1 ignored and 1 identical fields
+  					},
+  				},
+  				teststructs.Donkey{},
+  			},
+  			Ornamental: false,
+  			Amoeba:     53,
+  			... // 5 identical fields
+  		},
+  	},
+  	Prong: 0,
+  	Slaps: []teststructs.Slap{
+  		{
+  			... // 6 identical fields
+  			Homeland:   0x00,
+  			FunnyPrank: "",
+  			Immutable: &teststructs.SlapImmutable{
+  				ID:          "immutableSlap",
+  				Out:         nil,
+- 				MildSlap:    false,
++ 				MildSlap:    true,
+  				PrettyPrint: "",
+  				State:       nil,
+  				Started:     s"2009-11-10 23:00:00 +0000 UTC",
+  				Stopped:     s"0001-01-01 00:00:00 +0000 UTC",
+  				LastUpdate:  s"0001-01-01 00:00:00 +0000 UTC",
+  				LoveRadius: &teststructs.LoveRadius{
+  					Summer: &teststructs.SummerLove{
+  						Summary: &teststructs.SummerLoveSummary{
+  							Devices: []string{
+  								"foo",
+- 								"bar",
+- 								"baz",
+  							},
+  							ChangeType: []testprotos.SummerType{1, 2, 3},
+  							... // 1 ignored field
+  						},
+  						... // 1 ignored field
+  					},
+  					... // 1 ignored field
+  				},
+  				... // 1 ignored field
+  			},
+  		},
+  	},
+  	StateGoverner: "",
+  	PrankRating:   "",
+  	... // 2 identical fields
+  }
+`,
 	}}
 }
 
@@ -2570,20 +2481,17 @@ func project2Tests() []test {
 	}
 
 	return []test{{
-		label:     label + "/PanicUnexported",
+		label:     label,
 		x:         createBatch(),
 		y:         createBatch(),
 		wantPanic: "cannot handle unexported field",
-		reason:    "struct contains unexported fields",
 	}, {
-		label:     label + "/Equal",
-		x:         createBatch(),
-		y:         createBatch(),
-		opts:      []cmp.Option{cmp.Comparer(pb.Equal), sortGerms, equalDish},
-		wantEqual: true,
-		reason:    "equal because identical values are compared",
+		label: label,
+		x:     createBatch(),
+		y:     createBatch(),
+		opts:  []cmp.Option{cmp.Comparer(pb.Equal), sortGerms, equalDish},
 	}, {
-		label: label + "/InequalOrder",
+		label: label,
 		x:     createBatch(),
 		y: func() ts.GermBatch {
 			gb := createBatch()
@@ -2591,11 +2499,25 @@ func project2Tests() []test {
 			s[0], s[1], s[2] = s[1], s[2], s[0]
 			return gb
 		}(),
-		opts:      []cmp.Option{cmp.Comparer(pb.Equal), equalDish},
-		wantEqual: false,
-		reason:    "inequal because slice contains elements in differing order",
+		opts: []cmp.Option{cmp.Comparer(pb.Equal), equalDish},
+		wantDiff: `
+  teststructs.GermBatch{
+  	DirtyGerms: map[int32][]*testprotos.Germ{
+  		17: {s"germ1"},
+  		18: {
+- 			s"germ2",
+  			s"germ3",
+  			s"germ4",
++ 			s"germ2",
+  		},
+  	},
+  	CleanGerms: nil,
+  	GermMap:    map[int32]*testprotos.Germ{13: s"germ13", 21: s"germ21"},
+  	... // 7 identical fields
+  }
+`,
 	}, {
-		label: label + "/EqualOrder",
+		label: label,
 		x:     createBatch(),
 		y: func() ts.GermBatch {
 			gb := createBatch()
@@ -2603,11 +2525,9 @@ func project2Tests() []test {
 			s[0], s[1], s[2] = s[1], s[2], s[0]
 			return gb
 		}(),
-		opts:      []cmp.Option{cmp.Comparer(pb.Equal), sortGerms, equalDish},
-		wantEqual: true,
-		reason:    "equal because unordered slice is sorted using transformer",
+		opts: []cmp.Option{cmp.Comparer(pb.Equal), sortGerms, equalDish},
 	}, {
-		label: label + "/Inequal",
+		label: label,
 		x: func() ts.GermBatch {
 			gb := createBatch()
 			delete(gb.DirtyGerms, 17)
@@ -2620,9 +2540,34 @@ func project2Tests() []test {
 			gb.GermStrain = 22
 			return gb
 		}(),
-		opts:      []cmp.Option{cmp.Comparer(pb.Equal), sortGerms, equalDish},
-		wantEqual: false,
-		reason:    "inequal because some values are different",
+		opts: []cmp.Option{cmp.Comparer(pb.Equal), sortGerms, equalDish},
+		wantDiff: `
+  teststructs.GermBatch{
+  	DirtyGerms: map[int32][]*testprotos.Germ{
++ 		17: {s"germ1"},
+  		18: Inverse(Sort, []*testprotos.Germ{
+  			s"germ2",
+  			s"germ3",
+- 			s"germ4",
+  		}),
+  	},
+  	CleanGerms: nil,
+  	GermMap:    map[int32]*testprotos.Germ{13: s"germ13", 21: s"germ21"},
+  	DishMap: map[int32]*teststructs.Dish{
+  		0: &{err: &errors.errorString{s: "EOF"}},
+- 		1: nil,
++ 		1: &{err: &errors.errorString{s: "unexpected EOF"}},
+  		2: &{pb: &testprotos.Dish{Stringer: testprotos.Stringer{X: "dish"}}},
+  	},
+  	HasPreviousResult: true,
+  	DirtyID:           10,
+  	CleanID:           0,
+- 	GermStrain:        421,
++ 	GermStrain:        22,
+  	TotalDirtyGerms:   0,
+  	InfectedAt:        s"2009-11-10 23:00:00 +0000 UTC",
+  }
+`,
 	}}
 }
 
@@ -2660,27 +2605,23 @@ func project3Tests() []test {
 	}
 
 	return []test{{
-		label:     label + "/PanicUnexported1",
+		label:     label,
 		x:         createDirt(),
 		y:         createDirt(),
 		wantPanic: "cannot handle unexported field",
-		reason:    "struct contains unexported fields",
 	}, {
-		label:     label + "/PanicUnexported2",
+		label:     label,
 		x:         createDirt(),
 		y:         createDirt(),
 		opts:      []cmp.Option{allowVisibility, ignoreLocker, cmp.Comparer(pb.Equal), equalTable},
 		wantPanic: "cannot handle unexported field",
-		reason:    "struct contains references to simulated protobuf types with unexported fields",
 	}, {
-		label:     label + "/Equal",
-		x:         createDirt(),
-		y:         createDirt(),
-		opts:      []cmp.Option{allowVisibility, transformProtos, ignoreLocker, cmp.Comparer(pb.Equal), equalTable},
-		wantEqual: true,
-		reason:    "transformer used to create reference to protobuf message so it works with pb.Equal",
+		label: label,
+		x:     createDirt(),
+		y:     createDirt(),
+		opts:  []cmp.Option{allowVisibility, transformProtos, ignoreLocker, cmp.Comparer(pb.Equal), equalTable},
 	}, {
-		label: label + "/Inequal",
+		label: label,
 		x: func() ts.Dirt {
 			d := createDirt()
 			d.SetTable(ts.CreateMockTable([]string{"a", "c"}))
@@ -2695,9 +2636,26 @@ func project3Tests() []test {
 			})
 			return d
 		}(),
-		opts:      []cmp.Option{allowVisibility, transformProtos, ignoreLocker, cmp.Comparer(pb.Equal), equalTable},
-		wantEqual: false,
-		reason:    "inequal because some values are different",
+		opts: []cmp.Option{allowVisibility, transformProtos, ignoreLocker, cmp.Comparer(pb.Equal), equalTable},
+		wantDiff: `
+  teststructs.Dirt{
+- 	table:   &teststructs.MockTable{state: []string{"a", "c"}},
++ 	table:   &teststructs.MockTable{state: []string{"a", "b", "c"}},
+  	ts:      12345,
+- 	Discord: 554,
++ 	Discord: 500,
+- 	Proto:   testprotos.Dirt(Inverse(λ, s"blah")),
++ 	Proto:   testprotos.Dirt(Inverse(λ, s"proto")),
+  	wizard: map[string]*testprotos.Wizard{
+- 		"albus": s"dumbledore",
+- 		"harry": s"potter",
++ 		"harry": s"otter",
+  	},
+  	sadistic: nil,
+  	lastTime: 54321,
+  	... // 1 ignored field
+  }
+`,
 	}}
 }
 
@@ -2740,27 +2698,23 @@ func project4Tests() []test {
 	}
 
 	return []test{{
-		label:     label + "/PanicUnexported1",
+		label:     label,
 		x:         createCartel(),
 		y:         createCartel(),
 		wantPanic: "cannot handle unexported field",
-		reason:    "struct contains unexported fields",
 	}, {
-		label:     label + "/PanicUnexported2",
+		label:     label,
 		x:         createCartel(),
 		y:         createCartel(),
 		opts:      []cmp.Option{allowVisibility, cmp.Comparer(pb.Equal)},
 		wantPanic: "cannot handle unexported field",
-		reason:    "struct contains references to simulated protobuf types with unexported fields",
 	}, {
-		label:     label + "/Equal",
-		x:         createCartel(),
-		y:         createCartel(),
-		opts:      []cmp.Option{allowVisibility, transformProtos, cmp.Comparer(pb.Equal)},
-		wantEqual: true,
-		reason:    "transformer used to create reference to protobuf message so it works with pb.Equal",
+		label: label,
+		x:     createCartel(),
+		y:     createCartel(),
+		opts:  []cmp.Option{allowVisibility, transformProtos, cmp.Comparer(pb.Equal)},
 	}, {
-		label: label + "/Inequal",
+		label: label,
 		x: func() ts.Cartel {
 			d := createCartel()
 			var p1, p2 ts.Poison
@@ -2778,9 +2732,49 @@ func project4Tests() []test {
 			d.SetPublicMessage([]byte{1, 2, 4, 3, 5})
 			return d
 		}(),
-		opts:      []cmp.Option{allowVisibility, transformProtos, cmp.Comparer(pb.Equal)},
-		wantEqual: false,
-		reason:    "inequal because some values are different",
+		opts: []cmp.Option{allowVisibility, transformProtos, cmp.Comparer(pb.Equal)},
+		wantDiff: `
+  teststructs.Cartel{
+  	Headquarter: teststructs.Headquarter{
+  		id:       0x05,
+  		location: "moon",
+  		subDivisions: []string{
+- 			"alpha",
+  			"bravo",
+  			"charlie",
+  		},
+  		incorporatedDate: s"0001-01-01 00:00:00 +0000 UTC",
+  		metaData:         s"metadata",
+  		privateMessage:   nil,
+  		publicMessage: []uint8{
+  			0x01,
+  			0x02,
+- 			0x03,
++ 			0x04,
+- 			0x04,
++ 			0x03,
+  			0x05,
+  		},
+  		horseBack: "abcdef",
+  		rattle:    "",
+  		... // 5 identical fields
+  	},
+  	source:        "mars",
+  	creationDate:  s"0001-01-01 00:00:00 +0000 UTC",
+  	boss:          "al capone",
+  	lastCrimeDate: s"0001-01-01 00:00:00 +0000 UTC",
+  	poisons: []*teststructs.Poison{
+  		&{
+- 			poisonType:   1,
++ 			poisonType:   5,
+  			expiration:   s"2009-11-10 23:00:00 +0000 UTC",
+  			manufacturer: "acme",
+  			potency:      0,
+  		},
+- 		&{poisonType: 2, manufacturer: "acme2"},
+  	},
+  }
+`,
 	}}
 }
 

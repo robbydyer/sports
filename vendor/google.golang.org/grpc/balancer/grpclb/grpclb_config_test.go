@@ -20,31 +20,72 @@ package grpclb
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"reflect"
-	"strings"
 	"testing"
-
-	"google.golang.org/grpc/serviceconfig"
 )
 
-func Test_Parse(t *testing.T) {
+func Test_parseFullServiceConfig(t *testing.T) {
 	tests := []struct {
-		name    string
-		s       string
-		want    serviceconfig.LoadBalancingConfig
-		wantErr error
+		name string
+		s    string
+		want *serviceConfig
 	}{
 		{
-			name:    "empty",
-			s:       "",
-			want:    nil,
-			wantErr: errors.New("unexpected end of JSON input"),
+			name: "empty",
+			s:    "",
+			want: nil,
 		},
 		{
 			name: "success1",
-			s:    `{"childPolicy":[{"pick_first":{}}]}`,
+			s:    `{"loadBalancingConfig":[{"grpclb":{"childPolicy":[{"pick_first":{}}]}}]}`,
+			want: &serviceConfig{
+				LoadBalancingConfig: &[]map[string]*grpclbServiceConfig{
+					{"grpclb": &grpclbServiceConfig{
+						ChildPolicy: &[]map[string]json.RawMessage{
+							{"pick_first": json.RawMessage("{}")},
+						},
+					}},
+				},
+			},
+		},
+		{
+			name: "success2",
+			s:    `{"loadBalancingConfig":[{"grpclb":{"childPolicy":[{"round_robin":{}},{"pick_first":{}}]}}]}`,
+			want: &serviceConfig{
+				LoadBalancingConfig: &[]map[string]*grpclbServiceConfig{
+					{"grpclb": &grpclbServiceConfig{
+						ChildPolicy: &[]map[string]json.RawMessage{
+							{"round_robin": json.RawMessage("{}")},
+							{"pick_first": json.RawMessage("{}")},
+						},
+					}},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := parseFullServiceConfig(tt.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseFullServiceConfig() = %+v, want %+v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_parseServiceConfig(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want *grpclbServiceConfig
+	}{
+		{
+			name: "empty",
+			s:    "",
+			want: nil,
+		},
+		{
+			name: "success1",
+			s:    `{"loadBalancingConfig":[{"grpclb":{"childPolicy":[{"pick_first":{}}]}}]}`,
 			want: &grpclbServiceConfig{
 				ChildPolicy: &[]map[string]json.RawMessage{
 					{"pick_first": json.RawMessage("{}")},
@@ -53,7 +94,7 @@ func Test_Parse(t *testing.T) {
 		},
 		{
 			name: "success2",
-			s:    `{"childPolicy":[{"round_robin":{}},{"pick_first":{}}]}`,
+			s:    `{"loadBalancingConfig":[{"grpclb":{"childPolicy":[{"round_robin":{}},{"pick_first":{}}]}}]}`,
 			want: &grpclbServiceConfig{
 				ChildPolicy: &[]map[string]json.RawMessage{
 					{"round_robin": json.RawMessage("{}")},
@@ -61,11 +102,16 @@ func Test_Parse(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "no_grpclb",
+			s:    `{"loadBalancingConfig":[{"notgrpclb":{"childPolicy":[{"round_robin":{}},{"pick_first":{}}]}}]}`,
+			want: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got, err := (&lbBuilder{}).ParseConfig(json.RawMessage(tt.s)); !reflect.DeepEqual(got, tt.want) || !strings.Contains(fmt.Sprint(err), fmt.Sprint(tt.wantErr)) {
-				t.Errorf("parseFullServiceConfig() = %+v, %+v, want %+v, <contains %q>", got, err, tt.want, tt.wantErr)
+			if got := parseServiceConfig(tt.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseFullServiceConfig() = %+v, want %+v", got, tt.want)
 			}
 		})
 	}
@@ -78,28 +124,29 @@ func Test_childIsPickFirst(t *testing.T) {
 		want bool
 	}{
 		{
+			name: "invalid",
+			s:    "",
+			want: false,
+		},
+		{
 			name: "pickfirst_only",
-			s:    `{"childPolicy":[{"pick_first":{}}]}`,
+			s:    `{"loadBalancingConfig":[{"grpclb":{"childPolicy":[{"pick_first":{}}]}}]}`,
 			want: true,
 		},
 		{
 			name: "pickfirst_before_rr",
-			s:    `{"childPolicy":[{"pick_first":{}},{"round_robin":{}}]}`,
+			s:    `{"loadBalancingConfig":[{"grpclb":{"childPolicy":[{"pick_first":{}},{"round_robin":{}}]}}]}`,
 			want: true,
 		},
 		{
 			name: "rr_before_pickfirst",
-			s:    `{"childPolicy":[{"round_robin":{}},{"pick_first":{}}]}`,
+			s:    `{"loadBalancingConfig":[{"grpclb":{"childPolicy":[{"round_robin":{}},{"pick_first":{}}]}}]}`,
 			want: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gc, err := (&lbBuilder{}).ParseConfig(json.RawMessage(tt.s))
-			if err != nil {
-				t.Fatalf("Parse(%v) = _, %v; want _, nil", tt.s, err)
-			}
-			if got := childIsPickFirst(gc.(*grpclbServiceConfig)); got != tt.want {
+			if got := childIsPickFirst(tt.s); got != tt.want {
 				t.Errorf("childIsPickFirst() = %v, want %v", got, tt.want)
 			}
 		})

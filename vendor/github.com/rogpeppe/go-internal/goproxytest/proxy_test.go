@@ -23,7 +23,6 @@ func TestScripts(t *testing.T) {
 		Setup: func(e *testscript.Env) error {
 			e.Vars = append(e.Vars,
 				"GOPROXY="+srv.URL,
-				"GONOSUMDB=*",
 			)
 			return nil
 		},

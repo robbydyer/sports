@@ -9,12 +9,22 @@ import (
 
 	"golang.org/x/tools/internal/lsp/protocol"
 	"golang.org/x/tools/internal/lsp/source"
+	"golang.org/x/tools/internal/span"
 )
 
 func (s *Server) implementation(ctx context.Context, params *protocol.ImplementationParams) ([]protocol.Location, error) {
-	snapshot, fh, ok, err := s.beginFileRequest(params.TextDocument.URI, source.Go)
-	if !ok {
+	uri := span.NewURI(params.TextDocument.URI)
+	view, err := s.session.ViewOf(uri)
+	if err != nil {
 		return nil, err
+	}
+	snapshot := view.Snapshot()
+	fh, err := snapshot.GetFile(uri)
+	if err != nil {
+		return nil, err
+	}
+	if fh.Identity().Kind != source.Go {
+		return nil, nil
 	}
 	return source.Implementation(ctx, snapshot, fh, params.Position)
 }

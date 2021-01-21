@@ -10,13 +10,7 @@ import (
 	"strings"
 	"testing"
 	"unicode"
-
-	"github.com/google/go-cmp/cmp/internal/flags"
 )
-
-func init() {
-	flags.Deterministic = true
-}
 
 func TestDifference(t *testing.T) {
 	tests := []struct {

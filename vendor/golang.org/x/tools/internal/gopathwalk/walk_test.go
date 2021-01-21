@@ -6,7 +6,6 @@ package gopathwalk
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -117,7 +116,7 @@ func TestSkip(t *testing.T) {
 			found = append(found, dir[len(root.Path)+1:])
 		}, func(root Root, dir string) bool {
 			return false
-		}, Options{ModulesEnabled: false, Logf: log.Printf})
+		}, Options{ModulesEnabled: false, Debug: true})
 	if want := []string{"shouldfind"}; !reflect.DeepEqual(found, want) {
 		t.Errorf("expected to find only %v, got %v", want, found)
 	}

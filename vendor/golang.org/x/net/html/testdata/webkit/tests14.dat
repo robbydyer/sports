@@ -22,7 +22,7 @@
 #data
 <!DOCTYPE html><html><html abc:def=gh><xyz:abc></xyz:abc>
 #errors
-(1,38): non-html-root
+15: Unexpected start tag html
 #document
 | <!DOCTYPE html>
 | <html>
@@ -34,7 +34,7 @@
 #data
 <!DOCTYPE html><html xml:lang=bar><html xml:lang=foo>
 #errors
-(1,53): non-html-root
+15: Unexpected start tag html
 #document
 | <!DOCTYPE html>
 | <html>
@@ -55,7 +55,6 @@
 #data
 <!DOCTYPE html><html 123=456><html 789=012>
 #errors
-(1,43): non-html-root
 #document
 | <!DOCTYPE html>
 | <html>

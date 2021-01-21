@@ -39,7 +39,7 @@ import (
 )
 
 type testServer struct {
-	testpb.UnimplementedTestServiceServer
+	testpb.TestServiceServer
 }
 
 func (s *testServer) EmptyCall(ctx context.Context, in *testpb.Empty) (*testpb.Empty, error) {
@@ -315,7 +315,7 @@ func TestOneServerDown(t *testing.T) {
 	}
 	defer test.cleanup()
 
-	cc, err := grpc.Dial(r.Scheme()+":///test.server", grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
+	cc, err := grpc.Dial(r.Scheme()+":///test.server", grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name), grpc.WithWaitForHandshake())
 	if err != nil {
 		t.Fatalf("failed to dial: %v", err)
 	}
@@ -413,7 +413,7 @@ func TestAllServersDown(t *testing.T) {
 	}
 	defer test.cleanup()
 
-	cc, err := grpc.Dial(r.Scheme()+":///test.server", grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
+	cc, err := grpc.Dial(r.Scheme()+":///test.server", grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name), grpc.WithWaitForHandshake())
 	if err != nil {
 		t.Fatalf("failed to dial: %v", err)
 	}

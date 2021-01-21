@@ -158,6 +158,7 @@ func testStateTransitionSingleAddress(t *testing.T, want []connectivity.State, s
 
 	client, err := DialContext(ctx,
 		"",
+		WithWaitForHandshake(),
 		WithInsecure(),
 		WithBalancerName(stateRecordingBalancerName),
 		WithDialer(pl.Dialer()),
@@ -193,11 +194,12 @@ func testStateTransitionSingleAddress(t *testing.T, want []connectivity.State, s
 	}
 }
 
-// When a READY connection is closed, the client enters CONNECTING.
-func (s) TestStateTransitions_ReadyToConnecting(t *testing.T) {
+// When a READY connection is closed, the client enters TRANSIENT FAILURE before CONNECTING.
+func (s) TestStateTransitions_ReadyToTransientFailure(t *testing.T) {
 	want := []connectivity.State{
 		connectivity.Connecting,
 		connectivity.Ready,
+		connectivity.TransientFailure,
 		connectivity.Connecting,
 	}
 
@@ -234,7 +236,7 @@ func (s) TestStateTransitions_ReadyToConnecting(t *testing.T) {
 		conn.Close()
 	}()
 
-	client, err := DialContext(ctx, lis.Addr().String(), WithInsecure(), WithBalancerName(stateRecordingBalancerName))
+	client, err := DialContext(ctx, lis.Addr().String(), WithWaitForHandshake(), WithInsecure(), WithBalancerName(stateRecordingBalancerName))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -259,8 +261,8 @@ func (s) TestStateTransitions_ReadyToConnecting(t *testing.T) {
 	}
 }
 
-// When the first connection is closed, the client stays in CONNECTING until it
-// tries the second address (which succeeds, and then it enters READY).
+// When the first connection is closed, the client enters stays in CONNECTING
+// until it tries the second address (which succeeds, and then it enters READY).
 func (s) TestStateTransitions_TriesAllAddrsBeforeTransientFailure(t *testing.T) {
 	want := []connectivity.State{
 		connectivity.Connecting,
@@ -320,7 +322,7 @@ func (s) TestStateTransitions_TriesAllAddrsBeforeTransientFailure(t *testing.T) 
 		{Addr: lis1.Addr().String()},
 		{Addr: lis2.Addr().String()},
 	}})
-	client, err := DialContext(ctx, "whatever:///this-gets-overwritten", WithInsecure(), WithBalancerName(stateRecordingBalancerName), WithResolvers(rb))
+	client, err := DialContext(ctx, "this-gets-overwritten", WithInsecure(), WithWaitForHandshake(), WithBalancerName(stateRecordingBalancerName), withResolverBuilder(rb))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -353,11 +355,13 @@ func (s) TestStateTransitions_TriesAllAddrsBeforeTransientFailure(t *testing.T) 
 }
 
 // When there are multiple addresses, and we enter READY on one of them, a
-// later closure should cause the client to enter CONNECTING
+// later closure should cause the client to enter TRANSIENT FAILURE before it
+// re-enters CONNECTING.
 func (s) TestStateTransitions_MultipleAddrsEntersReady(t *testing.T) {
 	want := []connectivity.State{
 		connectivity.Connecting,
 		connectivity.Ready,
+		connectivity.TransientFailure,
 		connectivity.Connecting,
 	}
 
@@ -414,7 +418,7 @@ func (s) TestStateTransitions_MultipleAddrsEntersReady(t *testing.T) {
 		{Addr: lis1.Addr().String()},
 		{Addr: lis2.Addr().String()},
 	}})
-	client, err := DialContext(ctx, "whatever:///this-gets-overwritten", WithInsecure(), WithBalancerName(stateRecordingBalancerName), WithResolvers(rb))
+	client, err := DialContext(ctx, "this-gets-overwritten", WithInsecure(), WithWaitForHandshake(), WithBalancerName(stateRecordingBalancerName), withResolverBuilder(rb))
 	if err != nil {
 		t.Fatal(err)
 	}

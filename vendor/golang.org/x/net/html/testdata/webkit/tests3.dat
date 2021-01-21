@@ -1,8 +1,8 @@
 #data
 <head></head><style></style>
 #errors
-(1,6): expected-doctype-but-got-start-tag
-(1,20): unexpected-start-tag-out-of-my-head
+Line: 1 Col: 6 Unexpected start tag (head). Expected DOCTYPE.
+Line: 1 Col: 20 Unexpected start tag (style) that can be in head. Moved.
 #document
 | <html>
 |   <head>
@@ -12,8 +12,8 @@
 #data
 <head></head><script></script>
 #errors
-(1,6): expected-doctype-but-got-start-tag
-(1,21): unexpected-start-tag-out-of-my-head
+Line: 1 Col: 6 Unexpected start tag (head). Expected DOCTYPE.
+Line: 1 Col: 21 Unexpected start tag (script) that can be in head. Moved.
 #document
 | <html>
 |   <head>
@@ -23,9 +23,8 @@
 #data
 <head></head><!-- --><style></style><!-- --><script></script>
 #errors
-(1,6): expected-doctype-but-got-start-tag
-(1,28): unexpected-start-tag-out-of-my-head
-(1,52): unexpected-start-tag-out-of-my-head
+Line: 1 Col: 6 Unexpected start tag (head). Expected DOCTYPE.
+Line: 1 Col: 28 Unexpected start tag (style) that can be in head. Moved.
 #document
 | <html>
 |   <head>
@@ -38,7 +37,7 @@
 #data
 <head></head><!-- -->x<style></style><!-- --><script></script>
 #errors
-(1,6): expected-doctype-but-got-start-tag
+Line: 1 Col: 6 Unexpected start tag (head). Expected DOCTYPE.
 #document
 | <html>
 |   <head>
@@ -132,7 +131,7 @@ y"
 <!DOCTYPE html><html><head></head><body><pre>x<div>
 y</pre></body></html>
 #errors
-(2,7): end-tag-too-early
+Line: 2 Col: 7 End tag (pre) seen too early. Expected other end tag.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -159,7 +158,7 @@ A"
 #data
 <!DOCTYPE html><HTML><META><HEAD></HEAD></HTML>
 #errors
-(1,33): two-heads-are-not-better-than-one
+Line: 1 Col: 33 Unexpected start tag head in existing head. Ignored.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -170,7 +169,7 @@ A"
 #data
 <!DOCTYPE html><HTML><HEAD><head></HEAD></HTML>
 #errors
-(1,33): two-heads-are-not-better-than-one
+Line: 1 Col: 33 Unexpected start tag head in existing head. Ignored.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -180,8 +179,8 @@ A"
 #data
 <textarea>foo<span>bar</span><i>baz
 #errors
-(1,10): expected-doctype-but-got-start-tag
-(1,35): expected-closing-tag-but-got-eof
+Line: 1 Col: 10 Unexpected start tag (textarea). Expected DOCTYPE.
+Line: 1 Col: 35 Expected closing tag. Unexpected end of file.
 #document
 | <html>
 |   <head>
@@ -192,8 +191,8 @@ A"
 #data
 <title>foo<span>bar</em><i>baz
 #errors
-(1,7): expected-doctype-but-got-start-tag
-(1,30): expected-named-closing-tag-but-got-eof
+Line: 1 Col: 7 Unexpected start tag (title). Expected DOCTYPE.
+Line: 1 Col: 30 Unexpected end of file. Expected end tag (title).
 #document
 | <html>
 |   <head>
@@ -241,7 +240,7 @@ foo"
 #data
 <!DOCTYPE html><html><head></head><body><ul><li><div><p><li></ul></body></html>
 #errors
-(1,60): end-tag-too-early
+Line: 1 Col: 60 Missing end tag (div, li).
 #document
 | <!DOCTYPE html>
 | <html>
@@ -256,9 +255,9 @@ foo"
 #data
 <!doctype html><nobr><nobr><nobr>
 #errors
-(1,27): unexpected-start-tag-implies-end-tag
-(1,33): unexpected-start-tag-implies-end-tag
-(1,33): expected-closing-tag-but-got-eof
+Line: 1 Col: 27 Unexpected start tag (nobr) implies end tag (nobr).
+Line: 1 Col: 33 Unexpected start tag (nobr) implies end tag (nobr).
+Line: 1 Col: 33 Expected closing tag. Unexpected end of file.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -271,8 +270,8 @@ foo"
 #data
 <!doctype html><nobr><nobr></nobr><nobr>
 #errors
-(1,27): unexpected-start-tag-implies-end-tag
-(1,40): expected-closing-tag-but-got-eof
+Line: 1 Col: 27 Unexpected start tag (nobr) implies end tag (nobr).
+Line: 1 Col: 40 Expected closing tag. Unexpected end of file.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -285,6 +284,7 @@ foo"
 #data
 <!doctype html><html><body><p><table></table></body></html>
 #errors
+Not known
 #document
 | <!DOCTYPE html>
 | <html>
@@ -296,7 +296,7 @@ foo"
 #data
 <p><table></table>
 #errors
-(1,3): expected-doctype-but-got-start-tag
+Not known
 #document
 | <html>
 |   <head>

@@ -49,25 +49,23 @@ func (c *completer) builtinArgKind(obj types.Object, call *ast.CallExpr) objKind
 }
 
 // builtinArgType infers the type of an argument to a builtin
-// function. parentInf is the inferred type info for the builtin
-// call's parent node.
-func (c *completer) builtinArgType(obj types.Object, call *ast.CallExpr, parentInf candidateInference) candidateInference {
-	var (
-		exprIdx = exprAtPos(c.pos, call.Args)
-		inf     = candidateInference{}
-	)
+// function. "parentType" is the inferred type for the builtin call's
+// parent node.
+func (c *completer) builtinArgType(obj types.Object, call *ast.CallExpr, parentType types.Type) (infType types.Type, wantType, variadic bool) {
+	exprIdx := exprAtPos(c.pos, call.Args)
 
 	switch obj.Name() {
 	case "append":
-		inf.objType = parentInf.objType
-
 		// Check if we are completing the variadic append() param.
-		if exprIdx == 1 && len(call.Args) <= 2 {
-			inf.variadicType = deslice(inf.objType)
-		} else if exprIdx > 0 {
-			// If we are completing an individual element of the variadic
-			// param, "deslice" the expected type.
-			inf.objType = deslice(inf.objType)
+		variadic = exprIdx == 1 && len(call.Args) <= 2
+		infType = parentType
+
+		// If we are completing an individual element of the variadic
+		// param, "deslice" the expected type.
+		if !variadic && exprIdx > 0 {
+			if slice, ok := parentType.(*types.Slice); ok {
+				infType = slice.Elem()
+			}
 		}
 	case "delete":
 		if exprIdx > 0 && len(call.Args) > 0 {
@@ -75,7 +73,7 @@ func (c *completer) builtinArgType(obj types.Object, call *ast.CallExpr, parentI
 			firstArgType := c.pkg.GetTypesInfo().TypeOf(call.Args[0])
 			if firstArgType != nil {
 				if mt, ok := firstArgType.Underlying().(*types.Map); ok {
-					inf.objType = mt.Key()
+					infType = mt.Key()
 				}
 			}
 		}
@@ -90,26 +88,26 @@ func (c *completer) builtinArgType(obj types.Object, call *ast.CallExpr, parentI
 
 		// Fill in expected type of either arg if the other is already present.
 		if exprIdx == 1 && t1 != nil {
-			inf.objType = t1
+			infType = t1
 		} else if exprIdx == 0 && t2 != nil {
-			inf.objType = t2
+			infType = t2
 		}
 	case "new":
-		inf.typeName.wantTypeName = true
-		if parentInf.objType != nil {
+		wantType = true
+		if parentType != nil {
 			// Expected type for "new" is the de-pointered parent type.
-			if ptr, ok := parentInf.objType.Underlying().(*types.Pointer); ok {
-				inf.objType = ptr.Elem()
+			if ptr, ok := parentType.Underlying().(*types.Pointer); ok {
+				infType = ptr.Elem()
 			}
 		}
 	case "make":
 		if exprIdx == 0 {
-			inf.typeName.wantTypeName = true
-			inf.objType = parentInf.objType
+			wantType = true
+			infType = parentType
 		} else {
-			inf.objType = types.Typ[types.Int]
+			infType = types.Typ[types.Int]
 		}
 	}
 
-	return inf
+	return infType, wantType, variadic
 }

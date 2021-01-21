@@ -72,7 +72,7 @@ func TestNewLoggerFromConfigStringInvalid(t *testing.T) {
 		"s/m,*{}",
 		"s/m,s/m{a}",
 
-		// Duplicate rules.
+		// Duplciate rules.
 		"s/m,-s/m",
 		"-s/m,s/m",
 		"s/m,s/m",

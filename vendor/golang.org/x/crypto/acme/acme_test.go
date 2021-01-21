@@ -188,31 +188,6 @@ func TestRegister(t *testing.T) {
 	}
 }
 
-func TestRegisterWithoutKey(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "HEAD" {
-			w.Header().Set("Replay-Nonce", "test-nonce")
-			return
-		}
-		w.WriteHeader(http.StatusCreated)
-		fmt.Fprint(w, `{}`)
-	}))
-	defer ts.Close()
-	// First verify that using a complete client results in success.
-	c := Client{
-		Key:          testKeyEC,
-		DirectoryURL: ts.URL,
-		dir:          &Directory{RegURL: ts.URL},
-	}
-	if _, err := c.Register(context.Background(), &Account{}, AcceptTOS); err != nil {
-		t.Fatalf("c.Register() = %v; want success with a complete test client", err)
-	}
-	c.Key = nil
-	if _, err := c.Register(context.Background(), &Account{}, AcceptTOS); err == nil {
-		t.Error("c.Register() from client without key succeeded, wanted error")
-	}
-}
-
 func TestUpdateReg(t *testing.T) {
 	const terms = "https://ca.tld/acme/terms"
 	contacts := []string{"mailto:admin@example.com"}
@@ -592,45 +567,6 @@ func TestWaitAuthorization(t *testing.T) {
 		})
 		if _, ok := err.(*AuthorizationError); !ok {
 			t.Errorf("err is %v (%T); want non-nil *AuthorizationError", err, err)
-		}
-	})
-	t.Run("invalid status with error returns the authorization error", func(t *testing.T) {
-		_, err := runWaitAuthorization(context.Background(), t, func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintf(w, `{
-				"type": "dns-01",
-				"status": "invalid",
-				"error": {
-				  "type": "urn:ietf:params:acme:error:caa",
-				  "detail": "CAA record for <domain> prevents issuance",
-				  "status": 403
-				},
-				"url": "https://acme-v02.api.letsencrypt.org/acme/chall-v3/xxx/xxx",
-				"token": "xxx",
-				"validationRecord": [
-				  {
-					"hostname": "<domain>"
-				  }
-				]
-			  }`)
-		})
-
-		want := &AuthorizationError{
-			Errors: []error{
-				(&wireError{
-					Status: 403,
-					Type:   "urn:ietf:params:acme:error:caa",
-					Detail: "CAA record for <domain> prevents issuance",
-				}).error(nil),
-			},
-		}
-
-		_, ok := err.(*AuthorizationError)
-		if !ok {
-			t.Errorf("err is %T; want non-nil *AuthorizationError", err)
-		}
-
-		if err.Error() != want.Error() {
-			t.Errorf("err is %v; want %v", err, want)
 		}
 	})
 	t.Run("non-retriable error", func(t *testing.T) {
@@ -1381,7 +1317,7 @@ func TestTLSALPN01ChallengeCert(t *testing.T) {
 	}
 	acmeExts := []pkix.Extension{}
 	for _, ext := range cert.Extensions {
-		if idPeACMEIdentifier.Equal(ext.Id) {
+		if idPeACMEIdentifierV1.Equal(ext.Id) {
 			acmeExts = append(acmeExts, ext)
 		}
 	}

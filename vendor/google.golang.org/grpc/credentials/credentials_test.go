@@ -23,92 +23,10 @@ import (
 	"crypto/tls"
 	"net"
 	"reflect"
-	"strings"
 	"testing"
 
-	"google.golang.org/grpc/internal"
 	"google.golang.org/grpc/testdata"
 )
-
-// A struct that implements AuthInfo interface but does not implement GetCommonAuthInfo() method.
-type testAuthInfoNoGetCommonAuthInfoMethod struct{}
-
-func (ta testAuthInfoNoGetCommonAuthInfoMethod) AuthType() string {
-	return "testAuthInfoNoGetCommonAuthInfoMethod"
-}
-
-// A struct that implements AuthInfo interface and implements CommonAuthInfo() method.
-type testAuthInfo struct {
-	CommonAuthInfo
-}
-
-func (ta testAuthInfo) AuthType() string {
-	return "testAuthInfo"
-}
-
-func createTestContext(s SecurityLevel) context.Context {
-	auth := &testAuthInfo{CommonAuthInfo: CommonAuthInfo{SecurityLevel: s}}
-	ri := RequestInfo{
-		Method:   "testInfo",
-		AuthInfo: auth,
-	}
-	return internal.NewRequestInfoContext.(func(context.Context, RequestInfo) context.Context)(context.Background(), ri)
-}
-
-func TestCheckSecurityLevel(t *testing.T) {
-	testCases := []struct {
-		authLevel SecurityLevel
-		testLevel SecurityLevel
-		want      bool
-	}{
-		{
-			authLevel: PrivacyAndIntegrity,
-			testLevel: PrivacyAndIntegrity,
-			want:      true,
-		},
-		{
-			authLevel: IntegrityOnly,
-			testLevel: PrivacyAndIntegrity,
-			want:      false,
-		},
-		{
-			authLevel: IntegrityOnly,
-			testLevel: NoSecurity,
-			want:      true,
-		},
-		{
-			authLevel: 0,
-			testLevel: IntegrityOnly,
-			want:      true,
-		},
-		{
-			authLevel: 0,
-			testLevel: PrivacyAndIntegrity,
-			want:      true,
-		},
-	}
-	for _, tc := range testCases {
-		err := CheckSecurityLevel(createTestContext(tc.authLevel), tc.testLevel)
-		if tc.want && (err != nil) {
-			t.Fatalf("CheckSeurityLevel(%s, %s) returned failure but want success", tc.authLevel.String(), tc.testLevel.String())
-		} else if !tc.want && (err == nil) {
-			t.Fatalf("CheckSeurityLevel(%s, %s) returned success but want failure", tc.authLevel.String(), tc.testLevel.String())
-
-		}
-	}
-}
-
-func TestCheckSecurityLevelNoGetCommonAuthInfoMethod(t *testing.T) {
-	auth := &testAuthInfoNoGetCommonAuthInfoMethod{}
-	ri := RequestInfo{
-		Method:   "testInfo",
-		AuthInfo: auth,
-	}
-	ctxWithRequestInfo := internal.NewRequestInfoContext.(func(context.Context, RequestInfo) context.Context)(context.Background(), ri)
-	if err := CheckSecurityLevel(ctxWithRequestInfo, PrivacyAndIntegrity); err != nil {
-		t.Fatalf("CheckSeurityLevel() returned failure but want success")
-	}
-}
 
 func TestTLSOverrideServerName(t *testing.T) {
 	expectedServerName := "server.name"
@@ -137,40 +55,18 @@ func TestTLSClone(t *testing.T) {
 type serverHandshake func(net.Conn) (AuthInfo, error)
 
 func TestClientHandshakeReturnsAuthInfo(t *testing.T) {
-	tcs := []struct {
-		name    string
-		address string
-	}{
-		{
-			name:    "localhost",
-			address: "localhost:0",
-		},
-		{
-			name:    "ipv4",
-			address: "127.0.0.1:0",
-		},
-		{
-			name:    "ipv6",
-			address: "[::1]:0",
-		},
+	done := make(chan AuthInfo, 1)
+	lis := launchServer(t, tlsServerHandshake, done)
+	defer lis.Close()
+	lisAddr := lis.Addr().String()
+	clientAuthInfo := clientHandle(t, gRPCClientHandshake, lisAddr)
+	// wait until server sends serverAuthInfo or fails.
+	serverAuthInfo, ok := <-done
+	if !ok {
+		t.Fatalf("Error at server-side")
 	}
-
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			done := make(chan AuthInfo, 1)
-			lis := launchServerOnListenAddress(t, tlsServerHandshake, done, tc.address)
-			defer lis.Close()
-			lisAddr := lis.Addr().String()
-			clientAuthInfo := clientHandle(t, gRPCClientHandshake, lisAddr)
-			// wait until server sends serverAuthInfo or fails.
-			serverAuthInfo, ok := <-done
-			if !ok {
-				t.Fatalf("Error at server-side")
-			}
-			if !compare(clientAuthInfo, serverAuthInfo) {
-				t.Fatalf("c.ClientHandshake(_, %v, _) = %v, want %v.", lisAddr, clientAuthInfo, serverAuthInfo)
-			}
-		})
+	if !compare(clientAuthInfo, serverAuthInfo) {
+		t.Fatalf("c.ClientHandshake(_, %v, _) = %v, want %v.", lisAddr, clientAuthInfo, serverAuthInfo)
 	}
 }
 
@@ -225,16 +121,8 @@ func compare(a1, a2 AuthInfo) bool {
 }
 
 func launchServer(t *testing.T, hs serverHandshake, done chan AuthInfo) net.Listener {
-	return launchServerOnListenAddress(t, hs, done, "localhost:0")
-}
-
-func launchServerOnListenAddress(t *testing.T, hs serverHandshake, done chan AuthInfo, address string) net.Listener {
-	lis, err := net.Listen("tcp", address)
+	lis, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
-		if strings.Contains(err.Error(), "bind: cannot assign requested address") ||
-			strings.Contains(err.Error(), "socket: address family not supported by protocol") {
-			t.Skipf("no support for address %v", address)
-		}
 		t.Fatalf("Failed to listen: %v", err)
 	}
 	go serverHandle(t, hs, done, lis)
@@ -306,7 +194,7 @@ func tlsServerHandshake(conn net.Conn) (AuthInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	return TLSInfo{State: serverConn.ConnectionState(), CommonAuthInfo: CommonAuthInfo{SecurityLevel: PrivacyAndIntegrity}}, nil
+	return TLSInfo{State: serverConn.ConnectionState()}, nil
 }
 
 func tlsClientHandshake(conn net.Conn, _ string) (AuthInfo, error) {
@@ -315,7 +203,7 @@ func tlsClientHandshake(conn net.Conn, _ string) (AuthInfo, error) {
 	if err := clientConn.Handshake(); err != nil {
 		return nil, err
 	}
-	return TLSInfo{State: clientConn.ConnectionState(), CommonAuthInfo: CommonAuthInfo{SecurityLevel: PrivacyAndIntegrity}}, nil
+	return TLSInfo{State: clientConn.ConnectionState()}, nil
 }
 
 func TestAppendH2ToNextProtos(t *testing.T) {

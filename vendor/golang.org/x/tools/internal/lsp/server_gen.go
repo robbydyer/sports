@@ -72,7 +72,7 @@ func (s *Server) DocumentLink(ctx context.Context, params *protocol.DocumentLink
 	return s.documentLink(ctx, params)
 }
 
-func (s *Server) DocumentSymbol(ctx context.Context, params *protocol.DocumentSymbolParams) ([]interface{}, error) {
+func (s *Server) DocumentSymbol(ctx context.Context, params *protocol.DocumentSymbolParams) ([]protocol.DocumentSymbol, error) {
 	return s.documentSymbol(ctx, params)
 }
 
@@ -132,7 +132,7 @@ func (s *Server) PrepareCallHierarchy(context.Context, *protocol.CallHierarchyPr
 	return nil, notImplemented("PrepareCallHierarchy")
 }
 
-func (s *Server) PrepareRename(ctx context.Context, params *protocol.PrepareRenameParams) (*protocol.Range, error) {
+func (s *Server) PrepareRename(ctx context.Context, params *protocol.PrepareRenameParams) (interface{}, error) {
 	return s.prepareRename(ctx, params)
 }
 

@@ -4,7 +4,7 @@
 
 package telemetry
 
-// MetricData represents a single point in the time series of a metric.
+// Data represents a single point in the time series of a metric.
 // This provides the common interface to all metrics no matter their data
 // format.
 // To get the actual values for the metric you must type assert to a concrete

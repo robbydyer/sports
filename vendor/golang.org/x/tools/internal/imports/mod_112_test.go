@@ -3,7 +3,6 @@
 package imports
 
 import (
-	"context"
 	"testing"
 )
 
@@ -14,7 +13,7 @@ func TestNoMainModule(t *testing.T) {
 package x
 `, "")
 	defer mt.cleanup()
-	if _, err := mt.env.invokeGo(context.Background(), "mod", "download", "rsc.io/quote@v1.5.1"); err != nil {
+	if _, err := mt.env.invokeGo("mod", "download", "rsc.io/quote@v1.5.1"); err != nil {
 		t.Fatal(err)
 	}
 

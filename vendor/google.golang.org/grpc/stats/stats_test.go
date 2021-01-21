@@ -44,17 +44,12 @@ type connCtxKey struct{}
 type rpcCtxKey struct{}
 
 var (
-	// For headers sent to server:
+	// For headers:
 	testMetadata = metadata.MD{
 		"key1": []string{"value1"},
 		"key2": []string{"value2"},
 	}
-	// For headers sent from server:
-	testHeaderMetadata = metadata.MD{
-		"hkey1": []string{"headerValue1"},
-		"hkey2": []string{"headerValue2"},
-	}
-	// For trailers sent from server:
+	// For trailers:
 	testTrailerMetadata = metadata.MD{
 		"tkey1": []string{"trailerValue1"},
 		"tkey2": []string{"trailerValue2"},
@@ -63,16 +58,17 @@ var (
 	errorID int32 = 32202
 )
 
-type testServer struct {
-	testpb.UnimplementedTestServiceServer
-}
+type testServer struct{}
 
 func (s *testServer) UnaryCall(ctx context.Context, in *testpb.SimpleRequest) (*testpb.SimpleResponse, error) {
-	if err := grpc.SendHeader(ctx, testHeaderMetadata); err != nil {
-		return nil, status.Errorf(status.Code(err), "grpc.SendHeader(_, %v) = %v, want <nil>", testHeaderMetadata, err)
-	}
-	if err := grpc.SetTrailer(ctx, testTrailerMetadata); err != nil {
-		return nil, status.Errorf(status.Code(err), "grpc.SetTrailer(_, %v) = %v, want <nil>", testTrailerMetadata, err)
+	md, ok := metadata.FromIncomingContext(ctx)
+	if ok {
+		if err := grpc.SendHeader(ctx, md); err != nil {
+			return nil, status.Errorf(status.Code(err), "grpc.SendHeader(_, %v) = %v, want <nil>", md, err)
+		}
+		if err := grpc.SetTrailer(ctx, testTrailerMetadata); err != nil {
+			return nil, status.Errorf(status.Code(err), "grpc.SetTrailer(_, %v) = %v, want <nil>", testTrailerMetadata, err)
+		}
 	}
 
 	if in.Id == errorID {
@@ -83,10 +79,13 @@ func (s *testServer) UnaryCall(ctx context.Context, in *testpb.SimpleRequest) (*
 }
 
 func (s *testServer) FullDuplexCall(stream testpb.TestService_FullDuplexCallServer) error {
-	if err := stream.SendHeader(testHeaderMetadata); err != nil {
-		return status.Errorf(status.Code(err), "%v.SendHeader(%v) = %v, want %v", stream, testHeaderMetadata, err, nil)
+	md, ok := metadata.FromIncomingContext(stream.Context())
+	if ok {
+		if err := stream.SendHeader(md); err != nil {
+			return status.Errorf(status.Code(err), "%v.SendHeader(%v) = %v, want %v", stream, md, err, nil)
+		}
+		stream.SetTrailer(testTrailerMetadata)
 	}
-	stream.SetTrailer(testTrailerMetadata)
 	for {
 		in, err := stream.Recv()
 		if err == io.EOF {
@@ -108,10 +107,13 @@ func (s *testServer) FullDuplexCall(stream testpb.TestService_FullDuplexCallServ
 }
 
 func (s *testServer) ClientStreamCall(stream testpb.TestService_ClientStreamCallServer) error {
-	if err := stream.SendHeader(testHeaderMetadata); err != nil {
-		return status.Errorf(status.Code(err), "%v.SendHeader(%v) = %v, want %v", stream, testHeaderMetadata, err, nil)
+	md, ok := metadata.FromIncomingContext(stream.Context())
+	if ok {
+		if err := stream.SendHeader(md); err != nil {
+			return status.Errorf(status.Code(err), "%v.SendHeader(%v) = %v, want %v", stream, md, err, nil)
+		}
+		stream.SetTrailer(testTrailerMetadata)
 	}
-	stream.SetTrailer(testTrailerMetadata)
 	for {
 		in, err := stream.Recv()
 		if err == io.EOF {
@@ -129,10 +131,13 @@ func (s *testServer) ClientStreamCall(stream testpb.TestService_ClientStreamCall
 }
 
 func (s *testServer) ServerStreamCall(in *testpb.SimpleRequest, stream testpb.TestService_ServerStreamCallServer) error {
-	if err := stream.SendHeader(testHeaderMetadata); err != nil {
-		return status.Errorf(status.Code(err), "%v.SendHeader(%v) = %v, want %v", stream, testHeaderMetadata, err, nil)
+	md, ok := metadata.FromIncomingContext(stream.Context())
+	if ok {
+		if err := stream.SendHeader(md); err != nil {
+			return status.Errorf(status.Code(err), "%v.SendHeader(%v) = %v, want %v", stream, md, err, nil)
+		}
+		stream.SetTrailer(testTrailerMetadata)
 	}
-	stream.SetTrailer(testTrailerMetadata)
 
 	if in.Id == errorID {
 		return fmt.Errorf("got error id: %v", in.Id)
@@ -268,6 +273,7 @@ func (te *test) doUnaryCall(c *rpcConfig) (*testpb.SimpleRequest, *testpb.Simple
 		req = &testpb.SimpleRequest{Id: errorID}
 	}
 	ctx := metadata.NewOutgoingContext(context.Background(), testMetadata)
+
 	resp, err = tc.UnaryCall(ctx, req, grpc.WaitForReady(!c.failfast))
 	return req, resp, err
 }
@@ -396,8 +402,8 @@ const (
 	outPayload
 	outHeader
 	// TODO: test outTrailer ?
-	connBegin
-	connEnd
+	connbegin
+	connend
 )
 
 func checkBegin(t *testing.T, d *gotData, e *expectedData) {
@@ -432,15 +438,7 @@ func checkInHeader(t *testing.T, d *gotData, e *expectedData) {
 	if d.ctx == nil {
 		t.Fatalf("d.ctx = nil, want <non-nil>")
 	}
-	if d.client {
-		// additional headers might be injected so instead of testing equality, test that all the
-		// expected headers keys have the expected header values.
-		for key := range testHeaderMetadata {
-			if !reflect.DeepEqual(st.Header.Get(key), testHeaderMetadata.Get(key)) {
-				t.Fatalf("st.Header[%s] = %v, want %v", key, st.Header.Get(key), testHeaderMetadata.Get(key))
-			}
-		}
-	} else {
+	if !d.client {
 		if st.FullMethod != e.method {
 			t.Fatalf("st.FullMethod = %s, want %v", st.FullMethod, e.method)
 		}
@@ -449,13 +447,6 @@ func checkInHeader(t *testing.T, d *gotData, e *expectedData) {
 		}
 		if st.Compression != e.compression {
 			t.Fatalf("st.Compression = %v, want %v", st.Compression, e.compression)
-		}
-		// additional headers might be injected so instead of testing equality, test that all the
-		// expected headers keys have the expected header values.
-		for key := range testMetadata {
-			if !reflect.DeepEqual(st.Header.Get(key), testMetadata.Get(key)) {
-				t.Fatalf("st.Header[%s] = %v, want %v", key, st.Header.Get(key), testMetadata.Get(key))
-			}
 		}
 
 		if connInfo, ok := d.ctx.Value(connCtxKey{}).(*stats.ConnTagInfo); ok {
@@ -520,12 +511,7 @@ func checkInPayload(t *testing.T, d *gotData, e *expectedData) {
 			t.Fatalf("st.Lenght = %v, want %v", st.Length, len(b))
 		}
 	}
-	// Below are sanity checks that WireLength and RecvTime are populated.
-	// TODO: check values of WireLength and RecvTime.
-	if len(st.Data) > 0 && st.WireLength == 0 {
-		t.Fatalf("st.WireLength = %v with non-empty data, want <non-zero>",
-			st.WireLength)
-	}
+	// TODO check WireLength and ReceivedTime.
 	if st.RecvTime.IsZero() {
 		t.Fatalf("st.ReceivedTime = %v, want <non-zero>", st.RecvTime)
 	}
@@ -534,19 +520,12 @@ func checkInPayload(t *testing.T, d *gotData, e *expectedData) {
 func checkInTrailer(t *testing.T, d *gotData, e *expectedData) {
 	var (
 		ok bool
-		st *stats.InTrailer
 	)
-	if st, ok = d.s.(*stats.InTrailer); !ok {
+	if _, ok = d.s.(*stats.InTrailer); !ok {
 		t.Fatalf("got %T, want InTrailer", d.s)
 	}
 	if d.ctx == nil {
 		t.Fatalf("d.ctx = nil, want <non-nil>")
-	}
-	if !st.Client {
-		t.Fatalf("st IsClient = false, want true")
-	}
-	if !reflect.DeepEqual(st.Trailer, testTrailerMetadata) {
-		t.Fatalf("st.Trailer = %v, want %v", st.Trailer, testTrailerMetadata)
 	}
 }
 
@@ -571,13 +550,6 @@ func checkOutHeader(t *testing.T, d *gotData, e *expectedData) {
 		if st.Compression != e.compression {
 			t.Fatalf("st.Compression = %v, want %v", st.Compression, e.compression)
 		}
-		// additional headers might be injected so instead of testing equality, test that all the
-		// expected headers keys have the expected header values.
-		for key := range testMetadata {
-			if !reflect.DeepEqual(st.Header.Get(key), testMetadata.Get(key)) {
-				t.Fatalf("st.Header[%s] = %v, want %v", key, st.Header.Get(key), testMetadata.Get(key))
-			}
-		}
 
 		if rpcInfo, ok := d.ctx.Value(rpcCtxKey{}).(*stats.RPCTagInfo); ok {
 			if rpcInfo.FullMethodName != st.FullMethod {
@@ -585,14 +557,6 @@ func checkOutHeader(t *testing.T, d *gotData, e *expectedData) {
 			}
 		} else {
 			t.Fatalf("got context %v, want one with rpcCtxKey", d.ctx)
-		}
-	} else {
-		// additional headers might be injected so instead of testing equality, test that all the
-		// expected headers keys have the expected header values.
-		for key := range testHeaderMetadata {
-			if !reflect.DeepEqual(st.Header.Get(key), testHeaderMetadata.Get(key)) {
-				t.Fatalf("st.Header[%s] = %v, want %v", key, st.Header.Get(key), testHeaderMetadata.Get(key))
-			}
 		}
 	}
 }
@@ -639,12 +603,7 @@ func checkOutPayload(t *testing.T, d *gotData, e *expectedData) {
 			t.Fatalf("st.Lenght = %v, want %v", st.Length, len(b))
 		}
 	}
-	// Below are sanity checks that WireLength and SentTime are populated.
-	// TODO: check values of WireLength and SentTime.
-	if len(st.Data) > 0 && st.WireLength == 0 {
-		t.Fatalf("st.WireLength = %v with non-empty data, want <non-zero>",
-			st.WireLength)
-	}
+	// TODO check WireLength and ReceivedTime.
 	if st.SentTime.IsZero() {
 		t.Fatalf("st.SentTime = %v, want <non-zero>", st.SentTime)
 	}
@@ -663,9 +622,6 @@ func checkOutTrailer(t *testing.T, d *gotData, e *expectedData) {
 	}
 	if st.Client {
 		t.Fatalf("st IsClient = true, want false")
-	}
-	if !reflect.DeepEqual(st.Trailer, testTrailerMetadata) {
-		t.Fatalf("st.Trailer = %v, want %v", st.Trailer, testTrailerMetadata)
 	}
 }
 
@@ -1072,17 +1028,17 @@ func checkClientStats(t *testing.T, got []*gotData, expect *expectedData, checkF
 			checkFuncs[end].f(t, s, expect)
 			checkFuncs[end].c--
 		case *stats.ConnBegin:
-			if checkFuncs[connBegin].c <= 0 {
+			if checkFuncs[connbegin].c <= 0 {
 				t.Fatalf("unexpected stats: %T", s.s)
 			}
-			checkFuncs[connBegin].f(t, s, expect)
-			checkFuncs[connBegin].c--
+			checkFuncs[connbegin].f(t, s, expect)
+			checkFuncs[connbegin].c--
 		case *stats.ConnEnd:
-			if checkFuncs[connEnd].c <= 0 {
+			if checkFuncs[connend].c <= 0 {
 				t.Fatalf("unexpected stats: %T", s.s)
 			}
-			checkFuncs[connEnd].f(t, s, expect)
-			checkFuncs[connEnd].c--
+			checkFuncs[connend].f(t, s, expect)
+			checkFuncs[connend].c--
 		default:
 			t.Fatalf("unexpected stats: %T", s.s)
 		}

@@ -1,3 +1,5 @@
+-- -signature --
+
 -- Bar(float64, ...byte)-signature --
 Bar(float64, ...byte)
 

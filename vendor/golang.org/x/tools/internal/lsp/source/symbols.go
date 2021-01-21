@@ -22,7 +22,7 @@ func DocumentSymbols(ctx context.Context, snapshot Snapshot, fh FileHandle) ([]p
 	if err != nil {
 		return nil, fmt.Errorf("getting file for DocumentSymbols: %v", err)
 	}
-	file, _, _, _, err := pgh.Cached()
+	file, _, _, err := pgh.Cached()
 	if err != nil {
 		return nil, err
 	}
@@ -129,12 +129,40 @@ func funcSymbol(ctx context.Context, view View, pkg Package, decl *ast.FuncDecl,
 	return s, nil
 }
 
+func setKind(s *protocol.DocumentSymbol, typ types.Type, q types.Qualifier) {
+	switch typ := typ.Underlying().(type) {
+	case *types.Interface:
+		s.Kind = protocol.Interface
+	case *types.Struct:
+		s.Kind = protocol.Struct
+	case *types.Signature:
+		s.Kind = protocol.Function
+		if typ.Recv() != nil {
+			s.Kind = protocol.Method
+		}
+	case *types.Named:
+		setKind(s, typ.Underlying(), q)
+	case *types.Basic:
+		i := typ.Info()
+		switch {
+		case i&types.IsNumeric != 0:
+			s.Kind = protocol.Number
+		case i&types.IsBoolean != 0:
+			s.Kind = protocol.Boolean
+		case i&types.IsString != 0:
+			s.Kind = protocol.String
+		}
+	default:
+		s.Kind = protocol.Variable
+	}
+}
+
 func typeSymbol(ctx context.Context, view View, pkg Package, info *types.Info, spec *ast.TypeSpec, obj types.Object, q types.Qualifier) (protocol.DocumentSymbol, error) {
 	s := protocol.DocumentSymbol{
 		Name: obj.Name(),
 	}
 	s.Detail, _ = formatType(obj.Type(), q)
-	s.Kind = typeToKind(obj.Type())
+	setKind(&s, obj.Type(), q)
 
 	var err error
 	s.Range, err = nodeToProtocolRange(view, pkg, spec)
@@ -208,7 +236,7 @@ func typeSymbol(ctx context.Context, view View, pkg Package, info *types.Info, s
 			child := protocol.DocumentSymbol{
 				Name: types.TypeString(embedded, q),
 			}
-			child.Kind = typeToKind(embedded)
+			setKind(&child, embedded, q)
 			var spanNode, selectionNode ast.Node
 		Embeddeds:
 			for _, f := range ai.Methods.List {

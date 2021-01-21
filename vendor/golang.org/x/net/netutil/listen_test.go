@@ -18,7 +18,6 @@ import (
 )
 
 const defaultMaxOpenFiles = 256
-const timeout = 5 * time.Second
 
 func TestLimitListener(t *testing.T) {
 	const max = 5
@@ -82,26 +81,21 @@ var errFake = errors.New("fake error from errorListener")
 
 // This used to hang.
 func TestLimitListenerError(t *testing.T) {
-	errCh := make(chan error, 1)
+	donec := make(chan bool, 1)
 	go func() {
-		defer close(errCh)
 		const n = 2
 		ll := LimitListener(errorListener{}, n)
 		for i := 0; i < n+1; i++ {
 			_, err := ll.Accept()
 			if err != errFake {
-				errCh <- fmt.Errorf("Accept error = %v; want errFake", err)
-				return
+				t.Fatalf("Accept error = %v; want errFake", err)
 			}
 		}
+		donec <- true
 	}()
-
 	select {
-	case err := <-errCh:
-		if err != nil {
-			t.Fatalf("server: %v", err)
-		}
-	case <-time.After(timeout):
+	case <-donec:
+	case <-time.After(5 * time.Second):
 		t.Fatal("timeout. deadlock?")
 	}
 }
@@ -114,15 +108,15 @@ func TestLimitListenerClose(t *testing.T) {
 	defer ln.Close()
 	ln = LimitListener(ln, 1)
 
-	errCh := make(chan error)
+	doneCh := make(chan struct{})
+	defer close(doneCh)
 	go func() {
-		defer close(errCh)
-		c, err := net.DialTimeout("tcp", ln.Addr().String(), timeout)
+		c, err := net.Dial("tcp", ln.Addr().String())
 		if err != nil {
-			errCh <- err
-			return
+			t.Fatal(err)
 		}
-		c.Close()
+		defer c.Close()
+		<-doneCh
 	}()
 
 	c, err := ln.Accept()
@@ -130,11 +124,6 @@ func TestLimitListenerClose(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer c.Close()
-
-	err = <-errCh
-	if err != nil {
-		t.Fatalf("DialTimeout: %v", err)
-	}
 
 	acceptDone := make(chan struct{})
 	go func() {
@@ -152,7 +141,7 @@ func TestLimitListenerClose(t *testing.T) {
 
 	select {
 	case <-acceptDone:
-	case <-time.After(timeout):
+	case <-time.After(5 * time.Second):
 		t.Fatalf("Accept() still blocking")
 	}
 }

@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -361,7 +362,7 @@ func (s) TestRetryStreaming(t *testing.T) {
 			res, err := stream.Recv()
 			if res != nil ||
 				((err == nil) != (want == nil)) ||
-				(want != nil && err.Error() != want.Error()) {
+				(want != nil && !reflect.DeepEqual(err, want)) {
 				return fmt.Errorf("client: Recv() = %v, %v; want <nil>, %v", res, err, want)
 			}
 			return nil

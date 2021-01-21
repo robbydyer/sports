@@ -26,10 +26,9 @@ import (
 	"time"
 
 	"google.golang.org/grpc/balancer"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
+	_ "google.golang.org/grpc/grpclog/glogger"
 	"google.golang.org/grpc/internal/transport"
-	"google.golang.org/grpc/status"
 )
 
 const goroutineCount = 5
@@ -55,7 +54,7 @@ type testingPicker struct {
 	maxCalled int64
 }
 
-func (p *testingPicker) Pick(ctx context.Context, info balancer.PickInfo) (balancer.SubConn, func(balancer.DoneInfo), error) {
+func (p *testingPicker) Pick(ctx context.Context, opts balancer.PickOptions) (balancer.SubConn, func(balancer.DoneInfo), error) {
 	if atomic.AddInt64(&p.maxCalled, -1) < 0 {
 		return nil, nil, fmt.Errorf("pick called to many times (> goroutineCount)")
 	}
@@ -69,7 +68,7 @@ func (s) TestBlockingPickTimeout(t *testing.T) {
 	bp := newPickerWrapper()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
 	defer cancel()
-	if _, _, err := bp.pick(ctx, true, balancer.PickInfo{}); status.Code(err) != codes.DeadlineExceeded {
+	if _, _, err := bp.pick(ctx, true, balancer.PickOptions{}); err != context.DeadlineExceeded {
 		t.Errorf("bp.pick returned error %v, want DeadlineExceeded", err)
 	}
 }
@@ -80,7 +79,7 @@ func (s) TestBlockingPick(t *testing.T) {
 	var finishedCount uint64
 	for i := goroutineCount; i > 0; i-- {
 		go func() {
-			if tr, _, err := bp.pick(context.Background(), true, balancer.PickInfo{}); err != nil || tr != testT {
+			if tr, _, err := bp.pick(context.Background(), true, balancer.PickOptions{}); err != nil || tr != testT {
 				t.Errorf("bp.pick returned non-nil error: %v", err)
 			}
 			atomic.AddUint64(&finishedCount, 1)
@@ -100,7 +99,7 @@ func (s) TestBlockingPickNoSubAvailable(t *testing.T) {
 	// All goroutines should block because picker returns no sc available.
 	for i := goroutineCount; i > 0; i-- {
 		go func() {
-			if tr, _, err := bp.pick(context.Background(), true, balancer.PickInfo{}); err != nil || tr != testT {
+			if tr, _, err := bp.pick(context.Background(), true, balancer.PickOptions{}); err != nil || tr != testT {
 				t.Errorf("bp.pick returned non-nil error: %v", err)
 			}
 			atomic.AddUint64(&finishedCount, 1)
@@ -121,7 +120,7 @@ func (s) TestBlockingPickTransientWaitforready(t *testing.T) {
 	// picks are not failfast.
 	for i := goroutineCount; i > 0; i-- {
 		go func() {
-			if tr, _, err := bp.pick(context.Background(), false, balancer.PickInfo{}); err != nil || tr != testT {
+			if tr, _, err := bp.pick(context.Background(), false, balancer.PickOptions{}); err != nil || tr != testT {
 				t.Errorf("bp.pick returned non-nil error: %v", err)
 			}
 			atomic.AddUint64(&finishedCount, 1)
@@ -141,7 +140,7 @@ func (s) TestBlockingPickSCNotReady(t *testing.T) {
 	// All goroutines should block because sc is not ready.
 	for i := goroutineCount; i > 0; i-- {
 		go func() {
-			if tr, _, err := bp.pick(context.Background(), true, balancer.PickInfo{}); err != nil || tr != testT {
+			if tr, _, err := bp.pick(context.Background(), true, balancer.PickOptions{}); err != nil || tr != testT {
 				t.Errorf("bp.pick returned non-nil error: %v", err)
 			}
 			atomic.AddUint64(&finishedCount, 1)

@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	exporter *ocagent.Exporter
+	exporter export.Exporter
 	sent     fakeSender
 	start    time.Time
 	at       time.Time
@@ -214,22 +214,14 @@ func TestEvents(t *testing.T) {
 	ctx := context.TODO()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			startEvent := telemetry.Event{
-				Type:    telemetry.EventStartSpan,
-				Message: "event span",
-				At:      start,
+			span := &telemetry.Span{
+				Name:   "event span",
+				Start:  start,
+				Finish: end,
+				Events: []telemetry.Event{tt.event(ctx)},
 			}
-			endEvent := telemetry.Event{
-				Type: telemetry.EventEndSpan,
-				At:   end,
-			}
-			ctx := export.ContextSpan(ctx, startEvent)
-			span := export.GetSpan(ctx)
-			span.ID = export.SpanContext{}
-			span.Events = []telemetry.Event{tt.event(ctx)}
-			exporter.ProcessEvent(ctx, startEvent)
-			export.ContextSpan(ctx, endEvent)
-			exporter.ProcessEvent(ctx, endEvent)
+			exporter.StartSpan(ctx, span)
+			exporter.FinishSpan(ctx, span)
 			exporter.Flush()
 			got := sent.get("/v1/trace")
 			checkJSON(t, got, []byte(tt.want))

@@ -42,10 +42,7 @@ func TestScripts(t *testing.T) {
 	p := testscript.Params{
 		Dir: "testdata",
 		Setup: func(e *testscript.Env) error {
-			e.Vars = append(e.Vars,
-				"GOPROXY="+proxyURL,
-				"GONOSUMDB=*",
-			)
+			e.Vars = append(e.Vars, "GOPROXY="+proxyURL)
 			return nil
 		},
 	}

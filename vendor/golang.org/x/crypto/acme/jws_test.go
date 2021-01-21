@@ -323,14 +323,6 @@ func TestJWSEncodeJSONCustom(t *testing.T) {
 		// printf 'testsig' | b64raw
 		testsig = "dGVzdHNpZw"
 
-		// the example P256 curve point from https://tools.ietf.org/html/rfc7515#appendix-A.3.1
-		// encoded as ASN.1…
-		es256stdsig = "MEUCIA7RIVN5Y2xIPC9/FVgH1AKjsigDOvl8fheBmsMWnqZlAiEA" +
-			"xQoH04w8cOXY8S2vCEpUgKZlkMXyk1Cajz9/ioOjVNU"
-		// …and RFC7518 (https://tools.ietf.org/html/rfc7518#section-3.4)
-		es256jwsig = "DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw" +
-			"5djxLa8ISlSApmWQxfKTUJqPP3-Kg6NU1Q"
-
 		// printf '{"alg":"ES256","jwk":{"crv":"P-256","kty":"EC","x":<testKeyECPubY>,"y":<testKeyECPubY>},"nonce":"nonce","url":"url"}' | b64raw
 		es256phead = "eyJhbGciOiJFUzI1NiIsImp3ayI6eyJjcnYiOiJQLTI1NiIsImt0" +
 			"eSI6IkVDIiwieCI6IjVsaEV1ZzV4SzR4QkRaMm5BYmF4THRhTGl2" +
@@ -353,30 +345,24 @@ func TestJWSEncodeJSONCustom(t *testing.T) {
 	)
 
 	tt := []struct {
-		alg, phead    string
-		pub           crypto.PublicKey
-		stdsig, jwsig string
+		alg, phead string
+		pub        crypto.PublicKey
 	}{
-		{"ES256", es256phead, testKeyEC.Public(), es256stdsig, es256jwsig},
-		{"RS256", rs256phead, testKey.Public(), testsig, testsig},
+		{"ES256", es256phead, testKeyEC.Public()},
+		{"RS256", rs256phead, testKey.Public()},
 	}
 	for _, tc := range tt {
 		tc := tc
 		t.Run(tc.alg, func(t *testing.T) {
-			stdsig, err := base64.RawStdEncoding.DecodeString(tc.stdsig)
-			if err != nil {
-				t.Errorf("couldn't decode test vector: %v", err)
-			}
 			signer := &customTestSigner{
-				sig: stdsig,
+				sig: []byte("testsig"),
 				pub: tc.pub,
 			}
-
 			b, err := jwsEncodeJSON(claims, signer, noKeyID, "nonce", "url")
 			if err != nil {
 				t.Fatal(err)
 			}
-			var j jsonWebSignature
+			var j struct{ Protected, Payload, Signature string }
 			if err := json.Unmarshal(b, &j); err != nil {
 				t.Fatal(err)
 			}
@@ -386,53 +372,10 @@ func TestJWSEncodeJSONCustom(t *testing.T) {
 			if j.Payload != payload {
 				t.Errorf("j.Payload = %q\nwant %q", j.Payload, payload)
 			}
-			if j.Sig != tc.jwsig {
-				t.Errorf("j.Sig = %q\nwant %q", j.Sig, tc.jwsig)
+			if j.Signature != testsig {
+				t.Errorf("j.Signature = %q\nwant %q", j.Signature, testsig)
 			}
 		})
-	}
-}
-
-func TestJWSWithMAC(t *testing.T) {
-	// Example from RFC 7520 Section 4.4.3.
-	// https://tools.ietf.org/html/rfc7520#section-4.4.3
-	b64Key := "hJtXIZ2uSN5kbQfbtTNWbpdmhkV8FJG-Onbc6mxCcYg"
-	rawPayload := []byte("It\xe2\x80\x99s a dangerous business, Frodo, going out your " +
-		"door. You step onto the road, and if you don't keep your feet, " +
-		"there\xe2\x80\x99s no knowing where you might be swept off " +
-		"to.")
-	protected := "eyJhbGciOiJIUzI1NiIsImtpZCI6IjAxOGMwYWU1LTRkOWItNDcxYi1iZmQ2LW" +
-		"VlZjMxNGJjNzAzNyJ9"
-	payload := "SXTigJlzIGEgZGFuZ2Vyb3VzIGJ1c2luZXNzLCBGcm9kbywg" +
-		"Z29pbmcgb3V0IHlvdXIgZG9vci4gWW91IHN0ZXAgb250byB0aGUgcm9h" +
-		"ZCwgYW5kIGlmIHlvdSBkb24ndCBrZWVwIHlvdXIgZmVldCwgdGhlcmXi" +
-		"gJlzIG5vIGtub3dpbmcgd2hlcmUgeW91IG1pZ2h0IGJlIHN3ZXB0IG9m" +
-		"ZiB0by4"
-	sig := "s0h6KThzkfBBBkLspW1h84VsJZFTsPPqMDA7g1Md7p0"
-
-	key, err := base64.RawURLEncoding.DecodeString(b64Key)
-	if err != nil {
-		t.Fatalf("unable to decode key: %q", b64Key)
-	}
-	got, err := jwsWithMAC(key, "018c0ae5-4d9b-471b-bfd6-eef314bc7037", "", rawPayload)
-	if err != nil {
-		t.Fatalf("jwsWithMAC() = %q", err)
-	}
-	if got.Protected != protected {
-		t.Errorf("got.Protected = %q\nwant %q", got.Protected, protected)
-	}
-	if got.Payload != payload {
-		t.Errorf("got.Payload = %q\nwant %q", got.Payload, payload)
-	}
-	if got.Sig != sig {
-		t.Errorf("got.Signature = %q\nwant %q", got.Sig, sig)
-	}
-}
-
-func TestJWSWithMACError(t *testing.T) {
-	p := "{}"
-	if _, err := jwsWithMAC(nil, "", "", []byte(p)); err == nil {
-		t.Errorf("jwsWithMAC(nil, ...) = success; want err")
 	}
 }
 

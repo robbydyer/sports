@@ -22,38 +22,24 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	apb "github.com/golang/protobuf/ptypes/any"
 	dpb "github.com/golang/protobuf/ptypes/duration"
-	"github.com/google/go-cmp/cmp"
 	cpb "google.golang.org/genproto/googleapis/rpc/code"
 	epb "google.golang.org/genproto/googleapis/rpc/errdetails"
 	spb "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc/codes"
 )
 
-// errEqual is essentially a copy of testutils.StatusErrEqual(), to avoid a
-// cyclic dependency.
-func errEqual(err1, err2 error) bool {
-	status1, ok := FromError(err1)
-	if !ok {
-		return false
-	}
-	status2, ok := FromError(err2)
-	if !ok {
-		return false
-	}
-	return proto.Equal(status1.Proto(), status2.Proto())
-}
-
 func TestErrorsWithSameParameters(t *testing.T) {
 	const description = "some description"
 	e1 := Errorf(codes.AlreadyExists, description)
 	e2 := Errorf(codes.AlreadyExists, description)
-	if e1 == e2 || !errEqual(e1, e2) {
+	if e1 == e2 || !reflect.DeepEqual(e1, e2) {
 		t.Fatalf("Errors should be equivalent but unique - e1: %v, %v  e2: %p, %v", e1.(*statusError), e1, e2.(*statusError), e2)
 	}
 }
@@ -170,7 +156,7 @@ func TestFromErrorImplementsInterface(t *testing.T) {
 		t.Fatalf("FromError(%v) = %v, %v; want <Code()=%s, Message()=%q, Err()!=nil>, true", err, s, ok, code, message)
 	}
 	pd := s.Proto().GetDetails()
-	if len(pd) != 1 || !proto.Equal(pd[0], details[0]) {
+	if len(pd) != 1 || !reflect.DeepEqual(pd[0], details[0]) {
 		t.Fatalf("s.Proto.GetDetails() = %v; want <Details()=%s>", pd, details)
 	}
 }
@@ -318,14 +304,10 @@ func TestStatus_ErrorDetails_Fail(t *testing.T) {
 	}
 	for _, tc := range tests {
 		got := tc.s.Details()
-		if !cmp.Equal(got, tc.i, cmp.Comparer(proto.Equal), cmp.Comparer(equalError)) {
+		if !reflect.DeepEqual(got, tc.i) {
 			t.Errorf("(%v).Details() = %+v, want %+v", str(tc.s), got, tc.i)
 		}
 	}
-}
-
-func equalError(x, y error) bool {
-	return x == y || (x != nil && y != nil && x.Error() == y.Error())
 }
 
 func str(s *Status) string {

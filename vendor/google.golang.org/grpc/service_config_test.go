@@ -19,101 +19,19 @@
 package grpc
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"reflect"
 	"testing"
 	"time"
-
-	"google.golang.org/grpc/balancer"
-	"google.golang.org/grpc/serviceconfig"
 )
 
-type parseTestCase struct {
-	scjs    string
-	wantSC  *ServiceConfig
-	wantErr bool
-}
-
-func runParseTests(t *testing.T, testCases []parseTestCase) {
-	t.Helper()
-	for _, c := range testCases {
-		scpr := parseServiceConfig(c.scjs)
-		var sc *ServiceConfig
-		sc, _ = scpr.Config.(*ServiceConfig)
-		if !c.wantErr {
-			c.wantSC.rawJSONString = c.scjs
-		}
-		if c.wantErr != (scpr.Err != nil) || !reflect.DeepEqual(sc, c.wantSC) {
-			t.Fatalf("parseServiceConfig(%s) = %+v, %v, want %+v, %v", c.scjs, sc, scpr.Err, c.wantSC, c.wantErr)
-		}
-	}
-}
-
-type pbbData struct {
-	serviceconfig.LoadBalancingConfig
-	Foo string
-	Bar int
-}
-
-type parseBalancerBuilder struct{}
-
-func (parseBalancerBuilder) Name() string {
-	return "pbb"
-}
-
-func (parseBalancerBuilder) ParseConfig(c json.RawMessage) (serviceconfig.LoadBalancingConfig, error) {
-	d := pbbData{}
-	if err := json.Unmarshal(c, &d); err != nil {
-		return nil, err
-	}
-	return d, nil
-}
-
-func (parseBalancerBuilder) Build(cc balancer.ClientConn, opts balancer.BuildOptions) balancer.Balancer {
-	panic("unimplemented")
-}
-
-func init() {
-	balancer.Register(parseBalancerBuilder{})
-}
-
-func (s) TestParseLBConfig(t *testing.T) {
-	testcases := []parseTestCase{
-		{
-			`{
-    "loadBalancingConfig": [{"pbb": { "foo": "hi" } }]
-}`,
-			&ServiceConfig{
-				Methods:  make(map[string]MethodConfig),
-				lbConfig: &lbConfig{name: "pbb", cfg: pbbData{Foo: "hi"}},
-			},
-			false,
-		},
-	}
-	runParseTests(t, testcases)
-}
-
-func (s) TestParseNoLBConfigSupported(t *testing.T) {
-	// We have a loadBalancingConfig field but will not encounter a supported
-	// policy.  The config will be considered invalid in this case.
-	testcases := []parseTestCase{
-		{
-			scjs: `{
-    "loadBalancingConfig": [{"not_a_balancer1": {} }, {"not_a_balancer2": {}}]
-}`,
-			wantErr: true,
-		}, {
-			scjs:    `{"loadBalancingConfig": []}`,
-			wantErr: true,
-		},
-	}
-	runParseTests(t, testcases)
-}
-
 func (s) TestParseLoadBalancer(t *testing.T) {
-	testcases := []parseTestCase{
+	testcases := []struct {
+		scjs    string
+		wantSC  *ServiceConfig
+		wantErr bool
+	}{
 		{
 			`{
     "loadBalancingPolicy": "round_robin",
@@ -158,11 +76,21 @@ func (s) TestParseLoadBalancer(t *testing.T) {
 			true,
 		},
 	}
-	runParseTests(t, testcases)
+
+	for _, c := range testcases {
+		sc, err := parseServiceConfig(c.scjs)
+		if c.wantErr != (err != nil) || !scCompareWithRawJSONSkipped(sc, c.wantSC) {
+			t.Fatalf("parseServiceConfig(%s) = %+v, %v, want %+v, %v", c.scjs, sc, err, c.wantSC, c.wantErr)
+		}
+	}
 }
 
 func (s) TestParseWaitForReady(t *testing.T) {
-	testcases := []parseTestCase{
+	testcases := []struct {
+		scjs    string
+		wantSC  *ServiceConfig
+		wantErr bool
+	}{
 		{
 			`{
     "methodConfig": [
@@ -237,11 +165,20 @@ func (s) TestParseWaitForReady(t *testing.T) {
 		},
 	}
 
-	runParseTests(t, testcases)
+	for _, c := range testcases {
+		sc, err := parseServiceConfig(c.scjs)
+		if c.wantErr != (err != nil) || !scCompareWithRawJSONSkipped(sc, c.wantSC) {
+			t.Fatalf("parseServiceConfig(%s) = %+v, %v, want %+v, %v", c.scjs, sc, err, c.wantSC, c.wantErr)
+		}
+	}
 }
 
-func (s) TestParseTimeOut(t *testing.T) {
-	testcases := []parseTestCase{
+func (s) TestPraseTimeOut(t *testing.T) {
+	testcases := []struct {
+		scjs    string
+		wantSC  *ServiceConfig
+		wantErr bool
+	}{
 		{
 			`{
     "methodConfig": [
@@ -310,11 +247,20 @@ func (s) TestParseTimeOut(t *testing.T) {
 		},
 	}
 
-	runParseTests(t, testcases)
+	for _, c := range testcases {
+		sc, err := parseServiceConfig(c.scjs)
+		if c.wantErr != (err != nil) || !scCompareWithRawJSONSkipped(sc, c.wantSC) {
+			t.Fatalf("parseServiceConfig(%s) = %+v, %v, want %+v, %v", c.scjs, sc, err, c.wantSC, c.wantErr)
+		}
+	}
 }
 
-func (s) TestParseMsgSize(t *testing.T) {
-	testcases := []parseTestCase{
+func (s) TestPraseMsgSize(t *testing.T) {
+	testcases := []struct {
+		scjs    string
+		wantSC  *ServiceConfig
+		wantErr bool
+	}{
 		{
 			`{
     "methodConfig": [
@@ -370,7 +316,12 @@ func (s) TestParseMsgSize(t *testing.T) {
 		},
 	}
 
-	runParseTests(t, testcases)
+	for _, c := range testcases {
+		sc, err := parseServiceConfig(c.scjs)
+		if c.wantErr != (err != nil) || !scCompareWithRawJSONSkipped(sc, c.wantSC) {
+			t.Fatalf("parseServiceConfig(%s) = %+v, %v, want %+v, %v", c.scjs, sc, err, c.wantSC, c.wantErr)
+		}
+	}
 }
 
 func (s) TestParseDuration(t *testing.T) {
@@ -432,4 +383,16 @@ func newDuration(b time.Duration) *time.Duration {
 
 func newString(b string) *string {
 	return &b
+}
+
+func scCompareWithRawJSONSkipped(s1, s2 *ServiceConfig) bool {
+	if s1 == nil && s2 == nil {
+		return true
+	}
+	if (s1 == nil) != (s2 == nil) {
+		return false
+	}
+	s1.rawJSONString = ""
+	s2.rawJSONString = ""
+	return reflect.DeepEqual(s1, s2)
 }

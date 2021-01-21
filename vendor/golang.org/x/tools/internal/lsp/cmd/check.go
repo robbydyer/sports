@@ -48,7 +48,7 @@ func (c *check) Run(ctx context.Context, args ...string) error {
 	}
 	defer conn.terminate(ctx)
 	for _, arg := range args {
-		uri := span.URIFromPath(arg)
+		uri := span.FileURI(arg)
 		uris = append(uris, uri)
 		file := conn.AddFile(ctx, uri)
 		if file.err != nil {

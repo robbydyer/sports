@@ -24,8 +24,6 @@ import (
 	"reflect"
 	"testing"
 	"time"
-
-	"google.golang.org/grpc/connectivity"
 )
 
 func TestClientHealthCheckBackoff(t *testing.T) {
@@ -37,7 +35,7 @@ func TestClientHealthCheckBackoff(t *testing.T) {
 	}
 
 	var got []time.Duration
-	newStream := func(string) (interface{}, error) {
+	newStream := func() (interface{}, error) {
 		if len(got) < maxRetries {
 			return nil, errors.New("backoff")
 		}
@@ -51,7 +49,7 @@ func TestClientHealthCheckBackoff(t *testing.T) {
 	}
 	defer func() { backoffFunc = oldBackoffFunc }()
 
-	clientHealthCheck(context.Background(), newStream, func(connectivity.State, error) {}, "test")
+	clientHealthCheck(context.Background(), newStream, func(_ bool) {}, "test")
 
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("Backoff durations for %v retries are %v. (expected: %v)", maxRetries, got, want)

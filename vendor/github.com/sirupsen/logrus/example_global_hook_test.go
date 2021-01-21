@@ -1,9 +1,8 @@
 package logrus_test
 
 import (
-	"os"
-
 	"github.com/sirupsen/logrus"
+	"os"
 )
 
 var (
@@ -22,7 +21,7 @@ func (h *GlobalHook) Fire(e *logrus.Entry) error {
 	return nil
 }
 
-func ExampleGlobalHook() {
+func Example() {
 	l := logrus.New()
 	l.Out = os.Stdout
 	l.Formatter = &logrus.TextFormatter{DisableTimestamp: true, DisableColors: true}

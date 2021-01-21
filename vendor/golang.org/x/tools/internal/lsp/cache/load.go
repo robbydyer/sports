@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/internal/lsp/source"
 	"golang.org/x/tools/internal/lsp/telemetry"
 	"golang.org/x/tools/internal/packagesinternal"
 	"golang.org/x/tools/internal/span"
@@ -33,7 +32,6 @@ type metadata struct {
 	errors          []packages.Error
 	deps            []packageID
 	missingDeps     map[packagePath]struct{}
-	module          *packagesinternal.Module
 
 	// config is the *packages.Config associated with the loaded package.
 	config *packages.Config
@@ -121,7 +119,7 @@ func (s *snapshot) load(ctx context.Context, scopes ...interface{}) error {
 		if err != nil {
 			return err
 		}
-		if _, err := s.buildPackageHandle(ctx, m.id, source.ParseFull); err != nil {
+		if _, err := s.buildPackageHandle(ctx, m.id); err != nil {
 			return err
 		}
 	}
@@ -145,16 +143,15 @@ func (s *snapshot) setMetadata(ctx context.Context, pkgPath packagePath, pkg *pa
 		typesSizes: pkg.TypesSizes,
 		errors:     pkg.Errors,
 		config:     cfg,
-		module:     packagesinternal.GetModule(pkg),
 	}
 
 	for _, filename := range pkg.CompiledGoFiles {
-		uri := span.URIFromPath(filename)
+		uri := span.FileURI(filename)
 		m.compiledGoFiles = append(m.compiledGoFiles, uri)
 		s.addID(uri, m.id)
 	}
 	for _, filename := range pkg.GoFiles {
-		uri := span.URIFromPath(filename)
+		uri := span.FileURI(filename)
 		m.goFiles = append(m.goFiles, uri)
 		s.addID(uri, m.id)
 	}

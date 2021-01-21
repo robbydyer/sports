@@ -9,12 +9,22 @@ import (
 
 	"golang.org/x/tools/internal/lsp/protocol"
 	"golang.org/x/tools/internal/lsp/source"
+	"golang.org/x/tools/internal/span"
 )
 
 func (s *Server) definition(ctx context.Context, params *protocol.DefinitionParams) ([]protocol.Location, error) {
-	snapshot, fh, ok, err := s.beginFileRequest(params.TextDocument.URI, source.Go)
-	if !ok {
+	uri := span.NewURI(params.TextDocument.URI)
+	view, err := s.session.ViewOf(uri)
+	if err != nil {
 		return nil, err
+	}
+	snapshot := view.Snapshot()
+	fh, err := snapshot.GetFile(uri)
+	if err != nil {
+		return nil, err
+	}
+	if fh.Identity().Kind != source.Go {
+		return nil, nil
 	}
 	ident, err := source.Identifier(ctx, snapshot, fh, params.Position)
 	if err != nil {
@@ -26,16 +36,25 @@ func (s *Server) definition(ctx context.Context, params *protocol.DefinitionPara
 	}
 	return []protocol.Location{
 		{
-			URI:   protocol.URIFromSpanURI(ident.Declaration.URI()),
+			URI:   protocol.NewURI(ident.Declaration.URI()),
 			Range: decRange,
 		},
 	}, nil
 }
 
 func (s *Server) typeDefinition(ctx context.Context, params *protocol.TypeDefinitionParams) ([]protocol.Location, error) {
-	snapshot, fh, ok, err := s.beginFileRequest(params.TextDocument.URI, source.Go)
-	if !ok {
+	uri := span.NewURI(params.TextDocument.URI)
+	view, err := s.session.ViewOf(uri)
+	if err != nil {
 		return nil, err
+	}
+	snapshot := view.Snapshot()
+	fh, err := snapshot.GetFile(uri)
+	if err != nil {
+		return nil, err
+	}
+	if fh.Identity().Kind != source.Go {
+		return nil, nil
 	}
 	ident, err := source.Identifier(ctx, snapshot, fh, params.Position)
 	if err != nil {
@@ -47,7 +66,7 @@ func (s *Server) typeDefinition(ctx context.Context, params *protocol.TypeDefini
 	}
 	return []protocol.Location{
 		{
-			URI:   protocol.URIFromSpanURI(ident.Type.URI()),
+			URI:   protocol.NewURI(ident.Type.URI()),
 			Range: identRange,
 		},
 	}, nil

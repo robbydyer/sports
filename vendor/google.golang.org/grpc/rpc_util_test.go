@@ -30,7 +30,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/encoding"
 	protoenc "google.golang.org/grpc/encoding/proto"
-	"google.golang.org/grpc/internal/testutils"
 	"google.golang.org/grpc/internal/transport"
 	"google.golang.org/grpc/status"
 	perfpb "google.golang.org/grpc/test/codec_perf"
@@ -183,10 +182,10 @@ func (s) TestToRPCErr(t *testing.T) {
 	} {
 		err := toRPCErr(test.errIn)
 		if _, ok := status.FromError(err); !ok {
-			t.Errorf("toRPCErr{%v} returned type %T, want %T", test.errIn, err, status.Error)
+			t.Fatalf("toRPCErr{%v} returned type %T, want %T", test.errIn, err, status.Error(codes.Unknown, ""))
 		}
-		if !testutils.StatusErrEqual(err, test.errOut) {
-			t.Errorf("toRPCErr{%v} = %v \nwant %v", test.errIn, err, test.errOut)
+		if !reflect.DeepEqual(err, test.errOut) {
+			t.Fatalf("toRPCErr{%v} = %v \nwant %v", test.errIn, err, test.errOut)
 		}
 	}
 }

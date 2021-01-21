@@ -10,22 +10,18 @@ import (
 	"sync"
 
 	"golang.org/x/tools/internal/jsonrpc2"
-	"golang.org/x/tools/internal/lsp/mod"
 	"golang.org/x/tools/internal/lsp/protocol"
 	"golang.org/x/tools/internal/lsp/source"
 	"golang.org/x/tools/internal/span"
 )
 
-const concurrentAnalyses = 1
-
 // NewServer creates an LSP server and binds it to handle incoming client
 // messages on on the supplied stream.
 func NewServer(session source.Session, client protocol.Client) *Server {
 	return &Server{
-		delivered:       make(map[span.URI]sentDiagnostics),
-		session:         session,
-		client:          client,
-		diagnosticsSema: make(chan struct{}, concurrentAnalyses),
+		delivered: make(map[span.URI]sentDiagnostics),
+		session:   session,
+		client:    client,
 	}
 }
 
@@ -57,12 +53,6 @@ type Server struct {
 	// delivered is a cache of the diagnostics that the server has sent.
 	deliveredMu sync.Mutex
 	delivered   map[span.URI]sentDiagnostics
-
-	showedInitialError   bool
-	showedInitialErrorMu sync.Mutex
-
-	// diagnosticsSema limits the concurrency of diagnostics runs, which can be expensive.
-	diagnosticsSema chan struct{}
 }
 
 // sentDiagnostics is used to cache diagnostics that have been sent for a given file.
@@ -79,28 +69,24 @@ func (s *Server) cancelRequest(ctx context.Context, params *protocol.CancelParam
 }
 
 func (s *Server) codeLens(ctx context.Context, params *protocol.CodeLensParams) ([]protocol.CodeLens, error) {
-	snapshot, fh, ok, err := s.beginFileRequest(params.TextDocument.URI, source.Mod)
-	if !ok {
-		return nil, err
-	}
-	return mod.CodeLens(ctx, snapshot, fh.Identity().URI)
+	return nil, nil
 }
 
 func (s *Server) nonstandardRequest(ctx context.Context, method string, params interface{}) (interface{}, error) {
 	paramMap := params.(map[string]interface{})
 	if method == "gopls/diagnoseFiles" {
 		for _, file := range paramMap["files"].([]interface{}) {
-			snapshot, fh, ok, err := s.beginFileRequest(protocol.DocumentURI(file.(string)), source.UnknownKind)
-			if !ok {
+			uri := span.NewURI(file.(string))
+			view, err := s.session.ViewOf(uri)
+			if err != nil {
 				return nil, err
 			}
-
-			fileID, diagnostics, err := source.FileDiagnostics(ctx, snapshot, fh.Identity().URI)
+			fileID, diagnostics, err := source.FileDiagnostics(ctx, view.Snapshot(), uri)
 			if err != nil {
 				return nil, err
 			}
 			if err := s.client.PublishDiagnostics(ctx, &protocol.PublishDiagnosticsParams{
-				URI:         protocol.URIFromSpanURI(fh.Identity().URI),
+				URI:         protocol.NewURI(uri),
 				Diagnostics: toProtocolDiagnostics(diagnostics),
 				Version:     fileID.Version,
 			}); err != nil {

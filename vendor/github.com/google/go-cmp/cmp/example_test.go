@@ -37,7 +37,7 @@ func ExampleDiff_testing() {
 	//   	SSID:      "CoffeeShopWiFi",
 	// - 	IPAddress: s"192.168.0.2",
 	// + 	IPAddress: s"192.168.0.1",
-	//   	NetMask:   {0xff, 0xff, 0x00, 0x00},
+	//   	NetMask:   net.IPMask{0xff, 0xff, 0x00, 0x00},
 	//   	Clients: []cmp_test.Client{
 	//   		... // 2 identical elements
 	//   		{Hostname: "macchiato", IPAddress: s"192.168.0.153", LastSeen: s"2009-11-10 23:39:43 +0000 UTC"},
@@ -219,7 +219,7 @@ func (x otherString) Equal(y otherString) bool {
 	return strings.ToLower(string(x)) == strings.ToLower(string(y))
 }
 
-// If the Equal method defined on a type is not suitable, the type can be
+// If the Equal method defined on a type is not suitable, the type can be be
 // dynamically transformed to be stripped of the Equal method (or any method
 // for that matter).
 func ExampleOption_avoidEqualMethod() {

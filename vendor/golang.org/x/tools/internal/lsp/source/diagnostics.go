@@ -61,10 +61,10 @@ func Diagnostics(ctx context.Context, snapshot Snapshot, ph PackageHandle, missi
 		warn = true
 	}
 
-	missing := make(map[string]*modfile.Require)
+	isMissingModule := false
 	for _, imp := range pkg.Imports() {
-		if req, ok := missingModules[imp.PkgPath()]; ok {
-			missing[imp.PkgPath()] = req
+		if _, ok := missingModules[imp.PkgPath()]; ok {
+			isMissingModule = true
 			continue
 		}
 		for dep, req := range missingModules {
@@ -77,7 +77,8 @@ func Diagnostics(ctx context.Context, snapshot Snapshot, ph PackageHandle, missi
 			// )
 			// They both are related to the same module: "golang.org/x/tools"
 			if req != nil && strings.HasPrefix(imp.PkgPath(), dep) {
-				missing[imp.PkgPath()] = req
+				missingModules[imp.PkgPath()] = req
+				isMissingModule = true
 				break
 			}
 		}
@@ -89,8 +90,8 @@ func Diagnostics(ctx context.Context, snapshot Snapshot, ph PackageHandle, missi
 		if err := clearReports(snapshot, reports, fh.File().Identity().URI); err != nil {
 			return nil, warn, err
 		}
-		if len(missing) > 0 {
-			if err := missingModulesDiagnostics(ctx, snapshot, reports, missing, fh.File().Identity().URI); err != nil {
+		if isMissingModule {
+			if err := missingModulesDiagnostics(ctx, snapshot, reports, missingModules, fh.File().Identity().URI); err != nil {
 				return nil, warn, err
 			}
 		}
@@ -104,7 +105,7 @@ func Diagnostics(ctx context.Context, snapshot Snapshot, ph PackageHandle, missi
 		// If no file is associated with the error, pick an open file from the package.
 		if e.URI.Filename() == "" {
 			for _, ph := range pkg.CompiledGoFiles() {
-				if snapshot.IsOpen(ph.File().Identity().URI) {
+				if snapshot.View().Session().IsOpen(ph.File().Identity().URI) {
 					e.URI = ph.File().Identity().URI
 				}
 			}
@@ -222,7 +223,7 @@ func missingModulesDiagnostics(ctx context.Context, snapshot Snapshot, reports m
 	if err != nil {
 		return err
 	}
-	file, _, m, _, err := snapshot.View().Session().Cache().ParseGoHandle(fh, ParseHeader).Parse(ctx)
+	file, m, _, err := snapshot.View().Session().Cache().ParseGoHandle(fh, ParseHeader).Parse(ctx)
 	if err != nil {
 		log.Error(ctx, "could not parse go file when checking for missing modules", err)
 		return err
@@ -354,7 +355,7 @@ func onlyDeletions(fixes []SuggestedFix) bool {
 			}
 		}
 	}
-	return len(fixes) > 0
+	return true
 }
 
 // hasUndeclaredErrors returns true if a package has a type error

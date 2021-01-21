@@ -11,7 +11,7 @@ import (
 )
 
 // Parse returns the location represented by the input.
-// Only file paths are accepted, not URIs.
+// All inputs are valid locations, as they can always be a pure filename.
 // The returned span will be normalized, and thus if printed may produce a
 // different string.
 func Parse(input string) Span {
@@ -32,12 +32,12 @@ func Parse(input string) Span {
 	}
 	switch {
 	case suf.sep == ":":
-		return New(URIFromPath(suf.remains), NewPoint(suf.num, hold, offset), Point{})
+		return New(NewURI(suf.remains), NewPoint(suf.num, hold, offset), Point{})
 	case suf.sep == "-":
 		// we have a span, fall out of the case to continue
 	default:
 		// separator not valid, rewind to either the : or the start
-		return New(URIFromPath(valid), NewPoint(hold, 0, offset), Point{})
+		return New(NewURI(valid), NewPoint(hold, 0, offset), Point{})
 	}
 	// only the span form can get here
 	// at this point we still don't know what the numbers we have mean
@@ -53,20 +53,20 @@ func Parse(input string) Span {
 	}
 	if suf.sep != ":" {
 		// turns out we don't have a span after all, rewind
-		return New(URIFromPath(valid), end, Point{})
+		return New(NewURI(valid), end, Point{})
 	}
 	valid = suf.remains
 	hold = suf.num
 	suf = rstripSuffix(suf.remains)
 	if suf.sep != ":" {
 		// line#offset only
-		return New(URIFromPath(valid), NewPoint(hold, 0, offset), end)
+		return New(NewURI(valid), NewPoint(hold, 0, offset), end)
 	}
 	// we have a column, so if end only had one number, it is also the column
 	if !hadCol {
 		end = NewPoint(suf.num, end.v.Line, end.v.Offset)
 	}
-	return New(URIFromPath(suf.remains), NewPoint(suf.num, hold, offset), end)
+	return New(NewURI(suf.remains), NewPoint(suf.num, hold, offset), end)
 }
 
 type suffix struct {

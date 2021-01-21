@@ -116,9 +116,9 @@ The predefined commands are:
 - cd dir
   Change to the given directory for future commands.
 
-- chmod perm path...
-  Change the permissions of the files or directories named by the path arguments
-  to the given octal mode (000 to 777).
+- chmod mode file
+
+  Change the permissions of file or directory to the given octal mode (000 to 777).
 
 - cmp file1 file2
   Check that the named files have the same content.
@@ -180,8 +180,6 @@ The predefined commands are:
 
 - stdin file
   Set the standard input for the next exec command to the contents of the given file.
-  File can be "stdout" or "stderr" to use the standard output or standard error
-  from the most recent exec or wait command.
 
 - [!] stderr [-count=N] pattern
   Apply the grep command (see above) to the standard error

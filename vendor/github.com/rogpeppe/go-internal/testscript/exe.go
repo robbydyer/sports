@@ -211,6 +211,3 @@ func (nopTestDeps) WriteHeapProfile(io.Writer) error {
 	// Not needed for Go 1.10.
 	return nil
 }
-
-// Note: SetPanicOnExit0 was added in Go 1.16.
-func (nopTestDeps) SetPanicOnExit0(bool) {}

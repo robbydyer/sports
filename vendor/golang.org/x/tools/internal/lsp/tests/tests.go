@@ -15,7 +15,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"sort"
 	"strconv"
@@ -37,13 +36,12 @@ const (
 	overlayFileSuffix = ".overlay"
 	goldenFileSuffix  = ".golden"
 	inFileSuffix      = ".in"
-	summaryFile       = "summary.txt"
+	summaryFile       = "summary.txt.golden"
 	testModule        = "golang.org/x/tools/internal/lsp"
 )
 
 var UpdateGolden = flag.Bool("golden", false, "Update golden files")
 
-type CodeLens map[span.URI][]protocol.CodeLens
 type Diagnostics map[span.URI][]source.Diagnostic
 type CompletionItems map[token.Pos]*source.CompletionItem
 type Completions map[span.Span][]Completion
@@ -56,7 +54,7 @@ type RankCompletions map[span.Span][]Completion
 type FoldingRanges []span.Span
 type Formats []span.Span
 type Imports []span.Span
-type SuggestedFixes map[span.Span][]string
+type SuggestedFixes []span.Span
 type Definitions map[span.Span]Definition
 type Implementations map[span.Span][]span.Span
 type Highlights map[span.Span][]span.Span
@@ -71,36 +69,33 @@ type Signatures map[span.Span]*protocol.SignatureHelp
 type Links map[span.URI][]Link
 
 type Data struct {
-	Config                        packages.Config
-	Exported                      *packagestest.Exported
-	CodeLens                      CodeLens
-	Diagnostics                   Diagnostics
-	CompletionItems               CompletionItems
-	Completions                   Completions
-	CompletionSnippets            CompletionSnippets
-	UnimportedCompletions         UnimportedCompletions
-	DeepCompletions               DeepCompletions
-	FuzzyCompletions              FuzzyCompletions
-	CaseSensitiveCompletions      CaseSensitiveCompletions
-	RankCompletions               RankCompletions
-	FoldingRanges                 FoldingRanges
-	Formats                       Formats
-	Imports                       Imports
-	SuggestedFixes                SuggestedFixes
-	Definitions                   Definitions
-	Implementations               Implementations
-	Highlights                    Highlights
-	References                    References
-	Renames                       Renames
-	PrepareRenames                PrepareRenames
-	Symbols                       Symbols
-	symbolsChildren               SymbolsChildren
-	symbolInformation             SymbolInformation
-	WorkspaceSymbols              WorkspaceSymbols
-	FuzzyWorkspaceSymbols         WorkspaceSymbols
-	CaseSensitiveWorkspaceSymbols WorkspaceSymbols
-	Signatures                    Signatures
-	Links                         Links
+	Config                   packages.Config
+	Exported                 *packagestest.Exported
+	Diagnostics              Diagnostics
+	CompletionItems          CompletionItems
+	Completions              Completions
+	CompletionSnippets       CompletionSnippets
+	UnimportedCompletions    UnimportedCompletions
+	DeepCompletions          DeepCompletions
+	FuzzyCompletions         FuzzyCompletions
+	CaseSensitiveCompletions CaseSensitiveCompletions
+	RankCompletions          RankCompletions
+	FoldingRanges            FoldingRanges
+	Formats                  Formats
+	Imports                  Imports
+	SuggestedFixes           SuggestedFixes
+	Definitions              Definitions
+	Implementations          Implementations
+	Highlights               Highlights
+	References               References
+	Renames                  Renames
+	PrepareRenames           PrepareRenames
+	Symbols                  Symbols
+	symbolsChildren          SymbolsChildren
+	symbolInformation        SymbolInformation
+	WorkspaceSymbols         WorkspaceSymbols
+	Signatures               Signatures
+	Links                    Links
 
 	t         testing.TB
 	fragments map[string]string
@@ -115,7 +110,6 @@ type Data struct {
 }
 
 type Tests interface {
-	CodeLens(*testing.T, span.URI, []protocol.CodeLens)
 	Diagnostics(*testing.T, span.URI, []source.Diagnostic)
 	Completion(*testing.T, span.Span, Completion, CompletionItems)
 	CompletionSnippet(*testing.T, span.Span, CompletionSnippet, bool, CompletionItems)
@@ -127,7 +121,7 @@ type Tests interface {
 	FoldingRanges(*testing.T, span.Span)
 	Format(*testing.T, span.Span)
 	Import(*testing.T, span.Span)
-	SuggestedFix(*testing.T, span.Span, []string)
+	SuggestedFix(*testing.T, span.Span)
 	Definition(*testing.T, span.Span, Definition)
 	Implementation(*testing.T, span.Span, []span.Span)
 	Highlight(*testing.T, span.Span, []span.Span)
@@ -136,8 +130,6 @@ type Tests interface {
 	PrepareRename(*testing.T, span.Span, *source.PrepareItem)
 	Symbols(*testing.T, span.URI, []protocol.DocumentSymbol)
 	WorkspaceSymbols(*testing.T, string, []protocol.SymbolInformation, map[string]struct{})
-	FuzzyWorkspaceSymbols(*testing.T, string, []protocol.SymbolInformation, map[string]struct{})
-	CaseSensitiveWorkspaceSymbols(*testing.T, string, []protocol.SymbolInformation, map[string]struct{})
 	SignatureHelp(*testing.T, span.Span, *protocol.SignatureHelp)
 	Link(*testing.T, span.URI, []Link)
 }
@@ -164,24 +156,11 @@ const (
 	// Fuzzy tests deep completion and fuzzy matching.
 	CompletionFuzzy
 
-	// CaseSensitive tests case sensitive completion.
+	// CaseSensitive tests case sensitive completion
 	CompletionCaseSensitive
 
 	// CompletionRank candidates in test must be valid and in the right relative order.
 	CompletionRank
-)
-
-type WorkspaceSymbolsTestType int
-
-const (
-	// Default runs the standard workspace symbols tests.
-	WorkspaceSymbolsDefault = WorkspaceSymbolsTestType(iota)
-
-	// Fuzzy tests workspace symbols with fuzzy matching.
-	WorkspaceSymbolsFuzzy
-
-	// CaseSensitive tests workspace symbols with case sensitive.
-	WorkspaceSymbolsCaseSensitive
 )
 
 type Completion struct {
@@ -225,7 +204,6 @@ func DefaultOptions() source.Options {
 	o.HoverKind = source.SynopsisDocumentation
 	o.InsertTextFormat = protocol.SnippetTextFormat
 	o.CompletionBudget = time.Minute
-	o.HierarchicalDocumentSymbolSupport = true
 	return o
 }
 
@@ -265,31 +243,27 @@ func Load(t testing.TB, exporter packagestest.Exporter, dir string) []*Data {
 	var data []*Data
 	for _, folder := range folders {
 		datum := &Data{
-			CodeLens:                      make(CodeLens),
-			Diagnostics:                   make(Diagnostics),
-			CompletionItems:               make(CompletionItems),
-			Completions:                   make(Completions),
-			CompletionSnippets:            make(CompletionSnippets),
-			UnimportedCompletions:         make(UnimportedCompletions),
-			DeepCompletions:               make(DeepCompletions),
-			FuzzyCompletions:              make(FuzzyCompletions),
-			RankCompletions:               make(RankCompletions),
-			CaseSensitiveCompletions:      make(CaseSensitiveCompletions),
-			Definitions:                   make(Definitions),
-			Implementations:               make(Implementations),
-			Highlights:                    make(Highlights),
-			References:                    make(References),
-			Renames:                       make(Renames),
-			PrepareRenames:                make(PrepareRenames),
-			SuggestedFixes:                make(SuggestedFixes),
-			Symbols:                       make(Symbols),
-			symbolsChildren:               make(SymbolsChildren),
-			symbolInformation:             make(SymbolInformation),
-			WorkspaceSymbols:              make(WorkspaceSymbols),
-			FuzzyWorkspaceSymbols:         make(WorkspaceSymbols),
-			CaseSensitiveWorkspaceSymbols: make(WorkspaceSymbols),
-			Signatures:                    make(Signatures),
-			Links:                         make(Links),
+			Diagnostics:              make(Diagnostics),
+			CompletionItems:          make(CompletionItems),
+			Completions:              make(Completions),
+			CompletionSnippets:       make(CompletionSnippets),
+			UnimportedCompletions:    make(UnimportedCompletions),
+			DeepCompletions:          make(DeepCompletions),
+			FuzzyCompletions:         make(FuzzyCompletions),
+			RankCompletions:          make(RankCompletions),
+			CaseSensitiveCompletions: make(CaseSensitiveCompletions),
+			Definitions:              make(Definitions),
+			Implementations:          make(Implementations),
+			Highlights:               make(Highlights),
+			References:               make(References),
+			Renames:                  make(Renames),
+			PrepareRenames:           make(PrepareRenames),
+			Symbols:                  make(Symbols),
+			symbolsChildren:          make(SymbolsChildren),
+			symbolInformation:        make(SymbolInformation),
+			WorkspaceSymbols:         make(WorkspaceSymbols),
+			Signatures:               make(Signatures),
+			Links:                    make(Links),
 
 			t:         t,
 			dir:       folder,
@@ -299,19 +273,17 @@ func Load(t testing.TB, exporter packagestest.Exporter, dir string) []*Data {
 			mappers:   map[span.URI]*protocol.ColumnMapper{},
 		}
 
-		if !*UpdateGolden {
-			summary := filepath.Join(filepath.FromSlash(folder), summaryFile+goldenFileSuffix)
-			if _, err := os.Stat(summary); os.IsNotExist(err) {
-				t.Fatalf("could not find golden file summary.txt in %#v", folder)
-			}
-			archive, err := txtar.ParseFile(summary)
-			if err != nil {
-				t.Fatalf("could not read golden file %v/%v: %v", folder, summary, err)
-			}
-			datum.golden[summaryFile] = &Golden{
-				Filename: summary,
-				Archive:  archive,
-			}
+		summary := filepath.Join(filepath.FromSlash(folder), summaryFile)
+		if _, err := os.Stat(summary); os.IsNotExist(err) {
+			t.Fatalf("could not find golden file summary.txt in %#v", folder)
+		}
+		archive, err := txtar.ParseFile(summary)
+		if err != nil {
+			t.Fatalf("could not read golden file %v/%v: %v", folder, summary, err)
+		}
+		datum.golden["summary.txt"] = &Golden{
+			Filename: summary,
+			Archive:  archive,
 		}
 
 		modules, _ := packagestest.GroupFilesByModules(folder)
@@ -389,7 +361,6 @@ func Load(t testing.TB, exporter packagestest.Exporter, dir string) []*Data {
 
 		// Collect any data that needs to be used by subsequent tests.
 		if err := datum.Exported.Expect(map[string]interface{}{
-			"codelens":        datum.collectCodeLens,
 			"diag":            datum.collectDiagnostics,
 			"item":            datum.collectCompletionItems,
 			"complete":        datum.collectCompletions(CompletionDefault),
@@ -425,11 +396,9 @@ func Load(t testing.TB, exporter packagestest.Exporter, dir string) []*Data {
 		}
 		// Collect names for the entries that require golden files.
 		if err := datum.Exported.Expect(map[string]interface{}{
-			"godef":                        datum.collectDefinitionNames,
-			"hover":                        datum.collectDefinitionNames,
-			"workspacesymbol":              datum.collectWorkspaceSymbols(WorkspaceSymbolsDefault),
-			"workspacesymbolfuzzy":         datum.collectWorkspaceSymbols(WorkspaceSymbolsFuzzy),
-			"workspacesymbolcasesensitive": datum.collectWorkspaceSymbols(WorkspaceSymbolsCaseSensitive),
+			"godef":           datum.collectDefinitionNames,
+			"hover":           datum.collectDefinitionNames,
+			"workspacesymbol": datum.collectWorkspaceSymbols,
 		}); err != nil {
 			t.Fatal(err)
 		}
@@ -456,28 +425,6 @@ func Run(t *testing.T, tests Tests, data *Data) {
 				})
 			}
 
-		}
-	}
-
-	eachWorkspaceSymbols := func(t *testing.T, cases map[string][]protocol.SymbolInformation, test func(*testing.T, string, []protocol.SymbolInformation, map[string]struct{})) {
-		t.Helper()
-
-		for query, expectedSymbols := range cases {
-			name := query
-			if name == "" {
-				name = "EmptyQuery"
-			}
-			t.Run(name, func(t *testing.T) {
-				t.Helper()
-				dirs := make(map[string]struct{})
-				for _, si := range expectedSymbols {
-					d := filepath.Dir(si.Location.URI.SpanURI().Filename())
-					if _, ok := dirs[d]; !ok {
-						dirs[d] = struct{}{}
-					}
-				}
-				test(t, query, expectedSymbols, dirs)
-			})
 		}
 	}
 
@@ -530,20 +477,6 @@ func Run(t *testing.T, tests Tests, data *Data) {
 		eachCompletion(t, data.RankCompletions, tests.RankCompletion)
 	})
 
-	t.Run("CodeLens", func(t *testing.T) {
-		t.Helper()
-		for uri, want := range data.CodeLens {
-			// Check if we should skip this URI if the -modfile flag is not available.
-			if shouldSkip(data, uri) {
-				continue
-			}
-			t.Run(uriName(uri), func(t *testing.T) {
-				t.Helper()
-				tests.CodeLens(t, uri, want)
-			})
-		}
-	})
-
 	t.Run("Diagnostics", func(t *testing.T) {
 		t.Helper()
 		for uri, want := range data.Diagnostics {
@@ -590,14 +523,14 @@ func Run(t *testing.T, tests Tests, data *Data) {
 
 	t.Run("SuggestedFix", func(t *testing.T) {
 		t.Helper()
-		for spn, actionKinds := range data.SuggestedFixes {
+		for _, spn := range data.SuggestedFixes {
 			// Check if we should skip this spn if the -modfile flag is not available.
 			if shouldSkip(data, spn.URI()) {
 				continue
 			}
 			t.Run(SpanName(spn), func(t *testing.T) {
 				t.Helper()
-				tests.SuggestedFix(t, spn, actionKinds)
+				tests.SuggestedFix(t, spn)
 			})
 		}
 	})
@@ -677,17 +610,23 @@ func Run(t *testing.T, tests Tests, data *Data) {
 
 	t.Run("WorkspaceSymbols", func(t *testing.T) {
 		t.Helper()
-		eachWorkspaceSymbols(t, data.WorkspaceSymbols, tests.WorkspaceSymbols)
-	})
-
-	t.Run("FuzzyWorkspaceSymbols", func(t *testing.T) {
-		t.Helper()
-		eachWorkspaceSymbols(t, data.FuzzyWorkspaceSymbols, tests.FuzzyWorkspaceSymbols)
-	})
-
-	t.Run("CaseSensitiveWorkspaceSymbols", func(t *testing.T) {
-		t.Helper()
-		eachWorkspaceSymbols(t, data.CaseSensitiveWorkspaceSymbols, tests.CaseSensitiveWorkspaceSymbols)
+		for query, expectedSymbols := range data.WorkspaceSymbols {
+			name := query
+			if name == "" {
+				name = "EmptyQuery"
+			}
+			t.Run(name, func(t *testing.T) {
+				t.Helper()
+				dirs := make(map[string]struct{})
+				for _, si := range expectedSymbols {
+					d := filepath.Dir(si.Location.URI)
+					if _, ok := dirs[d]; !ok {
+						dirs[d] = struct{}{}
+					}
+				}
+				tests.WorkspaceSymbols(t, query, expectedSymbols, dirs)
+			})
+		}
 	})
 
 	t.Run("SignatureHelp", func(t *testing.T) {
@@ -703,18 +642,6 @@ func Run(t *testing.T, tests Tests, data *Data) {
 	t.Run("Link", func(t *testing.T) {
 		t.Helper()
 		for uri, wantLinks := range data.Links {
-			// If we are testing GOPATH, then we do not want links with
-			// the versions attached (pkg.go.dev/repoa/moda@v1.1.0/pkg),
-			// unless the file is a go.mod, then we can skip it alltogether.
-			if data.Exported.Exporter == packagestest.GOPATH {
-				if strings.HasSuffix(uri.Filename(), ".mod") {
-					continue
-				}
-				re := regexp.MustCompile(`@v\d+\.\d+\.[\w-]+`)
-				for i, link := range wantLinks {
-					wantLinks[i].Target = re.ReplaceAllString(link.Target, "")
-				}
-			}
 			t.Run(uriName(uri), func(t *testing.T) {
 				t.Helper()
 				tests.Link(t, uri, wantLinks)
@@ -769,14 +696,6 @@ func checkData(t *testing.T, data *Data) {
 		return count
 	}
 
-	countCodeLens := func(c map[span.URI][]protocol.CodeLens) (count int) {
-		for _, want := range c {
-			count += len(want)
-		}
-		return count
-	}
-
-	fmt.Fprintf(buf, "CodeLensCount = %v\n", countCodeLens(data.CodeLens))
 	fmt.Fprintf(buf, "CompletionsCount = %v\n", countCompletions(data.Completions))
 	fmt.Fprintf(buf, "CompletionSnippetCount = %v\n", snippetCount)
 	fmt.Fprintf(buf, "UnimportedCompletionsCount = %v\n", countCompletions(data.UnimportedCompletions))
@@ -797,13 +716,11 @@ func checkData(t *testing.T, data *Data) {
 	fmt.Fprintf(buf, "PrepareRenamesCount = %v\n", len(data.PrepareRenames))
 	fmt.Fprintf(buf, "SymbolsCount = %v\n", len(data.Symbols))
 	fmt.Fprintf(buf, "WorkspaceSymbolsCount = %v\n", len(data.WorkspaceSymbols))
-	fmt.Fprintf(buf, "FuzzyWorkspaceSymbolsCount = %v\n", len(data.FuzzyWorkspaceSymbols))
-	fmt.Fprintf(buf, "CaseSensitiveWorkspaceSymbolsCount = %v\n", len(data.CaseSensitiveWorkspaceSymbols))
 	fmt.Fprintf(buf, "SignaturesCount = %v\n", len(data.Signatures))
 	fmt.Fprintf(buf, "LinksCount = %v\n", linksCount)
 	fmt.Fprintf(buf, "ImplementationsCount = %v\n", len(data.Implementations))
 
-	want := string(data.Golden("summary", summaryFile, func() ([]byte, error) {
+	want := string(data.Golden("summary", "summary.txt", func() ([]byte, error) {
 		return buf.Bytes(), nil
 	}))
 	got := buf.String()
@@ -845,12 +762,8 @@ func (data *Data) Golden(tag string, target string, update func() ([]byte, error
 		if !*UpdateGolden {
 			data.t.Fatalf("could not find golden file %v: %v", fragment, tag)
 		}
-		var subdir string
-		if fragment != summaryFile {
-			subdir = "primarymod"
-		}
 		golden = &Golden{
-			Filename: filepath.Join(data.dir, subdir, fragment+goldenFileSuffix),
+			Filename: filepath.Join(data.dir, fragment+goldenFileSuffix),
 			Archive:  &txtar.Archive{},
 			Modified: true,
 		}
@@ -884,38 +797,9 @@ func (data *Data) Golden(tag string, target string, update func() ([]byte, error
 	return file.Data[:len(file.Data)-1] // drop the trailing \n
 }
 
-func (data *Data) collectCodeLens(spn span.Span, title, cmd string) {
-	if _, ok := data.CodeLens[spn.URI()]; !ok {
-		data.CodeLens[spn.URI()] = []protocol.CodeLens{}
-	}
-	m, err := data.Mapper(spn.URI())
-	if err != nil {
-		return
-	}
-	rng, err := m.Range(spn)
-	if err != nil {
-		return
-	}
-	data.CodeLens[spn.URI()] = append(data.CodeLens[spn.URI()], protocol.CodeLens{
-		Range: rng,
-		Command: protocol.Command{
-			Title:   title,
-			Command: cmd,
-		},
-	})
-}
-
 func (data *Data) collectDiagnostics(spn span.Span, msgSource, msg, msgSeverity string) {
 	if _, ok := data.Diagnostics[spn.URI()]; !ok {
 		data.Diagnostics[spn.URI()] = []source.Diagnostic{}
-	}
-	m, err := data.Mapper(spn.URI())
-	if err != nil {
-		return
-	}
-	rng, err := m.Range(spn)
-	if err != nil {
-		return
 	}
 	severity := protocol.SeverityError
 	switch msgSeverity {
@@ -930,7 +814,16 @@ func (data *Data) collectDiagnostics(spn span.Span, msgSource, msg, msgSeverity 
 	}
 	// This is not the correct way to do this, but it seems excessive to do the full conversion here.
 	want := source.Diagnostic{
-		Range:    rng,
+		Range: protocol.Range{
+			Start: protocol.Position{
+				Line:      float64(spn.Start().Line()) - 1,
+				Character: float64(spn.Start().Column()) - 1,
+			},
+			End: protocol.Position{
+				Line:      float64(spn.End().Line()) - 1,
+				Character: float64(spn.End().Column()) - 1,
+			},
+		},
 		Severity: severity,
 		Source:   msgSource,
 		Message:  msg,
@@ -1003,11 +896,8 @@ func (data *Data) collectImports(spn span.Span) {
 	data.Imports = append(data.Imports, spn)
 }
 
-func (data *Data) collectSuggestedFixes(spn span.Span, actionKind string) {
-	if _, ok := data.SuggestedFixes[spn]; !ok {
-		data.SuggestedFixes[spn] = []string{}
-	}
-	data.SuggestedFixes[spn] = append(data.SuggestedFixes[spn], actionKind)
+func (data *Data) collectSuggestedFixes(spn span.Span) {
+	data.SuggestedFixes = append(data.SuggestedFixes, spn)
 }
 
 func (data *Data) collectDefinitions(src, target span.Span) {
@@ -1101,33 +991,16 @@ func (data *Data) collectSymbols(name string, spn span.Span, kind string, parent
 		Name: sym.Name,
 		Kind: sym.Kind,
 		Location: protocol.Location{
-			URI:   protocol.URIFromSpanURI(spn.URI()),
+			URI:   protocol.NewURI(spn.URI()),
 			Range: sym.SelectionRange,
 		},
 	}
 	data.symbolInformation[spn] = si
 }
 
-func (data *Data) collectWorkspaceSymbols(typ WorkspaceSymbolsTestType) func(string, []span.Span) {
-	switch typ {
-	case WorkspaceSymbolsFuzzy:
-		return func(query string, targets []span.Span) {
-			for _, target := range targets {
-				data.FuzzyWorkspaceSymbols[query] = append(data.FuzzyWorkspaceSymbols[query], data.symbolInformation[target])
-			}
-		}
-	case WorkspaceSymbolsCaseSensitive:
-		return func(query string, targets []span.Span) {
-			for _, target := range targets {
-				data.CaseSensitiveWorkspaceSymbols[query] = append(data.CaseSensitiveWorkspaceSymbols[query], data.symbolInformation[target])
-			}
-		}
-	default:
-		return func(query string, targets []span.Span) {
-			for _, target := range targets {
-				data.WorkspaceSymbols[query] = append(data.WorkspaceSymbols[query], data.symbolInformation[target])
-			}
-		}
+func (data *Data) collectWorkspaceSymbols(query string, targets []span.Span) {
+	for _, target := range targets {
+		data.WorkspaceSymbols[query] = append(data.WorkspaceSymbols[query], data.symbolInformation[target])
 	}
 }
 
@@ -1232,7 +1105,7 @@ func shouldSkip(data *Data, uri span.URI) bool {
 	}
 	// If the -modfile flag is not available, then we do not want to run
 	// any tests on the go.mod file.
-	if strings.HasSuffix(uri.Filename(), ".mod") {
+	if strings.Contains(uri.Filename(), ".mod") {
 		return true
 	}
 	// If the -modfile flag is not available, then we do not want to test any

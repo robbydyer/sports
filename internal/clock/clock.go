@@ -1,0 +1,38 @@
+package clock
+
+import (
+	"context"
+	"time"
+
+	rgb "github.com/robbydyer/rgbmatrix-rpi"
+
+	"github.com/robbydyer/sports/internal/board"
+)
+
+// Board implements board.Board
+type basicClock struct{}
+
+func New() (board.Board, error) {
+	b := &basicClock{}
+
+	return b, nil
+}
+
+func (b *basicClock) Name() string {
+	return "Basic Clock"
+}
+
+func (b *basicClock) Cleanup() {}
+
+func (b *basicClock) Render(ctx context.Context, matrix rgb.Matrix, rotationDelay time.Duration) error {
+	cv := rgb.NewCanvas(matrix)
+	cv.Clear()
+
+	//rgbrender.DrawRectangle(cv, )
+
+	return nil
+}
+
+func (b *basicClock) HasPriority() bool {
+	return false
+}

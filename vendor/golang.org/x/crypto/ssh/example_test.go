@@ -198,7 +198,6 @@ func ExampleDial() {
 	if err != nil {
 		log.Fatal("Failed to dial: ", err)
 	}
-	defer client.Close()
 
 	// Each ClientConn can support multiple interactive sessions,
 	// represented by a Session.

@@ -18,7 +18,6 @@ import (
 	"golang.org/x/tools/go/packages/packagestest"
 	"golang.org/x/tools/internal/lsp/cache"
 	"golang.org/x/tools/internal/lsp/diff"
-	"golang.org/x/tools/internal/lsp/mod"
 	"golang.org/x/tools/internal/lsp/protocol"
 	"golang.org/x/tools/internal/lsp/source"
 	"golang.org/x/tools/internal/lsp/tests"
@@ -49,12 +48,13 @@ func testLSP(t *testing.T, exporter packagestest.Exporter) {
 	for _, datum := range data {
 		defer datum.Exported.Cleanup()
 
-		cache := cache.New(ctx, nil)
-		session := cache.NewSession(ctx)
+		cache := cache.New(nil)
+		session := cache.NewSession()
 		options := tests.DefaultOptions()
+		options.TempModfile = exporter == packagestest.Modules
 		session.SetOptions(options)
 		options.Env = datum.Config.Env
-		v, _, err := session.NewView(ctx, datum.Config.Dir, span.URIFromPath(datum.Config.Dir), options)
+		v, _, err := session.NewView(ctx, datum.Config.Dir, span.FileURI(datum.Config.Dir), options)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -74,7 +74,7 @@ func testLSP(t *testing.T, exporter packagestest.Exporter) {
 				continue
 			}
 			modifications = append(modifications, source.FileModification{
-				URI:        span.URIFromPath(filename),
+				URI:        span.FileURI(filename),
 				Action:     source.Open,
 				Version:    -1,
 				Text:       content,
@@ -85,31 +85,17 @@ func testLSP(t *testing.T, exporter packagestest.Exporter) {
 			t.Fatal(err)
 		}
 		r := &runner{
-			server: NewServer(session, nil),
-			data:   datum,
-			ctx:    ctx,
+			server: &Server{
+				session:   session,
+				delivered: map[span.URI]sentDiagnostics{},
+			},
+			data: datum,
+			ctx:  ctx,
 		}
 		t.Run(datum.Folder, func(t *testing.T) {
 			t.Helper()
 			tests.Run(t, r, datum)
 		})
-	}
-}
-
-func (r *runner) CodeLens(t *testing.T, uri span.URI, want []protocol.CodeLens) {
-	if source.DetectLanguage("", uri.Filename()) != source.Mod {
-		return
-	}
-	v, err := r.server.session.ViewOf(uri)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got, err := mod.CodeLens(r.ctx, v.Snapshot(), uri)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if diff := tests.DiffCodeLens(uri, want, got); diff != "" {
-		t.Error(diff)
 	}
 }
 
@@ -155,7 +141,7 @@ func (r *runner) FoldingRanges(t *testing.T, spn span.Span) {
 	}
 	ranges, err := r.server.FoldingRange(r.ctx, &protocol.FoldingRangeParams{
 		TextDocument: protocol.TextDocumentIdentifier{
-			URI: protocol.URIFromSpanURI(uri),
+			URI: protocol.NewURI(uri),
 		},
 	})
 	if err != nil {
@@ -173,7 +159,7 @@ func (r *runner) FoldingRanges(t *testing.T, spn span.Span) {
 	}
 	ranges, err = r.server.FoldingRange(r.ctx, &protocol.FoldingRangeParams{
 		TextDocument: protocol.TextDocumentIdentifier{
-			URI: protocol.URIFromSpanURI(uri),
+			URI: protocol.NewURI(uri),
 		},
 	})
 	if err != nil {
@@ -307,7 +293,7 @@ func (r *runner) Format(t *testing.T, spn span.Span) {
 
 	edits, err := r.server.Formatting(r.ctx, &protocol.DocumentFormattingParams{
 		TextDocument: protocol.TextDocumentIdentifier{
-			URI: protocol.URIFromSpanURI(uri),
+			URI: protocol.NewURI(uri),
 		},
 	})
 	if err != nil {
@@ -335,7 +321,7 @@ func (r *runner) Import(t *testing.T, spn span.Span) {
 	filename := uri.Filename()
 	actions, err := r.server.CodeAction(r.ctx, &protocol.CodeActionParams{
 		TextDocument: protocol.TextDocumentIdentifier{
-			URI: protocol.URIFromSpanURI(uri),
+			URI: protocol.NewURI(uri),
 		},
 	})
 	if err != nil {
@@ -361,7 +347,7 @@ func (r *runner) Import(t *testing.T, spn span.Span) {
 	}
 }
 
-func (r *runner) SuggestedFix(t *testing.T, spn span.Span, actionKinds []string) {
+func (r *runner) SuggestedFix(t *testing.T, spn span.Span) {
 	uri := spn.URI()
 	view, err := r.server.session.ViewOf(uri)
 	if err != nil {
@@ -397,16 +383,12 @@ func (r *runner) SuggestedFix(t *testing.T, spn span.Span, actionKinds []string)
 	if diag == nil {
 		t.Fatalf("could not get any suggested fixes for %v", spn)
 	}
-	codeActionKinds := []protocol.CodeActionKind{}
-	for _, k := range actionKinds {
-		codeActionKinds = append(codeActionKinds, protocol.CodeActionKind(k))
-	}
 	actions, err := r.server.CodeAction(r.ctx, &protocol.CodeActionParams{
 		TextDocument: protocol.TextDocumentIdentifier{
-			URI: protocol.URIFromSpanURI(uri),
+			URI: protocol.NewURI(uri),
 		},
 		Context: protocol.CodeActionContext{
-			Only:        codeActionKinds,
+			Only:        []protocol.CodeActionKind{protocol.QuickFix},
 			Diagnostics: toProtocolDiagnostics([]source.Diagnostic{*diag}),
 		},
 	})
@@ -483,7 +465,7 @@ func (r *runner) Definition(t *testing.T, spn span.Span, d tests.Definition) {
 	}
 	if !d.OnlyHover {
 		didSomething = true
-		locURI := locs[0].URI.SpanURI()
+		locURI := span.NewURI(locs[0].URI)
 		lm, err := r.data.Mapper(locURI)
 		if err != nil {
 			t.Fatal(err)
@@ -526,7 +508,7 @@ func (r *runner) Implementation(t *testing.T, spn span.Span, impls []span.Span) 
 
 	var results []span.Span
 	for i := range locs {
-		locURI := locs[i].URI.SpanURI()
+		locURI := span.NewURI(locs[i].URI)
 		lm, err := r.data.Mapper(locURI)
 		if err != nil {
 			t.Fatal(err)
@@ -664,7 +646,7 @@ func (r *runner) Rename(t *testing.T, spn span.Span, newText string) {
 
 	wedit, err := r.server.Rename(r.ctx, &protocol.RenameParams{
 		TextDocument: protocol.TextDocumentIdentifier{
-			URI: protocol.URIFromSpanURI(uri),
+			URI: protocol.NewURI(uri),
 		},
 		Position: loc.Range.Start,
 		NewName:  newText,
@@ -693,7 +675,7 @@ func (r *runner) Rename(t *testing.T, spn span.Span, newText string) {
 		if i != 0 {
 			got += "\n"
 		}
-		uri := span.URIFromURI(orderedURIs[i])
+		uri := span.NewURI(orderedURIs[i])
 		if len(res) > 1 {
 			got += filepath.Base(uri.Filename()) + ":\n"
 		}
@@ -732,21 +714,25 @@ func (r *runner) PrepareRename(t *testing.T, src span.Span, want *source.Prepare
 		return
 	}
 	// we all love typed nils
-	if got == nil {
+	if got == nil || got.(*protocol.Range) == nil {
 		if want.Text != "" { // expected an ident.
 			t.Errorf("prepare rename failed for %v: got nil", src)
 		}
 		return
 	}
-	if got.Start == got.End {
+	xx, ok := got.(*protocol.Range)
+	if !ok {
+		t.Fatalf("got %T, wanted Range", got)
+	}
+	if xx.Start == xx.End {
 		// Special case for 0-length ranges. Marks can't specify a 0-length range,
 		// so just compare the start.
-		if got.Start != want.Range.Start {
-			t.Errorf("prepare rename failed: incorrect point, got %v want %v", got.Start, want.Range.Start)
+		if xx.Start != want.Range.Start {
+			t.Errorf("prepare rename failed: incorrect point, got %v want %v", xx.Start, want.Range.Start)
 		}
 	} else {
-		if protocol.CompareRange(*got, want.Range) != 0 {
-			t.Errorf("prepare rename failed: incorrect range got %v want %v", *got, want.Range)
+		if protocol.CompareRange(*xx, want.Range) != 0 {
+			t.Errorf("prepare rename failed: incorrect range got %v want %v", *xx, want.Range)
 		}
 	}
 }
@@ -754,7 +740,7 @@ func (r *runner) PrepareRename(t *testing.T, src span.Span, want *source.Prepare
 func applyWorkspaceEdits(r *runner, wedit protocol.WorkspaceEdit) (map[span.URI]string, error) {
 	res := map[span.URI]string{}
 	for _, docEdits := range wedit.DocumentChanges {
-		uri := docEdits.TextDocument.URI.SpanURI()
+		uri := span.NewURI(docEdits.TextDocument.URI)
 		m, err := r.data.Mapper(uri)
 		if err != nil {
 			return nil, err
@@ -787,24 +773,16 @@ func applyEdits(contents string, edits []diff.TextEdit) string {
 func (r *runner) Symbols(t *testing.T, uri span.URI, expectedSymbols []protocol.DocumentSymbol) {
 	params := &protocol.DocumentSymbolParams{
 		TextDocument: protocol.TextDocumentIdentifier{
-			URI: protocol.URIFromSpanURI(uri),
+			URI: string(uri),
 		},
 	}
-	got, err := r.server.DocumentSymbol(r.ctx, params)
+	symbols, err := r.server.DocumentSymbol(r.ctx, params)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(got) != len(expectedSymbols) {
-		t.Errorf("want %d top-level symbols in %v, got %d", len(expectedSymbols), uri, len(got))
+	if len(symbols) != len(expectedSymbols) {
+		t.Errorf("want %d top-level symbols in %v, got %d", len(expectedSymbols), uri, len(symbols))
 		return
-	}
-	symbols := make([]protocol.DocumentSymbol, len(got))
-	for i, s := range got {
-		s, ok := s.(protocol.DocumentSymbol)
-		if !ok {
-			t.Fatalf("%v: wanted []DocumentSymbols but got %v", uri, got)
-		}
-		symbols[i] = s
 	}
 	if diff := tests.DiffSymbols(t, uri, expectedSymbols, symbols); diff != "" {
 		t.Error(diff)
@@ -812,63 +790,6 @@ func (r *runner) Symbols(t *testing.T, uri span.URI, expectedSymbols []protocol.
 }
 
 func (r *runner) WorkspaceSymbols(t *testing.T, query string, expectedSymbols []protocol.SymbolInformation, dirs map[string]struct{}) {
-	got := r.callWorkspaceSymbols(t, query, func(opts *source.Options) {
-		opts.Matcher = source.CaseInsensitive
-	})
-	got = tests.FilterWorkspaceSymbols(got, dirs)
-	if len(got) != len(expectedSymbols) {
-		t.Errorf("want %d symbols, got %d", len(expectedSymbols), len(got))
-		return
-	}
-	if diff := tests.DiffWorkspaceSymbols(expectedSymbols, got); diff != "" {
-		t.Error(diff)
-	}
-}
-
-func (r *runner) FuzzyWorkspaceSymbols(t *testing.T, query string, expectedSymbols []protocol.SymbolInformation, dirs map[string]struct{}) {
-	got := r.callWorkspaceSymbols(t, query, func(opts *source.Options) {
-		opts.Matcher = source.Fuzzy
-	})
-	got = tests.FilterWorkspaceSymbols(got, dirs)
-	if len(got) != len(expectedSymbols) {
-		t.Errorf("want %d symbols, got %d", len(expectedSymbols), len(got))
-		return
-	}
-	if diff := tests.DiffWorkspaceSymbols(expectedSymbols, got); diff != "" {
-		t.Error(diff)
-	}
-}
-
-func (r *runner) CaseSensitiveWorkspaceSymbols(t *testing.T, query string, expectedSymbols []protocol.SymbolInformation, dirs map[string]struct{}) {
-	got := r.callWorkspaceSymbols(t, query, func(opts *source.Options) {
-		opts.Matcher = source.CaseSensitive
-	})
-	got = tests.FilterWorkspaceSymbols(got, dirs)
-	if len(got) != len(expectedSymbols) {
-		t.Errorf("want %d symbols, got %d", len(expectedSymbols), len(got))
-		return
-	}
-	if diff := tests.DiffWorkspaceSymbols(expectedSymbols, got); diff != "" {
-		t.Error(diff)
-	}
-}
-
-func (r *runner) callWorkspaceSymbols(t *testing.T, query string, options func(*source.Options)) []protocol.SymbolInformation {
-	t.Helper()
-
-	for _, view := range r.server.session.Views() {
-		original := view.Options()
-		modified := original
-		options(&modified)
-		var err error
-		view, err = view.SetOptions(r.ctx, modified)
-		if err != nil {
-			t.Error(err)
-			return nil
-		}
-		defer view.SetOptions(r.ctx, original)
-	}
-
 	params := &protocol.WorkspaceSymbolParams{
 		Query: query,
 	}
@@ -876,7 +797,14 @@ func (r *runner) callWorkspaceSymbols(t *testing.T, query string, options func(*
 	if err != nil {
 		t.Fatal(err)
 	}
-	return symbols
+	got := tests.FilterWorkspaceSymbols(symbols, dirs)
+	if len(got) != len(expectedSymbols) {
+		t.Errorf("want %d symbols, got %d", len(expectedSymbols), len(got))
+		return
+	}
+	if diff := tests.DiffWorkspaceSymbols(expectedSymbols, got); diff != "" {
+		t.Error(diff)
+	}
 }
 
 func (r *runner) SignatureHelp(t *testing.T, spn span.Span, want *protocol.SignatureHelp) {
@@ -890,7 +818,7 @@ func (r *runner) SignatureHelp(t *testing.T, spn span.Span, want *protocol.Signa
 	}
 	tdpp := protocol.TextDocumentPositionParams{
 		TextDocument: protocol.TextDocumentIdentifier{
-			URI: protocol.URIFromSpanURI(spn.URI()),
+			URI: protocol.NewURI(spn.URI()),
 		},
 		Position: loc.Range.Start,
 	}
@@ -926,7 +854,7 @@ func (r *runner) Link(t *testing.T, uri span.URI, wantLinks []tests.Link) {
 	}
 	got, err := r.server.DocumentLink(r.ctx, &protocol.DocumentLinkParams{
 		TextDocument: protocol.TextDocumentIdentifier{
-			URI: protocol.URIFromSpanURI(uri),
+			URI: protocol.NewURI(uri),
 		},
 	})
 	if err != nil {
@@ -964,7 +892,7 @@ func TestBytesOffset(t *testing.T) {
 		fset := token.NewFileSet()
 		f := fset.AddFile(fname, -1, len(test.text))
 		f.SetLinesForContent([]byte(test.text))
-		uri := span.URIFromPath(fname)
+		uri := span.FileURI(fname)
 		converter := span.NewContentConverter(fname, []byte(test.text))
 		mapper := &protocol.ColumnMapper{
 			URI:       uri,

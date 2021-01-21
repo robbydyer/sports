@@ -30,15 +30,16 @@ import (
 	"time"
 
 	"golang.org/x/net/http2"
-	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
-	internalbackoff "google.golang.org/grpc/internal/backoff"
+	"google.golang.org/grpc/internal/backoff"
+	"google.golang.org/grpc/internal/envconfig"
 	"google.golang.org/grpc/internal/transport"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/naming"
 	"google.golang.org/grpc/resolver"
 	"google.golang.org/grpc/resolver/manual"
+	_ "google.golang.org/grpc/resolver/passthrough"
 	"google.golang.org/grpc/testdata"
 )
 
@@ -150,7 +151,72 @@ func (s) TestDialWithMultipleBackendsNotSendingServerPreface(t *testing.T) {
 	}
 }
 
+var allReqHSSettings = []envconfig.RequireHandshakeSetting{
+	envconfig.RequireHandshakeOff,
+	envconfig.RequireHandshakeOn,
+}
+
 func (s) TestDialWaitsForServerSettings(t *testing.T) {
+	// Restore current setting after test.
+	old := envconfig.RequireHandshake
+	defer func() { envconfig.RequireHandshake = old }()
+
+	// Test with all environment variable settings, which should not impact the
+	// test case since WithWaitForHandshake has higher priority.
+	for _, setting := range allReqHSSettings {
+		envconfig.RequireHandshake = setting
+		lis, err := net.Listen("tcp", "localhost:0")
+		if err != nil {
+			t.Fatalf("Error while listening. Err: %v", err)
+		}
+		defer lis.Close()
+		done := make(chan struct{})
+		sent := make(chan struct{})
+		dialDone := make(chan struct{})
+		go func() { // Launch the server.
+			defer func() {
+				close(done)
+			}()
+			conn, err := lis.Accept()
+			if err != nil {
+				t.Errorf("Error while accepting. Err: %v", err)
+				return
+			}
+			defer conn.Close()
+			// Sleep for a little bit to make sure that Dial on client
+			// side blocks until settings are received.
+			time.Sleep(100 * time.Millisecond)
+			framer := http2.NewFramer(conn, conn)
+			close(sent)
+			if err := framer.WriteSettings(http2.Setting{}); err != nil {
+				t.Errorf("Error while writing settings. Err: %v", err)
+				return
+			}
+			<-dialDone // Close conn only after dial returns.
+		}()
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		client, err := DialContext(ctx, lis.Addr().String(), WithInsecure(), WithWaitForHandshake(), WithBlock())
+		close(dialDone)
+		if err != nil {
+			t.Fatalf("Error while dialing. Err: %v", err)
+		}
+		defer client.Close()
+		select {
+		case <-sent:
+		default:
+			t.Fatalf("Dial returned before server settings were sent")
+		}
+		<-done
+	}
+}
+
+func (s) TestDialWaitsForServerSettingsViaEnv(t *testing.T) {
+	// Set default behavior and restore current setting after test.
+	old := envconfig.RequireHandshake
+	envconfig.RequireHandshake = envconfig.RequireHandshakeOn
+	defer func() { envconfig.RequireHandshake = old }()
+
 	lis, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		t.Fatalf("Error while listening. Err: %v", err)
@@ -197,6 +263,61 @@ func (s) TestDialWaitsForServerSettings(t *testing.T) {
 }
 
 func (s) TestDialWaitsForServerSettingsAndFails(t *testing.T) {
+	// Restore current setting after test.
+	old := envconfig.RequireHandshake
+	defer func() { envconfig.RequireHandshake = old }()
+
+	for _, setting := range allReqHSSettings {
+		envconfig.RequireHandshake = setting
+		lis, err := net.Listen("tcp", "localhost:0")
+		if err != nil {
+			t.Fatalf("Error while listening. Err: %v", err)
+		}
+		done := make(chan struct{})
+		numConns := 0
+		go func() { // Launch the server.
+			defer func() {
+				close(done)
+			}()
+			for {
+				conn, err := lis.Accept()
+				if err != nil {
+					break
+				}
+				numConns++
+				defer conn.Close()
+			}
+		}()
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
+		client, err := DialContext(ctx,
+			lis.Addr().String(),
+			WithInsecure(),
+			WithWaitForHandshake(),
+			WithBlock(),
+			withBackoff(noBackoff{}),
+			withMinConnectDeadline(func() time.Duration { return time.Second / 4 }))
+		lis.Close()
+		if err == nil {
+			client.Close()
+			t.Fatalf("Unexpected success (err=nil) while dialing")
+		}
+		if err != context.DeadlineExceeded {
+			t.Fatalf("DialContext(_) = %v; want context.DeadlineExceeded", err)
+		}
+		if numConns < 2 {
+			t.Fatalf("dial attempts: %v; want > 1", numConns)
+		}
+		<-done
+	}
+}
+
+func (s) TestDialWaitsForServerSettingsViaEnvAndFails(t *testing.T) {
+	// Set default behavior and restore current setting after test.
+	old := envconfig.RequireHandshake
+	envconfig.RequireHandshake = envconfig.RequireHandshakeOn
+	defer func() { envconfig.RequireHandshake = old }()
+
 	lis, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		t.Fatalf("Error while listening. Err: %v", err)
@@ -232,10 +353,49 @@ func (s) TestDialWaitsForServerSettingsAndFails(t *testing.T) {
 	if err != context.DeadlineExceeded {
 		t.Fatalf("DialContext(_) = %v; want context.DeadlineExceeded", err)
 	}
-	<-done
 	if numConns < 2 {
 		t.Fatalf("dial attempts: %v; want > 1", numConns)
 	}
+	<-done
+}
+
+func (s) TestDialDoesNotWaitForServerSettings(t *testing.T) {
+	// Restore current setting after test.
+	old := envconfig.RequireHandshake
+	defer func() { envconfig.RequireHandshake = old }()
+	envconfig.RequireHandshake = envconfig.RequireHandshakeOff
+
+	lis, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatalf("Error while listening. Err: %v", err)
+	}
+	defer lis.Close()
+	done := make(chan struct{})
+	dialDone := make(chan struct{})
+	go func() { // Launch the server.
+		defer func() {
+			close(done)
+		}()
+		conn, err := lis.Accept()
+		if err != nil {
+			t.Errorf("Error while accepting. Err: %v", err)
+			return
+		}
+		defer conn.Close()
+		<-dialDone // Close conn only after dial returns.
+	}()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	client, err := DialContext(ctx, lis.Addr().String(), WithInsecure(), WithBlock())
+	if err != nil {
+		t.Fatalf("DialContext returned err =%v; want nil", err)
+	}
+	defer client.Close()
+
+	if state := client.GetState(); state != connectivity.Ready {
+		t.Fatalf("client.GetState() = %v; want connectivity.Ready", state)
+	}
+	close(dialDone)
 }
 
 // 1. Client connects to a server that doesn't send preface.
@@ -243,6 +403,11 @@ func (s) TestDialWaitsForServerSettingsAndFails(t *testing.T) {
 // 3. The new server sends its preface.
 // 4. Client doesn't kill the connection this time.
 func (s) TestCloseConnectionWhenServerPrefaceNotReceived(t *testing.T) {
+	// Restore current setting after test.
+	old := envconfig.RequireHandshake
+	defer func() { envconfig.RequireHandshake = old }()
+	envconfig.RequireHandshake = envconfig.RequireHandshakeOn
+
 	lis, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		t.Fatalf("Error while listening. Err: %v", err)
@@ -539,10 +704,10 @@ func (s) TestDial_OneBackoffPerRetryGroup(t *testing.T) {
 		{Addr: lis1.Addr().String()},
 		{Addr: lis2.Addr().String()},
 	}})
-	client, err := DialContext(ctx, "whatever:///this-gets-overwritten",
+	client, err := DialContext(ctx, "this-gets-overwritten",
 		WithInsecure(),
 		WithBalancerName(stateRecordingBalancerName),
-		WithResolvers(rb),
+		withResolverBuilder(rb),
 		withMinConnectDeadline(getMinConnectTimeout))
 	if err != nil {
 		t.Fatal(err)
@@ -655,39 +820,22 @@ func (s) TestCredentialsMisuse(t *testing.T) {
 }
 
 func (s) TestWithBackoffConfigDefault(t *testing.T) {
-	testBackoffConfigSet(t, internalbackoff.DefaultExponential)
+	testBackoffConfigSet(t, &DefaultBackoffConfig)
 }
 
 func (s) TestWithBackoffConfig(t *testing.T) {
 	b := BackoffConfig{MaxDelay: DefaultBackoffConfig.MaxDelay / 2}
-	bc := backoff.DefaultConfig
-	bc.MaxDelay = b.MaxDelay
-	wantBackoff := internalbackoff.Exponential{Config: bc}
-	testBackoffConfigSet(t, wantBackoff, WithBackoffConfig(b))
+	expected := b
+	testBackoffConfigSet(t, &expected, WithBackoffConfig(b))
 }
 
 func (s) TestWithBackoffMaxDelay(t *testing.T) {
 	md := DefaultBackoffConfig.MaxDelay / 2
-	bc := backoff.DefaultConfig
-	bc.MaxDelay = md
-	wantBackoff := internalbackoff.Exponential{Config: bc}
-	testBackoffConfigSet(t, wantBackoff, WithBackoffMaxDelay(md))
+	expected := BackoffConfig{MaxDelay: md}
+	testBackoffConfigSet(t, &expected, WithBackoffMaxDelay(md))
 }
 
-func (s) TestWithConnectParams(t *testing.T) {
-	bd := 2 * time.Second
-	mltpr := 2.0
-	jitter := 0.0
-	bc := backoff.Config{BaseDelay: bd, Multiplier: mltpr, Jitter: jitter}
-
-	crt := ConnectParams{Backoff: bc}
-	// MaxDelay is not set in the ConnectParams. So it should not be set on
-	// internalbackoff.Exponential as well.
-	wantBackoff := internalbackoff.Exponential{Config: bc}
-	testBackoffConfigSet(t, wantBackoff, WithConnectParams(crt))
-}
-
-func testBackoffConfigSet(t *testing.T, wantBackoff internalbackoff.Exponential, opts ...DialOption) {
+func testBackoffConfigSet(t *testing.T, expected *BackoffConfig, opts ...DialOption) {
 	opts = append(opts, WithInsecure())
 	conn, err := Dial("passthrough:///foo:80", opts...)
 	if err != nil {
@@ -699,27 +847,16 @@ func testBackoffConfigSet(t *testing.T, wantBackoff internalbackoff.Exponential,
 		t.Fatalf("backoff config not set")
 	}
 
-	gotBackoff, ok := conn.dopts.bs.(internalbackoff.Exponential)
+	actual, ok := conn.dopts.bs.(backoff.Exponential)
 	if !ok {
 		t.Fatalf("unexpected type of backoff config: %#v", conn.dopts.bs)
 	}
 
-	if gotBackoff != wantBackoff {
-		t.Fatalf("unexpected backoff config on connection: %v, want %v", gotBackoff, wantBackoff)
+	expectedValue := backoff.Exponential{
+		MaxDelay: expected.MaxDelay,
 	}
-}
-
-func (s) TestConnectParamsWithMinConnectTimeout(t *testing.T) {
-	// Default value specified for minConnectTimeout in the spec is 20 seconds.
-	mct := 1 * time.Minute
-	conn, err := Dial("passthrough:///foo:80", WithInsecure(), WithConnectParams(ConnectParams{MinConnectTimeout: mct}))
-	if err != nil {
-		t.Fatalf("unexpected error dialing connection: %v", err)
-	}
-	defer conn.Close()
-
-	if got := conn.dopts.minConnectTimeout(); got != mct {
-		t.Errorf("unexpect minConnectTimeout on the connection: %v, want %v", got, mct)
+	if actual != expectedValue {
+		t.Fatalf("unexpected backoff config on connection: %v, want %v", actual, expected)
 	}
 }
 
@@ -779,7 +916,7 @@ func (s) TestResolverServiceConfigBeforeAddressNotPanic(t *testing.T) {
 
 	// SwitchBalancer before NewAddress. There was no balancer created, this
 	// makes sure we don't call close on nil balancerWrapper.
-	r.UpdateState(resolver.State{ServiceConfig: parseCfg(r, `{"loadBalancingPolicy": "round_robin"}`)}) // This should not panic.
+	r.UpdateState(resolver.State{ServiceConfig: `{"loadBalancingPolicy": "round_robin"}`}) // This should not panic.
 
 	time.Sleep(time.Second) // Sleep to make sure the service config is handled by ClientConn.
 }
@@ -795,7 +932,7 @@ func (s) TestResolverServiceConfigWhileClosingNotPanic(t *testing.T) {
 		}
 		// Send a new service config while closing the ClientConn.
 		go cc.Close()
-		go r.UpdateState(resolver.State{ServiceConfig: parseCfg(r, `{"loadBalancingPolicy": "round_robin"}`)}) // This should not panic.
+		go r.UpdateState(resolver.State{ServiceConfig: `{"loadBalancingPolicy": "round_robin"}`}) // This should not panic.
 	}
 }
 
@@ -888,7 +1025,7 @@ func (s) TestDisableServiceConfigOption(t *testing.T) {
 		t.Fatalf("Dial(%s, _) = _, %v, want _, <nil>", addr, err)
 	}
 	defer cc.Close()
-	r.UpdateState(resolver.State{ServiceConfig: parseCfg(r, `{
+	r.UpdateState(resolver.State{ServiceConfig: `{
     "methodConfig": [
         {
             "name": [
@@ -900,11 +1037,11 @@ func (s) TestDisableServiceConfigOption(t *testing.T) {
             "waitForReady": true
         }
     ]
-}`)})
+}`})
 	time.Sleep(1 * time.Second)
 	m := cc.GetMethodConfig("/foo/Bar")
 	if m.WaitForReady != nil {
-		t.Fatalf("want: method (\"/foo/bar/\") config to be empty, got: %+v", m)
+		t.Fatalf("want: method (\"/foo/bar/\") config to be empty, got: %v", m)
 	}
 }
 
@@ -1085,9 +1222,10 @@ func (s) TestUpdateAddresses_RetryFromFirstAddr(t *testing.T) {
 	rb := manual.NewBuilderWithScheme("whatever")
 	rb.InitialState(resolver.State{Addresses: addrsList})
 
-	client, err := Dial("whatever:///this-gets-overwritten",
+	client, err := Dial("this-gets-overwritten",
 		WithInsecure(),
-		WithResolvers(rb),
+		WithWaitForHandshake(),
+		withResolverBuilder(rb),
 		withBackoff(noBackoff{}),
 		WithBalancerName(stateRecordingBalancerName),
 		withMinConnectDeadline(func() time.Duration { return time.Hour }))
@@ -1180,29 +1318,29 @@ func testInvalidDefaultServiceConfig(t *testing.T) {
 	}
 }
 
-func testDefaultServiceConfigWhenResolverServiceConfigDisabled(t *testing.T, r *manual.Resolver, addr string, js string) {
+func testDefaultServiceConfigWhenResolverServiceConfigDisabled(t *testing.T, r resolver.Resolver, addr string, js string) {
 	cc, err := Dial(addr, WithInsecure(), WithDisableServiceConfig(), WithDefaultServiceConfig(js))
 	if err != nil {
 		t.Fatalf("Dial(%s, _) = _, %v, want _, <nil>", addr, err)
 	}
 	defer cc.Close()
 	// Resolver service config gets ignored since resolver service config is disabled.
-	r.UpdateState(resolver.State{
+	r.(*manual.Resolver).UpdateState(resolver.State{
 		Addresses:     []resolver.Address{{Addr: addr}},
-		ServiceConfig: parseCfg(r, "{}"),
+		ServiceConfig: "{}",
 	})
 	if !verifyWaitForReadyEqualsTrue(cc) {
 		t.Fatal("default service config failed to be applied after 1s")
 	}
 }
 
-func testDefaultServiceConfigWhenResolverDoesNotReturnServiceConfig(t *testing.T, r *manual.Resolver, addr string, js string) {
+func testDefaultServiceConfigWhenResolverDoesNotReturnServiceConfig(t *testing.T, r resolver.Resolver, addr string, js string) {
 	cc, err := Dial(addr, WithInsecure(), WithDefaultServiceConfig(js))
 	if err != nil {
 		t.Fatalf("Dial(%s, _) = _, %v, want _, <nil>", addr, err)
 	}
 	defer cc.Close()
-	r.UpdateState(resolver.State{
+	r.(*manual.Resolver).UpdateState(resolver.State{
 		Addresses: []resolver.Address{{Addr: addr}},
 	})
 	if !verifyWaitForReadyEqualsTrue(cc) {
@@ -1210,14 +1348,15 @@ func testDefaultServiceConfigWhenResolverDoesNotReturnServiceConfig(t *testing.T
 	}
 }
 
-func testDefaultServiceConfigWhenResolverReturnInvalidServiceConfig(t *testing.T, r *manual.Resolver, addr string, js string) {
+func testDefaultServiceConfigWhenResolverReturnInvalidServiceConfig(t *testing.T, r resolver.Resolver, addr string, js string) {
 	cc, err := Dial(addr, WithInsecure(), WithDefaultServiceConfig(js))
 	if err != nil {
 		t.Fatalf("Dial(%s, _) = _, %v, want _, <nil>", addr, err)
 	}
 	defer cc.Close()
-	r.UpdateState(resolver.State{
-		Addresses: []resolver.Address{{Addr: addr}},
+	r.(*manual.Resolver).UpdateState(resolver.State{
+		Addresses:     []resolver.Address{{Addr: addr}},
+		ServiceConfig: "{something wrong,}",
 	})
 	if !verifyWaitForReadyEqualsTrue(cc) {
 		t.Fatal("default service config failed to be applied after 1s")

@@ -62,7 +62,7 @@ func (t *imports) Run(ctx context.Context, args ...string) error {
 	}
 	actions, err := conn.CodeAction(ctx, &protocol.CodeActionParams{
 		TextDocument: protocol.TextDocumentIdentifier{
-			URI: protocol.URIFromSpanURI(uri),
+			URI: protocol.NewURI(uri),
 		},
 	})
 	if err != nil {
@@ -74,7 +74,7 @@ func (t *imports) Run(ctx context.Context, args ...string) error {
 			continue
 		}
 		for _, c := range a.Edit.DocumentChanges {
-			if fileURI(c.TextDocument.URI) == uri {
+			if c.TextDocument.URI == string(uri) {
 				edits = append(edits, c.Edits...)
 			}
 		}

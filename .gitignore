@@ -1,3 +1,4 @@
+cmd/sportsmatrix/pkged.go
 sportsmatrix.bin
 *.swp
 .cache
