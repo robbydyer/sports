@@ -3,15 +3,38 @@ set -euo pipefail
 
 ROOT=$(git rev-parse --show-toplevel)
 cd "${ROOT}"
+IN_DOCKER="${IN_DOCKER:-no}"
 
-#CGO_ENABLED=1 go build -mod=vendor -o sportsmatrix.bin ./cmd/sportsmatrix/
+if [ "${IN_DOCKER}" = "no" ]; then
+  if ! docker images | grep pibuilder &> /dev/null; then
+    docker buildx build -f Dockerfile.builder -t pibuilder .
+  fi
+
+  exec docker run -t --rm \
+    -e IN_DOCKER=yes \
+    -v "${ROOT}":/src \
+    -w /src \
+    pibuilder \
+    /src/script/build
+fi
+
+# Inside docker
+
+export CGO_ENABLED=1
+export GOCACHE=/src/.cache
+export GOOS=linux
+export GOARCH=arm
+export GOARM=6
+export CC=arm-linux-gnueabihf-gcc
+export CXX=arm-linux-gnueabihf-g++
 
 set -x
-docker run -t --rm \
-  -u $(id -u):$(id -g) \
-  -v "${ROOT}":/src \
-  -w /src \
-  -e CGO_ENABLED=1 \
-  -e GOCACHE=/src/.cache \
-  pibuilder \
-  go build -mod=vendor -o sportsmatrix.bin ./cmd/sportsmatrix
+cp -r ~/go/src/github.com/robbydyer/rgbmatrix-rpi/lib /src/vendor/github.com/robbydyer/rgbmatrix-rpi/
+cd /src/vendor/github.com/robbydyer/rgbmatrix-rpi/lib/rpi-rgb-led-matrix
+make
+cd /src/vendor/github.com/robbydyer/rgbmatrix-rpi
+go install -v ./...
+
+cd /src
+#go build -mod=vendor -o sportsmatrix.bin -ldflags="-extld=$CC" ./cmd/sportsmatrix
+go build -mod=vendor -o sportsmatrix.bin  ./cmd/sportsmatrix

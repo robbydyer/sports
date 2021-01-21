@@ -8,18 +8,19 @@ import (
 	"path/filepath"
 	"time"
 
-	//rgb "github.com/mcuadros/go-rpi-rgb-led-matrix"
-	rgb "github.com/fcjr/rgbmatrix-rpi"
+	"github.com/gobuffalo/packr/v2"
+	rgb "github.com/robbydyer/rgbmatrix-rpi"
 
 	"github.com/robbydyer/sports/pkg/nhl"
 )
 
 type SportsMatrix struct {
-	nhlAPI  *nhl.Nhl
-	cfg     *Config
-	matrix  rgb.Matrix
-	canvas  *rgb.Canvas
-	toolkit *rgb.ToolKit
+	nhlAPI   *nhl.Nhl
+	cfg      *Config
+	matrix   rgb.Matrix
+	canvas   *rgb.Canvas
+	toolkit  *rgb.ToolKit
+	imageBox *packr.Box
 }
 
 type Config struct {
@@ -30,6 +31,8 @@ func New(ctx context.Context, cfg Config) (*SportsMatrix, error) {
 	s := &SportsMatrix{
 		cfg: &cfg,
 	}
+
+	s.imageBox = packr.New("images", "./images")
 
 	var err error
 
@@ -45,7 +48,8 @@ func New(ctx context.Context, cfg Config) (*SportsMatrix, error) {
 		Cols:       32,
 		Brightness: 60,
 	}
-	s.matrix, err = rgb.NewRGBLedMatrix(c)
+	rt := &rgb.DefaultRuntimeOptions
+	s.matrix, err = rgb.NewRGBLedMatrix(c, rt)
 
 	s.canvas = rgb.NewCanvas(s.matrix)
 
@@ -61,7 +65,7 @@ func (s *SportsMatrix) Close() {
 }
 
 func (s *SportsMatrix) RenderGoal() error {
-	p, err := filepath.Abs("../../images/goal_light.png")
+	p, err := filepath.Abs("images/goal_light.png")
 	if err != nil {
 		return err
 	}

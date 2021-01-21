@@ -30,7 +30,9 @@ RUN apt-get update && \
     openssh-client \
     pkg-config \
     software-properties-common \
-    wget && \
+    libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi libncurses5-dev build-essential bison flex libssl-dev bc \
+    gcc-arm-linux-gnueabi g++-arm-linux-gnueabi \
+    wget && \ 
   rm -rf /var/lib/apt/lists/*
 
 ENV CMAKE_VERSION 3.16.4
@@ -83,11 +85,4 @@ RUN RPI_DIR=/raspberrypi && \
   cd / && \
   rm -rf $WPI_DIR
 
-# This is supposed to fail
-RUN go get github.com/mcuadros/go-rpi-rgb-led-matrix || true
-
-RUN cd /root/go/src/github.com/mcuadros/go-rpi-rgb-led-matrix/vendor/rpi-rgb-led-matrix && \
-    make && \
-    cd /root/go/src/github.com/mcuadros/go-rpi-rgb-led-matrix && \
-    rm -rf examples && \
-    go install -v ./...
+RUN go get github.com/robbydyer/rgbmatrix-rpi || true
