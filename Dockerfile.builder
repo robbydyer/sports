@@ -86,3 +86,4 @@ RUN RPI_DIR=/raspberrypi && \
   rm -rf $WPI_DIR
 
 RUN go get github.com/robbydyer/rgbmatrix-rpi || true
+RUN go get github.com/golang/freetype

@@ -9,7 +9,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/golang/freetype"
+	"github.com/pbnjay/pixfont"
 	rgb "github.com/robbydyer/rgbmatrix-rpi"
 )
 
@@ -73,19 +73,10 @@ func AlignPosition(align Align, bounds image.Rectangle, sizeX int, sizeY int) (i
 	}, nil
 }
 
-// ImageSize returns an image.Image's size in X, Y pixels
-func ImageSize(img image.Image) (int, int) {
-	rect := img.Bounds()
-
-	retX := rect.Max.X - rect.Min.X + 1
-	retY := rect.Max.Y - rect.Min.Y + 1
-
-	return retX, retY
-}
-
 // ZoomImageSize takes a zoom percentage and returns the resulting image size.
 func ZoomImageSize(img image.Image, zoom float64) (int, int) {
-	fullX, fullY := ImageSize(img)
+	fullX := img.Bounds().Dx()
+	fullY := img.Bounds().Dy()
 
 	if zoom <= 0 {
 		return 0, 0
@@ -94,15 +85,8 @@ func ZoomImageSize(img image.Image, zoom float64) (int, int) {
 	return int(math.Round(float64(fullX) * zoom)), int(math.Round(float64(fullY) * zoom))
 }
 
-func DrawText(canvas *rgb.Canvas, layout Layout, text string) error {
-	c := freetype.NewContext()
-	c.SetDst(canvas)
-
-	return nil
-}
-
-func DrawRectangle(canvas *rgb.Canvas, startX int, startY int, endX int, endY int, fillColor color.Color) error {
-	rect := image.Rect(startX, startY, endX, endY)
+func DrawRectangle(canvas *rgb.Canvas, startX int, startY int, sizeX int, sizeY int, fillColor color.Color) error {
+	rect := image.Rect(startX, startY, startX+sizeX, startY+sizeY)
 
 	rgba := image.NewRGBA(rect)
 
@@ -112,10 +96,26 @@ func DrawRectangle(canvas *rgb.Canvas, startX int, startY int, endX int, endY in
 		}
 	}
 
+	draw.Draw(canvas, canvas.Bounds(), rgba, image.Pt(0, 0), draw.Over)
+
 	return nil
 }
 
-func ShowImageFull(canvas *rgb.Canvas, img image.Image) error {
+// DrawImageAligned draws an image aligned within the given bounds
+func DrawImageAligned(canvas *rgb.Canvas, bounds image.Rectangle, img *image.RGBA, align Align) error {
+	aligned, err := AlignPosition(align, bounds, img.Bounds().Dx(), img.Bounds().Dy())
+	if err != nil {
+		return err
+	}
+
+	img.Rect.Min = aligned.Min
+	img.Rect.Max = aligned.Max
+
+	return DrawImage(canvas, img)
+}
+
+// DrawImage draws an image
+func DrawImage(canvas *rgb.Canvas, img image.Image) error {
 	draw.Draw(canvas, canvas.Bounds(), img, image.ZP, draw.Over)
 	return canvas.Render()
 }
@@ -132,7 +132,7 @@ func PlayImages(canvas *rgb.Canvas, images []image.Image, delay []time.Duration,
 			case <-quit:
 				return
 			default:
-				if err := ShowImageFull(canvas, images[i]); err != nil {
+				if err := DrawImage(canvas, images[i]); err != nil {
 					errChan <- err
 				}
 				time.Sleep(delay[i])
@@ -171,4 +171,8 @@ func PlayGIF(canvas *rgb.Canvas, r io.Reader) (chan bool, chan error) {
 	}
 
 	return PlayImages(canvas, images, delay, gif.LoopCount)
+}
+
+func DrawText(canvas *rgb.Canvas, startX int, startY int, str string, clr color.Color) {
+	pixfont.DrawString(canvas, startX, startY, str, clr)
 }

@@ -264,57 +264,6 @@ func TestAlignPosition(t *testing.T) {
 	}
 }
 
-func TestImageSize(t *testing.T) {
-	tests := []struct {
-		name      string
-		img       image.Image
-		expectedX int
-		expectedY int
-	}{
-		{
-			name: "square",
-			img: image.Rectangle{
-				Min: image.Point{
-					X: 0,
-					Y: 0,
-				},
-				Max: image.Point{
-					X: 4,
-					Y: 4,
-				},
-			},
-			expectedX: 5,
-			expectedY: 5,
-		},
-		{
-			name: "rectangle",
-			img: image.Rectangle{
-				Min: image.Point{
-					X: 0,
-					Y: 0,
-				},
-				Max: image.Point{
-					X: 4,
-					Y: 5,
-				},
-			},
-			expectedX: 5,
-			expectedY: 6,
-		},
-	}
-
-	for _, test := range tests {
-		test := test
-
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-			actualX, actualY := ImageSize(test.img)
-			require.Equal(t, test.expectedX, actualX)
-			require.Equal(t, test.expectedY, actualY)
-		})
-	}
-}
-
 func TestZoomImageSize(t *testing.T) {
 	tests := []struct {
 		name      string
