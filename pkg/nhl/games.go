@@ -20,11 +20,40 @@ type Game struct {
 	GameDate string `json:"gameDate"`
 }
 
+type LiveGame struct {
+	ID       int    `json:"gamePk"`
+	Link     string `json:"link"`
+	GameData *struct {
+		DateTime *struct {
+			DateTime string `json:"datetime,omitempty"`
+		} `json:"dateTime,omitempty"`
+		Status *struct {
+			AbstractGameState string `json:"abstractGameState,omitempty"`
+			DetailedState     string `json:"detailedState,omitempty"`
+		} `json:"status,omitempty"`
+	} `json:"gameData,omitempty"`
+	LiveData *struct {
+		Linescore *struct {
+			Teams *struct {
+				Home *GameTeam `json:"home"`
+				Away *GameTeam `json:"away"`
+			} `json:"teams"`
+			CurrentPeriod              int    `json:"currentPeriod,omitempty"`
+			CurrentPeriodTimeRemaining string `json:"currentPeriodTimeRemaining,omitempty"`
+		} `json:"linescore,omitempty"`
+	} `json:"liveData"`
+}
+
 type GameTeam struct {
-	Score int `json:"score"`
+	Score int `json:"score,omitempty"`
 	Team  *struct {
-		Id int `json:"id"`
-	} `json:"team"`
+		ID           int    `json:"id"`
+		Abbreviation string `json:"abbreviation,omitempty"`
+		Name         string `json:"name,omitempty"`
+	} `json:"team,omitempty"`
+	Goals       int  `json:"goals,omitempty"`
+	ShotsOnGoal int  `json:"shotsOnGoal,omitempty"`
+	PowerPlay   bool `json:"powerPlay,omitempty"`
 }
 
 type games struct {
@@ -41,6 +70,37 @@ func (g *Game) setGameTime() error {
 	}
 
 	return nil
+}
+
+func GetLiveGame(ctx context.Context, link string) (*LiveGame, error) {
+	uri := fmt.Sprintf("%s/%s", LinkBase, link)
+
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+
+	client := http.DefaultClient
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var game *LiveGame
+
+	if err := json.Unmarshal(body, &game); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal LiveGame: %w", err)
+	}
+
+	return game, nil
 }
 
 func getGames(ctx context.Context, dateStr string) ([]*Game, error) {

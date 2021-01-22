@@ -7,6 +7,7 @@ import (
 	"os/signal"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/nhlboard"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
 	"github.com/spf13/cobra"
 )
@@ -55,6 +56,11 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 
 		boards = append(boards, clockBoard)
 	*/
+	nhlBoards, err := nhlboard.New(ctx)
+	if err != nil {
+		return err
+	}
+	boards = append(boards, nhlBoards...)
 
 	mtrx, err := sportsmatrix.New(ctx, cfg, boards...)
 	if err != nil {

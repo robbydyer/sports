@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	BaseURL = "http://statsapi.web.nhl.com/api/v1/"
+	BaseURL  = "http://statsapi.web.nhl.com/api/v1/"
+	LinkBase = "http://statsapi.web.nhl.com"
 )
 
 type Nhl struct {
@@ -57,6 +58,16 @@ func (n *Nhl) UpdateGames(ctx context.Context, dateStr string) error {
 	return nil
 }
 
+func (n *Nhl) TeamFromAbbreviation(abbrev string) (*Team, error) {
+	for _, t := range n.Teams {
+		if t.Abbreviation == abbrev {
+			return t, nil
+		}
+	}
+
+	return nil, fmt.Errorf("could not find team with abbreviation '%s'", abbrev)
+}
+
 func (n *Nhl) nameFromID(ctx context.Context, id int) (string, error) {
 	t, ok := n.Teams[id]
 	if !ok {
@@ -69,7 +80,7 @@ func (n *Nhl) nameFromID(ctx context.Context, id int) (string, error) {
 }
 
 func (n *Nhl) PrintTodaySchedule(ctx context.Context, out io.Writer) error {
-	return n.PrintSchedule(ctx, time.Now().Format("2006-01-02"), out)
+	return n.PrintSchedule(ctx, Today(), out)
 }
 
 func (n *Nhl) PrintSchedule(ctx context.Context, dateStr string, out io.Writer) error {
@@ -85,11 +96,11 @@ func (n *Nhl) PrintSchedule(ctx context.Context, dateStr string, out io.Writer) 
 	}
 
 	for _, game := range games {
-		away, err := n.nameFromID(ctx, game.Teams.Away.Team.Id)
+		away, err := n.nameFromID(ctx, game.Teams.Away.Team.ID)
 		if err != nil {
 			return err
 		}
-		home, err := n.nameFromID(ctx, game.Teams.Home.Team.Id)
+		home, err := n.nameFromID(ctx, game.Teams.Home.Team.ID)
 		if err != nil {
 			return err
 		}
@@ -97,6 +108,10 @@ func (n *Nhl) PrintSchedule(ctx context.Context, dateStr string, out io.Writer) 
 	}
 
 	return nil
+}
+
+func Today() string {
+	return time.Now().Local().Format("2006-01-02")
 }
 
 func validateDateStr(dateStr string) error {

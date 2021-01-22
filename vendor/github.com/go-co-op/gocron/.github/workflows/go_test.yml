@@ -1,0 +1,34 @@
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+name: Go Test
+jobs:
+  test:
+    strategy:
+      matrix:
+        go-version:
+          - 1.14
+          - 1.15
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: fmt
+        run: make check-fmt
+      - name: lint
+        run: |
+          go get golang.org/x/lint/golint
+          $(go list -f {{.Target}} golang.org/x/lint/golint) -set_exit_status ./...
+      - name: vet
+        run: make vet
+      - name: test
+        run: make test
