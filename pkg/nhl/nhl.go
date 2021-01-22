@@ -27,9 +27,8 @@ func New(ctx context.Context) (*Nhl, error) {
 		return nil, err
 	}
 
-	today := time.Now().Format("2006-01-02")
-
-	if err := n.UpdateGames(ctx, today); err != nil {
+	fmt.Printf("Getting games for %s\n", Today())
+	if err := n.UpdateGames(ctx, Today()); err != nil {
 		return nil, fmt.Errorf("failed to get today's games: %w", err)
 	}
 
@@ -110,7 +109,12 @@ func (n *Nhl) PrintSchedule(ctx context.Context, dateStr string, out io.Writer) 
 	return nil
 }
 
+// Today is sometimes actually yesterday
 func Today() string {
+	// Don't update until the morning, because games might go past midnight
+	if time.Now().Local().Hour() < 4 {
+		return time.Now().AddDate(0, 0, -1).Local().Format("2006-01-02")
+	}
 	return time.Now().Local().Format("2006-01-02")
 }
 

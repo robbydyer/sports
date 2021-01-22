@@ -44,7 +44,7 @@ func New(ctx context.Context) ([]board.Board, error) {
 		return nil, err
 	}
 	controller.scheduler = gocron.NewScheduler(loc)
-	controller.scheduler.Every(1).Day().At("01:00").Do(controller.updateGames)
+	controller.scheduler.Every(1).Day().At("05:00").Do(controller.updateGames)
 	controller.scheduler.StartAsync()
 
 	var boards []board.Board
@@ -78,8 +78,6 @@ func (b *scoreBoard) Render(ctx context.Context, matrix rgb.Matrix, rotationDela
 	case <-time.After(rotationDelay):
 	}
 
-	today := time.Now().Format("2006-01-02")
-
 OUTER:
 	for _, abbrev := range b.controller.watchTeams {
 		team, err := b.controller.api.TeamFromAbbreviation(abbrev)
@@ -87,7 +85,7 @@ OUTER:
 			return err
 		}
 
-		for _, game := range b.controller.api.Games[today] {
+		for _, game := range b.controller.api.Games[nhl.Today()] {
 			if game.Teams.Away.Team.ID == team.ID || game.Teams.Home.Team.ID == team.ID {
 				liveGame, err := nhl.GetLiveGame(ctx, game.Link)
 				if err != nil {
@@ -115,6 +113,9 @@ func gameIsOver(game *nhl.LiveGame) bool {
 		return true
 	}
 	if strings.Contains(strings.ToLower(game.LiveData.Linescore.CurrentPeriodTimeRemaining), "final") {
+		return true
+	}
+	if game.LiveData.Linescore.CurrentPeriod < 1 {
 		return true
 	}
 
