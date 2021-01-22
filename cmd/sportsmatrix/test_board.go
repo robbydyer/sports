@@ -36,7 +36,7 @@ func (t *testBoard) Render(ctx context.Context, matrix rgb.Matrix, rotationDelay
 		t.canvas = rgb.NewCanvas(matrix)
 	}
 
-	if err := rgbrender.ShowImage(t.canvas, img); err != nil {
+	if err := rgbrender.ShowImageFull(t.canvas, img); err != nil {
 		return err
 	}
 
