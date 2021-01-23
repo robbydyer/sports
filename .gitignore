@@ -7,3 +7,4 @@ sportsmatrix.bin
 *.a
 *~
 *.so
+.DS_Store
