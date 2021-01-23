@@ -9,7 +9,6 @@ import (
 	"math"
 	"time"
 
-	"github.com/pbnjay/pixfont"
 	rgb "github.com/robbydyer/rgbmatrix-rpi"
 )
 
@@ -171,8 +170,4 @@ func PlayGIF(canvas *rgb.Canvas, r io.Reader) (chan bool, chan error) {
 	}
 
 	return PlayImages(canvas, images, delay, gif.LoopCount)
-}
-
-func DrawText(canvas *rgb.Canvas, startX int, startY int, str string, clr color.Color) {
-	pixfont.DrawString(canvas, startX, startY, str, clr)
 }

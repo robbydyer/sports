@@ -3,6 +3,7 @@ package nhlboard
 import (
 	"context"
 	"fmt"
+	"image"
 	"strings"
 	"time"
 
@@ -16,9 +17,10 @@ import (
 var scorePollRate = 30 * time.Second
 
 type nhlBoards struct {
-	api        *nhl.Nhl
-	watchTeams []string
-	scheduler  *gocron.Scheduler
+	api           *nhl.Nhl
+	watchTeams    []string
+	favoriteTeams []string
+	scheduler     *gocron.Scheduler
 }
 
 type scoreBoard struct {
@@ -30,7 +32,8 @@ func New(ctx context.Context) ([]board.Board, error) {
 	var err error
 
 	controller := &nhlBoards{
-		watchTeams: []string{"NYI", "MTL", "COL"},
+		watchTeams:    []string{"NYI", "MTL", "COL"},
+		favoriteTeams: []string{"NYI"},
 	}
 
 	controller.api, err = nhl.New(ctx)
@@ -122,16 +125,47 @@ func gameIsOver(game *nhl.LiveGame) bool {
 	return false
 }
 
+func (b *scoreBoard) isFavorite(abbrev string) bool {
+	for _, t := range b.controller.favoriteTeams {
+		if t == abbrev {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (b *scoreBoard) renderGameUntilOver(ctx context.Context, liveGame *nhl.LiveGame) error {
-	// TODO: Make this atomic?
-	b.liveGame = true
-	defer func() { b.liveGame = false }()
+	isFavorite := b.isFavorite(liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation) ||
+		b.isFavorite(liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
+
+	if isFavorite {
+		// TODO: Make atomic?
+		b.liveGame = true
+		defer func() { b.liveGame = false }()
+	}
+
+	logoBounds := image.Rect(0, 0, 64, 32)
 
 	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-time.After(scorePollRate):
+		homeLogoInfo, ok := logos[fmt.Sprintf("%s_HOME", liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation)]
+		if !ok {
+			return fmt.Errorf("could not find logo info for %s", liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation)
+		}
+		awayLogoInfo, ok := logos[fmt.Sprintf("%s_HOME", liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)]
+		if !ok {
+			return fmt.Errorf("could not find logo info for %s", liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
+		}
+
+		var err error
+
+		_, err = GetLogo(homeLogoInfo, logoBounds)
+		if err != nil {
+			return err
+		}
+		_, err = GetLogo(awayLogoInfo, logoBounds)
+		if err != nil {
+			return err
 		}
 
 		// This game is live, scoreboard time
@@ -144,6 +178,10 @@ func (b *scoreBoard) renderGameUntilOver(ctx context.Context, liveGame *nhl.Live
 			liveGame.LiveData.Linescore.CurrentPeriodTimeRemaining,
 		)
 
+		if !isFavorite {
+			return nil
+		}
+
 		updated, err := nhl.GetLiveGame(ctx, liveGame.Link)
 		if err != nil {
 			fmt.Printf("failed to update live game: %s", err.Error())
@@ -155,6 +193,12 @@ func (b *scoreBoard) renderGameUntilOver(ctx context.Context, liveGame *nhl.Live
 
 		if updated != nil {
 			liveGame = updated
+		}
+
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(scorePollRate):
 		}
 	}
 }

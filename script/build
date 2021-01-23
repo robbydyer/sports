@@ -6,7 +6,8 @@ cd "${ROOT}"
 IN_DOCKER="${IN_DOCKER:-no}"
 
 if [ "${IN_DOCKER}" = "no" ]; then
-  pkger -o ./cmd/sportsmatrix
+  # Run pkger when static assets change
+  #pkger -o ./cmd/sportsmatrix
   if ! docker images | grep pibuilder &> /dev/null; then
     docker buildx build -f Dockerfile.builder -t pibuilder .
   fi

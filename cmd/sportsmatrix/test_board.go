@@ -37,12 +37,26 @@ func (t *testBoard) Render(ctx context.Context, matrix rgb.Matrix, rotationDelay
 	}
 
 	if err := rgbrender.DrawImage(t.canvas, img); err != nil {
-		return err
+		return fmt.Errorf("failed to draw test image: %w", err)
 	}
 
 	select {
 	case <-ctx.Done():
-	case <-time.After(rotationDelay):
+	case <-time.After(rotationDelay / 2):
+	}
+
+	textWriter, err := rgbrender.DefaultTextWriter()
+	if err != nil {
+		return fmt.Errorf("failed to get TextWriter: %w", err)
+	}
+
+	if err := textWriter.Write(t.canvas, t.canvas.Bounds(), []string{"Hello Test"}, image.Black); err != nil {
+		return fmt.Errorf("failed to write text: %w", err)
+	}
+
+	select {
+	case <-ctx.Done():
+	case <-time.After(rotationDelay / 2):
 	}
 
 	return nil

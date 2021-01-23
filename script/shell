@@ -35,6 +35,7 @@ cp -r ~/go/src/github.com/robbydyer/rgbmatrix-rpi/lib /src/vendor/github.com/rob
 cd /src/vendor/github.com/robbydyer/rgbmatrix-rpi/lib/rpi-rgb-led-matrix
 make
 cd /src/vendor/github.com/robbydyer/rgbmatrix-rpi
+rm -rf examples || true
 go install -v ./...
 
 cd /src

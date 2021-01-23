@@ -1,3 +1,4 @@
+vendor/github.com/robbydyer/rgbmatrix-rpi/examples/
 cmd/sportsmatrix/pkged.go
 sportsmatrix.bin
 *.swp
