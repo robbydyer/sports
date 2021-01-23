@@ -19,7 +19,8 @@ func (t *testBoard) Name() string {
 	return "Test Board"
 }
 
-func (t *testBoard) Render(ctx context.Context, matrix rgb.Matrix, rotationDelay time.Duration) error {
+func (t *testBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
+	delay := 10 * time.Second
 	fmt.Println("Rendering testBoard!")
 	f, err := pkger.Open("/assets/images/goal_light.png")
 	if err != nil {
@@ -42,7 +43,7 @@ func (t *testBoard) Render(ctx context.Context, matrix rgb.Matrix, rotationDelay
 
 	select {
 	case <-ctx.Done():
-	case <-time.After(rotationDelay / 2):
+	case <-time.After(delay / 2):
 	}
 
 	textWriter, err := rgbrender.DefaultTextWriter()
@@ -56,7 +57,7 @@ func (t *testBoard) Render(ctx context.Context, matrix rgb.Matrix, rotationDelay
 
 	select {
 	case <-ctx.Done():
-	case <-time.After(rotationDelay / 2):
+	case <-time.After(delay / 2):
 	}
 
 	return nil

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"image/color"
 	"strings"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 
 	"github.com/robbydyer/sports/internal/board"
 	"github.com/robbydyer/sports/pkg/nhl"
+	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
 var scorePollRate = 30 * time.Second
@@ -23,6 +25,8 @@ type nhlBoards struct {
 	scheduler     *gocron.Scheduler
 	logos         map[string]image.Image
 	matrixBounds  image.Rectangle
+	config        *Config
+	cancel        chan bool
 }
 
 type scoreBoard struct {
@@ -30,7 +34,11 @@ type scoreBoard struct {
 	liveGame   bool
 }
 
-func New(ctx context.Context, matrixBounds image.Rectangle) ([]board.Board, error) {
+type Config struct {
+	Delay time.Duration
+}
+
+func New(ctx context.Context, matrixBounds image.Rectangle, config *Config) ([]board.Board, error) {
 	var err error
 
 	controller := &nhlBoards{
@@ -38,6 +46,8 @@ func New(ctx context.Context, matrixBounds image.Rectangle) ([]board.Board, erro
 		favoriteTeams: []string{"NYI"},
 		logos:         make(map[string]image.Image),
 		matrixBounds:  matrixBounds,
+		config:        config,
+		cancel:        make(chan bool, 1),
 	}
 
 	controller.api, err = nhl.New(ctx)
@@ -90,14 +100,20 @@ func (b *scoreBoard) HasPriority() bool {
 
 func (b *scoreBoard) Cleanup() {}
 
-func (b *scoreBoard) Render(ctx context.Context, matrix rgb.Matrix, rotationDelay time.Duration) error {
-	select {
-	case <-ctx.Done():
-	case <-time.After(rotationDelay):
-	}
+func (b *scoreBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
+	canvas := rgb.NewCanvas(matrix)
+	canvas.Clear()
+
+	seenTeams := make(map[string]bool)
 
 OUTER:
 	for _, abbrev := range b.controller.watchTeams {
+		seen, ok := seenTeams[abbrev]
+		if ok && seen {
+			continue OUTER
+		}
+		seenTeams[abbrev] = true
+
 		team, err := b.controller.api.TeamFromAbbreviation(abbrev)
 		if err != nil {
 			return err
@@ -109,20 +125,40 @@ OUTER:
 				if err != nil {
 					return fmt.Errorf("failed to get live game status of game: %w", err)
 				}
+				if gameNotStarted(liveGame) {
+					if err := b.RenderUpcomingGame(ctx, canvas, liveGame); err != nil {
+						return err
+					}
+				}
 				if gameIsOver(liveGame) {
-					fmt.Printf("%s game is not live\n", team.Name)
+					fmt.Printf("%s game is over\n", team.Name)
 					continue OUTER
 				}
 
-				if err := b.RenderGameUntilOver(ctx, liveGame); err != nil {
+				if err := b.RenderGameUntilOver(ctx, canvas, liveGame); err != nil {
 					return err
 				}
 
 			}
 		}
+		select {
+		case <-ctx.Done():
+		case <-time.After(b.controller.config.Delay):
+		}
 	}
 
 	return nil
+}
+
+func gameNotStarted(game *nhl.LiveGame) bool {
+	if game == nil || game.LiveData == nil {
+		return true
+	}
+	if game.LiveData.Linescore.CurrentPeriod < 1 {
+		return true
+	}
+
+	return false
 }
 
 func gameIsOver(game *nhl.LiveGame) bool {
@@ -133,9 +169,6 @@ func gameIsOver(game *nhl.LiveGame) bool {
 		return true
 	}
 	if strings.Contains(strings.ToLower(game.LiveData.Linescore.CurrentPeriodTimeRemaining), "final") {
-		return true
-	}
-	if game.LiveData.Linescore.CurrentPeriod < 1 {
 		return true
 	}
 
@@ -174,7 +207,7 @@ func (b *nhlBoards) getLogo(logoKey string) (image.Image, error) {
 	return b.logos[logoKey], nil
 }
 
-func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, liveGame *nhl.LiveGame) error {
+func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas, liveGame *nhl.LiveGame) error {
 	isFavorite := b.isFavorite(liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation) ||
 		b.isFavorite(liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
 
@@ -184,28 +217,23 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, liveGame *nhl.Live
 		defer func() { b.liveGame = false }()
 	}
 
-	logoBounds := image.Rect(0, 0, 64, 32)
-
 	for {
 		hKey := fmt.Sprintf("%s_HOME", liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation)
 		aKey := fmt.Sprintf("%s_AWAY", liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
-		homeLogoInfo, ok := logos[hKey]
-		if !ok {
-			return fmt.Errorf("could not find logo info for %s", liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation)
-		}
-		awayLogoInfo, ok := logos[aKey]
-		if !ok {
-			return fmt.Errorf("could not find logo info for %s", liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
-		}
 
-		var err error
-
-		_, err = GetLogo(homeLogoInfo, logoBounds)
+		homeLogo, err := b.controller.getLogo(hKey)
 		if err != nil {
 			return err
 		}
-		_, err = GetLogo(awayLogoInfo, logoBounds)
+		awayLogo, err := b.controller.getLogo(aKey)
 		if err != nil {
+			return err
+		}
+
+		if err := rgbrender.DrawImage(canvas, homeLogo); err != nil {
+			return err
+		}
+		if err := rgbrender.DrawImage(canvas, awayLogo); err != nil {
 			return err
 		}
 
@@ -242,6 +270,40 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, liveGame *nhl.Live
 		case <-time.After(scorePollRate):
 		}
 	}
+}
+
+func (b *scoreBoard) RenderUpcomingGame(ctx context.Context, canvas *rgb.Canvas, liveGame *nhl.LiveGame) error {
+	hKey := fmt.Sprintf("%s_HOME", liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation)
+	aKey := fmt.Sprintf("%s_AWAY", liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
+
+	homeLogo, err := b.controller.getLogo(hKey)
+	if err != nil {
+		return err
+	}
+	awayLogo, err := b.controller.getLogo(aKey)
+	if err != nil {
+		return err
+	}
+
+	if err := rgbrender.DrawImage(canvas, homeLogo); err != nil {
+		return err
+	}
+	if err := rgbrender.DrawImage(canvas, awayLogo); err != nil {
+		return err
+	}
+	wrter, err := rgbrender.DefaultTextWriter()
+	if err != nil {
+		return err
+	}
+
+	center, err := rgbrender.AlignPosition(rgbrender.CenterCenter, canvas.Bounds(), 5, 5)
+	if err != nil {
+		return err
+	}
+
+	wrter.Write(canvas, center, []string{"vs."}, color.Black)
+
+	return nil
 }
 
 func periodStr(period int) string {

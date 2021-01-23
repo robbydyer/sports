@@ -2,7 +2,6 @@ package clock
 
 import (
 	"context"
-	"time"
 
 	rgb "github.com/robbydyer/rgbmatrix-rpi"
 
@@ -24,7 +23,7 @@ func (b *basicClock) Name() string {
 
 func (b *basicClock) Cleanup() {}
 
-func (b *basicClock) Render(ctx context.Context, matrix rgb.Matrix, rotationDelay time.Duration) error {
+func (b *basicClock) Render(ctx context.Context, matrix rgb.Matrix) error {
 	cv := rgb.NewCanvas(matrix)
 	cv.Clear()
 

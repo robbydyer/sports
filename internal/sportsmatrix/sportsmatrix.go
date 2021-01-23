@@ -42,7 +42,7 @@ func New(ctx context.Context, cfg Config, boards ...board.Board) (*SportsMatrix,
 	s := &SportsMatrix{
 		boards: boards,
 		cfg:    &cfg,
-		done:   make(chan bool),
+		done:   make(chan bool, 1),
 	}
 
 	var err error
@@ -92,14 +92,14 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 			}
 			if b.HasPriority() {
 				fmt.Printf("Rendering board '%s' as priority\n", b.Name())
-				err := b.Render(ctx, s.matrix, s.cfg.RotationDelay)
+				err := b.Render(ctx, s.matrix)
 				if err != nil {
 					fmt.Printf("Error: %s", err.Error())
 				}
 				break INNER
 			}
 			fmt.Printf("Rendering board '%s'\n", b.Name())
-			err := b.Render(ctx, s.matrix, s.cfg.RotationDelay)
+			err := b.Render(ctx, s.matrix)
 			if err != nil {
 				fmt.Printf("Error: %s", err.Error())
 			}

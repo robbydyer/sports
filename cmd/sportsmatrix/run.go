@@ -6,6 +6,7 @@ import (
 	"image"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/robbydyer/sports/internal/board"
 	"github.com/robbydyer/sports/internal/nhlboard"
@@ -68,7 +69,9 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 
 	bounds := image.Rect(0, 0, cfg.HardwareConfig.Cols, cfg.HardwareConfig.Rows)
 
-	nhlBoards, err := nhlboard.New(ctx, bounds)
+	nhlBoards, err := nhlboard.New(ctx, bounds, &nhlboard.Config{
+		Delay: 30 * time.Second,
+	})
 	if err != nil {
 		return err
 	}
