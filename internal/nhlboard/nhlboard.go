@@ -21,6 +21,8 @@ type nhlBoards struct {
 	watchTeams    []string
 	favoriteTeams []string
 	scheduler     *gocron.Scheduler
+	logos         map[string]image.Image
+	matrixBounds  image.Rectangle
 }
 
 type scoreBoard struct {
@@ -28,12 +30,14 @@ type scoreBoard struct {
 	liveGame   bool
 }
 
-func New(ctx context.Context) ([]board.Board, error) {
+func New(ctx context.Context, matrixBounds image.Rectangle) ([]board.Board, error) {
 	var err error
 
 	controller := &nhlBoards{
 		watchTeams:    []string{"NYI", "MTL", "COL"},
 		favoriteTeams: []string{"NYI"},
+		logos:         make(map[string]image.Image),
+		matrixBounds:  matrixBounds,
 	}
 
 	controller.api, err = nhl.New(ctx)
@@ -49,6 +53,17 @@ func New(ctx context.Context) ([]board.Board, error) {
 	controller.scheduler = gocron.NewScheduler(loc)
 	controller.scheduler.Every(1).Day().At("05:00").Do(controller.updateGames)
 	controller.scheduler.StartAsync()
+
+	// Intialize logo cache
+	for _, t := range controller.watchTeams {
+		for _, h := range []string{"HOME", "AWAY"} {
+			lKey := fmt.Sprintf("%s_%s", t, h)
+			_, err := controller.getLogo(lKey)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 
 	var boards []board.Board
 
@@ -137,6 +152,28 @@ func (b *scoreBoard) isFavorite(abbrev string) bool {
 	return false
 }
 
+// getLogo checks cache first
+func (b *nhlBoards) getLogo(logoKey string) (image.Image, error) {
+	// Check cache first
+	logo, ok := b.logos[logoKey]
+	if ok {
+		return logo, nil
+	}
+
+	info, ok := logos[logoKey]
+	if !ok {
+		return nil, fmt.Errorf("no logo info for %s\n", logoKey)
+	}
+
+	logo, err := GetLogo(info, b.matrixBounds.Bounds())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get logo for %s: %w", logoKey, err)
+	}
+	b.logos[logoKey] = logo
+
+	return b.logos[logoKey], nil
+}
+
 func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, liveGame *nhl.LiveGame) error {
 	isFavorite := b.isFavorite(liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation) ||
 		b.isFavorite(liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
@@ -150,11 +187,13 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, liveGame *nhl.Live
 	logoBounds := image.Rect(0, 0, 64, 32)
 
 	for {
-		homeLogoInfo, ok := logos[fmt.Sprintf("%s_HOME", liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation)]
+		hKey := fmt.Sprintf("%s_HOME", liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation)
+		aKey := fmt.Sprintf("%s_AWAY", liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
+		homeLogoInfo, ok := logos[hKey]
 		if !ok {
 			return fmt.Errorf("could not find logo info for %s", liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation)
 		}
-		awayLogoInfo, ok := logos[fmt.Sprintf("%s_AWAY", liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)]
+		awayLogoInfo, ok := logos[aKey]
 		if !ok {
 			return fmt.Errorf("could not find logo info for %s", liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
 		}

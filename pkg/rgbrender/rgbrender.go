@@ -74,8 +74,8 @@ func AlignPosition(align Align, bounds image.Rectangle, sizeX int, sizeY int) (i
 
 // ZoomImageSize takes a zoom percentage and returns the resulting image size.
 func ZoomImageSize(img image.Image, zoom float64) (int, int) {
-	fullX := img.Bounds().Dx()
-	fullY := img.Bounds().Dy()
+	fullX := img.Bounds().Dx() + 1
+	fullY := img.Bounds().Dy() + 1
 
 	if zoom <= 0 {
 		return 0, 0

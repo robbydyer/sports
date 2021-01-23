@@ -3,6 +3,7 @@ package sportsmatrix
 import (
 	"context"
 	"fmt"
+	"image"
 	_ "image/png"
 	"time"
 
@@ -55,6 +56,12 @@ func New(ctx context.Context, cfg Config, boards ...board.Board) (*SportsMatrix,
 	return s, nil
 }
 
+// MatrixBounds returns an image.Rectangle of the matrix bounds
+func (s *SportsMatrix) MatrixBounds() image.Rectangle {
+	w, h := s.matrix.Geometry()
+	return image.Rect(0, 0, w-1, h-1)
+}
+
 func (s *SportsMatrix) Done() chan bool {
 	return s.done
 }
@@ -68,9 +75,12 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			fmt.Println("Got context cancel, cleaning up boards")
-			for _, b := range s.boards {
-				b.Cleanup()
-			}
+			go func() {
+				for _, b := range s.boards {
+					b.Cleanup()
+				}
+			}()
+			time.Sleep(5 * time.Second)
 			s.done <- true
 			return nil
 		default:
@@ -109,8 +119,10 @@ func (s *SportsMatrix) anyPriorities() bool {
 }
 
 func (s *SportsMatrix) Close() {
-	fmt.Println("Waiting for boards to clean up")
-	<-s.done
+	if len(s.boards) > 1 {
+		fmt.Println("Waiting for boards to clean up")
+		<-s.done
+	}
 	if s.matrix != nil {
 		fmt.Println("Closing matrix")
 		_ = s.matrix.Close()

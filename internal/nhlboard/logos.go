@@ -18,38 +18,50 @@ type LogoInfo struct {
 }
 
 var logos = map[string]*LogoInfo{
-	"NYI_HOME": &LogoInfo{
+	"NYI_HOME": {
 		TeamAbbreviation: "NYI",
 		Zoom:             1,
 		XPosition:        -3,
 		YPosition:        0,
 	},
-	"NYI_AWAY": &LogoInfo{
+	"NYI_AWAY": {
 		TeamAbbreviation: "NYI",
 		Zoom:             1,
 		XPosition:        3,
 		YPosition:        0,
 	},
-	"COL_HOME": &LogoInfo{
+	"COL_HOME": {
 		TeamAbbreviation: "COL",
 		Zoom:             1,
 		XPosition:        -5,
 		YPosition:        0,
 	},
-	"COL_AWAY": &LogoInfo{
+	"COL_AWAY": {
 		TeamAbbreviation: "COL",
 		Zoom:             1,
 		XPosition:        -5,
 		YPosition:        0,
 	},
-	"ANA_HOME": &LogoInfo{
+	"ANA_HOME": {
 		TeamAbbreviation: "ANA",
 		Zoom:             0.8,
 		XPosition:        -22,
 		YPosition:        3,
 	},
-	"ANA_AWAY": &LogoInfo{
+	"ANA_AWAY": {
 		TeamAbbreviation: "ANA",
+		Zoom:             0.8,
+		XPosition:        7,
+		YPosition:        3,
+	},
+	"MTL_HOME": {
+		TeamAbbreviation: "MTL",
+		Zoom:             0.8,
+		XPosition:        -22,
+		YPosition:        3,
+	},
+	"MTL_AWAY": {
+		TeamAbbreviation: "MTL",
 		Zoom:             0.8,
 		XPosition:        7,
 		YPosition:        3,
@@ -57,7 +69,11 @@ var logos = map[string]*LogoInfo{
 }
 
 func imageRootDir() (string, error) {
-	return "/home/pi", nil
+	d := "/tmp/sportsmatrix"
+	if err := os.MkdirAll(d, 0755); err != nil {
+		return "", err
+	}
+	return d, nil
 	/*
 		u, err := user.Current()
 		if err != nil {
@@ -83,7 +99,7 @@ func GetLogo(logo *LogoInfo, bounds image.Rectangle) (image.Image, error) {
 		return nil, err
 	}
 
-	thumbFile := fmt.Sprintf("%s/.sportsmatrix/%s_%dx%d.png", imgRoot, logo.TeamAbbreviation, bounds.Dx(), bounds.Dy())
+	thumbFile := fmt.Sprintf("%s/%s_%dx%d.png", imgRoot, logo.TeamAbbreviation, bounds.Dx(), bounds.Dy())
 
 	var thumbnail image.Image
 
@@ -91,11 +107,11 @@ func GetLogo(logo *LogoInfo, bounds image.Rectangle) (image.Image, error) {
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Create the thumbnail
-			thumbnail = rgbrender.ResizeImage(img, logo.Zoom)
+			thumbnail = rgbrender.ResizeImage(img, bounds, logo.Zoom)
 
 			fmt.Printf("Saving thumbnail logo for %s\n", logo.TeamAbbreviation)
 			if err := rgbrender.SavePng(thumbnail, thumbFile); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to save logo %s: %w", thumbFile, err)
 			}
 
 			return thumbnail, nil
@@ -104,13 +120,13 @@ func GetLogo(logo *LogoInfo, bounds image.Rectangle) (image.Image, error) {
 
 	t, err := os.Open(thumbFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open logo %s: %w", thumbFile, err)
 	}
 	defer t.Close()
 
 	thumbnail, err = png.Decode(t)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to decode logo %s: %w", thumbFile, err)
 	}
 
 	return thumbnail, nil

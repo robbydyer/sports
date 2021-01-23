@@ -273,6 +273,22 @@ func TestZoomImageSize(t *testing.T) {
 		expectedY int
 	}{
 		{
+			name: "full size",
+			img: image.Rectangle{
+				Min: image.Point{
+					X: 0,
+					Y: 0,
+				},
+				Max: image.Point{
+					X: 5,
+					Y: 5,
+				},
+			},
+			zoom:      1,
+			expectedX: 6,
+			expectedY: 6,
+		},
+		{
 			name: "half square, even",
 			img: image.Rectangle{
 				Min: image.Point{
