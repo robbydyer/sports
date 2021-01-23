@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/png"
 	"os"
-	"os/user"
 
 	"github.com/markbates/pkger"
 	"github.com/robbydyer/sports/pkg/rgbrender"
@@ -20,54 +19,63 @@ type LogoInfo struct {
 
 var logos = map[string]*LogoInfo{
 	"NYI_HOME": &LogoInfo{
-		Zoom:      1,
-		XPosition: -3,
-		YPosition: 0,
+		TeamAbbreviation: "NYI",
+		Zoom:             1,
+		XPosition:        -3,
+		YPosition:        0,
 	},
 	"NYI_AWAY": &LogoInfo{
-		Zoom:      1,
-		XPosition: 3,
-		YPosition: 0,
+		TeamAbbreviation: "NYI",
+		Zoom:             1,
+		XPosition:        3,
+		YPosition:        0,
 	},
 	"COL_HOME": &LogoInfo{
-		Zoom:      1,
-		XPosition: -5,
-		YPosition: 0,
+		TeamAbbreviation: "COL",
+		Zoom:             1,
+		XPosition:        -5,
+		YPosition:        0,
 	},
 	"COL_AWAY": &LogoInfo{
-		Zoom:      1,
-		XPosition: -5,
-		YPosition: 0,
+		TeamAbbreviation: "COL",
+		Zoom:             1,
+		XPosition:        -5,
+		YPosition:        0,
 	},
 	"ANA_HOME": &LogoInfo{
-		Zoom:      0.8,
-		XPosition: -22,
-		YPosition: 3,
+		TeamAbbreviation: "ANA",
+		Zoom:             0.8,
+		XPosition:        -22,
+		YPosition:        3,
 	},
 	"ANA_AWAY": &LogoInfo{
-		Zoom:      0.8,
-		XPosition: 7,
-		YPosition: 3,
+		TeamAbbreviation: "ANA",
+		Zoom:             0.8,
+		XPosition:        7,
+		YPosition:        3,
 	},
 }
 
 func imageRootDir() (string, error) {
-	u, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-	return u.HomeDir, nil
+	return "/home/pi", nil
+	/*
+		u, err := user.Current()
+		if err != nil {
+			return "", err
+		}
+		return u.HomeDir, nil
+	*/
 }
 
 func GetLogo(logo *LogoInfo, bounds image.Rectangle) (image.Image, error) {
-	f, err := pkger.Open(fmt.Sprintf("github.com/robbydyer/sports:/assets/logos/svg/%s_light.svg", logo.TeamAbbreviation))
+	f, err := pkger.Open(fmt.Sprintf("github.com/robbydyer/sports:/assets/logos/%s/%s.png", logo.TeamAbbreviation, logo.TeamAbbreviation))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to locate logo asset: %w", err)
 	}
 
-	img, _, err := image.Decode(f)
+	img, err := png.Decode(f)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to decode logo png: %w", err)
 	}
 
 	imgRoot, err := imageRootDir()
