@@ -29,6 +29,26 @@ var logos = map[string]*LogoInfo{
 		XPosition: 3,
 		YPosition: 0,
 	},
+	"COL_HOME": &LogoInfo{
+		Zoom:      1,
+		XPosition: -5,
+		YPosition: 0,
+	},
+	"COL_AWAY": &LogoInfo{
+		Zoom:      1,
+		XPosition: -5,
+		YPosition: 0,
+	},
+	"ANA_HOME": &LogoInfo{
+		Zoom:      0.8,
+		XPosition: -22,
+		YPosition: 3,
+	},
+	"ANA_AWAY": &LogoInfo{
+		Zoom:      0.8,
+		XPosition: 7,
+		YPosition: 3,
+	},
 }
 
 func imageRootDir() (string, error) {

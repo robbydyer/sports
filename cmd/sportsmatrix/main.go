@@ -13,6 +13,7 @@ type rootArgs struct {
 }
 
 func main() {
+	includeAssets()
 	args := &rootArgs{}
 
 	rootCmd := newRootCmd(args)
@@ -46,43 +47,36 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 }
 
 func includeAssets() {
-
-	a := []string{
-		"/assets/fonts/04b24.ttf",
-		"/assets/logos/DAL/DAL.png",
-		"/assets/logos/OTT/OTT.png",
-		"/assets/logos/MTL/MTL.png",
-		"/assets/logos/COL/COL.png",
-		"/assets/logos/MIN/MIN.png",
-		"/assets/logos/PHI/PHI.png",
-		"/assets/logos/TOR/TOR.png",
-		"/assets/logos/WSH/WSH.png",
-		"/assets/logos/WPG/WPG.png",
-		"/assets/logos/EDM/EDM.png",
-		"/assets/logos/CBJ/CBJ.png",
-		"/assets/logos/BOS/BOS.png",
-		"/assets/logos/FLA/FLA.png",
-		"/assets/logos/ARI/ARI.png",
-		"/assets/logos/SJS/SJS.png",
-		"/assets/logos/LAK/LAK.png",
-		"/assets/logos/NYI/NYI.png",
-		"/assets/logos/STL/STL.png",
-		"/assets/logos/NYR/NYR.png",
-		"/assets/logos/VGK/VGK.png",
-		"/assets/logos/NSH/NSH.png",
-		"/assets/logos/VAN/VAN.png",
-		"/assets/logos/TBL/TBL.png",
-		"/assets/logos/BUF/BUF.png",
-		"/assets/logos/CGY/CGY.png",
-		"/assets/logos/CAR/CAR.png",
-		"/assets/logos/ANA/ANA.png",
-		"/assets/logos/CHI/CHI.png",
-		"/assets/logos/PIT/PIT.png",
-		"/assets/logos/NJD/NJD.png",
-		"/assets/logos/DET/DET.png",
-	}
-
-	for _, f := range a {
-		_ = pkger.Include(f)
-	}
+	_ = pkger.Include("/assets/fonts/04b24.ttf")
+	_ = pkger.Include("/assets/logos/DAL/DAL.png")
+	_ = pkger.Include("/assets/logos/OTT/OTT.png")
+	_ = pkger.Include("/assets/logos/MTL/MTL.png")
+	_ = pkger.Include("/assets/logos/COL/COL.png")
+	_ = pkger.Include("/assets/logos/MIN/MIN.png")
+	_ = pkger.Include("/assets/logos/PHI/PHI.png")
+	_ = pkger.Include("/assets/logos/TOR/TOR.png")
+	_ = pkger.Include("/assets/logos/WSH/WSH.png")
+	_ = pkger.Include("/assets/logos/WPG/WPG.png")
+	_ = pkger.Include("/assets/logos/EDM/EDM.png")
+	_ = pkger.Include("/assets/logos/CBJ/CBJ.png")
+	_ = pkger.Include("/assets/logos/BOS/BOS.png")
+	_ = pkger.Include("/assets/logos/FLA/FLA.png")
+	_ = pkger.Include("/assets/logos/ARI/ARI.png")
+	_ = pkger.Include("/assets/logos/SJS/SJS.png")
+	_ = pkger.Include("/assets/logos/LAK/LAK.png")
+	_ = pkger.Include("/assets/logos/NYI/NYI.png")
+	_ = pkger.Include("/assets/logos/STL/STL.png")
+	_ = pkger.Include("/assets/logos/NYR/NYR.png")
+	_ = pkger.Include("/assets/logos/VGK/VGK.png")
+	_ = pkger.Include("/assets/logos/NSH/NSH.png")
+	_ = pkger.Include("/assets/logos/VAN/VAN.png")
+	_ = pkger.Include("/assets/logos/TBL/TBL.png")
+	_ = pkger.Include("/assets/logos/BUF/BUF.png")
+	_ = pkger.Include("/assets/logos/CGY/CGY.png")
+	_ = pkger.Include("/assets/logos/CAR/CAR.png")
+	_ = pkger.Include("/assets/logos/ANA/ANA.png")
+	_ = pkger.Include("/assets/logos/CHI/CHI.png")
+	_ = pkger.Include("/assets/logos/PIT/PIT.png")
+	_ = pkger.Include("/assets/logos/NJD/NJD.png")
+	_ = pkger.Include("/assets/logos/DET/DET.png")
 }

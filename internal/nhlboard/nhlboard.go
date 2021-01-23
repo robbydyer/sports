@@ -99,7 +99,9 @@ OUTER:
 					continue OUTER
 				}
 
-				b.renderGameUntilOver(ctx, liveGame)
+				if err := b.RenderGameUntilOver(ctx, liveGame); err != nil {
+					return err
+				}
 
 			}
 		}
@@ -135,7 +137,7 @@ func (b *scoreBoard) isFavorite(abbrev string) bool {
 	return false
 }
 
-func (b *scoreBoard) renderGameUntilOver(ctx context.Context, liveGame *nhl.LiveGame) error {
+func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, liveGame *nhl.LiveGame) error {
 	isFavorite := b.isFavorite(liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation) ||
 		b.isFavorite(liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
 
@@ -152,7 +154,7 @@ func (b *scoreBoard) renderGameUntilOver(ctx context.Context, liveGame *nhl.Live
 		if !ok {
 			return fmt.Errorf("could not find logo info for %s", liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation)
 		}
-		awayLogoInfo, ok := logos[fmt.Sprintf("%s_HOME", liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)]
+		awayLogoInfo, ok := logos[fmt.Sprintf("%s_AWAY", liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)]
 		if !ok {
 			return fmt.Errorf("could not find logo info for %s", liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
 		}
