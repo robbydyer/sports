@@ -37,7 +37,7 @@ func (t *testBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 		t.canvas = rgb.NewCanvas(matrix)
 	}
 
-	if err := rgbrender.DrawImage(t.canvas, img); err != nil {
+	if err := rgbrender.DrawImage(t.canvas, t.canvas.Bounds(), img); err != nil {
 		return fmt.Errorf("failed to draw test image: %w", err)
 	}
 

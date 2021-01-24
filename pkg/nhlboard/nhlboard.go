@@ -11,7 +11,7 @@ import (
 	"github.com/go-co-op/gocron"
 	rgb "github.com/robbydyer/rgbmatrix-rpi"
 
-	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/nhl"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
@@ -23,7 +23,8 @@ type nhlBoards struct {
 	watchTeams    []string
 	favoriteTeams []string
 	scheduler     *gocron.Scheduler
-	logos         map[string]image.Image
+	logos         map[string]*logoInfo
+	logoCache     map[string]image.Image
 	matrixBounds  image.Rectangle
 	config        *Config
 	cancel        chan bool
@@ -44,7 +45,8 @@ func New(ctx context.Context, matrixBounds image.Rectangle, config *Config) ([]b
 	controller := &nhlBoards{
 		watchTeams:    []string{"NYI", "MTL", "COL"},
 		favoriteTeams: []string{"NYI"},
-		logos:         make(map[string]image.Image),
+		logos:         make(map[string]*logoInfo),
+		logoCache:     make(map[string]image.Image),
 		matrixBounds:  matrixBounds,
 		config:        config,
 		cancel:        make(chan bool, 1),
@@ -64,13 +66,14 @@ func New(ctx context.Context, matrixBounds image.Rectangle, config *Config) ([]b
 	controller.scheduler.Every(1).Day().At("05:00").Do(controller.updateGames)
 	controller.scheduler.StartAsync()
 
+	controller.logos, err = getLogos()
+
 	// Intialize logo cache
-	for _, t := range controller.watchTeams {
-		for _, h := range []string{"HOME", "AWAY"} {
-			lKey := fmt.Sprintf("%s_%s", t, h)
-			_, err := controller.getLogo(lKey)
+	for _, t := range ALL {
+		for _, h := range []string{"_HOME", "_AWAY"} {
+			_, err := controller.getLogo(t + h)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to get logo thumbnail for %s: %w", t, err)
 			}
 		}
 	}
@@ -98,7 +101,11 @@ func (b *scoreBoard) HasPriority() bool {
 	return b.liveGame
 }
 
-func (b *scoreBoard) Cleanup() {}
+func (b *scoreBoard) Cleanup() {
+	for _, l := range b.controller.logos {
+		_ = l.logo.Close()
+	}
+}
 
 func (b *scoreBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	canvas := rgb.NewCanvas(matrix)
@@ -188,23 +195,18 @@ func (b *scoreBoard) isFavorite(abbrev string) bool {
 // getLogo checks cache first
 func (b *nhlBoards) getLogo(logoKey string) (image.Image, error) {
 	// Check cache first
-	logo, ok := b.logos[logoKey]
+	logo, ok := b.logoCache[logoKey]
 	if ok {
 		return logo, nil
 	}
 
-	info, ok := logos[logoKey]
-	if !ok {
-		return nil, fmt.Errorf("no logo info for %s\n", logoKey)
-	}
-
-	logo, err := GetLogo(info, b.matrixBounds.Bounds())
+	var err error
+	b.logoCache[logoKey], err = b.logos[logoKey].logo.GetThumbnail(b.matrixBounds)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get logo for %s: %w", logoKey, err)
+		return nil, err
 	}
-	b.logos[logoKey] = logo
 
-	return b.logos[logoKey], nil
+	return b.logoCache[logoKey], nil
 }
 
 func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas, liveGame *nhl.LiveGame) error {
@@ -230,10 +232,19 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 			return err
 		}
 
-		if err := rgbrender.DrawImage(canvas, homeLogo); err != nil {
+		homeShift, err := b.controller.logoShift(hKey)
+		if err != nil {
 			return err
 		}
-		if err := rgbrender.DrawImage(canvas, awayLogo); err != nil {
+		awayShift, err := b.controller.logoShift(aKey)
+		if err != nil {
+			return err
+		}
+
+		if err := rgbrender.DrawImage(canvas, homeShift, homeLogo); err != nil {
+			return err
+		}
+		if err := rgbrender.DrawImage(canvas, awayShift, awayLogo); err != nil {
 			return err
 		}
 
@@ -285,10 +296,19 @@ func (b *scoreBoard) RenderUpcomingGame(ctx context.Context, canvas *rgb.Canvas,
 		return err
 	}
 
-	if err := rgbrender.DrawImage(canvas, homeLogo); err != nil {
+	homeShift, err := b.controller.logoShift(hKey)
+	if err != nil {
 		return err
 	}
-	if err := rgbrender.DrawImage(canvas, awayLogo); err != nil {
+	awayShift, err := b.controller.logoShift(aKey)
+	if err != nil {
+		return err
+	}
+
+	if err := rgbrender.DrawImage(canvas, homeShift, homeLogo); err != nil {
+		return err
+	}
+	if err := rgbrender.DrawImage(canvas, awayShift, awayLogo); err != nil {
 		return err
 	}
 	wrter, err := rgbrender.DefaultTextWriter()

@@ -8,9 +8,9 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/robbydyer/sports/internal/board"
-	"github.com/robbydyer/sports/internal/nhlboard"
-	"github.com/robbydyer/sports/internal/sportsmatrix"
+	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/nhlboard"
+	"github.com/robbydyer/sports/pkg/sportsmatrix"
 	"github.com/spf13/cobra"
 )
 

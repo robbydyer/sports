@@ -110,12 +110,12 @@ func DrawImageAligned(canvas *rgb.Canvas, bounds image.Rectangle, img *image.RGB
 	img.Rect.Min = aligned.Min
 	img.Rect.Max = aligned.Max
 
-	return DrawImage(canvas, img)
+	return DrawImage(canvas, canvas.Bounds(), img)
 }
 
 // DrawImage draws an image
-func DrawImage(canvas *rgb.Canvas, img image.Image) error {
-	draw.Draw(canvas, canvas.Bounds(), img, image.ZP, draw.Over)
+func DrawImage(canvas *rgb.Canvas, bounds image.Rectangle, img image.Image) error {
+	draw.Draw(canvas, bounds, img, image.ZP, draw.Over)
 	return canvas.Render()
 }
 
@@ -131,7 +131,7 @@ func PlayImages(canvas *rgb.Canvas, images []image.Image, delay []time.Duration,
 			case <-quit:
 				return
 			default:
-				if err := DrawImage(canvas, images[i]); err != nil {
+				if err := DrawImage(canvas, canvas.Bounds(), images[i]); err != nil {
 					errChan <- err
 				}
 				time.Sleep(delay[i])

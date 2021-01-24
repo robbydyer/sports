@@ -24,3 +24,13 @@ func SavePng(img image.Image, fileName string) error {
 
 	return png.Encode(f, img)
 }
+
+// ShiftedSize shifts an image's start location and returns its resulting bounds
+func ShiftedSize(xStart int, yStart int, bounds image.Rectangle) image.Rectangle {
+	startX := bounds.Min.X + xStart
+	startY := bounds.Min.Y + yStart
+	endX := bounds.Dx() + startX
+	endY := bounds.Dy() + startY
+
+	return image.Rect(startX, startY, endX, endY)
+}

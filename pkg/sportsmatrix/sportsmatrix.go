@@ -9,7 +9,7 @@ import (
 
 	rgb "github.com/robbydyer/rgbmatrix-rpi"
 
-	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/nhl"
 )
 
