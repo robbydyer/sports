@@ -46,7 +46,13 @@ OUTER:
 			return err
 		}
 
-		for _, game := range b.controller.api.Games[nhl.Today()] {
+		games, ok := b.controller.api.Games[nhl.Today()]
+		if !ok {
+			fmt.Printf("No NHL games scheduled today %s\n", nhl.Today())
+			return nil
+		}
+
+		for _, game := range games {
 			if game.Teams.Away.Team.ID == team.ID || game.Teams.Home.Team.ID == team.ID {
 				liveGame, err := nhl.GetLiveGame(ctx, game.Link)
 				if err != nil {
@@ -56,6 +62,7 @@ OUTER:
 					if err := b.RenderUpcomingGame(ctx, canvas, liveGame); err != nil {
 						return err
 					}
+					continue OUTER
 				}
 				if gameIsOver(liveGame) {
 					fmt.Printf("%s game is over\n", team.Name)

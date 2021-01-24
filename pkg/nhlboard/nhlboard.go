@@ -63,7 +63,6 @@ func New(ctx context.Context, matrixBounds image.Rectangle, config *Config) ([]b
 	// Initialize logo cache
 	for _, t := range ALL {
 		for _, h := range []string{"_HOME", "_AWAY"} {
-			fmt.Printf("Caching logo for %s\n", t+h)
 			_, err := controller.getLogo(t + h)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get logo thumbnail for %s: %w", t, err)
@@ -120,7 +119,7 @@ func (b *nhlBoards) getLogo(logoKey string) (image.Image, error) {
 		return logo, nil
 	}
 
-	fmt.Printf("generating logo for %s\n", logoKey)
+	fmt.Printf("getting thumbnail logo for %s\n", logoKey)
 	var err error
 	b.logoCache[logoKey], err = b.logos[logoKey].logo.GetThumbnail(b.matrixBounds)
 	if err != nil {
