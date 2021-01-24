@@ -29,8 +29,8 @@ type Config struct {
 
 func DefaultConfig() Config {
 	dCfg := rgb.DefaultConfig
-	dCfg.Rows = 64
-	dCfg.Cols = 32
+	dCfg.Rows = 32
+	dCfg.Cols = 64
 	dCfg.Brightness = 60
 	return Config{
 		RotationDelay:  5 * time.Second,
