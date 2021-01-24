@@ -13,7 +13,7 @@ import (
 	"github.com/robbydyer/sports/pkg/nhl"
 )
 
-var scorePollRate = 30 * time.Second
+var scorePollRate = 20 * time.Second
 
 type nhlBoards struct {
 	api           *nhl.Nhl

@@ -23,6 +23,7 @@ type Game struct {
 type LiveGame struct {
 	ID       int    `json:"gamePk"`
 	Link     string `json:"link"`
+	GameTime time.Time
 	GameData *struct {
 		DateTime *struct {
 			DateTime string `json:"datetime,omitempty"`
@@ -62,14 +63,15 @@ type games struct {
 	} `json:"dates"`
 }
 
-func (g *Game) setGameTime() error {
-	var err error
-	g.GameTime, err = time.Parse("2006-01-02T15:04:05Z", g.GameDate)
+func timeFromGameTime(gameTime string) (time.Time, error) {
+	t, err := time.Parse("2006-01-02T15:04:05Z", gameTime)
 	if err != nil {
-		return err
+		return time.Time{}, err
 	}
 
-	return nil
+	t = t.Local()
+
+	return t, nil
 }
 
 func GetLiveGame(ctx context.Context, link string) (*LiveGame, error) {
@@ -99,6 +101,13 @@ func GetLiveGame(ctx context.Context, link string) (*LiveGame, error) {
 	if err := json.Unmarshal(body, &game); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal LiveGame: %w", err)
 	}
+
+	t, err := timeFromGameTime(game.GameData.DateTime.DateTime)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse game time: %w", err)
+	}
+
+	game.GameTime = t
 
 	return game, nil
 }
@@ -138,9 +147,11 @@ func getGames(ctx context.Context, dateStr string) ([]*Game, error) {
 
 	for _, d := range gameList.Dates {
 		for _, g := range d.Games {
-			if err := g.setGameTime(); err != nil {
+			t, err := timeFromGameTime(g.GameDate)
+			if err != nil {
 				return nil, fmt.Errorf("failed to set GameTime: %w", err)
 			}
+			g.GameTime = t
 			retGames = append(retGames, g)
 		}
 	}
