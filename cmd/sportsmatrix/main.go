@@ -1,15 +1,21 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/markbates/pkger"
+	"github.com/robbydyer/sports/internal/config"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 type rootArgs struct {
-	logLevel string
+	logLevel   string
+	configFile string
+	config     *config.Config
 }
 
 func main() {
@@ -28,22 +34,58 @@ func main() {
 }
 
 func newRootCmd(args *rootArgs) *cobra.Command {
-
 	rootCmd := &cobra.Command{
 		Use:   "sports",
 		Short: "Sports info",
+		PersistentPreRunE: func(cmd *cobra.Command, a []string) error {
+			configFile := viper.GetString("config")
+
+			if configFile != "" {
+				fmt.Printf("Loading config from file %s\n", configFile)
+				if err := args.setConfig(configFile); err != nil {
+					return err
+				}
+			} else {
+				fmt.Println("Using default config")
+				args.config = &config.Config{}
+			}
+
+			return nil
+		},
 	}
 
-	/*
-		f := rootCmd.PersistentFlags()
+	f := rootCmd.PersistentFlags()
 
-		f.StringVarP(&args.logLevel, "log-level", "l", "info", "Logging level. One of info, warn, debug")
+	f.StringVarP(&args.configFile, "config", "c", "", "Config filename")
 
-	*/
 	rootCmd.AddCommand(newNhlCmd(args))
 	rootCmd.AddCommand(newRunCmd(args))
 
 	return rootCmd
+}
+
+func (r *rootArgs) setConfig(filename string) error {
+	f, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+
+	var c *config.Config
+
+	if err := json.Unmarshal(f, &c); err != nil {
+		return fmt.Errorf("failed to parse config file: %w", err)
+	}
+
+	// Set board dimension defaults
+	if c.SportsMatrixConfig.HardwareConfig.Cols == 0 {
+		c.SportsMatrixConfig.HardwareConfig.Cols = 64
+	}
+	if c.SportsMatrixConfig.HardwareConfig.Rows == 0 {
+		c.SportsMatrixConfig.HardwareConfig.Rows = 32
+	}
+
+	r.config = c
+	return nil
 }
 
 func includeAssets() {

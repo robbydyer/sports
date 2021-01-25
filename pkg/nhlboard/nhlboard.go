@@ -16,32 +16,34 @@ import (
 var scorePollRate = 20 * time.Second
 
 type nhlBoards struct {
-	api           *nhl.Nhl
-	watchTeams    []string
-	favoriteTeams []string
-	scheduler     *gocron.Scheduler
-	logos         map[string]*logoInfo
-	logoCache     map[string]image.Image
-	matrixBounds  image.Rectangle
-	config        *Config
-	cancel        chan bool
+	api          *nhl.Nhl
+	scheduler    *gocron.Scheduler
+	logos        map[string]*logoInfo
+	logoCache    map[string]image.Image
+	matrixBounds image.Rectangle
+	config       *Config
+	cancel       chan bool
 }
 
 type Config struct {
-	Delay time.Duration
+	BoardDelay    string
+	FavoriteTeams []string
+	WatchTeams    []string
 }
 
 func New(ctx context.Context, matrixBounds image.Rectangle, config *Config) ([]board.Board, error) {
 	var err error
 
+	if len(config.WatchTeams) == 0 && len(config.FavoriteTeams) == 0 {
+		config.WatchTeams = ALL
+	}
+
 	controller := &nhlBoards{
-		watchTeams:    ALL,
-		favoriteTeams: []string{"NYI"},
-		logos:         make(map[string]*logoInfo),
-		logoCache:     make(map[string]image.Image),
-		matrixBounds:  matrixBounds,
-		config:        config,
-		cancel:        make(chan bool, 1),
+		logos:        make(map[string]*logoInfo),
+		logoCache:    make(map[string]image.Image),
+		matrixBounds: matrixBounds,
+		config:       config,
+		cancel:       make(chan bool, 1),
 	}
 
 	controller.api, err = nhl.New(ctx)
@@ -79,6 +81,16 @@ func New(ctx context.Context, matrixBounds image.Rectangle, config *Config) ([]b
 	boards = append(boards, b)
 
 	return boards, nil
+}
+
+func (c *Config) boardDelay() time.Duration {
+	d, err := time.ParseDuration(c.BoardDelay)
+	if err != nil {
+		fmt.Printf("could not parse board delay '%s', defaulting to 20 sec", c.BoardDelay)
+		return 20 * time.Second
+	}
+
+	return d
 }
 
 func (n *nhlBoards) updateGames() {

@@ -53,7 +53,7 @@ func (b *scoreBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	preloader := make(map[int]chan bool)
 
 OUTER:
-	for _, abbrev := range b.controller.watchTeams {
+	for _, abbrev := range b.controller.config.WatchTeams {
 		seen, ok := seenTeams[abbrev]
 		if ok && seen {
 			continue OUTER
@@ -97,7 +97,7 @@ OUTER:
 			// Wait for the preloader to finish getting data, but with a timeout
 			select {
 			case <-preloader[game.ID]:
-			case <-time.After(b.controller.config.Delay / 2):
+			case <-time.After(b.controller.config.boardDelay() / 2):
 			}
 
 			liveGame, ok := liveGames[game.ID]
@@ -121,7 +121,7 @@ OUTER:
 			select {
 			case <-ctx.Done():
 				return nil
-			case <-time.After(b.controller.config.Delay):
+			case <-time.After(b.controller.config.boardDelay()):
 			}
 			break INNER
 		}
@@ -327,7 +327,7 @@ func scoreStr(liveGame *nhl.LiveGame) string {
 }
 
 func (b *scoreBoard) isFavorite(abbrev string) bool {
-	for _, t := range b.controller.favoriteTeams {
+	for _, t := range b.controller.config.FavoriteTeams {
 		if t == abbrev {
 			return true
 		}

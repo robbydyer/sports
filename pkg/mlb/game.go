@@ -50,4 +50,5 @@ func GetGames(ctx context.Context, dateStr string) ([]*Game, error) {
 	if err != nil {
 		return nil, err
 	}
+
 }

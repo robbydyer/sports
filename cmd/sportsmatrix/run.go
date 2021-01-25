@@ -6,7 +6,6 @@ import (
 	"image"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/nhlboard"
@@ -50,8 +49,6 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		cancel()
 	}()
 
-	cfg := sportsmatrix.DefaultConfig()
-
 	var boards []board.Board
 
 	if s.testMode {
@@ -67,11 +64,9 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		boards = append(boards, clockBoard)
 	*/
 
-	bounds := image.Rect(0, 0, cfg.HardwareConfig.Cols, cfg.HardwareConfig.Rows)
+	bounds := image.Rect(0, 0, s.rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, s.rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
 
-	nhlBoards, err := nhlboard.New(ctx, bounds, &nhlboard.Config{
-		Delay: 30 * time.Second,
-	})
+	nhlBoards, err := nhlboard.New(ctx, bounds, s.rArgs.config.NHLConfig)
 	if err != nil {
 		return err
 	}
@@ -81,7 +76,7 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("WAT. No boards?")
 	}
 
-	mtrx, err := sportsmatrix.New(ctx, cfg, boards...)
+	mtrx, err := sportsmatrix.New(ctx, s.rArgs.config.SportsMatrixConfig, boards...)
 	if err != nil {
 		return err
 	}

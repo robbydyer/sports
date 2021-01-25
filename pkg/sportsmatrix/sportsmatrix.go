@@ -22,26 +22,41 @@ type SportsMatrix struct {
 }
 
 type Config struct {
-	RotationDelay  time.Duration
-	EnableNHL      bool
+	RotationDelay  string
+	EnableNHL      bool `json:"enableNHL,omitempty"`
 	HardwareConfig *rgb.HardwareConfig
 }
 
-func DefaultConfig() Config {
-	dCfg := rgb.DefaultConfig
-	dCfg.Rows = 32
-	dCfg.Cols = 64
-	dCfg.Brightness = 60
-	return Config{
-		RotationDelay:  5 * time.Second,
-		HardwareConfig: &dCfg,
+func (c *Config) configDefaults() {
+	if c.HardwareConfig.Rows == 0 {
+		c.HardwareConfig.Rows = 32
+	}
+	if c.HardwareConfig.Cols == 0 {
+		c.HardwareConfig.Cols = 64
+	}
+	if c.HardwareConfig.Brightness == 0 {
+		c.HardwareConfig.Brightness = 60
+	}
+	if c.RotationDelay == "" {
+		c.RotationDelay = "5s"
 	}
 }
 
-func New(ctx context.Context, cfg Config, boards ...board.Board) (*SportsMatrix, error) {
+func (c *Config) rotationDelay() time.Duration {
+	d, err := time.ParseDuration(c.RotationDelay)
+	if err != nil {
+		fmt.Printf("could not parse duration '%s', defaulting to 20 sec", c.RotationDelay)
+		return 20 * time.Second
+	}
+	return d
+}
+
+func New(ctx context.Context, cfg *Config, boards ...board.Board) (*SportsMatrix, error) {
+	cfg.configDefaults()
+
 	s := &SportsMatrix{
 		boards: boards,
-		cfg:    &cfg,
+		cfg:    cfg,
 		done:   make(chan bool, 1),
 	}
 
