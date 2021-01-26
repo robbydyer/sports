@@ -4,20 +4,24 @@ set -euo pipefail
 ROOT=$(git rev-parse --show-toplevel)
 cd "${ROOT}"
 IN_DOCKER="${IN_DOCKER:-no}"
+pibuilder="pibuilder"
+#pibuilder="pibuilderv6"
 
 if [ "${IN_DOCKER}" = "no" ]; then
-  # Run pkger when static assets change
-  #pkger -o ./cmd/sportsmatrix
-  if ! docker images | grep pibuilder &> /dev/null; then
-    docker buildx build -f Dockerfile.builder -t pibuilder .
-  fi
+  if ! uname -a | grep raspberry &> /dev/null; then
+    # Run pkger when static assets change
+    #pkger -o ./cmd/sportsmatrix
+    if ! docker images | grep ${pibuilder} &> /dev/null; then
+      docker buildx build -f Dockerfile.${pibuilder} -t ${pibuilder} .
+    fi
 
-  exec docker run -t --rm \
-    -e IN_DOCKER=yes \
-    -v "${ROOT}":/src \
-    -w /src \
-    pibuilder \
-    /src/script/build
+    exec docker run -t --rm \
+      -e IN_DOCKER=yes \
+      -v "${ROOT}":/src \
+      -w /src \
+      ${pibuilder} \
+      /src/script/build
+  fi
 fi
 
 # Inside docker

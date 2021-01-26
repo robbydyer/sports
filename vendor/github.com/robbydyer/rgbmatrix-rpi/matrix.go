@@ -284,6 +284,11 @@ func (c *RGBLedMatrix) Apply(leds []color.Color) error {
 
 // Render update the display with the data from the LED buffer
 func (c *RGBLedMatrix) Render() error {
+	// Check this so we don't cause a panic
+	if len(c.leds) < 1 {
+		return fmt.Errorf("led buffer is empty")
+	}
+
 	w, h := c.Config.geometry()
 
 	C.led_matrix_swap(

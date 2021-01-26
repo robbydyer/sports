@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/png"
 	"os"
+	"strings"
 
 	"github.com/markbates/pkger"
 	"github.com/robbydyer/sports/pkg/logo"
@@ -407,6 +408,9 @@ func getLogos() (map[string]*logoInfo, error) {
 	return l, nil
 }
 
+func (c *Config) setDefaultPositions() {
+}
+
 func logoSources() (map[string]image.Image, error) {
 	sources := make(map[string]image.Image)
 	for _, t := range ALL {
@@ -430,6 +434,15 @@ func logoSources() (map[string]image.Image, error) {
 func (n *nhlBoards) logoShift(key string) (image.Rectangle, error) {
 	if _, ok := n.logos[key]; !ok {
 		return image.Rectangle{}, fmt.Errorf("logo for key %s not found", key)
+	}
+
+	// Away teams are on the right side
+	if strings.Contains(key, "AWAY") {
+		return rgbrender.ShiftedSize(
+			n.logos[key].xPosition+(n.matrixBounds.Dx()/2),
+			n.logos[key].yPosition,
+			n.matrixBounds,
+		), nil
 	}
 	return rgbrender.ShiftedSize(
 		n.logos[key].xPosition,

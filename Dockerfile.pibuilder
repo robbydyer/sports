@@ -48,9 +48,9 @@ RUN export CMAKE_DIR=cmake-$CMAKE_VERSION && \
   rm -rf ../$CMAKE_ARCH \
     ../$CMAKE_DIR
 
-#ADD https://golang.org/dl/go1.15.7.linux-armv6l.tar.gz /tmp/
 ADD https://golang.org/dl/go1.15.7.linux-arm64.tar.gz /tmp/
 RUN tar -C /usr/local -xzf /tmp/go1.15.7.linux-arm64.tar.gz
+
 ENV PATH="/usr/local/go/bin:${PATH}"
 
 # NOTE: These versions must be the same on the target host

@@ -116,7 +116,7 @@ func DrawImageAligned(canvas *rgb.Canvas, bounds image.Rectangle, img *image.RGB
 // DrawImage draws an image
 func DrawImage(canvas *rgb.Canvas, bounds image.Rectangle, img image.Image) error {
 	draw.Draw(canvas, bounds, img, image.ZP, draw.Over)
-	return canvas.Render()
+	return nil
 }
 
 func PlayImages(canvas *rgb.Canvas, images []image.Image, delay []time.Duration, loop int) (chan bool, chan error) {
@@ -132,6 +132,9 @@ func PlayImages(canvas *rgb.Canvas, images []image.Image, delay []time.Duration,
 				return
 			default:
 				if err := DrawImage(canvas, canvas.Bounds(), images[i]); err != nil {
+					errChan <- err
+				}
+				if err := canvas.Render(); err != nil {
 					errChan <- err
 				}
 				time.Sleep(delay[i])

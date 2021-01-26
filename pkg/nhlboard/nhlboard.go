@@ -16,39 +16,54 @@ import (
 var scorePollRate = 20 * time.Second
 
 type nhlBoards struct {
-	api          *nhl.Nhl
-	scheduler    *gocron.Scheduler
-	logos        map[string]*logoInfo
-	logoCache    map[string]image.Image
-	matrixBounds image.Rectangle
-	config       *Config
-	cancel       chan bool
+	api            DataAPI
+	liveGameGetter LiveGameGetter
+	scheduler      *gocron.Scheduler
+	logos          map[string]*logoInfo
+	logoCache      map[string]image.Image
+	matrixBounds   image.Rectangle
+	config         *Config
+	cancel         chan bool
+}
+
+type Point struct {
+	X int
+	Y int
 }
 
 type Config struct {
 	BoardDelay    string
 	FavoriteTeams []string
 	WatchTeams    []string
+	LogoPosition  map[string]*Point
 }
 
-func New(ctx context.Context, matrixBounds image.Rectangle, config *Config) ([]board.Board, error) {
+type DataAPI interface {
+	UpdateTeams(ctx context.Context) error
+	UpdateGames(ctx context.Context, dateStr string) error
+	TeamFromAbbreviation(abbrev string) (*nhl.Team, error)
+	Games(dateStr string) ([]*nhl.Game, error)
+}
+
+type LiveGameGetter func(ctx context.Context, link string) (*nhl.LiveGame, error)
+
+func New(ctx context.Context, matrixBounds image.Rectangle, dataAPI DataAPI, liveGameGetter LiveGameGetter, config *Config) ([]board.Board, error) {
 	var err error
 
 	if len(config.WatchTeams) == 0 && len(config.FavoriteTeams) == 0 {
 		config.WatchTeams = ALL
 	}
 
-	controller := &nhlBoards{
-		logos:        make(map[string]*logoInfo),
-		logoCache:    make(map[string]image.Image),
-		matrixBounds: matrixBounds,
-		config:       config,
-		cancel:       make(chan bool, 1),
-	}
+	fmt.Printf("Initializing NHL Board %dx%d\n", matrixBounds.Dx(), matrixBounds.Dy())
 
-	controller.api, err = nhl.New(ctx)
-	if err != nil {
-		return nil, err
+	controller := &nhlBoards{
+		api:            dataAPI,
+		liveGameGetter: liveGameGetter,
+		logos:          make(map[string]*logoInfo),
+		logoCache:      make(map[string]image.Image),
+		matrixBounds:   matrixBounds,
+		config:         config,
+		cancel:         make(chan bool, 1),
 	}
 
 	// Schedule game updates
@@ -81,6 +96,15 @@ func New(ctx context.Context, matrixBounds image.Rectangle, config *Config) ([]b
 	boards = append(boards, b)
 
 	return boards, nil
+}
+
+func (c *Config) Defaults() {
+	if c.BoardDelay == "" {
+		c.BoardDelay = "20s"
+	}
+	if len(c.FavoriteTeams) == 0 && len(c.WatchTeams) == 0 {
+		c.WatchTeams = ALL
+	}
 }
 
 func (c *Config) boardDelay() time.Duration {

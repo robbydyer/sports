@@ -4,10 +4,15 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"image/color"
+	"image/draw"
 	"os"
 	"os/signal"
+	"time"
 
+	rgb "github.com/robbydyer/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/nhl"
 	"github.com/robbydyer/sports/pkg/nhlboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 	"github.com/spf13/cobra"
@@ -41,6 +46,8 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	s.rArgs.setConfigDefaults()
+
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt)
 	go func() {
@@ -51,26 +58,15 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 
 	var boards []board.Board
 
-	if s.testMode {
-		boards = append(boards, &testBoard{})
-	}
-
-	/*
-		clockBoard, err := clock.New()
-		if err != nil {
-			return err
-		}
-
-		boards = append(boards, clockBoard)
-	*/
-
-	bounds := image.Rect(0, 0, s.rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, s.rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
-
-	nhlBoards, err := nhlboard.New(ctx, bounds, s.rArgs.config.NHLConfig)
+	nhlB, err := nhlBoards(ctx, s.rArgs)
 	if err != nil {
 		return err
 	}
-	boards = append(boards, nhlBoards...)
+	boards = append(boards, nhlB...)
+
+	if s.testMode {
+		boards = []board.Board{&testBoard{}}
+	}
 
 	if len(boards) < 1 {
 		return fmt.Errorf("WAT. No boards?")
@@ -87,5 +83,50 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	return nil
+}
+
+func nhlBoards(ctx context.Context, rArgs *rootArgs) ([]board.Board, error) {
+	bounds := image.Rect(0, 0, rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
+
+	nhlAPI, err := nhl.New(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	boards, err := nhlboard.New(ctx, bounds, nhlAPI, nhl.GetLiveGame, rArgs.config.NHLConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return boards, nil
+}
+
+func basicTest() error {
+	fmt.Println("test mode")
+	cfg := &rgb.HardwareConfig{
+		Rows:              32,
+		Cols:              64,
+		ChainLength:       1,
+		Parallel:          1,
+		PWMBits:           11,
+		PWMLSBNanoseconds: 130,
+		Brightness:        60,
+		ScanMode:          rgb.Progressive,
+		HardwareMapping:   "adafruit-hat",
+	}
+	// create a new Matrix instance with the DefaultConfig & DefaultRuntimeOptions
+	m, _ := rgb.NewRGBLedMatrix(cfg, &rgb.DefaultRuntimeOptions)
+
+	// create the Canvas, implements the image.Image interface
+	c := rgb.NewCanvas(m)
+	defer c.Close() // don't forgot close the Matrix, if not your leds will remain on
+
+	// using the standard draw.Draw function we copy a white image onto the Canvas
+	draw.Draw(c, c.Bounds(), &image.Uniform{color.RGBA{255, 255, 0, 255}}, image.ZP, draw.Src)
+
+	// don't forget call Render to display the new led status
+	c.Render()
+	time.Sleep(10 * time.Second)
 	return nil
 }

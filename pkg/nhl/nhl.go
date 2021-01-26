@@ -13,14 +13,14 @@ const (
 )
 
 type Nhl struct {
-	Teams map[int]*Team
-	Games map[string][]*Game
+	teams map[int]*Team
+	games map[string][]*Game
 }
 
 func New(ctx context.Context) (*Nhl, error) {
 	n := &Nhl{
-		Games: make(map[string][]*Game),
-		Teams: make(map[int]*Team),
+		games: make(map[string][]*Game),
+		teams: make(map[int]*Team),
 	}
 
 	if err := n.UpdateTeams(ctx); err != nil {
@@ -41,7 +41,7 @@ func (n *Nhl) UpdateTeams(ctx context.Context) error {
 		return err
 	}
 
-	n.Teams = teamList
+	n.teams = teamList
 
 	return nil
 }
@@ -52,13 +52,13 @@ func (n *Nhl) UpdateGames(ctx context.Context, dateStr string) error {
 		return err
 	}
 
-	n.Games[dateStr] = games
+	n.games[dateStr] = games
 
 	return nil
 }
 
 func (n *Nhl) TeamFromAbbreviation(abbrev string) (*Team, error) {
-	for _, t := range n.Teams {
+	for _, t := range n.teams {
 		if t.Abbreviation == abbrev {
 			return t, nil
 		}
@@ -68,7 +68,7 @@ func (n *Nhl) TeamFromAbbreviation(abbrev string) (*Team, error) {
 }
 
 func (n *Nhl) nameFromID(ctx context.Context, id int) (string, error) {
-	t, ok := n.Teams[id]
+	t, ok := n.teams[id]
 	if !ok {
 		if err := n.UpdateTeams(ctx); err != nil {
 			return "", err
@@ -87,7 +87,7 @@ func (n *Nhl) PrintSchedule(ctx context.Context, dateStr string, out io.Writer) 
 		return err
 	}
 
-	games, ok := n.Games[dateStr]
+	games, ok := n.games[dateStr]
 	if !ok {
 		if err := n.UpdateGames(ctx, dateStr); err != nil {
 			return err

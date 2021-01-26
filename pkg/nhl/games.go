@@ -63,6 +63,15 @@ type games struct {
 	} `json:"dates"`
 }
 
+func (n *Nhl) Games(dateStr string) ([]*Game, error) {
+	games, ok := n.games[dateStr]
+	if !ok {
+		return nil, fmt.Errorf("no games for date %s", dateStr)
+	}
+
+	return games, nil
+}
+
 func timeFromGameTime(gameTime string) (time.Time, error) {
 	t, err := time.Parse("2006-01-02T15:04:05Z", gameTime)
 	if err != nil {

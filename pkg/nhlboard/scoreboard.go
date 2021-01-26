@@ -31,13 +31,12 @@ func (b *scoreBoard) Cleanup() {}
 
 func (b *scoreBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	canvas := rgb.NewCanvas(matrix)
-	canvas.Clear()
 
 	seenTeams := make(map[string]bool)
 
-	games, ok := b.controller.api.Games[nhl.Today()]
-	if !ok {
-		fmt.Printf("No NHL games scheduled today %s\n", nhl.Today())
+	games, err := b.controller.api.Games(nhl.Today())
+	if err != nil {
+		fmt.Printf("no games for today: %s", err.Error())
 		return nil
 	}
 
@@ -141,7 +140,6 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 	}
 
 	for {
-		canvas.Clear()
 		hKey := fmt.Sprintf("%s_HOME", liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation)
 		aKey := fmt.Sprintf("%s_AWAY", liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
 
@@ -175,19 +173,56 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 			return err
 		}
 
-		center, err := rgbrender.AlignPosition(rgbrender.CenterCenter, canvas.Bounds(), 10, 10)
+		center, err := rgbrender.AlignPosition(rgbrender.CenterTop, canvas.Bounds(), 16, 16)
 		if err != nil {
 			return err
 		}
 
-		wrter.Write(canvas, center, []string{scoreStr(liveGame)}, color.White)
+		fmt.Printf("text centertop align: %dx%d to %dx%d\n",
+			center.Min.X,
+			center.Min.Y,
+			center.Max.X,
+			center.Max.Y,
+		)
+		scoreAlign, err := rgbrender.AlignPosition(rgbrender.CenterBottom, canvas.Bounds(), 16, 16)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("text centerbottom align: %dx%d to %dx%d\n",
+			scoreAlign.Min.X,
+			scoreAlign.Min.Y,
+			scoreAlign.Max.X,
+			scoreAlign.Max.Y,
+		)
+
+		wrter.Write(
+			canvas,
+			scoreAlign,
+			[]string{
+				scoreStr(liveGame),
+			},
+			color.White,
+		)
+		wrter.Write(
+			canvas,
+			center,
+			[]string{
+				periodStr(liveGame.LiveData.Linescore.CurrentPeriod),
+				liveGame.LiveData.Linescore.CurrentPeriodTimeRemaining,
+			},
+			color.White,
+		)
+
+		if err := canvas.Render(); err != nil {
+			return fmt.Errorf("failed to render live scoreboard: %w", err)
+		}
 
 		// This game is live, scoreboard time
-		fmt.Printf("Live Game: %s vs. %s\nScore: %d - %d\n%s period %s\n",
+		fmt.Printf("Live Game: %s vs. %s\nScore: %s\n%s period %s\n",
 			liveGame.LiveData.Linescore.Teams.Home.Team.Name,
 			liveGame.LiveData.Linescore.Teams.Away.Team.Name,
-			liveGame.LiveData.Linescore.Teams.Home.Goals,
-			liveGame.LiveData.Linescore.Teams.Away.Goals,
+			scoreStr(liveGame),
 			periodStr(liveGame.LiveData.Linescore.CurrentPeriod),
 			liveGame.LiveData.Linescore.CurrentPeriodTimeRemaining,
 		)
@@ -239,25 +274,27 @@ func (b *scoreBoard) RenderUpcomingGame(ctx context.Context, canvas *rgb.Canvas,
 		return err
 	}
 
-	canvas.Clear()
-
 	if err := rgbrender.DrawImage(canvas, homeShift, homeLogo); err != nil {
-		return err
+		return fmt.Errorf("failed to draw home logo: %w", err)
 	}
 	if err := rgbrender.DrawImage(canvas, awayShift, awayLogo); err != nil {
-		return err
+		return fmt.Errorf("failed to draw away logo: %w", err)
 	}
 	wrter, err := rgbrender.DefaultTextWriter()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get text writer: %w", err)
 	}
 
-	center, err := rgbrender.AlignPosition(rgbrender.CenterCenter, canvas.Bounds(), 10, 10)
+	center, err := rgbrender.AlignPosition(rgbrender.CenterCenter, canvas.Bounds(), 16, 16)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get text align position: %w", err)
 	}
 
 	wrter.Write(canvas, center, []string{"vs."}, color.White)
+
+	if err := canvas.Render(); err != nil {
+		return fmt.Errorf("failed to render upcoming game: %w", err)
+	}
 
 	fmt.Printf("Upcoming: %s vs. %s %s\n",
 		liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation,
@@ -290,8 +327,6 @@ func (b *scoreBoard) RenderFinal(ctx context.Context, canvas *rgb.Canvas, liveGa
 		return err
 	}
 
-	canvas.Clear()
-
 	if err := rgbrender.DrawImage(canvas, homeShift, homeLogo); err != nil {
 		return err
 	}
@@ -303,12 +338,16 @@ func (b *scoreBoard) RenderFinal(ctx context.Context, canvas *rgb.Canvas, liveGa
 		return err
 	}
 
-	center, err := rgbrender.AlignPosition(rgbrender.CenterCenter, canvas.Bounds(), 10, 10)
+	center, err := rgbrender.AlignPosition(rgbrender.CenterCenter, canvas.Bounds(), 16, 16)
 	if err != nil {
 		return err
 	}
 
 	wrter.Write(canvas, center, []string{"FINAL", scoreStr(liveGame)}, color.White)
+
+	if err := canvas.Render(); err != nil {
+		return fmt.Errorf("failed to render game final: %w", err)
+	}
 
 	fmt.Printf("FINAL: %s vs. %s %s\n",
 		liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation,

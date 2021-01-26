@@ -7,8 +7,8 @@ import (
 	"os"
 	"sync"
 
-	"golang.org/x/exp/shiny/driver"
-	"golang.org/x/exp/shiny/screen"
+	"github.com/robbydyer/exp/shiny/driver"
+	"github.com/robbydyer/exp/shiny/screen"
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
 )
@@ -72,7 +72,7 @@ func (e *Emulator) mainWindowLoop(s screen.Screen) {
 	})
 
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("failed to get new screen window: %w", err))
 	}
 
 	defer e.w.Release()

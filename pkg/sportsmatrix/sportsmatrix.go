@@ -27,7 +27,14 @@ type Config struct {
 	HardwareConfig *rgb.HardwareConfig
 }
 
-func (c *Config) configDefaults() {
+func (c *Config) Defaults() {
+	if c.HardwareConfig == nil {
+		c.HardwareConfig = &rgb.DefaultConfig
+		c.HardwareConfig.Cols = 64
+		c.HardwareConfig.Rows = 32
+		c.HardwareConfig.Brightness = 60
+	}
+
 	if c.HardwareConfig.Rows == 0 {
 		c.HardwareConfig.Rows = 32
 	}
@@ -38,7 +45,10 @@ func (c *Config) configDefaults() {
 		c.HardwareConfig.Brightness = 60
 	}
 	if c.RotationDelay == "" {
-		c.RotationDelay = "5s"
+		c.RotationDelay = "20s"
+	}
+	if c.HardwareConfig.HardwareMapping == "" {
+		c.HardwareConfig.HardwareMapping = "adafruit-hat-pwm"
 	}
 }
 
@@ -52,7 +62,7 @@ func (c *Config) rotationDelay() time.Duration {
 }
 
 func New(ctx context.Context, cfg *Config, boards ...board.Board) (*SportsMatrix, error) {
-	cfg.configDefaults()
+	cfg.Defaults()
 
 	s := &SportsMatrix{
 		boards: boards,
@@ -61,6 +71,8 @@ func New(ctx context.Context, cfg *Config, boards ...board.Board) (*SportsMatrix
 	}
 
 	var err error
+
+	fmt.Printf("Initializing matrix %dx%d\n", s.cfg.HardwareConfig.Cols, s.cfg.HardwareConfig.Rows)
 
 	rt := &rgb.DefaultRuntimeOptions
 	s.matrix, err = rgb.NewRGBLedMatrix(s.cfg.HardwareConfig, rt)

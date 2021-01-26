@@ -16,7 +16,7 @@ import (
 type TextWriter struct {
 	context  *freetype.Context
 	font     *truetype.Font
-	fontSize float64
+	FontSize float64
 }
 
 func DefaultTextWriter() (*TextWriter, error) {
@@ -36,7 +36,7 @@ func NewTextWriter(font *truetype.Font, fontSize float64) *TextWriter {
 	return &TextWriter{
 		context:  cntx,
 		font:     font,
-		fontSize: fontSize,
+		FontSize: fontSize,
 	}
 }
 
@@ -68,6 +68,7 @@ func (t *TextWriter) Write(canvas *rgb.Canvas, bounds image.Rectangle, str []str
 	if t.context == nil {
 		return fmt.Errorf("invalid TextWriter, must initialize with NewTextWriter()")
 	}
+	t.context.SetFontSize(t.FontSize)
 
 	textColor := image.NewUniform(clr)
 	t.context.SetClip(bounds)
@@ -75,13 +76,13 @@ func (t *TextWriter) Write(canvas *rgb.Canvas, bounds image.Rectangle, str []str
 	t.context.SetSrc(textColor)
 	t.context.SetHinting(font.HintingFull)
 
-	point := freetype.Pt(bounds.Min.X, int(t.context.PointToFixed(t.fontSize)>>6))
+	point := freetype.Pt(bounds.Min.X, int(t.context.PointToFixed(t.FontSize)>>6))
 	for _, c := range str {
 		_, err := t.context.DrawString(c, point)
 		if err != nil {
 			return err
 		}
-		point.Y += t.context.PointToFixed(t.fontSize * 1.5)
+		point.Y += t.context.PointToFixed(t.FontSize * 0.75)
 	}
 
 	return nil

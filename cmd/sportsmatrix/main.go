@@ -1,15 +1,17 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 
 	"github.com/markbates/pkger"
 	"github.com/robbydyer/sports/internal/config"
+	"github.com/robbydyer/sports/pkg/nhlboard"
+	"github.com/robbydyer/sports/pkg/sportsmatrix"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	yaml "gopkg.in/yaml.v2"
 )
 
 type rootArgs struct {
@@ -58,6 +60,8 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 
 	f.StringVarP(&args.configFile, "config", "c", "", "Config filename")
 
+	_ = viper.BindPFlags(f)
+
 	rootCmd.AddCommand(newNhlCmd(args))
 	rootCmd.AddCommand(newRunCmd(args))
 
@@ -72,20 +76,26 @@ func (r *rootArgs) setConfig(filename string) error {
 
 	var c *config.Config
 
-	if err := json.Unmarshal(f, &c); err != nil {
+	if err := yaml.Unmarshal(f, &c); err != nil {
 		return fmt.Errorf("failed to parse config file: %w", err)
-	}
-
-	// Set board dimension defaults
-	if c.SportsMatrixConfig.HardwareConfig.Cols == 0 {
-		c.SportsMatrixConfig.HardwareConfig.Cols = 64
-	}
-	if c.SportsMatrixConfig.HardwareConfig.Rows == 0 {
-		c.SportsMatrixConfig.HardwareConfig.Rows = 32
 	}
 
 	r.config = c
 	return nil
+}
+
+func (r *rootArgs) setConfigDefaults() {
+	if r.config.SportsMatrixConfig == nil {
+		r.config.SportsMatrixConfig = &sportsmatrix.Config{}
+	}
+	r.config.SportsMatrixConfig.Defaults()
+
+	if r.config.NHLConfig == nil {
+		r.config.NHLConfig = &nhlboard.Config{}
+	}
+
+	r.config.NHLConfig.Defaults()
+
 }
 
 func includeAssets() {

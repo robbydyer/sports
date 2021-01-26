@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"image/png"
 	"time"
 
 	"github.com/markbates/pkger"
@@ -28,7 +29,7 @@ func (t *testBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	}
 	defer f.Close()
 
-	img, _, err := image.Decode(f)
+	img, err := png.Decode(f)
 	if err != nil {
 		return fmt.Errorf("failed to decode image: %w", err)
 	}
@@ -41,6 +42,10 @@ func (t *testBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 		return fmt.Errorf("failed to draw test image: %w", err)
 	}
 
+	if err := t.canvas.Render(); err != nil {
+		return fmt.Errorf("failed to render: %w", err)
+	}
+
 	select {
 	case <-ctx.Done():
 	case <-time.After(delay / 2):
@@ -51,8 +56,24 @@ func (t *testBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 		return fmt.Errorf("failed to get TextWriter: %w", err)
 	}
 
-	if err := textWriter.Write(t.canvas, t.canvas.Bounds(), []string{"Hello Test"}, image.Black); err != nil {
+	center, err := rgbrender.AlignPosition(rgbrender.CenterCenter, t.canvas.Bounds(), 64, 32)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Writing text in rect: %d, %d to %d, %d\n",
+		center.Min.X,
+		center.Min.Y,
+		center.Max.X,
+		center.Max.Y,
+	)
+
+	if err := textWriter.Write(t.canvas, center, []string{"Hello World", "How are you?"}, image.White); err != nil {
 		return fmt.Errorf("failed to write text: %w", err)
+	}
+
+	if err := t.canvas.Render(); err != nil {
+		return err
 	}
 
 	select {
