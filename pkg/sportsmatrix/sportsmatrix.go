@@ -7,7 +7,7 @@ import (
 	_ "image/png"
 	"time"
 
-	rgb "github.com/robbydyer/rgbmatrix-rpi"
+	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/nhl"
@@ -30,18 +30,17 @@ type Config struct {
 func (c *Config) Defaults() {
 	if c.HardwareConfig == nil {
 		c.HardwareConfig = &rgb.DefaultConfig
-		c.HardwareConfig.Cols = 64
-		c.HardwareConfig.Rows = 32
-		c.HardwareConfig.Brightness = 60
 	}
 
 	if c.HardwareConfig.Rows == 0 {
 		c.HardwareConfig.Rows = 32
 	}
-	if c.HardwareConfig.Cols == 0 {
+	if c.HardwareConfig.Cols == 32 || c.HardwareConfig.Cols == 0 {
+		// We don't support 32x32 matrix
 		c.HardwareConfig.Cols = 64
 	}
-	if c.HardwareConfig.Brightness == 0 {
+	// The defaults do 100, but that's too much
+	if c.HardwareConfig.Brightness == 0 || c.HardwareConfig.Brightness == 100 {
 		c.HardwareConfig.Brightness = 60
 	}
 	if c.RotationDelay == "" {
@@ -49,6 +48,18 @@ func (c *Config) Defaults() {
 	}
 	if c.HardwareConfig.HardwareMapping == "" {
 		c.HardwareConfig.HardwareMapping = "adafruit-hat-pwm"
+	}
+	if c.HardwareConfig.ChainLength == 0 {
+		c.HardwareConfig.ChainLength = 1
+	}
+	if c.HardwareConfig.Parallel == 0 {
+		c.HardwareConfig.Parallel = 1
+	}
+	if c.HardwareConfig.PWMBits == 0 {
+		c.HardwareConfig.PWMBits = 11
+	}
+	if c.HardwareConfig.PWMLSBNanoseconds == 0 {
+		c.HardwareConfig.PWMLSBNanoseconds = 130
 	}
 }
 
@@ -72,7 +83,12 @@ func New(ctx context.Context, cfg *Config, boards ...board.Board) (*SportsMatrix
 
 	var err error
 
-	fmt.Printf("Initializing matrix %dx%d\n", s.cfg.HardwareConfig.Cols, s.cfg.HardwareConfig.Rows)
+	fmt.Printf("Initializing matrix %dx%d\nBrightness:%d\nMapping:%s\n",
+		s.cfg.HardwareConfig.Cols,
+		s.cfg.HardwareConfig.Rows,
+		s.cfg.HardwareConfig.Brightness,
+		s.cfg.HardwareConfig.HardwareMapping,
+	)
 
 	rt := &rgb.DefaultRuntimeOptions
 	s.matrix, err = rgb.NewRGBLedMatrix(s.cfg.HardwareConfig, rt)

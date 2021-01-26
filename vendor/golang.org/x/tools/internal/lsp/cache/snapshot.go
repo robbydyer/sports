@@ -11,6 +11,8 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 	"sync"
 
 	"golang.org/x/tools/go/analysis"
@@ -57,6 +59,13 @@ type snapshot struct {
 
 	// unloadableFiles keeps track of files that we've failed to load.
 	unloadableFiles map[span.URI]struct{}
+
+	// modHandles keeps track of any ParseModHandles for this snapshot.
+	modHandles map[span.URI]*modHandle
+
+	// modTidyHandle is the saved modTidyHandle for this snapshot, it is attached to the
+	// snapshot so we can reuse it without having to call "go mod tidy" everytime.
+	modTidyHandle *modHandle
 }
 
 type packageKey struct {
@@ -108,6 +117,9 @@ func (s *snapshot) Config(ctx context.Context) *packages.Config {
 }
 
 func (s *snapshot) buildOverlay() map[string][]byte {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	overlays := make(map[string][]byte)
 	for uri, fh := range s.files {
 		overlay, ok := fh.(*overlay)
@@ -123,150 +135,73 @@ func (s *snapshot) buildOverlay() map[string][]byte {
 	return overlays
 }
 
+func hashUnsavedOverlays(files map[span.URI]source.FileHandle) string {
+	var unsaved []string
+	for uri, fh := range files {
+		if overlay, ok := fh.(*overlay); ok && !overlay.saved {
+			unsaved = append(unsaved, uri.Filename())
+		}
+	}
+	sort.Strings(unsaved)
+	return hashContents([]byte(strings.Join(unsaved, "")))
+}
+
 func (s *snapshot) PackageHandles(ctx context.Context, fh source.FileHandle) ([]source.PackageHandle, error) {
-	// If the file is a go.mod file, go.Packages.Load will always return 0 packages.
-	if fh.Identity().Kind == source.Mod {
-		return nil, errors.Errorf("attempting to get PackageHandles of .mod file %s", fh.Identity().URI)
+	if fh.Identity().Kind != source.Go {
+		panic("called PackageHandles on a non-Go FileHandle")
 	}
 
 	ctx = telemetry.File.With(ctx, fh.Identity().URI)
-	meta := s.getMetadataForURI(fh.Identity().URI)
 
-	phs, err := s.packageHandles(ctx, fh.Identity().URI, meta)
-	if err != nil {
-		return nil, err
+	// Check if we should reload metadata for the file. We don't invalidate IDs
+	// (though we should), so the IDs will be a better source of truth than the
+	// metadata. If there are no IDs for the file, then we should also reload.
+	ids := s.getIDsForURI(fh.Identity().URI)
+	reload := len(ids) == 0
+	for _, id := range ids {
+		// Reload package metadata if any of the metadata has missing
+		// dependencies, in case something has changed since the last time we
+		// reloaded it.
+		if m := s.getMetadata(id); m == nil {
+			reload = true
+			break
+		}
+		// TODO(golang/go#36918): Previously, we would reload any package with
+		// missing dependencies. This is expensive and results in too many
+		// calls to packages.Load. Determine what we should do instead.
 	}
-	var results []source.PackageHandle
-	for _, ph := range phs {
-		results = append(results, ph)
+	if reload {
+		if err := s.load(ctx, fileURI(fh.Identity().URI)); err != nil {
+			return nil, err
+		}
 	}
-	return results, nil
-}
-
-func (s *snapshot) packageHandle(ctx context.Context, id packageID) (*packageHandle, error) {
-	m := s.getMetadata(id)
-
-	// Don't reload metadata in this function.
-	// Callers of this function must reload metadata themselves.
-	if m == nil {
-		return nil, errors.Errorf("%s has no metadata", id)
-	}
-	phs, load, check := s.shouldCheck([]*metadata{m})
-	if load {
-		return nil, errors.Errorf("%s needs loading", id)
-	}
-	if check {
-		ph, err := s.buildPackageHandle(ctx, m.id)
+	// Get the list of IDs from the snapshot again, in case it has changed.
+	var phs []source.PackageHandle
+	for _, id := range s.getIDsForURI(fh.Identity().URI) {
+		ph, err := s.packageHandle(ctx, id, source.ParseFull)
 		if err != nil {
 			return nil, err
 		}
-		expectMode(ph, source.ParseFull)
-		return ph, nil
-	}
-	var result *packageHandle
-	for _, ph := range phs {
-		if ph.m.id == id {
-			if result != nil {
-				return nil, errors.Errorf("multiple package handles for the same ID: %s", id)
-			}
-			result = ph
-		}
-	}
-	if result == nil {
-		return nil, errors.Errorf("no PackageHandle for %s", id)
-	}
-	return result, nil
-}
-
-func (s *snapshot) packageHandles(ctx context.Context, uri span.URI, meta []*metadata) ([]*packageHandle, error) {
-	// First, determine if we need to reload or recheck the package.
-	phs, load, check := s.shouldCheck(meta)
-	if load {
-		if err := s.load(ctx, fileURI(uri)); err != nil {
-			return nil, err
-		}
-		// TODO(rstambler): Now that we are creating new package handles in
-		// every load, this isn't really necessary.
-		newMeta := s.getMetadataForURI(uri)
-		newMissing := missingImports(newMeta)
-		if len(newMissing) != 0 {
-			// Type checking a package with the same missing imports over and over
-			// is futile. Don't re-check unless something has changed.
-			check = check && !sameSet(missingImports(meta), newMissing)
-		}
-		meta = newMeta
-	}
-	var results []*packageHandle
-	if check {
-		for _, m := range meta {
-			ph, err := s.buildPackageHandle(ctx, m.id)
-			if err != nil {
-				return nil, err
-			}
-			expectMode(ph, source.ParseFull)
-			results = append(results, ph)
-		}
-	} else {
-		results = phs
-	}
-	if len(results) == 0 {
-		return nil, errors.Errorf("packageHandles: no package handles for %v", uri)
-	}
-	return results, nil
-}
-
-func missingImports(metadata []*metadata) map[packagePath]struct{} {
-	result := map[packagePath]struct{}{}
-	for _, m := range metadata {
-		for path := range m.missingDeps {
-			result[path] = struct{}{}
-		}
-	}
-	return result
-}
-
-func sameSet(x, y map[packagePath]struct{}) bool {
-	if len(x) != len(y) {
-		return false
-	}
-	for k := range x {
-		if _, ok := y[k]; !ok {
-			return false
-		}
-	}
-	return true
-}
-
-// shouldCheck determines if the packages provided by the metadata
-// need to be re-loaded or re-type-checked.
-func (s *snapshot) shouldCheck(m []*metadata) (phs []*packageHandle, load, check bool) {
-	// No metadata. Re-load and re-check.
-	if len(m) == 0 {
-		return nil, true, true
-	}
-	// We expect to see a checked package for each package ID,
-	// and it should be parsed in full mode.
-	// If a single PackageHandle is missing, re-check all of them.
-	// TODO: Optimize this by only checking the necessary packages.
-	for _, m := range m {
-		ph := s.getPackage(m.id)
-		if ph == nil {
-			return nil, false, true
-		}
-		expectMode(ph, source.ParseFull)
 		phs = append(phs, ph)
 	}
-	// If the metadata for the package had missing dependencies,
-	// we _may_ need to re-check. If the missing dependencies haven't changed
-	// since previous load, we will not check again.
-	if len(phs) < len(m) {
-		for _, m := range m {
-			if len(m.missingDeps) != 0 {
-				return nil, true, true
-			}
-		}
+	return phs, nil
+}
+
+// packageHandle returns a PackageHandle for the given ID. It assumes that
+// the metadata for the given ID has already been loaded, but if the
+// PackageHandle has not been constructed, it will rebuild it.
+func (s *snapshot) packageHandle(ctx context.Context, id packageID, mode source.ParseMode) (*packageHandle, error) {
+	ph := s.getPackage(id, mode)
+	if ph != nil {
+		return ph, nil
 	}
-	return phs, false, false
+	// Don't reload metadata in this function.
+	// Callers of this function must reload metadata themselves.
+	m := s.getMetadata(id)
+	if m == nil {
+		return nil, errors.Errorf("%s has no metadata", id)
+	}
+	return s.buildPackageHandle(ctx, m.id, mode)
 }
 
 func (s *snapshot) GetReverseDependencies(ctx context.Context, id string) ([]source.PackageHandle, error) {
@@ -281,7 +216,7 @@ func (s *snapshot) GetReverseDependencies(ctx context.Context, id string) ([]sou
 
 	var results []source.PackageHandle
 	for id := range ids {
-		ph, err := s.packageHandle(ctx, id)
+		ph, err := s.packageHandle(ctx, id, source.ParseFull)
 		if err != nil {
 			return nil, err
 		}
@@ -304,6 +239,18 @@ func (s *snapshot) transitiveReverseDependencies(id packageID, ids map[packageID
 	for _, parentID := range importedBy {
 		s.transitiveReverseDependencies(parentID, ids)
 	}
+}
+
+func (s *snapshot) getModHandle(uri span.URI) *modHandle {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.modHandles[uri]
+}
+
+func (s *snapshot) getModTidyHandle() *modHandle {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.modTidyHandle
 }
 
 func (s *snapshot) getImportedBy(id packageID) []packageID {
@@ -366,7 +313,7 @@ func (s *snapshot) WorkspacePackages(ctx context.Context) ([]source.PackageHandl
 	}
 	var results []source.PackageHandle
 	for _, pkgID := range s.workspacePackageIDs() {
-		ph, err := s.packageHandle(ctx, pkgID)
+		ph, err := s.packageHandle(ctx, pkgID, source.ParseFull)
 		if err != nil {
 			return nil, err
 		}
@@ -390,7 +337,7 @@ func (s *snapshot) KnownPackages(ctx context.Context) ([]source.PackageHandle, e
 
 	var results []source.PackageHandle
 	for pkgID := range wsPackages {
-		ph, err := s.packageHandle(ctx, pkgID)
+		ph, err := s.packageHandle(ctx, pkgID, source.ParseFull)
 		if err != nil {
 			return nil, err
 		}
@@ -411,22 +358,13 @@ func (s *snapshot) KnownPackages(ctx context.Context) ([]source.PackageHandle, e
 	for pkgID := range pkgIDs {
 		// Metadata for these packages should already be up-to-date,
 		// so just build the package handle directly (without a reload).
-		ph, err := s.buildPackageHandle(ctx, pkgID)
+		ph, err := s.buildPackageHandle(ctx, pkgID, source.ParseExported)
 		if err != nil {
 			return nil, err
 		}
-		expectMode(ph, source.ParseExported)
 		results = append(results, ph)
 	}
 	return results, nil
-}
-
-// expectMode is a defensive check to make sure that we mark workspace packages
-// correctly. TODO(rstambler): Remove this once we're confident this works.
-func expectMode(ph *packageHandle, mode source.ParseMode) {
-	if ph.mode != mode {
-		panic(fmt.Sprintf("unexpected parse mode for %s", ph.m.id))
-	}
 }
 
 func (s *snapshot) CachedImportPaths(ctx context.Context) (map[string]source.Package, error) {
@@ -457,29 +395,15 @@ func (s *snapshot) CachedImportPaths(ctx context.Context) (map[string]source.Pac
 	return results, nil
 }
 
-func (s *snapshot) getPackage(id packageID) *packageHandle {
+func (s *snapshot) getPackage(id packageID, mode source.ParseMode) *packageHandle {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	key := packageKey{
 		id:   id,
-		mode: s.packageModeLocked(id),
+		mode: mode,
 	}
 	return s.packages[key]
-}
-
-func (s *snapshot) packageMode(id packageID) source.ParseMode {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	return s.packageModeLocked(id)
-}
-
-func (s *snapshot) packageModeLocked(id packageID) source.ParseMode {
-	if _, ok := s.workspacePackages[id]; ok {
-		return source.ParseFull
-	}
-	return source.ParseExported
 }
 
 func (s *snapshot) getActionHandle(id packageID, m source.ParseMode, a *analysis.Analyzer) *actionHandle {
@@ -513,11 +437,11 @@ func (s *snapshot) addActionHandle(ah *actionHandle) {
 	s.actions[key] = ah
 }
 
-func (s *snapshot) getMetadataForURI(uri span.URI) []*metadata {
+func (s *snapshot) getIDsForURI(uri span.URI) []packageID {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return s.getMetadataForURILocked(uri)
+	return s.ids[uri]
 }
 
 func (s *snapshot) getMetadataForURILocked(uri span.URI) (metadata []*metadata) {
@@ -543,11 +467,17 @@ func (s *snapshot) addID(uri span.URI, id packageID) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	for _, existingID := range s.ids[uri] {
+	for i, existingID := range s.ids[uri] {
+		// TODO: We should make sure not to set duplicate IDs,
+		// and instead panic here. This can be done by making sure not to
+		// reset metadata information for packages we've already seen.
 		if existingID == id {
-			// TODO: We should make sure not to set duplicate IDs,
-			// and instead panic here. This can be done by making sure not to
-			// reset metadata information for packages we've already seen.
+			return
+		}
+		// If we are setting a real ID, when the package had only previously
+		// had a command-line-arguments ID, we should just replace it.
+		if existingID == "command-line-arguments" {
+			s.ids[uri][i] = id
 			return
 		}
 	}
@@ -569,13 +499,30 @@ func (s *snapshot) GetFile(uri span.URI) (source.FileHandle, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if _, ok := s.files[f.URI()]; !ok {
-		s.files[f.URI()] = s.view.session.GetFile(f.URI())
+		s.files[f.URI()] = s.view.session.cache.GetFile(uri)
 	}
 	return s.files[f.URI()], nil
+}
+
+func (s *snapshot) IsOpen(uri span.URI) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	_, open := s.files[uri].(*overlay)
+	return open
+}
+
+func (s *snapshot) IsSaved(uri span.URI) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	ovl, open := s.files[uri].(*overlay)
+	return !open || ovl.saved
 }
 
 func (s *snapshot) awaitLoaded(ctx context.Context) error {
@@ -685,7 +632,7 @@ func contains(views []*view, view *view) bool {
 	return false
 }
 
-func (s *snapshot) clone(ctx context.Context, withoutURIs []span.URI) *snapshot {
+func (s *snapshot) clone(ctx context.Context, withoutURIs map[span.URI]source.FileHandle) *snapshot {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -700,6 +647,8 @@ func (s *snapshot) clone(ctx context.Context, withoutURIs []span.URI) *snapshot 
 		files:             make(map[span.URI]source.FileHandle),
 		workspacePackages: make(map[packageID]packagePath),
 		unloadableFiles:   make(map[span.URI]struct{}),
+		modHandles:        make(map[span.URI]*modHandle),
+		modTidyHandle:     s.modTidyHandle,
 	}
 
 	// Copy all of the FileHandles.
@@ -710,13 +659,17 @@ func (s *snapshot) clone(ctx context.Context, withoutURIs []span.URI) *snapshot 
 	for k, v := range s.unloadableFiles {
 		result.unloadableFiles[k] = v
 	}
+	// Copy all of the modHandles.
+	for k, v := range s.modHandles {
+		result.modHandles[k] = v
+	}
 
 	// transitiveIDs keeps track of transitive reverse dependencies.
 	// If an ID is present in the map, invalidate its types.
 	// If an ID's value is true, invalidate its metadata too.
 	transitiveIDs := make(map[packageID]bool)
 
-	for _, withoutURI := range withoutURIs {
+	for withoutURI, currentFH := range withoutURIs {
 		directIDs := map[packageID]struct{}{}
 
 		// Collect all of the package IDs that correspond to the given file.
@@ -724,20 +677,28 @@ func (s *snapshot) clone(ctx context.Context, withoutURIs []span.URI) *snapshot 
 		for _, id := range s.ids[withoutURI] {
 			directIDs[id] = struct{}{}
 		}
-		// Get the current and original FileHandles for this URI.
-		currentFH := s.view.session.GetFile(withoutURI)
+		// The original FileHandle for this URI is cached on the snapshot.
 		originalFH := s.files[withoutURI]
 
 		// Check if the file's package name or imports have changed,
 		// and if so, invalidate this file's packages' metadata.
-		invalidateMetadata := s.shouldLoad(ctx, originalFH, currentFH)
+		invalidateMetadata := s.shouldInvalidateMetadata(ctx, originalFH, currentFH)
 
-		// If a go.mod file's contents have changed, invalidate the metadata
-		// for all of the packages in the workspace.
-		if invalidateMetadata && currentFH.Identity().Kind == source.Mod {
-			for id := range s.workspacePackages {
-				directIDs[id] = struct{}{}
+		// Invalidate the previous modTidyHandle if any of the files have been
+		// saved or if any of the metadata has been invalidated.
+		if invalidateMetadata || fileWasSaved(originalFH, currentFH) {
+			result.modTidyHandle = nil
+		}
+
+		if currentFH.Identity().Kind == source.Mod {
+			// If the view's go.mod file's contents have changed, invalidate the metadata
+			// for all of the packages in the workspace.
+			if invalidateMetadata {
+				for id := range s.workspacePackages {
+					directIDs[id] = struct{}{}
+				}
 			}
+			delete(result.modHandles, withoutURI)
 		}
 
 		// If this is a file we don't yet know about,
@@ -784,11 +745,6 @@ func (s *snapshot) clone(ctx context.Context, withoutURIs []span.URI) *snapshot 
 		// Make sure to remove the changed file from the unloadable set.
 		delete(result.unloadableFiles, withoutURI)
 	}
-
-	// Collect the IDs for the packages associated with the excluded URIs.
-	for k, ids := range s.ids {
-		result.ids[k] = ids
-	}
 	// Copy the set of initally loaded packages.
 	for k, v := range s.workspacePackages {
 		result.workspacePackages[k] = v
@@ -815,15 +771,41 @@ func (s *snapshot) clone(ctx context.Context, withoutURIs []span.URI) *snapshot 
 		}
 		result.metadata[k] = v
 	}
+	// Copy the URI to package ID mappings, skipping only those URIs whose
+	// metadata will be reloaded in future calls to load.
+outer:
+	for k, ids := range s.ids {
+		for _, id := range ids {
+			if invalidateMetadata, ok := transitiveIDs[id]; invalidateMetadata && ok {
+				continue outer
+			}
+		}
+		result.ids[k] = ids
+	}
 	// Don't bother copying the importedBy graph,
 	// as it changes each time we update metadata.
-
 	return result
 }
 
-// shouldLoad reparses a file's package and import declarations to
+// fileWasSaved reports whether the FileHandle passed in has been saved. It
+// accomplishes this by checking to see if the original and current FileHandles
+// are both overlays, and if the current FileHandle is saved while the original
+// FileHandle was not saved.
+func fileWasSaved(originalFH, currentFH source.FileHandle) bool {
+	c, ok := currentFH.(*overlay)
+	if !ok || c == nil {
+		return true
+	}
+	o, ok := originalFH.(*overlay)
+	if !ok || o == nil {
+		return c.saved
+	}
+	return !o.saved && c.saved
+}
+
+// shouldInvalidateMetadata reparses a file's package and import declarations to
 // determine if the file requires a metadata reload.
-func (s *snapshot) shouldLoad(ctx context.Context, originalFH, currentFH source.FileHandle) bool {
+func (s *snapshot) shouldInvalidateMetadata(ctx context.Context, originalFH, currentFH source.FileHandle) bool {
 	if originalFH == nil {
 		return currentFH.Identity().Kind == source.Go
 	}
@@ -837,12 +819,11 @@ func (s *snapshot) shouldLoad(ctx context.Context, originalFH, currentFH source.
 		return originalFH.Identity().URI == modfile
 	}
 	// Get the original and current parsed files in order to check package name and imports.
-	original, _, _, originalErr := s.view.session.cache.ParseGoHandle(originalFH, source.ParseHeader).Parse(ctx)
-	current, _, _, currentErr := s.view.session.cache.ParseGoHandle(currentFH, source.ParseHeader).Parse(ctx)
+	original, _, _, _, originalErr := s.view.session.cache.ParseGoHandle(originalFH, source.ParseHeader).Parse(ctx)
+	current, _, _, _, currentErr := s.view.session.cache.ParseGoHandle(currentFH, source.ParseHeader).Parse(ctx)
 	if originalErr != nil || currentErr != nil {
 		return (originalErr == nil) != (currentErr == nil)
 	}
-
 	// Check if the package's metadata has changed. The cases handled are:
 	//    1. A package's name has changed
 	//    2. A file's imports have changed

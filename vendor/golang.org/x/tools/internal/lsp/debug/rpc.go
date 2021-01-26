@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"sync"
 
 	tlm "golang.org/x/tools/internal/lsp/telemetry"
 	"golang.org/x/tools/internal/telemetry"
@@ -42,6 +43,7 @@ var rpcTmpl = template.Must(template.Must(baseTemplate.Clone()).Parse(`
 `))
 
 type rpcs struct {
+	mu       sync.Mutex
 	Inbound  []*rpcStats
 	Outbound []*rpcStats
 }
@@ -90,12 +92,9 @@ type rpcCodeBucket struct {
 	Count int64
 }
 
-func (r *rpcs) StartSpan(ctx context.Context, span *telemetry.Span)  {}
-func (r *rpcs) FinishSpan(ctx context.Context, span *telemetry.Span) {}
-func (r *rpcs) Log(ctx context.Context, event telemetry.Event)       {}
-func (r *rpcs) Flush()                                               {}
-
 func (r *rpcs) Metric(ctx context.Context, data telemetry.MetricData) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	for i, group := range data.Groups() {
 		set := &r.Inbound
 		if group.Get(tlm.RPCDirection) == tlm.Outbound {

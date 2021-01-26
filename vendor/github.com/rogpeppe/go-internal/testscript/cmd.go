@@ -5,6 +5,8 @@
 package testscript
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -24,25 +26,26 @@ import (
 // NOTE: If you make changes here, update doc.go.
 //
 var scriptCmds = map[string]func(*TestScript, bool, []string){
-	"cd":      (*TestScript).cmdCd,
-	"chmod":   (*TestScript).cmdChmod,
-	"cmp":     (*TestScript).cmdCmp,
-	"cmpenv":  (*TestScript).cmdCmpenv,
-	"cp":      (*TestScript).cmdCp,
-	"env":     (*TestScript).cmdEnv,
-	"exec":    (*TestScript).cmdExec,
-	"exists":  (*TestScript).cmdExists,
-	"grep":    (*TestScript).cmdGrep,
-	"mkdir":   (*TestScript).cmdMkdir,
-	"rm":      (*TestScript).cmdRm,
-	"unquote": (*TestScript).cmdUnquote,
-	"skip":    (*TestScript).cmdSkip,
-	"stdin":   (*TestScript).cmdStdin,
-	"stderr":  (*TestScript).cmdStderr,
-	"stdout":  (*TestScript).cmdStdout,
-	"stop":    (*TestScript).cmdStop,
-	"symlink": (*TestScript).cmdSymlink,
-	"wait":    (*TestScript).cmdWait,
+	"cd":       (*TestScript).cmdCd,
+	"chmod":    (*TestScript).cmdChmod,
+	"cmp":      (*TestScript).cmdCmp,
+	"cmpenv":   (*TestScript).cmdCmpenv,
+	"cp":       (*TestScript).cmdCp,
+	"env":      (*TestScript).cmdEnv,
+	"exec":     (*TestScript).cmdExec,
+	"exists":   (*TestScript).cmdExists,
+	"grep":     (*TestScript).cmdGrep,
+	"mkdir":    (*TestScript).cmdMkdir,
+	"rm":       (*TestScript).cmdRm,
+	"unquote":  (*TestScript).cmdUnquote,
+	"skip":     (*TestScript).cmdSkip,
+	"stdin":    (*TestScript).cmdStdin,
+	"stderr":   (*TestScript).cmdStderr,
+	"stdout":   (*TestScript).cmdStdout,
+	"stop":     (*TestScript).cmdStop,
+	"symlink":  (*TestScript).cmdSymlink,
+	"unix2dos": (*TestScript).cmdUNIX2DOS,
+	"wait":     (*TestScript).cmdWait,
 }
 
 // cd changes to a different directory.
@@ -71,25 +74,23 @@ func (ts *TestScript) cmdCd(neg bool, args []string) {
 }
 
 func (ts *TestScript) cmdChmod(neg bool, args []string) {
-	if len(args) != 2 {
-		ts.Fatalf("usage: chmod mode file")
-	}
-	mode, err := strconv.ParseInt(args[0], 8, 32)
-	if err != nil {
-		ts.Fatalf("bad file mode %q: %v", args[0], err)
-	}
-	if mode > 0777 {
-		ts.Fatalf("unsupported file mode %.3o", mode)
-	}
-	err = os.Chmod(ts.MkAbs(args[1]), os.FileMode(mode))
 	if neg {
-		if err == nil {
-			ts.Fatalf("unexpected chmod success")
-		}
-		return
+		ts.Fatalf("unsupported: ! chmod")
 	}
-	if err != nil {
-		ts.Fatalf("unexpected chmod failure: %v", err)
+	if len(args) != 2 {
+		ts.Fatalf("usage: chmod perm paths...")
+	}
+	perm, err := strconv.ParseUint(args[0], 8, 32)
+	if err != nil || perm&uint64(os.ModePerm) != perm {
+		ts.Fatalf("invalid mode: %s", args[0])
+	}
+	for _, arg := range args[1:] {
+		path := arg
+		if !filepath.IsAbs(path) {
+			path = filepath.Join(ts.cd, arg)
+		}
+		err := os.Chmod(path, os.FileMode(perm))
+		ts.Check(err)
 	}
 }
 
@@ -119,27 +120,25 @@ func (ts *TestScript) cmdCmpenv(neg bool, args []string) {
 
 func (ts *TestScript) doCmdCmp(args []string, env bool) {
 	name1, name2 := args[0], args[1]
-	var text1, text2 string
-	if name1 == "stdout" {
-		text1 = ts.stdout
-	} else if name1 == "stderr" {
-		text1 = ts.stderr
-	} else {
-		data, err := ioutil.ReadFile(ts.MkAbs(name1))
-		ts.Check(err)
-		text1 = string(data)
-	}
+	text1 := ts.ReadFile(name1)
 
-	data, err := ioutil.ReadFile(ts.MkAbs(name2))
+	absName2 := ts.MkAbs(name2)
+	data, err := ioutil.ReadFile(absName2)
 	ts.Check(err)
-	text2 = string(data)
-
+	text2 := string(data)
 	if env {
 		text2 = ts.expand(text2)
 	}
-
 	if text1 == text2 {
 		return
+	}
+	if ts.params.UpdateScripts && !env {
+		if scriptFile, ok := ts.scriptFiles[absName2]; ok {
+			ts.scriptUpdates[scriptFile] = text1
+			return
+		}
+		// The file being compared against isn't in the txtar archive, so don't
+		// update the script.
 	}
 
 	ts.Logf("[diff -%s +%s]\n%s\n", name1, name2, textutil.Diff(text1, text2))
@@ -365,9 +364,7 @@ func (ts *TestScript) cmdStdin(neg bool, args []string) {
 	if len(args) != 1 {
 		ts.Fatalf("usage: stdin filename")
 	}
-	data, err := ioutil.ReadFile(ts.MkAbs(args[0]))
-	ts.Check(err)
-	ts.stdin = string(data)
+	ts.stdin = ts.ReadFile(args[0])
 }
 
 // stdout checks that the last go command standard output matches a regexp.
@@ -413,6 +410,26 @@ func (ts *TestScript) cmdSymlink(neg bool, args []string) {
 	// Note that the link target args[2] is not interpreted with MkAbs:
 	// it will be interpreted relative to the directory file is in.
 	ts.Check(os.Symlink(args[2], ts.MkAbs(args[0])))
+}
+
+// cmdUNIX2DOS converts files from UNIX line endings to DOS line endings.
+func (ts *TestScript) cmdUNIX2DOS(neg bool, args []string) {
+	if neg {
+		ts.Fatalf("unsupported: ! unix2dos")
+	}
+	if len(args) < 1 {
+		ts.Fatalf("usage: unix2dos paths...")
+	}
+	for _, arg := range args {
+		filename := ts.MkAbs(arg)
+		data, err := ioutil.ReadFile(filename)
+		ts.Check(err)
+		dosData, err := unix2DOS(data)
+		ts.Check(err)
+		if err := ioutil.WriteFile(filename, dosData, 0666); err != nil {
+			ts.Fatalf("%s: %v", filename, err)
+		}
+	}
 }
 
 // Tait waits for background commands to exit, setting stderr and stdout to their result.
@@ -525,4 +542,22 @@ func scriptMatch(ts *TestScript, neg bool, args []string, text, name string) {
 			}
 		}
 	}
+}
+
+// unix2DOS returns data with UNIX line endings converted to DOS line endings.
+func unix2DOS(data []byte) ([]byte, error) {
+	sb := &strings.Builder{}
+	s := bufio.NewScanner(bytes.NewReader(data))
+	for s.Scan() {
+		if _, err := sb.Write(s.Bytes()); err != nil {
+			return nil, err
+		}
+		if _, err := sb.WriteString("\r\n"); err != nil {
+			return nil, err
+		}
+	}
+	if err := s.Err(); err != nil {
+		return nil, err
+	}
+	return []byte(sb.String()), nil
 }

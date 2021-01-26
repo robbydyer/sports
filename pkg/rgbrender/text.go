@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"io/ioutil"
 
+	"github.com/gobuffalo/packr/v2"
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
-	"github.com/markbates/pkger"
-	rgb "github.com/robbydyer/rgbmatrix-rpi"
+
+	//"github.com/markbates/pkger"
+	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"golang.org/x/image/font"
 )
 
@@ -39,6 +40,23 @@ func NewTextWriter(font *truetype.Font, fontSize float64) *TextWriter {
 		FontSize: fontSize,
 	}
 }
+
+/*
+func DefaultFont() (*truetype.Font, error) {
+	box := packr.NewBox("../assets")
+	dat, err := box.Find("fonts/04b24.ttf")
+	if err != nil {
+		return nil, err
+	}
+
+	fnt, err := freetype.ParseFont(dat)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse font: %w", err)
+	}
+
+	return fnt, nil
+}
+*/
 
 func DefaultFont() (*truetype.Font, error) {
 	return FontFromAsset("github.com/robbydyer/sports:/assets/fonts/04b24.ttf")

@@ -2,7 +2,11 @@ package nhl
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"time"
+	//"github.com/markbates/pkger"
+	//"github.com/gobuffalo/packr/v2"
 )
 
 type MockNHLAPI struct {
@@ -34,10 +38,71 @@ func (m *MockNHLAPI) Games(dateStr string) ([]*Game, error) {
 	return games, nil
 }
 
-/*
-func NewMockAPI() *MockNHLAPI {
+func MockLiveGameGetter(ctx context.Context, link string) (*LiveGame, error) {
+	f, err := pkger.Open("github.com/robbydyer/sports:/pkg/nhl/assets/mock_livegames.json")
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	dat, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+	/*
+		box := packr.NewBox("./assets")
+		dat, err := box.Find("mock_livegames.json")
+		if err != nil {
+			return nil, err
+		}
+	*/
+
+	var gameList []*LiveGame
+
+	if err := json.Unmarshal(dat, &gameList); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal live game mock yaml: %w", err)
+	}
+
+	for _, liveGame := range gameList {
+		if liveGame.Link == link {
+			liveGame.GameTime = time.Now().Local()
+			return liveGame, nil
+		}
+	}
+
+	return nil, fmt.Errorf("could not locate live game with Link '%s'", link)
+}
+
+func NewMockAPI() (*MockNHLAPI, error) {
 	today := Today()
-	return &MockNHLAPI{
+	/*
+		box := packr.NewBox("./assets")
+		dat, err := box.Find("mock_games.json")
+		if err != nil {
+			return nil, err
+		}
+	*/
+	f, err := pkger.Open("github.com/robbydyer/sports:/pkg/nhl/assets/mock_games.json")
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	dat, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	var gameList []*Game
+
+	if err := json.Unmarshal(dat, &gameList); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal mock yaml: %w", err)
+	}
+
+	m := &MockNHLAPI{
+		GameList: map[string][]*Game{
+			today: gameList,
+		},
 		Teams: map[int]*Team{
 			2: {
 				ID:           2,
@@ -49,34 +114,28 @@ func NewMockAPI() *MockNHLAPI {
 				Name:         "New Jersey Devils",
 				Abbreviation: "NJD",
 			},
-		},
-		GameList: map[string][]*Game{
-			today: {
-				{
-					ID:   1,
-					Link: "1",
-					Teams: {
-						Away: &GameTeam{
-							Team: {
-								ID:           2,
-								Abbreviation: "NYI",
-								Name:         "New York Islanders",
-							},
-							Goals: 9,
-						},
-						Home: &GameTeam{
-							Team: {
-								ID:           2,
-								Abbreviation: "NJD",
-								Name:         "New Jersey Devils",
-							},
-							Goals: 0,
-						},
-					},
-				},
+			3: {
+				ID:           3,
+				Name:         "New York Rangers",
+				Abbreviation: "NYR",
+			},
+			4: {
+				ID:           4,
+				Name:         "Philadelphia Flyers",
+				Abbreviation: "PHI",
+			},
+			29: {
+				ID:           29,
+				Name:         "Columbus Blue Jackets",
+				Abbreviation: "CBJ",
+			},
+			30: {
+				ID:           30,
+				Name:         "Minnesota Wild",
+				Abbreviation: "MIN",
 			},
 		},
 	}
-}
 
-*/
+	return m, nil
+}

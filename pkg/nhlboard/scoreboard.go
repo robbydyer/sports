@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"image/color"
+	"strings"
 	"time"
 
-	rgb "github.com/robbydyer/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/nhl"
+	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
@@ -32,8 +33,6 @@ func (b *scoreBoard) Cleanup() {}
 func (b *scoreBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	canvas := rgb.NewCanvas(matrix)
 
-	seenTeams := make(map[string]bool)
-
 	games, err := b.controller.api.Games(nhl.Today())
 	if err != nil {
 		fmt.Printf("no games for today: %s", err.Error())
@@ -42,7 +41,7 @@ func (b *scoreBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 
 	liveGames := make(map[int]*nhl.LiveGame)
 	for _, game := range games {
-		live, err := nhl.GetLiveGame(ctx, game.Link)
+		live, err := b.controller.liveGameGetter(ctx, game.Link)
 		if err != nil {
 			return err
 		}
@@ -50,6 +49,7 @@ func (b *scoreBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	}
 
 	preloader := make(map[int]chan bool)
+	seenTeams := make(map[string]bool)
 
 OUTER:
 	for _, abbrev := range b.controller.config.WatchTeams {
@@ -64,13 +64,22 @@ OUTER:
 			return err
 		}
 
+		fmt.Printf("Checking for games for %s\n", team.Abbreviation)
+
 	INNER:
 		for gameIndex, game := range games {
-			if game.Teams.Away.Team.ID != team.ID && game.Teams.Home.Team.ID != team.ID {
+			fmt.Printf("Checking if %s in %s vs. %s for Game ID %d\n",
+				team.Abbreviation,
+				game.Teams.Home.Team.Abbreviation,
+				game.Teams.Away.Team.Abbreviation,
+				game.ID,
+			)
+			if game.Teams.Away.Team.Abbreviation != team.Abbreviation && game.Teams.Home.Team.Abbreviation != team.Abbreviation {
+				fmt.Println("it is not")
 				continue INNER
 			}
 			// Preload the next game's data
-			if gameIndex+1 < len(games)-1 {
+			if gameIndex+1 <= len(games)-1 {
 				nextGame := games[gameIndex+1]
 				preloader[nextGame.ID] = make(chan bool, 1)
 				go func() {
@@ -81,9 +90,10 @@ OUTER:
 							preloader[nextGame.ID] <- true
 							return
 						}
-						live, err := nhl.GetLiveGame(ctx, nextGame.Link)
+						live, err := b.controller.liveGameGetter(ctx, nextGame.Link)
 						if err != nil {
 							tries++
+							time.Sleep(5 * time.Second)
 							continue
 						}
 						liveGames[nextGame.ID] = live
@@ -102,18 +112,22 @@ OUTER:
 			liveGame, ok := liveGames[game.ID]
 			if !ok {
 				// This means we failed to get data from the API for this game
-				break INNER
+				fmt.Printf("failed to fetch live game data for ID %d\n", game.ID)
+				continue OUTER
 			}
 
 			if gameNotStarted(liveGame) {
 				if err := b.RenderUpcomingGame(ctx, canvas, liveGame); err != nil {
-					return err
+					return fmt.Errorf("failed to render upcoming game: %w", err)
 				}
 			} else if gameIsOver(liveGame) {
 				fmt.Printf("%s game is over\n", team.Name)
+				if err := b.RenderUpcomingGame(ctx, canvas, liveGame); err != nil {
+					return fmt.Errorf("failed to render upcoming game: %w", err)
+				}
 			} else {
 				if err := b.RenderGameUntilOver(ctx, canvas, liveGame); err != nil {
-					return err
+					return fmt.Errorf("failed to render live game: %w", err)
 				}
 			}
 
@@ -122,7 +136,8 @@ OUTER:
 				return nil
 			case <-time.After(b.controller.config.boardDelay()):
 			}
-			break INNER
+			continue OUTER
+			//break INNER
 		}
 	}
 
@@ -133,38 +148,66 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 	isFavorite := b.isFavorite(liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation) ||
 		b.isFavorite(liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
 
+	isFavorite = false
+
 	if isFavorite {
 		// TODO: Make atomic?
 		b.liveGame = true
 		defer func() { b.liveGame = false }()
 	}
 
+	hKey, err := key("HOME", liveGame)
+	if err != nil {
+		return err
+	}
+	aKey, err := key("AWAY", liveGame)
+	if err != nil {
+		return err
+	}
+
+	homeLogo, err := b.controller.getLogo(hKey)
+	if err != nil {
+		return err
+	}
+	awayLogo, err := b.controller.getLogo(aKey)
+	if err != nil {
+		return err
+	}
+
+	homeShift, err := b.controller.logoShift(hKey)
+	if err != nil {
+		return err
+	}
+	awayShift, err := b.controller.logoShift(aKey)
+	if err != nil {
+		return err
+	}
+
+	hLogo, err := rgbrender.SetImageAlign(rgbrender.LeftCenter, homeLogo)
+	if err != nil {
+		return err
+	}
+	aLogo, err := rgbrender.SetImageAlign(rgbrender.RightCenter, awayLogo)
+	if err != nil {
+		return err
+	}
+	count := 0
 	for {
-		hKey := fmt.Sprintf("%s_HOME", liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation)
-		aKey := fmt.Sprintf("%s_AWAY", liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
+		count++
+		fmt.Printf("NUM in loop %d\n", count)
 
-		homeLogo, err := b.controller.getLogo(hKey)
-		if err != nil {
+		/*
+			if err := rgbrender.DrawImage(canvas, homeShift, homeLogo); err != nil {
+				return err
+			}
+			if err := rgbrender.DrawImage(canvas, awayShift, awayLogo); err != nil {
+				return err
+			}
+		*/
+		if err := rgbrender.DrawImage(canvas, homeShift, hLogo); err != nil {
 			return err
 		}
-		awayLogo, err := b.controller.getLogo(aKey)
-		if err != nil {
-			return err
-		}
-
-		homeShift, err := b.controller.logoShift(hKey)
-		if err != nil {
-			return err
-		}
-		awayShift, err := b.controller.logoShift(aKey)
-		if err != nil {
-			return err
-		}
-
-		if err := rgbrender.DrawImage(canvas, homeShift, homeLogo); err != nil {
-			return err
-		}
-		if err := rgbrender.DrawImage(canvas, awayShift, awayLogo); err != nil {
+		if err := rgbrender.DrawImage(canvas, awayShift, aLogo); err != nil {
 			return err
 		}
 
@@ -228,10 +271,14 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 		)
 
 		if !isFavorite {
+			fmt.Printf("Game %s v. %s is not a favorite, continuing rotation\n",
+				liveGame.LiveData.Linescore.Teams.Home.Team.Name,
+				liveGame.LiveData.Linescore.Teams.Away.Team.Name,
+			)
 			return nil
 		}
 
-		updated, err := nhl.GetLiveGame(ctx, liveGame.Link)
+		updated, err := b.controller.liveGameGetter(ctx, liveGame.Link)
 		if err != nil {
 			fmt.Printf("failed to update live game: %s", err.Error())
 		}
@@ -253,8 +300,14 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 }
 
 func (b *scoreBoard) RenderUpcomingGame(ctx context.Context, canvas *rgb.Canvas, liveGame *nhl.LiveGame) error {
-	hKey := fmt.Sprintf("%s_HOME", liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation)
-	aKey := fmt.Sprintf("%s_AWAY", liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
+	hKey, err := key("HOME", liveGame)
+	if err != nil {
+		return err
+	}
+	aKey, err := key("AWAY", liveGame)
+	if err != nil {
+		return err
+	}
 
 	homeLogo, err := b.controller.getLogo(hKey)
 	if err != nil {
@@ -306,8 +359,14 @@ func (b *scoreBoard) RenderUpcomingGame(ctx context.Context, canvas *rgb.Canvas,
 }
 
 func (b *scoreBoard) RenderFinal(ctx context.Context, canvas *rgb.Canvas, liveGame *nhl.LiveGame) error {
-	hKey := fmt.Sprintf("%s_HOME", liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation)
-	aKey := fmt.Sprintf("%s_AWAY", liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
+	hKey, err := key("HOME", liveGame)
+	if err != nil {
+		return err
+	}
+	aKey, err := key("AWAY", liveGame)
+	if err != nil {
+		return err
+	}
 
 	homeLogo, err := b.controller.getLogo(hKey)
 	if err != nil {
@@ -373,4 +432,32 @@ func (b *scoreBoard) isFavorite(abbrev string) bool {
 	}
 
 	return false
+}
+
+func key(homeAway string, liveGame *nhl.LiveGame) (string, error) {
+	if liveGame == nil ||
+		liveGame.LiveData == nil ||
+		liveGame.LiveData.Linescore == nil ||
+		liveGame.LiveData.Linescore.Teams == nil {
+		return "", fmt.Errorf("invalid LiveGame: missing LiveData %v", liveGame)
+	}
+
+	homeAway = strings.ToUpper(homeAway)
+	if homeAway == "AWAY" {
+		if liveGame.LiveData.Linescore.Teams.Away == nil ||
+			liveGame.LiveData.Linescore.Teams.Away.Team == nil ||
+			liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation == "" {
+			return "", fmt.Errorf("invalid LiveGame: missing Away team %v", liveGame)
+		}
+
+		return fmt.Sprintf("%s_AWAY", liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation), nil
+	}
+
+	if liveGame.LiveData.Linescore.Teams.Home == nil ||
+		liveGame.LiveData.Linescore.Teams.Home.Team == nil ||
+		liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation == "" {
+		return "", fmt.Errorf("invalid LiveGame: missing Home team %v", liveGame)
+	}
+
+	return fmt.Sprintf("%s_HOME", liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation), nil
 }

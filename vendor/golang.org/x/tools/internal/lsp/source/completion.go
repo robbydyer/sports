@@ -324,6 +324,15 @@ func (c *completer) found(cand candidate) {
 		return
 	}
 
+	// If we know we want a type name, don't offer non-type name
+	// candidates. However, do offer package names since they can
+	// contain type names, and do offer any candidate without a type
+	// since we aren't sure if it is a type name or not (i.e. unimported
+	// candidate).
+	if c.wantTypeName() && obj.Type() != nil && !isTypeName(obj) && !isPkgName(obj) {
+		return
+	}
+
 	if c.matchingCandidate(&cand) {
 		cand.score *= highScore
 	} else if isTypeName(obj) {
@@ -384,8 +393,9 @@ type candidate struct {
 	// makePointer is true if the candidate type name T should be made into *T.
 	makePointer bool
 
-	// dereference is true if the candidate obj should be made into *obj.
-	dereference bool
+	// dereference is a count of how many times to dereference the candidate obj.
+	// For example, dereference=2 turns "foo" into "**foo" when formatting.
+	dereference int
 
 	// imp is the import that needs to be added to this package in order
 	// for this candidate to be valid. nil if no import needed.
@@ -423,7 +433,7 @@ func Completion(ctx context.Context, snapshot Snapshot, fh FileHandle, pos proto
 	if err != nil {
 		return nil, nil, fmt.Errorf("getting file for Completion: %v", err)
 	}
-	file, m, _, err := pgh.Cached()
+	file, src, m, _, err := pgh.Cached()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -483,18 +493,24 @@ func Completion(ctx context.Context, snapshot Snapshot, fh FileHandle, pos proto
 	}
 
 	// Detect our surrounding identifier.
-	if ident, ok := path[0].(*ast.Ident); ok {
-		// In the normal case, our leaf AST node is the identifer being completed.
-		c.setSurrounding(ident)
-	} else {
+	switch leaf := path[0].(type) {
+	case *ast.Ident:
+		// In the normal case, our leaf AST node is the identifier being completed.
+		c.setSurrounding(leaf)
+	case *ast.BadDecl:
+		// You don't get *ast.Idents at the file level, so look for bad
+		// decls and manually extract the surrounding token.
+		pos, _, lit := c.scanToken(ctx, src)
+		if pos.IsValid() {
+			c.setSurrounding(&ast.Ident{Name: lit, NamePos: pos})
+		}
+	default:
 		// Otherwise, manually extract the prefix if our containing token
 		// is a keyword. This improves completion after an "accidental
 		// keyword", e.g. completing to "variance" in "someFunc(var<>)".
-		if contents, _, err := pgh.File().Read(ctx); err == nil {
-			id := scanKeyword(c.pos, c.snapshot.View().Session().Cache().FileSet().File(c.pos), contents)
-			if id != nil {
-				c.setSurrounding(id)
-			}
+		pos, tkn, lit := c.scanToken(ctx, src)
+		if pos.IsValid() && tkn.IsKeyword() {
+			c.setSurrounding(&ast.Ident{Name: lit, NamePos: pos})
 		}
 	}
 
@@ -504,7 +520,7 @@ func Completion(ctx context.Context, snapshot Snapshot, fh FileHandle, pos proto
 
 	// If we're inside a comment return comment completions
 	for _, comment := range file.Comments {
-		if comment.Pos() <= rng.Start && rng.Start <= comment.End() {
+		if comment.Pos() < rng.Start && rng.Start <= comment.End() {
 			c.populateCommentCompletions(comment)
 			return c.items, c.getSurrounding(), nil
 		}
@@ -548,10 +564,6 @@ func Completion(ctx context.Context, snapshot Snapshot, fh FileHandle, pos proto
 		if err := c.lexical(); err != nil {
 			return nil, nil, err
 		}
-		if err := c.keyword(); err != nil {
-			return nil, nil, err
-		}
-
 	// The function name hasn't been typed yet, but the parens are there:
 	//   recv.‸(arg)
 	case *ast.TypeAssertExpr:
@@ -565,6 +577,10 @@ func Completion(ctx context.Context, snapshot Snapshot, fh FileHandle, pos proto
 			return nil, nil, err
 		}
 
+	// At the file scope, only keywords are allowed.
+	case *ast.BadDecl, *ast.File:
+		c.addKeywordCompletions()
+
 	default:
 		// fallback to lexical completions
 		if err := c.lexical(); err != nil {
@@ -575,20 +591,20 @@ func Completion(ctx context.Context, snapshot Snapshot, fh FileHandle, pos proto
 	return c.items, c.getSurrounding(), nil
 }
 
-// scanKeyword scans file for the ident or keyword containing or abutting pos.
-func scanKeyword(pos token.Pos, file *token.File, data []byte) *ast.Ident {
+// scanToken scans pgh's contents for the token containing pos.
+func (c *completer) scanToken(ctx context.Context, contents []byte) (token.Pos, token.Token, string) {
+	tok := c.snapshot.View().Session().Cache().FileSet().File(c.pos)
+
 	var s scanner.Scanner
-	s.Init(file, data, nil, 0)
+	s.Init(tok, contents, nil, 0)
 	for {
 		tknPos, tkn, lit := s.Scan()
-		if tkn == token.EOF || tknPos >= pos {
-			return nil
+		if tkn == token.EOF || tknPos >= c.pos {
+			return token.NoPos, token.ILLEGAL, ""
 		}
 
-		if tkn.IsKeyword() {
-			if tknPos <= pos && pos <= tknPos+token.Pos(len(lit)) {
-				return &ast.Ident{NamePos: tknPos, Name: lit}
-			}
+		if len(lit) > 0 && tknPos <= c.pos && c.pos <= tknPos+token.Pos(len(lit)) {
+			return tknPos, tkn, lit
 		}
 	}
 }
@@ -663,14 +679,17 @@ func (c *completer) wantTypeName() bool {
 }
 
 // See https://golang.org/issue/36001. Unimported completions are expensive.
-const unimportedTarget = 100
+const (
+	maxUnimportedPackageNames = 5
+	unimportedMemberTarget    = 100
+)
 
 // selector finds completions for the specified selector expression.
 func (c *completer) selector(sel *ast.SelectorExpr) error {
 	// Is sel a qualified identifier?
 	if id, ok := sel.X.(*ast.Ident); ok {
-		if pkgname, ok := c.pkg.GetTypesInfo().Uses[id].(*types.PkgName); ok {
-			c.packageMembers(pkgname.Imported(), stdScore, nil)
+		if pkgName, ok := c.pkg.GetTypesInfo().Uses[id].(*types.PkgName); ok {
+			c.packageMembers(pkgName.Imported(), stdScore, nil)
 			return nil
 		}
 	}
@@ -682,7 +701,7 @@ func (c *completer) selector(sel *ast.SelectorExpr) error {
 	}
 
 	// Try unimported packages.
-	if id, ok := sel.X.(*ast.Ident); ok && c.opts.unimported && len(c.items) < unimportedTarget {
+	if id, ok := sel.X.(*ast.Ident); ok && c.opts.unimported {
 		if err := c.unimportedMembers(id); err != nil {
 			return err
 		}
@@ -696,6 +715,7 @@ func (c *completer) unimportedMembers(id *ast.Ident) error {
 	if err != nil {
 		return err
 	}
+
 	var paths []string
 	for path, pkg := range known {
 		if pkg.GetTypes().Name() != id.Name {
@@ -703,6 +723,7 @@ func (c *completer) unimportedMembers(id *ast.Ident) error {
 		}
 		paths = append(paths, path)
 	}
+
 	var relevances map[string]int
 	if len(paths) != 0 {
 		c.snapshot.View().RunProcessEnvFunc(c.ctx, func(opts *imports.Options) error {
@@ -710,6 +731,7 @@ func (c *completer) unimportedMembers(id *ast.Ident) error {
 			return nil
 		})
 	}
+
 	for path, pkg := range known {
 		if pkg.GetTypes().Name() != id.Name {
 			continue
@@ -721,8 +743,8 @@ func (c *completer) unimportedMembers(id *ast.Ident) error {
 		if imports.ImportPathToAssumedName(path) != pkg.GetTypes().Name() {
 			imp.name = pkg.GetTypes().Name()
 		}
-		c.packageMembers(pkg.GetTypes(), .01*float64(relevances[path]), imp)
-		if len(c.items) >= unimportedTarget {
+		c.packageMembers(pkg.GetTypes(), stdScore+.01*float64(relevances[path]), imp)
+		if len(c.items) >= unimportedMemberTarget {
 			return nil
 		}
 	}
@@ -740,7 +762,7 @@ func (c *completer) unimportedMembers(id *ast.Ident) error {
 		// Continue with untyped proposals.
 		pkg := types.NewPackage(pkgExport.Fix.StmtInfo.ImportPath, pkgExport.Fix.IdentName)
 		for _, export := range pkgExport.Exports {
-			score := 0.01 * float64(pkgExport.Fix.Relevance)
+			score := stdScore + 0.01*float64(pkgExport.Fix.Relevance)
 			c.found(candidate{
 				obj:   types.NewVar(0, pkg, export, nil),
 				score: score,
@@ -750,7 +772,7 @@ func (c *completer) unimportedMembers(id *ast.Ident) error {
 				},
 			})
 		}
-		if len(c.items) >= unimportedTarget {
+		if len(c.items) >= unimportedMemberTarget {
 			cancel()
 		}
 	}
@@ -849,7 +871,7 @@ func (c *completer) lexical() error {
 
 			// If obj's type is invalid, find the AST node that defines the lexical block
 			// containing the declaration of obj. Don't resolve types for packages.
-			if _, ok := obj.(*types.PkgName); !ok && !typeIsValid(obj.Type()) {
+			if !isPkgName(obj) && !typeIsValid(obj.Type()) {
 				// Match the scope to its ast.Node. If the scope is the package scope,
 				// use the *ast.File as the starting node.
 				var node ast.Node
@@ -930,7 +952,7 @@ func (c *completer) lexical() error {
 		}
 	}
 
-	if c.opts.unimported && len(c.items) < unimportedTarget {
+	if c.opts.unimported {
 		ctx, cancel := c.deepCompletionContext()
 		defer cancel()
 		// Suggest packages that have not been imported yet.
@@ -938,13 +960,22 @@ func (c *completer) lexical() error {
 		if c.surrounding != nil {
 			prefix = c.surrounding.Prefix()
 		}
-		var mu sync.Mutex
+		var (
+			mu               sync.Mutex
+			initialItemCount = len(c.items)
+		)
 		add := func(pkg imports.ImportFix) {
 			mu.Lock()
 			defer mu.Unlock()
 			if _, ok := seen[pkg.IdentName]; ok {
 				return
 			}
+
+			if len(c.items)-initialItemCount >= maxUnimportedPackageNames {
+				cancel()
+				return
+			}
+
 			// Rank unimported packages significantly lower than other results.
 			score := 0.01 * float64(pkg.Relevance)
 
@@ -952,18 +983,6 @@ func (c *completer) lexical() error {
 			// multiple packages of the same name as completion suggestions, since
 			// only one will be chosen.
 			obj := types.NewPkgName(0, nil, pkg.IdentName, types.NewPackage(pkg.StmtInfo.ImportPath, pkg.IdentName))
-			c.found(candidate{
-				obj:   obj,
-				score: score,
-				imp: &importInfo{
-					importPath: pkg.StmtInfo.ImportPath,
-					name:       pkg.StmtInfo.Name,
-				},
-			})
-
-			if len(c.items) >= unimportedTarget {
-				cancel()
-			}
 			c.found(candidate{
 				obj:   obj,
 				score: score,
@@ -990,6 +1009,9 @@ func (c *completer) lexical() error {
 			c.literal(t, nil)
 		}
 	}
+
+	// Add keyword completion items appropriate in the current context.
+	c.addKeywordCompletions()
 
 	return nil
 }
@@ -1277,9 +1299,10 @@ type candidateInference struct {
 	// objKind is a mask of expected kinds of types such as "map", "slice", etc.
 	objKind objKind
 
-	// variadic is true if objType is a slice type from an initial
-	// variadic param.
-	variadic bool
+	// variadicType is the scalar variadic element type. For example,
+	// when completing "append([]T{}, <>)" objType is []T and
+	// variadicType is T.
+	variadicType types.Type
 
 	// modifiers are prefixes such as "*", "&" or "<-" that influence how
 	// a candidate type relates to the expected type.
@@ -1300,6 +1323,17 @@ type candidateInference struct {
 	//
 	// at "<>", the assignees are [int, <invalid>].
 	assignees []types.Type
+
+	// variadicAssignees is true if we could be completing an inner
+	// function call that fills out an outer function call's variadic
+	// params. For example:
+	//
+	// func foo(int, ...string) {}
+	//
+	// foo(<>)         // variadicAssignees=true
+	// foo(bar<>)      // variadicAssignees=true
+	// foo(bar, baz<>) // variadicAssignees=false
+	variadicAssignees bool
 }
 
 // typeNameInference holds information about the expected type name at
@@ -1326,7 +1360,6 @@ func expectedCandidate(c *completer) (inf candidateInference) {
 
 	if c.enclosingCompositeLiteral != nil {
 		inf.objType = c.expectedCompositeLiteralType()
-		return inf
 	}
 
 Nodes:
@@ -1405,14 +1438,19 @@ Nodes:
 							for i := 0; i < sig.Params().Len(); i++ {
 								inf.assignees = append(inf.assignees, sig.Params().At(i).Type())
 							}
+
+							// Record that we may be completing into variadic parameters.
+							inf.variadicAssignees = sig.Variadic()
 						}
 
 						if sig.Variadic() {
+							variadicType := deslice(sig.Params().At(numParams - 1).Type())
+
 							// If we are beyond the last param or we are the last
 							// param w/ further expressions, we expect a single
 							// variadic item.
 							if beyondLastParam || isLastParam && len(node.Args) > numParams {
-								inf.objType = sig.Params().At(numParams - 1).Type().(*types.Slice).Elem()
+								inf.objType = variadicType
 								break Nodes
 							}
 
@@ -1420,7 +1458,7 @@ Nodes:
 							// completing the variadic positition (i.e. we expect a
 							// slice type []T or an individual item T).
 							if isLastParam {
-								inf.variadic = true
+								inf.variadicType = variadicType
 							}
 						}
 
@@ -1437,12 +1475,11 @@ Nodes:
 					obj := c.pkg.GetTypesInfo().ObjectOf(funIdent)
 
 					if obj != nil && obj.Parent() == types.Universe {
-						inf.objKind |= c.builtinArgKind(obj, node)
-
 						// Defer call to builtinArgType so we can provide it the
 						// inferred type from its parent node.
 						defer func() {
-							inf.objType, inf.typeName.wantTypeName, inf.variadic = c.builtinArgType(obj, node, inf.objType)
+							inf = c.builtinArgType(obj, node, inf)
+							inf.objKind = c.builtinArgKind(obj, node)
 						}()
 
 						// The expected type of builtin arguments like append() is
@@ -1522,7 +1559,6 @@ Nodes:
 				inf.modifiers = append(inf.modifiers, typeModifier{mod: address})
 			case token.ARROW:
 				inf.modifiers = append(inf.modifiers, typeModifier{mod: chanRead})
-				inf.objKind |= kindChan
 			}
 		default:
 			if breaksExpectedTypeInference(node) {
@@ -1587,7 +1623,7 @@ func (ci candidateInference) applyTypeNameModifiers(typ types.Type) types.Type {
 // matchesVariadic returns true if we are completing a variadic
 // parameter and candType is a compatible slice type.
 func (ci candidateInference) matchesVariadic(candType types.Type) bool {
-	return ci.variadic && types.AssignableTo(ci.objType, candType)
+	return ci.variadicType != nil && types.AssignableTo(ci.objType, candType)
 
 }
 
@@ -1710,13 +1746,18 @@ Nodes:
 		case *ast.MapType:
 			wantTypeName = true
 			if n.Key != nil {
-				wantComparable = n.Key.Pos() <= c.pos && c.pos <= n.Key.End()
+				wantComparable = nodeContains(n.Key, c.pos)
 			} else {
 				// If the key is empty, assume we are completing the key if
 				// pos is directly after the "map[".
 				wantComparable = c.pos == n.Pos()+token.Pos(len("map["))
 			}
 			break Nodes
+		case *ast.ValueSpec:
+			wantTypeName = nodeContains(n.Type, c.pos)
+			break Nodes
+		case *ast.TypeSpec:
+			wantTypeName = nodeContains(n.Type, c.pos)
 		default:
 			if breaksExpectedTypeInference(p) {
 				return typeNameInference{}
@@ -1736,8 +1777,80 @@ func (c *completer) fakeObj(T types.Type) *types.Var {
 	return types.NewVar(token.NoPos, c.pkg.GetTypes(), "", T)
 }
 
-// matchingCandidate reports whether a candidate matches our type
-// inferences.
+// anyCandType reports whether f returns true for any candidate type
+// derivable from c. For example, from "foo" we might derive "&foo",
+// and "foo()".
+func (c *candidate) anyCandType(f func(t types.Type, addressable bool) bool) bool {
+	if c.obj == nil || c.obj.Type() == nil {
+		return false
+	}
+
+	objType := c.obj.Type()
+
+	if f(objType, c.addressable) {
+		return true
+	}
+
+	// If c is a func type with a single result, offer the result type.
+	if sig, ok := objType.Underlying().(*types.Signature); ok {
+		if sig.Results().Len() == 1 && f(sig.Results().At(0).Type(), false) {
+			// Mark the candidate so we know to append "()" when formatting.
+			c.expandFuncCall = true
+			return true
+		}
+	}
+
+	var (
+		seenPtrTypes map[types.Type]bool
+		ptrType      = objType
+		ptrDepth     int
+	)
+
+	// Check if dereferencing c would match our type inference. We loop
+	// since c could have arbitrary levels of pointerness.
+	for {
+		ptr, ok := ptrType.Underlying().(*types.Pointer)
+		if !ok {
+			break
+		}
+
+		ptrDepth++
+
+		// Avoid pointer type cycles.
+		if seenPtrTypes[ptrType] {
+			break
+		}
+
+		if _, named := ptrType.(*types.Named); named {
+			// Lazily allocate "seen" since it isn't used normally.
+			if seenPtrTypes == nil {
+				seenPtrTypes = make(map[types.Type]bool)
+			}
+
+			// Track named pointer types we have seen to detect cycles.
+			seenPtrTypes[ptrType] = true
+		}
+
+		if f(ptr.Elem(), false) {
+			// Mark the candidate so we know to prepend "*" when formatting.
+			c.dereference = ptrDepth
+			return true
+		}
+
+		ptrType = ptr.Elem()
+	}
+
+	// Check if c is addressable and a pointer to c matches our type inference.
+	if c.addressable && f(types.NewPointer(objType), false) {
+		// Mark the candidate so we know to prepend "&" when formatting.
+		c.takeAddress = true
+		return true
+	}
+
+	return false
+}
+
+// matchingCandidate reports whether cand matches our type inferences.
 func (c *completer) matchingCandidate(cand *candidate) bool {
 	if isTypeName(cand.obj) {
 		return c.matchingTypeName(cand)
@@ -1746,9 +1859,21 @@ func (c *completer) matchingCandidate(cand *candidate) bool {
 		return false
 	}
 
+	if c.inference.candTypeMatches(cand) {
+		return true
+	}
+
 	candType := cand.obj.Type()
 	if candType == nil {
 		return false
+	}
+
+	if sig, ok := candType.Underlying().(*types.Signature); ok {
+		if c.inference.assigneesMatch(cand, sig) {
+			// Invoke the candidate if its results are multi-assignable.
+			cand.expandFuncCall = true
+			return true
+		}
 	}
 
 	// Default to invoking *types.Func candidates. This is so function
@@ -1756,76 +1881,76 @@ func (c *completer) matchingCandidate(cand *candidate) bool {
 	// are invoked by default.
 	cand.expandFuncCall = isFunc(cand.obj)
 
-	if c.inference.typeMatches(cand, c.inference.objType, candType) {
-		// If obj's type matches, we don't want to expand to an invocation of obj.
-		cand.expandFuncCall = false
-		return true
-	}
-
-	// Try using a function's return type as its type.
-	if sig, ok := candType.Underlying().(*types.Signature); ok {
-		if c.inference.signatureMatches(cand, sig) {
-			// If obj's signature's return value matches the expected type,
-			// we need to invoke obj in the completion.
-			cand.expandFuncCall = true
-			return true
-		}
-	}
-
-	// When completing the variadic parameter, if the expected type is
-	// []T then check candType against T.
-	if c.inference.variadic {
-		if slice, ok := c.inference.objType.(*types.Slice); ok {
-			if c.inference.typeMatches(cand, slice.Elem(), candType) {
-				return true
-			}
-		}
-	}
-
-	if c.inference.convertibleTo != nil && types.ConvertibleTo(candType, c.inference.convertibleTo) {
-		return true
-	}
-
-	// Check if dereferencing cand would match our type inference.
-	if ptr, ok := cand.obj.Type().Underlying().(*types.Pointer); ok {
-		if c.matchingCandidate(&candidate{obj: c.fakeObj(ptr.Elem())}) {
-			// Mark the candidate so we know to prepend "*" when formatting.
-			cand.dereference = true
-			return true
-		}
-	}
-
-	// Check if cand is addressable and a pointer to cand matches our type inference.
-	if cand.addressable && c.matchingCandidate(&candidate{obj: c.fakeObj(types.NewPointer(candType))}) {
-		// Mark the candidate so we know to prepend "&" when formatting.
-		cand.takeAddress = true
-		return true
-	}
-
 	return false
 }
 
-// typeMatches reports whether an object of candType makes a good
-// completion candidate given the expected type expType. The
-// candidate's score may be mutated to downrank the candidate in
-// certain situations.
-func (ci *candidateInference) typeMatches(cand *candidate, expType, candType types.Type) bool {
-	if expType == nil {
-		// If we don't expect a specific type, check if we expect a particular
-		// kind of object (map, slice, etc).
-		if ci.objKind > 0 {
-			return ci.objKind&candKind(candType) > 0
+// candTypeMatches reports whether cand makes a good completion
+// candidate given the candidate inference. cand's score may be
+// mutated to downrank the candidate in certain situations.
+func (ci *candidateInference) candTypeMatches(cand *candidate) bool {
+	expTypes := make([]types.Type, 0, 2)
+	if ci.objType != nil {
+		expTypes = append(expTypes, ci.objType)
+	}
+	if ci.variadicType != nil {
+		expTypes = append(expTypes, ci.variadicType)
+	}
+
+	return cand.anyCandType(func(candType types.Type, addressable bool) bool {
+		// Take into account any type modifiers on the expected type.
+		candType = ci.applyTypeModifiers(candType, addressable)
+		if candType == nil {
+			return false
+		}
+
+		if ci.convertibleTo != nil && types.ConvertibleTo(candType, ci.convertibleTo) {
+			return true
+		}
+
+		if len(expTypes) == 0 {
+			// If we have no expected type but were able to apply type
+			// modifiers to our candidate type, count that as a match. This
+			// handles cases like:
+			//
+			//   var foo chan int
+			//   <-fo<>
+			//
+			// There is no exected type at "<>", but we were able to apply
+			// the "<-" type modifier to "foo", so it matches.
+			if len(ci.modifiers) > 0 {
+				return true
+			}
+
+			// If we have no expected type, fall back to checking the
+			// expected "kind" of object, if available.
+			return ci.kindMatches(candType)
+		}
+
+		for _, expType := range expTypes {
+			matches, untyped := ci.typeMatches(expType, candType)
+			if !matches {
+				continue
+			}
+
+			// Lower candidate score for untyped conversions. This avoids
+			// ranking untyped constants above candidates with an exact type
+			// match. Don't lower score of builtin constants, e.g. "true".
+			if untyped && !types.Identical(candType, expType) && cand.obj.Parent() != types.Universe {
+				cand.score /= 2
+			}
+
+			return true
 		}
 
 		return false
-	}
+	})
+}
 
-	// Take into account any type modifiers on the expected type.
-	candType = ci.applyTypeModifiers(candType, cand.addressable)
-	if candType == nil {
-		return false
-	}
-
+// typeMatches reports whether an object of candType makes a good
+// completion candidate given the expected type expType. It also
+// returns a second bool which is true if both types are basic types
+// of the same kind, and at least one is untyped.
+func (ci *candidateInference) typeMatches(expType, candType types.Type) (bool, bool) {
 	// Handle untyped values specially since AssignableTo gives false negatives
 	// for them (see https://golang.org/issue/32146).
 	if candBasic, ok := candType.Underlying().(*types.Basic); ok {
@@ -1836,13 +1961,7 @@ func (ci *candidateInference) typeMatches(cand *candidate, expType, candType typ
 				// This doesn't take into account the constant value, so there will be some
 				// false positives due to integer sign and overflow.
 				if candBasic.Info()&types.IsConstType == wantBasic.Info()&types.IsConstType {
-					// Lower candidate score if the types are not identical. This avoids
-					// ranking untyped constants above candidates with an exact type
-					// match. Don't lower score of builtin constants (e.g. "true").
-					if !types.Identical(candType, expType) && cand.obj.Parent() != types.Universe {
-						cand.score /= 2
-					}
-					return true
+					return true, true
 				}
 			}
 		}
@@ -1850,21 +1969,33 @@ func (ci *candidateInference) typeMatches(cand *candidate, expType, candType typ
 
 	// AssignableTo covers the case where the types are equal, but also handles
 	// cases like assigning a concrete type to an interface type.
-	return types.AssignableTo(candType, expType)
+	return types.AssignableTo(candType, expType), false
 }
 
-// signatureMatches reports whether an invocation of sig makes a good
-// completion candidate. The candidate's score may be mutated to
-// downrank the candidate in certain situations.
-func (ci *candidateInference) signatureMatches(cand *candidate, sig *types.Signature) bool {
-	// If sig returns a single value and it matches our expected type,
-	// invocation of sig is a good candidate.
-	if sig.Results().Len() == 1 {
-		return ci.typeMatches(cand, ci.objType, sig.Results().At(0).Type())
-	}
+// kindMatches reports whether candType's kind matches our expected
+// kind (e.g. slice, map, etc.).
+func (ci *candidateInference) kindMatches(candType types.Type) bool {
+	return ci.objKind&candKind(candType) > 0
+}
 
+// assigneesMatch reports whether an invocation of sig matches the
+// number and type of any assignees.
+func (ci *candidateInference) assigneesMatch(cand *candidate, sig *types.Signature) bool {
 	if len(ci.assignees) == 0 {
 		return false
+	}
+
+	// Uniresult functions are always usable and are handled by the
+	// normal, non-assignees type matching logic.
+	if sig.Results().Len() == 1 {
+		return false
+	}
+
+	var numberOfResultsCouldMatch bool
+	if ci.variadicAssignees {
+		numberOfResultsCouldMatch = sig.Results().Len() >= len(ci.assignees)-1
+	} else {
+		numberOfResultsCouldMatch = sig.Results().Len() == len(ci.assignees)
 	}
 
 	// If our signature doesn't return the right number of values, it's
@@ -1872,10 +2003,7 @@ func (ci *candidateInference) signatureMatches(cand *candidate, sig *types.Signa
 	//
 	//  var foo func() (int, int)
 	//  a, b, c := <> // downrank "foo()" since it only returns two values
-	//
-	// TODO: handle the case when we are completing the parameters to a
-	//       variadic function call.
-	if sig.Results().Len() != len(ci.assignees) {
+	if !numberOfResultsCouldMatch {
 		cand.score /= 2
 		return false
 	}
@@ -1884,11 +2012,25 @@ func (ci *candidateInference) signatureMatches(cand *candidate, sig *types.Signa
 	// assignees match the corresponding sig result value, the signature
 	// is a match.
 	allMatch := false
-	for i, a := range ci.assignees {
-		if a == nil || a.Underlying() == types.Typ[types.Invalid] {
+	for i := 0; i < sig.Results().Len(); i++ {
+		var assignee types.Type
+
+		// If we are completing into variadic parameters, deslice the
+		// expected variadic type.
+		if ci.variadicAssignees && i >= len(ci.assignees)-1 {
+			assignee = ci.assignees[len(ci.assignees)-1]
+			if elem := deslice(assignee); elem != nil {
+				assignee = elem
+			}
+		} else {
+			assignee = ci.assignees[i]
+		}
+
+		if assignee == nil {
 			continue
 		}
-		allMatch = ci.typeMatches(cand, a, sig.Results().At(i).Type())
+
+		allMatch, _ = ci.typeMatches(assignee, sig.Results().At(i).Type())
 		if !allMatch {
 			break
 		}

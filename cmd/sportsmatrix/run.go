@@ -10,10 +10,10 @@ import (
 	"os/signal"
 	"time"
 
-	rgb "github.com/robbydyer/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/nhl"
 	"github.com/robbydyer/sports/pkg/nhlboard"
+	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 	"github.com/spf13/cobra"
 )

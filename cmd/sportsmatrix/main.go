@@ -5,13 +5,13 @@ import (
 	"io/ioutil"
 	"os"
 
+	yaml "github.com/ghodss/yaml"
 	"github.com/markbates/pkger"
 	"github.com/robbydyer/sports/internal/config"
 	"github.com/robbydyer/sports/pkg/nhlboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	yaml "gopkg.in/yaml.v2"
 )
 
 type rootArgs struct {
@@ -99,7 +99,6 @@ func (r *rootArgs) setConfigDefaults() {
 }
 
 func includeAssets() {
-	_ = pkger.Include("/assets/fonts/04b24.ttf")
 	_ = pkger.Include("/assets/logos/DAL/DAL.png")
 	_ = pkger.Include("/assets/logos/OTT/OTT.png")
 	_ = pkger.Include("/assets/logos/MTL/MTL.png")
@@ -131,4 +130,5 @@ func includeAssets() {
 	_ = pkger.Include("/assets/logos/PIT/PIT.png")
 	_ = pkger.Include("/assets/logos/NJD/NJD.png")
 	_ = pkger.Include("/assets/logos/DET/DET.png")
+	_ = pkger.Include("/assets/fonts/04b24.ttf")
 }

@@ -118,7 +118,7 @@ type Exported struct {
 
 	ExpectFileSet *token.FileSet // The file set used when parsing expectations
 
-	exporter Exporter                     // the exporter used
+	Exporter Exporter                     // the exporter used
 	temp     string                       // the temporary directory that was exported to
 	primary  string                       // the first non GOROOT module that was exported
 	written  map[string]map[string]string // the full set of exported files
@@ -201,7 +201,7 @@ func Export(t testing.TB, exporter Exporter, modules []Module) *Exported {
 			Mode:    packages.LoadImports,
 		},
 		Modules:       modules,
-		exporter:      exporter,
+		Exporter:      exporter,
 		temp:          temp,
 		primary:       modules[0].Name,
 		written:       map[string]map[string]string{},
@@ -364,13 +364,38 @@ func GroupFilesByModules(root string) ([]Module, error) {
 	}
 
 	var currentRepo, currentModule string
+	updateCurrentModule := func(dir string) {
+		if dir == currentModule {
+			return
+		}
+		// Handle the case where we step into a nested directory that is a module
+		// and then step out into the parent which is also a module.
+		// Example:
+		// - repoa
+		//   - moda
+		//     - go.mod
+		//     - v2
+		//       - go.mod
+		//     - what.go
+		//   - modb
+		for dir != root {
+			if mods[dir] != nil {
+				currentModule = dir
+				return
+			}
+			dir = filepath.Dir(dir)
+		}
+	}
+
 	if err := filepath.Walk(modulesPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
+		enclosingDir := filepath.Dir(path)
 		// If the path is not a directory, then we want to add the path to
 		// the files map of the currentModule.
 		if !info.IsDir() {
+			updateCurrentModule(enclosingDir)
 			fragment, err := filepath.Rel(currentModule, path)
 			if err != nil {
 				return err
@@ -380,13 +405,14 @@ func GroupFilesByModules(root string) ([]Module, error) {
 		}
 		// If the path is a directory and it's enclosing folder is equal to
 		// the modules folder, then the path is a new repo.
-		if filepath.Dir(path) == modulesPath {
+		if enclosingDir == modulesPath {
 			currentRepo = path
 			return nil
 		}
 		// If the path is a directory and it's enclosing folder is not the same
-		// as the current repo, then the path is a folder/package of the current module.
-		if filepath.Dir(path) != currentRepo {
+		// as the current repo and it is not of the form `v1`,`v2`,...
+		// then the path is a folder/package of the current module.
+		if enclosingDir != currentRepo && !versionSuffixRE.MatchString(filepath.Base(path)) {
 			return nil
 		}
 		// If the path is a directory and it's enclosing folder is the current repo

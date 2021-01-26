@@ -1,6 +1,5 @@
 vendor/github.com/robbydyer/rgbmatrix-rpi/examples/
 vendor/github.com/robbydyer/rgbmatrix-rpi/lib
-cmd/sportsmatrix/pkged.go
 sportsmatrix.bin
 sportsmatrix.arm*
 *.swp
@@ -10,3 +9,4 @@ sportsmatrix.arm*
 *~
 *.so
 .DS_Store
+.vscode

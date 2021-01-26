@@ -47,11 +47,11 @@ func testSource(t *testing.T, exporter packagestest.Exporter) {
 	for _, datum := range data {
 		defer datum.Exported.Cleanup()
 
-		cache := cache.New(nil)
-		session := cache.NewSession()
+		cache := cache.New(ctx, nil)
+		session := cache.NewSession(ctx)
 		options := tests.DefaultOptions()
 		options.Env = datum.Config.Env
-		view, _, err := session.NewView(ctx, "source_test", span.FileURI(datum.Config.Dir), options)
+		view, _, err := session.NewView(ctx, "source_test", span.URIFromPath(datum.Config.Dir), options)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -67,7 +67,7 @@ func testSource(t *testing.T, exporter packagestest.Exporter) {
 				continue
 			}
 			modifications = append(modifications, source.FileModification{
-				URI:        span.FileURI(filename),
+				URI:        span.URIFromPath(filename),
 				Action:     source.Open,
 				Version:    -1,
 				Text:       content,
@@ -467,7 +467,7 @@ func (r *runner) Import(t *testing.T, spn span.Span) {
 	}
 }
 
-func (r *runner) SuggestedFix(t *testing.T, spn span.Span) {}
+func (r *runner) SuggestedFix(t *testing.T, spn span.Span, actionKinds []string) {}
 
 func (r *runner) Definition(t *testing.T, spn span.Span, d tests.Definition) {
 	_, srcRng, err := spanToRange(r.data, d.Src)
@@ -547,7 +547,7 @@ func (r *runner) Implementation(t *testing.T, spn span.Span, impls []span.Span) 
 	}
 	var results []span.Span
 	for i := range locs {
-		locURI := span.NewURI(locs[i].URI)
+		locURI := locs[i].URI.SpanURI()
 		lm, err := r.data.Mapper(locURI)
 		if err != nil {
 			t.Fatal(err)
@@ -798,11 +798,10 @@ func (r *runner) Symbols(t *testing.T, uri span.URI, expectedSymbols []protocol.
 }
 
 func (r *runner) WorkspaceSymbols(t *testing.T, query string, expectedSymbols []protocol.SymbolInformation, dirs map[string]struct{}) {
-	symbols, err := source.WorkspaceSymbols(r.ctx, []source.View{r.view}, query)
-	if err != nil {
-		t.Errorf("symbols failed: %v", err)
-	}
-	got := tests.FilterWorkspaceSymbols(symbols, dirs)
+	got := r.callWorkspaceSymbols(t, query, func(opts *source.Options) {
+		opts.Matcher = source.CaseInsensitive
+	})
+	got = tests.FilterWorkspaceSymbols(got, dirs)
 	if len(got) != len(expectedSymbols) {
 		t.Errorf("want %d symbols, got %d", len(expectedSymbols), len(got))
 		return
@@ -810,6 +809,53 @@ func (r *runner) WorkspaceSymbols(t *testing.T, query string, expectedSymbols []
 	if diff := tests.DiffWorkspaceSymbols(expectedSymbols, got); diff != "" {
 		t.Error(diff)
 	}
+}
+
+func (r *runner) FuzzyWorkspaceSymbols(t *testing.T, query string, expectedSymbols []protocol.SymbolInformation, dirs map[string]struct{}) {
+	got := r.callWorkspaceSymbols(t, query, func(opts *source.Options) {
+		opts.Matcher = source.Fuzzy
+	})
+	got = tests.FilterWorkspaceSymbols(got, dirs)
+	if len(got) != len(expectedSymbols) {
+		t.Errorf("want %d symbols, got %d", len(expectedSymbols), len(got))
+		return
+	}
+	if diff := tests.DiffWorkspaceSymbols(expectedSymbols, got); diff != "" {
+		t.Error(diff)
+	}
+}
+
+func (r *runner) CaseSensitiveWorkspaceSymbols(t *testing.T, query string, expectedSymbols []protocol.SymbolInformation, dirs map[string]struct{}) {
+	got := r.callWorkspaceSymbols(t, query, func(opts *source.Options) {
+		opts.Matcher = source.CaseSensitive
+	})
+	got = tests.FilterWorkspaceSymbols(got, dirs)
+	if len(got) != len(expectedSymbols) {
+		t.Errorf("want %d symbols, got %d", len(expectedSymbols), len(got))
+		return
+	}
+	if diff := tests.DiffWorkspaceSymbols(expectedSymbols, got); diff != "" {
+		t.Error(diff)
+	}
+}
+
+func (r *runner) callWorkspaceSymbols(t *testing.T, query string, options func(*source.Options)) []protocol.SymbolInformation {
+	t.Helper()
+
+	original := r.view.Options()
+	modified := original
+	options(&modified)
+	view, err := r.view.SetOptions(r.ctx, modified)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.view.SetOptions(r.ctx, original)
+
+	got, err := source.WorkspaceSymbols(r.ctx, []source.View{view}, query)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return got
 }
 
 func (r *runner) SignatureHelp(t *testing.T, spn span.Span, want *protocol.SignatureHelp) {
@@ -845,6 +891,10 @@ func (r *runner) SignatureHelp(t *testing.T, spn span.Span, want *protocol.Signa
 }
 
 func (r *runner) Link(t *testing.T, uri span.URI, wantLinks []tests.Link) {
+	// This is a pure LSP feature, no source level functionality to be tested.
+}
+
+func (r *runner) CodeLens(t *testing.T, uri span.URI, want []protocol.CodeLens) {
 	// This is a pure LSP feature, no source level functionality to be tested.
 }
 

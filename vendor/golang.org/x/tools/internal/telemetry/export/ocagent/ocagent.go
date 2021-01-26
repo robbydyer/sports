@@ -43,21 +43,21 @@ func Discover() *Config {
 	}
 }
 
-type exporter struct {
+type Exporter struct {
 	mu      sync.Mutex
 	config  Config
-	spans   []*telemetry.Span
+	spans   []*export.Span
 	metrics []telemetry.MetricData
 }
 
 // Connect creates a process specific exporter with the specified
 // serviceName and the address of the ocagent to which it will upload
 // its telemetry.
-func Connect(config *Config) export.Exporter {
+func Connect(config *Config) *Exporter {
 	if config == nil || config.Address == "off" {
 		return nil
 	}
-	exporter := &exporter{config: *config}
+	exporter := &Exporter{config: *config}
 	if exporter.config.Start.IsZero() {
 		exporter.config.Start = time.Now()
 	}
@@ -85,23 +85,26 @@ func Connect(config *Config) export.Exporter {
 	return exporter
 }
 
-func (e *exporter) StartSpan(ctx context.Context, span *telemetry.Span) {}
-
-func (e *exporter) FinishSpan(ctx context.Context, span *telemetry.Span) {
+func (e *Exporter) ProcessEvent(ctx context.Context, event telemetry.Event) context.Context {
+	if event.Type != telemetry.EventEndSpan {
+		return ctx
+	}
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	e.spans = append(e.spans, span)
+	span := export.GetSpan(ctx)
+	if span != nil {
+		e.spans = append(e.spans, span)
+	}
+	return ctx
 }
 
-func (e *exporter) Log(context.Context, telemetry.Event) {}
-
-func (e *exporter) Metric(ctx context.Context, data telemetry.MetricData) {
+func (e *Exporter) Metric(ctx context.Context, data telemetry.MetricData) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	e.metrics = append(e.metrics, data)
 }
 
-func (e *exporter) Flush() {
+func (e *Exporter) Flush() {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	spans := make([]*wire.Span, len(e.spans))
@@ -149,7 +152,7 @@ func (cfg *Config) buildNode() *wire.Node {
 	}
 }
 
-func (e *exporter) send(endpoint string, message interface{}) {
+func (e *Exporter) send(endpoint string, message interface{}) {
 	blob, err := json.Marshal(message)
 	if err != nil {
 		errorInExport("ocagent failed to marshal message for %v: %v", endpoint, err)
@@ -188,7 +191,7 @@ func toTruncatableString(s string) *wire.TruncatableString {
 	return &wire.TruncatableString{Value: s}
 }
 
-func convertSpan(span *telemetry.Span) *wire.Span {
+func convertSpan(span *export.Span) *wire.Span {
 	result := &wire.Span{
 		TraceID:                 span.ID.TraceID[:],
 		SpanID:                  span.ID.SpanID[:],

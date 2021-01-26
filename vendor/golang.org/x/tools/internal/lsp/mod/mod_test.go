@@ -23,8 +23,8 @@ func TestMain(m *testing.M) {
 
 func TestModfileRemainsUnchanged(t *testing.T) {
 	ctx := tests.Context(t)
-	cache := cache.New(nil)
-	session := cache.NewSession()
+	cache := cache.New(nil, nil)
+	session := cache.NewSession(ctx)
 	options := tests.DefaultOptions()
 	options.TempModfile = true
 	options.Env = append(os.Environ(), "GOPACKAGESDRIVER=off", "GOROOT=")
@@ -41,7 +41,7 @@ func TestModfileRemainsUnchanged(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, snapshot, err := session.NewView(ctx, "diagnostics_test", span.FileURI(folder), options)
+	_, snapshot, err := session.NewView(ctx, "diagnostics_test", span.URIFromPath(folder), options)
 	if err != nil {
 		t.Fatal(err)
 	}

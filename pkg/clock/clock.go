@@ -3,9 +3,8 @@ package clock
 import (
 	"context"
 
-	rgb "github.com/robbydyer/rgbmatrix-rpi"
-
 	"github.com/robbydyer/sports/pkg/board"
+	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
 // Board implements board.Board

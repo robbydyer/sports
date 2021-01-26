@@ -15,25 +15,19 @@ import (
 	"golang.org/x/tools/internal/lsp/protocol"
 	"golang.org/x/tools/internal/lsp/source"
 	"golang.org/x/tools/internal/lsp/telemetry"
-	"golang.org/x/tools/internal/span"
 	"golang.org/x/tools/internal/telemetry/log"
 	errors "golang.org/x/xerrors"
 )
 
 func (s *Server) codeAction(ctx context.Context, params *protocol.CodeActionParams) ([]protocol.CodeAction, error) {
-	uri := span.NewURI(params.TextDocument.URI)
-	view, err := s.session.ViewOf(uri)
-	if err != nil {
+	snapshot, fh, ok, err := s.beginFileRequest(params.TextDocument.URI, source.UnknownKind)
+	if !ok {
 		return nil, err
 	}
-	snapshot := view.Snapshot()
-	fh, err := snapshot.GetFile(uri)
-	if err != nil {
-		return nil, err
-	}
+	uri := fh.Identity().URI
 
 	// Determine the supported actions for this file kind.
-	supportedCodeActions, ok := view.Options().SupportedCodeActions[fh.Identity().Kind]
+	supportedCodeActions, ok := snapshot.View().Options().SupportedCodeActions[fh.Identity().Kind]
 	if !ok {
 		return nil, fmt.Errorf("no supported code actions for %v file kind", fh.Identity().Kind)
 	}
@@ -257,7 +251,7 @@ func documentChanges(fh source.FileHandle, edits []protocol.TextEdit) []protocol
 			TextDocument: protocol.VersionedTextDocumentIdentifier{
 				Version: fh.Identity().Version,
 				TextDocumentIdentifier: protocol.TextDocumentIdentifier{
-					URI: protocol.NewURI(fh.Identity().URI),
+					URI: protocol.URIFromSpanURI(fh.Identity().URI),
 				},
 			},
 			Edits: edits,

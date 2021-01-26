@@ -9,7 +9,7 @@ import (
 	"math"
 	"time"
 
-	rgb "github.com/robbydyer/rgbmatrix-rpi"
+	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
 type Align int
@@ -28,6 +28,19 @@ const (
 
 type Layout struct {
 	Zoom float32
+}
+
+func SetImageAlign(align Align, img image.Image) (image.Image, error) {
+	rect, err := AlignPosition(align, img.Bounds(), img.Bounds().Dx(), img.Bounds().Dy())
+	if err != nil {
+		return nil, err
+	}
+
+	n := image.NewRGBA(rect)
+
+	draw.Draw(n, rect.Bounds(), img, image.Pt(rect.Min.X, rect.Min.Y), draw.Over)
+
+	return n, nil
 }
 
 // AlignPosition returns image.Rectangle bounds for an image within a given bounds

@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"io/ioutil"
 	"os"
 	"strings"
 
-	"github.com/markbates/pkger"
+	//"github.com/markbates/pkger"
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/rgbrender"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -49,12 +51,81 @@ const (
 
 var ALL = []string{ANA, ARI, BOS, BUF, CAR, CBJ, CGY, CHI, COL, DAL, DET, EDM, FLA, LAK, MIN, MTL, NJD, NSH, NYI, NYR, OTT, PHI, PIT, SJS, STL, TBL, TOR, VAN, VGK, WPG, WSH}
 
-type logoInfo struct {
-	logo      *logo.Logo
-	xPosition int
-	yPosition int
+type pt struct {
+	X    int     `json:"x"`
+	Y    int     `json:"y"`
+	Zoom float64 `json:"zoom"`
+}
+type logoConfig struct {
+	Abbrev string `json:"abbrev"`
+	Pt     *pt    `json:"pt"`
 }
 
+type logoInfo struct {
+	logo      *logo.Logo
+	XPosition int
+	YPosition int
+}
+
+func getLogos(logoPosFile string) (map[string]*logoInfo, error) {
+	var dat []byte
+	/*
+		if _, err := os.Stat(logoPosFile); err != nil {
+			fmt.Println("Using builtin logo positions")
+			f, err := pkger.Open("github.com/robbydyer/sports:/pkg/nhlboard/logo_position.yaml")
+			if err != nil {
+				return nil, err
+			}
+			defer f.Close()
+
+			dat, err = ioutil.ReadAll(f)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			var err error
+			dat, err = ioutil.ReadFile(logoPosFile)
+			if err != nil {
+				return nil, err
+			}
+		}
+	*/
+	var err error
+	dat, err = ioutil.ReadFile(logoPosFile)
+	if err != nil {
+		return nil, err
+	}
+
+	sources, err := logoSources()
+	if err != nil {
+		return nil, err
+	}
+
+	var logoConfs []*logoConfig
+
+	if err := yaml.Unmarshal(dat, &logoConfs); err != nil {
+		return nil, err
+	}
+
+	lInfo := make(map[string]*logoInfo)
+	for _, t := range ALL {
+		for _, lConf := range logoConfs {
+			for _, key := range []string{fmt.Sprintf("%s_AWAY", t), fmt.Sprintf("%s_HOME", t)} {
+				if lConf.Abbrev == key {
+					lInfo[key] = &logoInfo{
+						XPosition: lConf.Pt.X,
+						YPosition: lConf.Pt.Y,
+						logo:      logo.New(t, sources[t], logoCacheDir, lConf.Pt.Zoom),
+					}
+				}
+			}
+		}
+	}
+
+	return lInfo, nil
+}
+
+/*
 func getLogos() (map[string]*logoInfo, error) {
 
 	l := make(map[string]*logoInfo)
@@ -407,6 +478,7 @@ func getLogos() (map[string]*logoInfo, error) {
 
 	return l, nil
 }
+*/
 
 func (c *Config) setDefaultPositions() {
 }
@@ -439,14 +511,14 @@ func (n *nhlBoards) logoShift(key string) (image.Rectangle, error) {
 	// Away teams are on the right side
 	if strings.Contains(key, "AWAY") {
 		return rgbrender.ShiftedSize(
-			n.logos[key].xPosition+(n.matrixBounds.Dx()/2),
-			n.logos[key].yPosition,
+			n.logos[key].XPosition+(n.matrixBounds.Dx()/2),
+			n.logos[key].YPosition,
 			n.matrixBounds,
 		), nil
 	}
 	return rgbrender.ShiftedSize(
-		n.logos[key].xPosition,
-		n.logos[key].yPosition,
+		n.logos[key].XPosition,
+		n.logos[key].YPosition,
 		n.matrixBounds,
 	), nil
 }

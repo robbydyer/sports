@@ -84,5 +84,3 @@ RUN RPI_DIR=/raspberrypi && \
   make install DESTDIR=$CROSS_INSTALL_PREFIX PREFIX="" && \
   cd / && \
   rm -rf $WPI_DIR
-
-RUN go get github.com/robbydyer/rgbmatrix-rpi || true

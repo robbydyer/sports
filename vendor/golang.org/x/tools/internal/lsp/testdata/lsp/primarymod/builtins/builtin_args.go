@@ -22,6 +22,8 @@ func _() {
 
 	append() //@rank(")", builtinSlice, builtinChan)
 
+	var _ []byte = append([]byte(nil), ""...) //@rank(") //")
+
 	copy()           //@rank(")", builtinSlice, builtinChan)
 	copy(aSlice, aS) //@rank(")", builtinSlice, builtinString)
 	copy(aS, aSlice) //@rank(",", builtinSlice, builtinString)
@@ -29,17 +31,21 @@ func _() {
 	delete()         //@rank(")", builtinMap, builtinChan)
 	delete(aMap, aS) //@rank(")", builtinString, builtinSlice)
 
+	aMapFunc := func() map[int]int { //@item(builtinMapFunc, "aMapFunc", "func() map[int]int", "var")
+		return nil
+	}
+	delete() //@rank(")", builtinMapFunc, builtinSlice)
+
 	len() //@rank(")", builtinSlice, builtinInt),rank(")", builtinMap, builtinInt),rank(")", builtinString, builtinInt),rank(")", builtinArray, builtinInt),rank(")", builtinArrayPtr, builtinPtr),rank(")", builtinChan, builtinInt)
 
 	cap() //@rank(")", builtinSlice, builtinMap),rank(")", builtinArray, builtinString),rank(")", builtinArrayPtr, builtinPtr),rank(")", builtinChan, builtinInt)
 
-	make()              //@rank(")", builtinMapType, int),rank(")", builtinChanType, int),rank(")", builtinSliceType, int),rank(")", builtinMapType, builtinMap)
+	make()              //@rank(")", builtinMapType, int),rank(")", builtinChanType, int),rank(")", builtinSliceType, int),rank(")", builtinMapType, int)
 	make(aSliceType, a) //@rank(")", builtinInt, builtinSlice)
 
-	var _ []int = make() //@rank(")", builtinSliceType, builtinSlice)
+	var _ []int = make() //@rank(")", builtinSliceType, builtinMapType)
 
 	type myStruct struct{}  //@item(builtinStructType, "myStruct", "struct{...}", "struct")
-	new()                   //@rank(")", builtinStructType, builtinInt)
 	var _ *myStruct = new() //@rank(")", builtinStructType, int)
 
 	for k := range a { //@rank(" {", builtinSlice, builtinInt),rank(" {", builtinString, builtinInt),rank(" {", builtinChan, builtinInt),rank(" {", builtinArray, builtinInt),rank(" {", builtinArrayPtr, builtinInt),rank(" {", builtinMap, builtinInt),

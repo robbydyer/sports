@@ -32,10 +32,11 @@ type Point struct {
 }
 
 type Config struct {
-	BoardDelay    string
-	FavoriteTeams []string
-	WatchTeams    []string
-	LogoPosition  map[string]*Point
+	BoardDelay       string   `json:"boardDelay"`
+	FavoriteTeams    []string `json:"favoriteTeams"`
+	WatchTeams       []string `json:"watchTeams"`
+	LogoPosition     map[string]*Point
+	LogoPositionFile string `json:"logoPositionFile"`
 }
 
 type DataAPI interface {
@@ -54,7 +55,12 @@ func New(ctx context.Context, matrixBounds image.Rectangle, dataAPI DataAPI, liv
 		config.WatchTeams = ALL
 	}
 
-	fmt.Printf("Initializing NHL Board %dx%d\n", matrixBounds.Dx(), matrixBounds.Dy())
+	fmt.Printf("Initializing NHL Board %dx%d\nWatch Teams: %s\nFavorites:%s\n",
+		matrixBounds.Dx(),
+		matrixBounds.Dy(),
+		strings.Join(config.WatchTeams, ", "),
+		strings.Join(config.FavoriteTeams, ", "),
+	)
 
 	controller := &nhlBoards{
 		api:            dataAPI,
@@ -71,11 +77,15 @@ func New(ctx context.Context, matrixBounds image.Rectangle, dataAPI DataAPI, liv
 	if err != nil {
 		return nil, err
 	}
+
 	controller.scheduler = gocron.NewScheduler(loc)
 	controller.scheduler.Every(1).Day().At("05:00").Do(controller.updateGames)
 	controller.scheduler.StartAsync()
 
-	controller.logos, err = getLogos()
+	controller.logos, err = getLogos(config.LogoPositionFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get logos: %w", err)
+	}
 
 	// Initialize logo cache
 	for _, t := range ALL {
@@ -155,7 +165,6 @@ func (b *nhlBoards) getLogo(logoKey string) (image.Image, error) {
 		return logo, nil
 	}
 
-	fmt.Printf("getting thumbnail logo for %s\n", logoKey)
 	var err error
 	b.logoCache[logoKey], err = b.logos[logoKey].logo.GetThumbnail(b.matrixBounds)
 	if err != nil {

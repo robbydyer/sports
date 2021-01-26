@@ -3,7 +3,7 @@ package board
 import (
 	"context"
 
-	rgb "github.com/robbydyer/rgbmatrix-rpi"
+	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
 type Board interface {

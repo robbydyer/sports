@@ -12,7 +12,7 @@ import (
 type Game struct {
 	ID    int    `json:"gamePk"`
 	Link  string `json:"link"`
-	Teams struct {
+	Teams *struct {
 		Away *GameTeam `json:"away"`
 		Home *GameTeam `json:"home"`
 	} `json:"teams"`
@@ -41,7 +41,7 @@ type LiveGame struct {
 			} `json:"teams"`
 			CurrentPeriod              int    `json:"currentPeriod,omitempty"`
 			CurrentPeriodTimeRemaining string `json:"currentPeriodTimeRemaining,omitempty"`
-		} `json:"linescore,omitempty"`
+		} `json:"linescore"`
 	} `json:"liveData"`
 }
 
@@ -49,9 +49,9 @@ type GameTeam struct {
 	Score int `json:"score,omitempty"`
 	Team  *struct {
 		ID           int    `json:"id"`
-		Abbreviation string `json:"abbreviation,omitempty"`
-		Name         string `json:"name,omitempty"`
-	} `json:"team,omitempty"`
+		Abbreviation string `json:"abbreviation"`
+		Name         string `json:"name"`
+	} `json:"team"`
 	Goals       int  `json:"goals,omitempty"`
 	ShotsOnGoal int  `json:"shotsOnGoal,omitempty"`
 	PowerPlay   bool `json:"powerPlay,omitempty"`

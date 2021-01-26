@@ -55,8 +55,6 @@ func (l *Logo) GetThumbnail(size image.Rectangle) (image.Image, error) {
 		return nil, err
 	}
 
-	fmt.Printf("thumbnail %s found\n", thumbFile)
-
 	t, err := os.Open(thumbFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open logo %s: %w", thumbFile, err)

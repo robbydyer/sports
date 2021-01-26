@@ -7,6 +7,6 @@ import (
 
 type Config struct {
 	EnableNHL          bool                 `json:"enableNHL,omitempty"`
-	NHLConfig          *nhlboard.Config     `json:"NHLConfig,omitempty"`
+	NHLConfig          *nhlboard.Config     `json:"nhlConfig,omitempty"`
 	SportsMatrixConfig *sportsmatrix.Config `json:"sportsMatrixConfig,omitempty"`
 }
