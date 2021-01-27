@@ -49,8 +49,8 @@ const (
 var ALL = []string{ANA, ARI, BOS, BUF, CAR, CBJ, CGY, CHI, COL, DAL, DET, EDM, FLA, LAK, MIN, MTL, NJD, NSH, NYI, NYR, OTT, PHI, PIT, SJS, STL, TBL, TOR, VAN, VGK, WPG, WSH}
 
 type pt struct {
-	X    int     `json:"x"`
-	Y    int     `json:"y"`
+	X    int     `json:"xShift"`
+	Y    int     `json:"yShift"`
 	Zoom float64 `json:"zoom"`
 }
 type logoConfig struct {
@@ -114,18 +114,17 @@ func (b *nhlBoards) setLogoInfo() error {
 			xPosition: lConf.Pt.X,
 			yPosition: lConf.Pt.Y,
 		}
-		fmt.Printf("Defining logo for %s: SHIFT %d, %d\n",
+		fmt.Printf("Defining logo for %s: SHIFT %d, %d zoom: %f\n",
 			lConf.Abbrev,
-			b.logos[lConf.Abbrev].xPosition,
-			b.logos[lConf.Abbrev].yPosition,
+			lConf.Pt.X,
+			lConf.Pt.Y,
+			lConf.Pt.Zoom,
 		)
 	}
 
-	/*
-		if len(b.logos) != len(ALL)*2 {
-			return fmt.Errorf("logo configuration mismatch: %d out of %d expected", len(b.logos), len(ALL)*2)
-		}
-	*/
+	if len(b.logos) != len(ALL)*2 {
+		return fmt.Errorf("logo configuration mismatch: %d out of %d expected", len(b.logos), len(ALL)*2)
+	}
 
 	return nil
 }

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/nhl"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
@@ -18,8 +19,9 @@ const maxAPITries = 3
 
 // scoreBoard implements board.Board
 type scoreBoard struct {
-	controller *nhlBoards
-	liveGame   bool
+	controller    *nhlBoards
+	liveGame      bool
+	logoDrawCache map[string]image.Image // Contains cached image.Image of home/away logos after being positioned
 }
 
 func (b *scoreBoard) Name() string {
@@ -80,6 +82,11 @@ OUTER:
 				go func() {
 					tries := 0
 					for {
+						select {
+						case <-ctx.Done():
+							return
+						default:
+						}
 						if tries > maxAPITries {
 							// I give up
 							preloader[nextGame.ID] <- true
@@ -88,7 +95,11 @@ OUTER:
 						live, err := b.controller.liveGameGetter(ctx, nextGame.Link)
 						if err != nil {
 							tries++
-							time.Sleep(5 * time.Second)
+							select {
+							case <-ctx.Done():
+								return
+							case <-time.After(5 * time.Second):
+							}
 							continue
 						}
 						liveGames[nextGame.ID] = live
@@ -100,6 +111,8 @@ OUTER:
 
 			// Wait for the preloader to finish getting data, but with a timeout
 			select {
+			case <-ctx.Done():
+				return nil
 			case <-preloader[game.ID]:
 			case <-time.After(b.controller.config.boardDelay() / 2):
 			}
@@ -143,60 +156,61 @@ func (b *scoreBoard) textAreaWidth() int {
 }
 
 func (b *scoreBoard) renderHomeLogo(canvas *rgb.Canvas, logoKey string) error {
-	logo, err := b.controller.getLogo(logoKey)
+	i, ok := b.logoDrawCache[logoKey]
+	if ok {
+		draw.Draw(canvas, canvas.Bounds(), i, image.ZP, draw.Over)
+		return nil
+	}
+
+	l, err := b.controller.getLogo(logoKey)
 	if err != nil {
 		return err
 	}
 	textWdith := b.textAreaWidth()
 	logoWidth := (b.controller.matrixBounds.Dx() - textWdith) / 2
+	xShift, yShift := b.controller.logoShiftPt(logoKey)
 
-	startX := logoWidth - logo.Bounds().Dx()
+	if xShift != 0 || yShift != 0 {
+		fmt.Printf("Shifting %s %d, %d\n", logoKey, xShift, yShift)
+	}
 
-	shiftX, shiftY := b.controller.logoShiftPt(logoKey)
+	i, err = logo.RenderLeftAligned(canvas, l, logoWidth, xShift, yShift)
+	if err != nil {
+		return err
+	}
 
-	fmt.Printf("Adding shift to %s: %d, %d\n", logoKey, shiftX, shiftY)
-	startX = startX + shiftX
-	startY := 0 + shiftY
-
-	bounds := image.Rect(startX, startY, canvas.Bounds().Dx()-1, canvas.Bounds().Dy()-1)
-
-	i := image.NewRGBA(bounds)
-	draw.Draw(i, bounds, logo, image.ZP, draw.Over)
-
-	fmt.Printf("%s size is %dx%d\n", logoKey, logo.Bounds().Dx(), logo.Bounds().Dy())
-	fmt.Printf("Starting pt for %s is %d, 0 within bounds: %d, %d to %d, %d\n",
-		logoKey,
-		startX,
-		bounds.Min.X,
-		bounds.Min.Y,
-		bounds.Max.X,
-		bounds.Max.Y,
-	)
+	b.logoDrawCache[logoKey] = i
 
 	draw.Draw(canvas, canvas.Bounds(), i, image.ZP, draw.Over)
 
 	return nil
 }
 func (b *scoreBoard) renderAwayLogo(canvas *rgb.Canvas, logoKey string) error {
-	logo, err := b.controller.getLogo(logoKey)
+	i, ok := b.logoDrawCache[logoKey]
+	if ok {
+		draw.Draw(canvas, canvas.Bounds(), i, image.ZP, draw.Over)
+		return nil
+	}
+
+	l, err := b.controller.getLogo(logoKey)
 	if err != nil {
 		return err
 	}
 	textWdith := b.textAreaWidth()
 	logoWidth := (b.controller.matrixBounds.Dx() - textWdith) / 2
+	xShift, yShift := b.controller.logoShiftPt(logoKey)
 
-	startX := logoWidth + textWdith
+	if xShift != 0 || yShift != 0 {
+		fmt.Printf("Shifting %s %d, %d\n", logoKey, xShift, yShift)
+	}
+	xShift += textWdith
 
-	shiftX, shiftY := b.controller.logoShiftPt(logoKey)
-	fmt.Printf("Adding shift to %s: %d, %d\n", logoKey, shiftX, shiftY)
+	i, err = logo.RenderRightAligned(canvas, l, logoWidth, xShift, yShift)
+	if err != nil {
+		return err
+	}
 
-	startX = startX + shiftX
-	startY := 0 + shiftY
-
-	bounds := image.Rect(startX, startY, canvas.Bounds().Dx()-1, canvas.Bounds().Dy()-1)
-
-	i := image.NewRGBA(bounds)
-	draw.Draw(i, bounds, logo, image.ZP, draw.Over)
+	b.logoDrawCache[logoKey] = i
 
 	draw.Draw(canvas, canvas.Bounds(), i, image.ZP, draw.Over)
 
@@ -206,8 +220,6 @@ func (b *scoreBoard) renderAwayLogo(canvas *rgb.Canvas, logoKey string) error {
 func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas, liveGame *nhl.LiveGame) error {
 	isFavorite := b.isFavorite(liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation) ||
 		b.isFavorite(liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation)
-
-	isFavorite = false
 
 	if isFavorite {
 		// TODO: Make atomic?
@@ -224,6 +236,42 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 		return err
 	}
 
+	wrter, err := rgbrender.DefaultTextWriter()
+	if err != nil {
+		return err
+	}
+
+	wrter.LineSpace = b.controller.config.FontSizes.LineSpace
+
+	center, err := rgbrender.AlignPosition(rgbrender.CenterTop, canvas.Bounds(), b.textAreaWidth(), 16)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("text centertop align: %dx%d to %dx%d\n",
+		center.Min.X,
+		center.Min.Y,
+		center.Max.X,
+		center.Max.Y,
+	)
+	scoreAlign, err := rgbrender.AlignPosition(rgbrender.CenterBottom, canvas.Bounds(), b.textAreaWidth(), 16)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("text centerbottom align: %dx%d to %dx%d\n",
+		scoreAlign.Min.X,
+		scoreAlign.Min.Y,
+		scoreAlign.Max.X,
+		scoreAlign.Max.Y-1,
+	)
+	wrter.FontSize = b.controller.config.FontSizes.Period
+
+	scoreWrtr, err := scoreWriter(b.controller.config.FontSizes.Score)
+	if err != nil {
+		return err
+	}
+
 	for {
 		if err := b.renderHomeLogo(canvas, hKey); err != nil {
 			return fmt.Errorf("failed to render home logo: %w", err)
@@ -231,57 +279,33 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 		if err := b.renderAwayLogo(canvas, aKey); err != nil {
 			return fmt.Errorf("failed to render away logo: %w", err)
 		}
-
-		wrter, err := rgbrender.DefaultTextWriter()
-		if err != nil {
-			return err
-		}
-
-		center, err := rgbrender.AlignPosition(rgbrender.CenterTop, canvas.Bounds(), b.textAreaWidth(), 32)
-		if err != nil {
-			return err
-		}
-
-		fmt.Printf("text centertop align: %dx%d to %dx%d\n",
-			center.Min.X,
-			center.Min.Y,
-			center.Max.X,
-			center.Max.Y,
-		)
-		scoreAlign, err := rgbrender.AlignPosition(rgbrender.CenterBottom, canvas.Bounds(), b.textAreaWidth(), 16)
-		if err != nil {
-			return err
-		}
-
-		fmt.Printf("text centerbottom align: %dx%d to %dx%d\n",
-			scoreAlign.Min.X,
-			scoreAlign.Min.Y,
-			scoreAlign.Max.X,
-			scoreAlign.Max.Y-1,
-		)
-
-		wrter.Write(
+		wrter.Write2(
 			canvas,
 			center,
 			[]string{
 				periodStr(liveGame.LiveData.Linescore.CurrentPeriod),
+			},
+			color.White,
+		)
+		wrter.FontSize = b.controller.config.FontSizes.PeriodTime
+		wrter.Write2(
+			canvas,
+			center,
+			[]string{
+				"",
 				liveGame.LiveData.Linescore.CurrentPeriodTimeRemaining,
-				"",
-				"",
+			},
+			color.White,
+		)
+
+		scoreWrtr.Write2(
+			canvas,
+			scoreAlign,
+			[]string{
 				scoreStr(liveGame),
 			},
 			color.White,
 		)
-		/*
-			wrter.Write(
-				canvas,
-				scoreAlign,
-				[]string{
-					scoreStr(liveGame),
-				},
-				color.White,
-			)
-		*/
 
 		if err := canvas.Render(); err != nil {
 			return fmt.Errorf("failed to render live scoreboard: %w", err)
@@ -326,41 +350,21 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 }
 
 func (b *scoreBoard) RenderUpcomingGame(ctx context.Context, canvas *rgb.Canvas, liveGame *nhl.LiveGame) error {
-	/*
-		hKey, err := key("HOME", liveGame)
-		if err != nil {
-			return err
-		}
-		aKey, err := key("AWAY", liveGame)
-		if err != nil {
-			return err
-		}
+	hKey, err := key("HOME", liveGame)
+	if err != nil {
+		return err
+	}
+	aKey, err := key("AWAY", liveGame)
+	if err != nil {
+		return err
+	}
+	if err := b.renderHomeLogo(canvas, hKey); err != nil {
+		return fmt.Errorf("failed to render home logo: %w", err)
+	}
+	if err := b.renderAwayLogo(canvas, aKey); err != nil {
+		return fmt.Errorf("failed to render away logo: %w", err)
+	}
 
-		homeLogo, err := b.controller.getLogo(hKey)
-		if err != nil {
-			return err
-		}
-		awayLogo, err := b.controller.getLogo(aKey)
-		if err != nil {
-			return err
-		}
-
-		homeShift, err := b.controller.logoShift(hKey)
-		if err != nil {
-			return err
-		}
-		awayShift, err := b.controller.logoShift(aKey)
-		if err != nil {
-			return err
-		}
-
-		if err := rgbrender.DrawImage(canvas, homeShift, homeLogo); err != nil {
-			return fmt.Errorf("failed to draw home logo: %w", err)
-		}
-		if err := rgbrender.DrawImage(canvas, awayShift, awayLogo); err != nil {
-			return fmt.Errorf("failed to draw away logo: %w", err)
-		}
-	*/
 	wrter, err := rgbrender.DefaultTextWriter()
 	if err != nil {
 		return fmt.Errorf("failed to get text writer: %w", err)
@@ -387,41 +391,20 @@ func (b *scoreBoard) RenderUpcomingGame(ctx context.Context, canvas *rgb.Canvas,
 }
 
 func (b *scoreBoard) RenderFinal(ctx context.Context, canvas *rgb.Canvas, liveGame *nhl.LiveGame) error {
-	/*
-		hKey, err := key("HOME", liveGame)
-		if err != nil {
-			return err
-		}
-		aKey, err := key("AWAY", liveGame)
-		if err != nil {
-			return err
-		}
-
-		homeLogo, err := b.controller.getLogo(hKey)
-		if err != nil {
-			return err
-		}
-		awayLogo, err := b.controller.getLogo(aKey)
-		if err != nil {
-			return err
-		}
-
-		homeShift, err := b.controller.logoShift(hKey)
-		if err != nil {
-			return err
-		}
-		awayShift, err := b.controller.logoShift(aKey)
-		if err != nil {
-			return err
-		}
-
-		if err := rgbrender.DrawImage(canvas, homeShift, homeLogo); err != nil {
-			return err
-		}
-		if err := rgbrender.DrawImage(canvas, awayShift, awayLogo); err != nil {
-			return err
-		}
-	*/
+	hKey, err := key("HOME", liveGame)
+	if err != nil {
+		return err
+	}
+	aKey, err := key("AWAY", liveGame)
+	if err != nil {
+		return err
+	}
+	if err := b.renderHomeLogo(canvas, hKey); err != nil {
+		return fmt.Errorf("failed to render home logo: %w", err)
+	}
+	if err := b.renderAwayLogo(canvas, aKey); err != nil {
+		return fmt.Errorf("failed to render away logo: %w", err)
+	}
 	wrter, err := rgbrender.DefaultTextWriter()
 	if err != nil {
 		return err
@@ -445,6 +428,19 @@ func (b *scoreBoard) RenderFinal(ctx context.Context, canvas *rgb.Canvas, liveGa
 	)
 
 	return nil
+}
+
+func scoreWriter(size float64) (*rgbrender.TextWriter, error) {
+	fnt, err := rgbrender.FontFromAsset("github.com/robbydyer/sports:/assets/fonts/score.ttf")
+	if err != nil {
+		return nil, fmt.Errorf("failed to load font for score: %w", err)
+	}
+
+	wrtr := rgbrender.NewTextWriter(fnt, size)
+
+	wrtr.YStartCorrection = -7
+
+	return wrtr, nil
 }
 
 func scoreStr(liveGame *nhl.LiveGame) string {

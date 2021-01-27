@@ -2,11 +2,11 @@ package nhl
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"time"
 
+	yaml "github.com/ghodss/yaml"
 	"github.com/markbates/pkger"
 	//"github.com/gobuffalo/packr/v2"
 )
@@ -41,7 +41,7 @@ func (m *MockNHLAPI) Games(dateStr string) ([]*Game, error) {
 }
 
 func MockLiveGameGetter(ctx context.Context, link string) (*LiveGame, error) {
-	f, err := pkger.Open("github.com/robbydyer/sports:/pkg/nhl/assets/mock_livegames.json")
+	f, err := pkger.Open("github.com/robbydyer/sports:/pkg/nhl/assets/mock_livegames.yaml")
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func MockLiveGameGetter(ctx context.Context, link string) (*LiveGame, error) {
 
 	var gameList []*LiveGame
 
-	if err := json.Unmarshal(dat, &gameList); err != nil {
+	if err := yaml.Unmarshal(dat, &gameList); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal live game mock yaml: %w", err)
 	}
 
@@ -70,7 +70,8 @@ func MockLiveGameGetter(ctx context.Context, link string) (*LiveGame, error) {
 
 func NewMockAPI() (*MockNHLAPI, error) {
 	today := Today()
-	f, err := pkger.Open("github.com/robbydyer/sports:/pkg/nhl/assets/mock_games.json")
+	// Load Teams
+	f, err := pkger.Open("github.com/robbydyer/sports:/pkg/nhl/assets/mock_teams.yaml")
 	if err != nil {
 		return nil, err
 	}
@@ -81,9 +82,27 @@ func NewMockAPI() (*MockNHLAPI, error) {
 		return nil, err
 	}
 
+	var teamList []*Team
+
+	if err := yaml.Unmarshal(dat, &teamList); err != nil {
+		return nil, err
+	}
+
+	// Load Games
+	gamef, err := pkger.Open("github.com/robbydyer/sports:/pkg/nhl/assets/mock_games.yaml")
+	if err != nil {
+		return nil, err
+	}
+	defer gamef.Close()
+
+	dat, err = ioutil.ReadAll(gamef)
+	if err != nil {
+		return nil, err
+	}
+
 	var gameList []*Game
 
-	if err := json.Unmarshal(dat, &gameList); err != nil {
+	if err := yaml.Unmarshal(dat, &gameList); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal mock yaml: %w", err)
 	}
 
@@ -91,38 +110,11 @@ func NewMockAPI() (*MockNHLAPI, error) {
 		GameList: map[string][]*Game{
 			today: gameList,
 		},
-		Teams: map[int]*Team{
-			2: {
-				ID:           2,
-				Name:         "New York Islanders",
-				Abbreviation: "NYI",
-			},
-			1: {
-				ID:           1,
-				Name:         "New Jersey Devils",
-				Abbreviation: "NJD",
-			},
-			3: {
-				ID:           3,
-				Name:         "New York Rangers",
-				Abbreviation: "NYR",
-			},
-			4: {
-				ID:           4,
-				Name:         "Philadelphia Flyers",
-				Abbreviation: "PHI",
-			},
-			29: {
-				ID:           29,
-				Name:         "Columbus Blue Jackets",
-				Abbreviation: "CBJ",
-			},
-			30: {
-				ID:           30,
-				Name:         "Minnesota Wild",
-				Abbreviation: "MIN",
-			},
-		},
+		Teams: make(map[int]*Team),
+	}
+
+	for _, t := range teamList {
+		m.Teams[t.ID] = t
 	}
 
 	return m, nil

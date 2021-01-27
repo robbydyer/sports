@@ -31,6 +31,14 @@ type Config struct {
 	FavoriteTeams []string      `json:"favoriteTeams"`
 	WatchTeams    []string      `json:"watchTeams"`
 	LogoPosition  []*logoConfig `json:"logoPosition"`
+	FontSizes     *fontSizes    `json:"fontSizes"`
+}
+
+type fontSizes struct {
+	PeriodTime float64 `json:"periodTime"`
+	Period     float64 `json:"period"`
+	Score      float64 `json:"score"`
+	LineSpace  float64 `json:"lineSpace"`
 }
 
 type DataAPI interface {
@@ -93,7 +101,8 @@ func New(ctx context.Context, matrixBounds image.Rectangle, dataAPI DataAPI, liv
 	var boards []board.Board
 
 	b := &scoreBoard{
-		controller: controller,
+		controller:    controller,
+		logoDrawCache: make(map[string]image.Image),
 	}
 
 	boards = append(boards, b)
@@ -107,6 +116,18 @@ func (c *Config) Defaults() {
 	}
 	if len(c.FavoriteTeams) == 0 && len(c.WatchTeams) == 0 {
 		c.WatchTeams = ALL
+	}
+	if c.FontSizes == nil {
+		c.FontSizes = &fontSizes{}
+	}
+	if c.FontSizes.Period == 0 {
+		c.FontSizes.Period = 8
+	}
+	if c.FontSizes.PeriodTime == 0 {
+		c.FontSizes.PeriodTime = 8
+	}
+	if c.FontSizes.Score == 0 {
+		c.FontSizes.Score = 16
 	}
 }
 

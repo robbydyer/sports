@@ -123,7 +123,6 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 					b.Cleanup()
 				}
 			}()
-			time.Sleep(5 * time.Second)
 			s.done <- true
 			return nil
 		default:

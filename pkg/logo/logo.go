@@ -3,9 +3,11 @@ package logo
 import (
 	"fmt"
 	"image"
+	"image/draw"
 	"image/png"
 	"os"
 
+	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
@@ -31,7 +33,7 @@ func New(teamKey string, sourceLogo image.Image, targetDirectory string, zoom fl
 }
 
 func (l *Logo) ThumbnailFilename(size image.Rectangle) string {
-	return fmt.Sprintf("%s/%s_%dx%d.png", l.targetDirectory, l.teamKey, size.Dx(), size.Dy())
+	return fmt.Sprintf("%s/%s_%dx%d_%f.png", l.targetDirectory, l.teamKey, size.Dx(), size.Dy(), l.zoom)
 }
 
 func (l *Logo) GetThumbnail(size image.Rectangle) (image.Image, error) {
@@ -67,4 +69,40 @@ func (l *Logo) GetThumbnail(size image.Rectangle) (image.Image, error) {
 	}
 
 	return thumbnail, nil
+}
+
+func RenderLeftAligned(canvas *rgb.Canvas, img image.Image, width int, xShift int, yShift int) (image.Image, error) {
+	startX := width - img.Bounds().Dx() + xShift
+	startY := 0 + yShift
+
+	bounds := image.Rect(startX, startY, canvas.Bounds().Dx()-1, canvas.Bounds().Dy()-1)
+
+	i := image.NewRGBA(bounds)
+	draw.Draw(i, bounds, img, image.ZP, draw.Over)
+
+	return i, nil
+
+	/*
+		draw.Draw(canvas, canvas.Bounds(), i, image.ZP, draw.Over)
+
+		return nil
+	*/
+}
+
+func RenderRightAligned(canvas *rgb.Canvas, img image.Image, width int, xShift int, yShift int) (image.Image, error) {
+	startX := width + xShift
+	startY := 0 + yShift
+
+	bounds := image.Rect(startX, startY, canvas.Bounds().Dx()-1, canvas.Bounds().Dy()-1)
+
+	i := image.NewRGBA(bounds)
+	draw.Draw(i, bounds, img, image.ZP, draw.Over)
+
+	return i, nil
+
+	/*
+		draw.Draw(canvas, canvas.Bounds(), i, image.ZP, draw.Over)
+
+		return nil
+	*/
 }

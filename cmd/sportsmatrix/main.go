@@ -130,4 +130,6 @@ func includeAssets() {
 	_ = pkger.Include("/assets/logos/NJD/NJD.png")
 	_ = pkger.Include("/assets/logos/DET/DET.png")
 	_ = pkger.Include("/assets/fonts/04b24.ttf")
+	_ = pkger.Include("/assets/fonts/score.ttf")
+	_ = pkger.Include("/assets/fonts/BlockStockRegular-A71p.ttf")
 }
