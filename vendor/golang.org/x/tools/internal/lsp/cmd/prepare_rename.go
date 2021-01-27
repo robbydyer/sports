@@ -6,7 +6,6 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 
@@ -35,10 +34,6 @@ Example:
 `)
 	f.PrintDefaults()
 }
-
-// ErrInvalidRenamePosition is returned when prepareRename is run at a position that
-// is not a candidate for renaming.
-var ErrInvalidRenamePosition = errors.New("request is not valid at the given position")
 
 func (r *prepareRename) Run(ctx context.Context, args ...string) error {
 	if len(args) != 1 {
@@ -71,10 +66,15 @@ func (r *prepareRename) Run(ctx context.Context, args ...string) error {
 		return fmt.Errorf("prepare_rename failed: %v", err)
 	}
 	if result == nil {
-		return ErrInvalidRenamePosition
+		return fmt.Errorf("request is not valid at the given position")
 	}
 
-	l := protocol.Location{Range: *result}
+	resRange, ok := result.(protocol.Range)
+	if !ok {
+		return fmt.Errorf("prepare_rename failed to convert result to range, got: %T", result)
+	}
+
+	l := protocol.Location{Range: resRange}
 	s, err := file.mapper.Span(l)
 	if err != nil {
 		return err

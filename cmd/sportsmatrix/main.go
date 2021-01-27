@@ -95,7 +95,6 @@ func (r *rootArgs) setConfigDefaults() {
 	}
 
 	r.config.NHLConfig.Defaults()
-
 }
 
 func includeAssets() {

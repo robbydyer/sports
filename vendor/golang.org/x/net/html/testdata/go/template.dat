@@ -21,8 +21,6 @@
 |     <template>
 |       content
 |         <tbody>
-|         <isindex>
-|           action="0"
 |   <body>
 
 #data

@@ -12,14 +12,14 @@ import (
 
 	"golang.org/x/tools/internal/telemetry"
 	"golang.org/x/tools/internal/telemetry/export"
+	"golang.org/x/tools/internal/telemetry/tag"
 )
 
 type Event telemetry.Event
 
 // With sends a tag list to the installed loggers.
 func With(ctx context.Context, tags ...telemetry.Tag) {
-	export.ProcessEvent(ctx, telemetry.Event{
-		Type: telemetry.EventLog,
+	export.Log(ctx, telemetry.Event{
 		At:   time.Now(),
 		Tags: tags,
 	})
@@ -27,29 +27,27 @@ func With(ctx context.Context, tags ...telemetry.Tag) {
 
 // Print takes a message and a tag list and combines them into a single tag
 // list before delivering them to the loggers.
-func Print(ctx context.Context, message string, tags ...telemetry.Tag) {
-	export.ProcessEvent(ctx, telemetry.Event{
-		Type:    telemetry.EventLog,
+func Print(ctx context.Context, message string, tags ...tag.Tagger) {
+	export.Log(ctx, telemetry.Event{
 		At:      time.Now(),
 		Message: message,
-		Tags:    tags,
+		Tags:    tag.Tags(ctx, tags...),
 	})
 }
 
 // Error takes a message and a tag list and combines them into a single tag
 // list before delivering them to the loggers. It captures the error in the
 // delivered event.
-func Error(ctx context.Context, message string, err error, tags ...telemetry.Tag) {
+func Error(ctx context.Context, message string, err error, tags ...tag.Tagger) {
 	if err == nil {
 		err = errorString(message)
 		message = ""
 	}
-	export.ProcessEvent(ctx, telemetry.Event{
-		Type:    telemetry.EventLog,
+	export.Log(ctx, telemetry.Event{
 		At:      time.Now(),
 		Message: message,
 		Error:   err,
-		Tags:    tags,
+		Tags:    tag.Tags(ctx, tags...),
 	})
 }
 

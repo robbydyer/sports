@@ -11,27 +11,27 @@ import (
 	"go/types"
 	"strings"
 
-	"golang.org/x/tools/internal/lsp/fuzzy"
 	"golang.org/x/tools/internal/lsp/protocol"
 	"golang.org/x/tools/internal/telemetry/log"
 	"golang.org/x/tools/internal/telemetry/trace"
 )
 
-const maxSymbols = 100
-
 func WorkspaceSymbols(ctx context.Context, views []View, query string) ([]protocol.SymbolInformation, error) {
 	ctx, done := trace.StartSpan(ctx, "source.WorkspaceSymbols")
 	defer done()
 
+	q := strings.ToLower(query)
+	matcher := func(s string) bool {
+		return strings.Contains(strings.ToLower(s), q)
+	}
+
 	seen := make(map[string]struct{})
 	var symbols []protocol.SymbolInformation
-outer:
 	for _, view := range views {
 		knownPkgs, err := view.Snapshot().KnownPackages(ctx)
 		if err != nil {
 			return nil, err
 		}
-		matcher := makeMatcher(view.Options().Matcher, query)
 		for _, ph := range knownPkgs {
 			pkg, err := ph.Check(ctx)
 			if err != nil {
@@ -42,32 +42,24 @@ outer:
 			}
 			seen[pkg.PkgPath()] = struct{}{}
 			for _, fh := range pkg.CompiledGoFiles() {
-				file, _, _, _, err := fh.Cached()
+				file, _, _, err := fh.Cached()
 				if err != nil {
 					return nil, err
 				}
 				for _, si := range findSymbol(file.Decls, pkg.GetTypesInfo(), matcher) {
-					mrng, err := posToMappedRange(view, pkg, si.node.Pos(), si.node.End())
+					rng, err := nodeToProtocolRange(view, pkg, si.node)
 					if err != nil {
-						log.Error(ctx, "Error getting mapped range for node", err)
-						continue
-					}
-					rng, err := mrng.Range()
-					if err != nil {
-						log.Error(ctx, "Error getting range from mapped range", err)
+						log.Error(ctx, "Error getting range for node", err)
 						continue
 					}
 					symbols = append(symbols, protocol.SymbolInformation{
 						Name: si.name,
 						Kind: si.kind,
 						Location: protocol.Location{
-							URI:   protocol.URIFromSpanURI(mrng.URI()),
+							URI:   protocol.NewURI(fh.File().Identity().URI),
 							Range: rng,
 						},
 					})
-					if len(symbols) > maxSymbols {
-						break outer
-					}
 				}
 			}
 		}
@@ -82,25 +74,6 @@ type symbolInformation struct {
 }
 
 type matcherFunc func(string) bool
-
-func makeMatcher(m Matcher, query string) matcherFunc {
-	switch m {
-	case Fuzzy:
-		fm := fuzzy.NewMatcher(query)
-		return func(s string) bool {
-			return fm.Score(s) > 0
-		}
-	case CaseSensitive:
-		return func(s string) bool {
-			return strings.Contains(s, query)
-		}
-	default:
-		q := strings.ToLower(query)
-		return func(s string) bool {
-			return strings.Contains(strings.ToLower(s), q)
-		}
-	}
-}
 
 func findSymbol(decls []ast.Decl, info *types.Info, matcher matcherFunc) []symbolInformation {
 	var result []symbolInformation

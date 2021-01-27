@@ -21,19 +21,6 @@ github.com/go-gl/glfw/v3.3/glfw/glfw/include/GLFW
 github.com/go-gl/glfw/v3.3/glfw/glfw/src
 # github.com/gobuffalo/here v0.6.0
 github.com/gobuffalo/here
-# github.com/gobuffalo/logger v1.0.3
-github.com/gobuffalo/logger
-# github.com/gobuffalo/packd v1.0.0
-github.com/gobuffalo/packd
-github.com/gobuffalo/packd/internal/takeon/github.com/markbates/errx
-# github.com/gobuffalo/packr/v2 v2.8.1
-## explicit
-github.com/gobuffalo/packr/v2
-github.com/gobuffalo/packr/v2/file
-github.com/gobuffalo/packr/v2/file/resolver
-github.com/gobuffalo/packr/v2/file/resolver/encoding/hex
-github.com/gobuffalo/packr/v2/jam/parser
-github.com/gobuffalo/packr/v2/plog
 # github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 ## explicit
 github.com/golang/freetype
@@ -57,26 +44,19 @@ github.com/jezek/xgb
 github.com/jezek/xgb/render
 github.com/jezek/xgb/shm
 github.com/jezek/xgb/xproto
-# github.com/karrick/godirwalk v1.16.1
-## explicit
-github.com/karrick/godirwalk
 # github.com/kr/text v0.1.0
 github.com/kr/text
 # github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
-# github.com/markbates/errx v1.1.0
-github.com/markbates/errx
-# github.com/markbates/oncer v1.0.0
-github.com/markbates/oncer
 # github.com/markbates/pkger v0.17.1
 ## explicit
 github.com/markbates/pkger
 github.com/markbates/pkger/here
 github.com/markbates/pkger/internal/maps
 github.com/markbates/pkger/pkging
+github.com/markbates/pkger/pkging/embed
+github.com/markbates/pkger/pkging/mem
 github.com/markbates/pkger/pkging/stdos
-# github.com/markbates/safe v1.0.1
-github.com/markbates/safe
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
 # github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
@@ -106,11 +86,6 @@ github.com/robbydyer/exp/shiny/driver/mtldriver/internal/coreanim
 github.com/robbydyer/exp/shiny/driver/windriver
 github.com/robbydyer/exp/shiny/driver/x11driver
 github.com/robbydyer/exp/shiny/screen
-# github.com/rogpeppe/go-internal v1.7.0
-## explicit
-# github.com/sirupsen/logrus v1.7.0
-## explicit
-github.com/sirupsen/logrus
 # github.com/spf13/afero v1.1.2
 github.com/spf13/afero
 github.com/spf13/afero/mem
@@ -132,9 +107,6 @@ github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/subosito/gotenv v1.2.0
 github.com/subosito/gotenv
-# golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
-## explicit
-golang.org/x/crypto/ssh/terminal
 # golang.org/x/image v0.0.0-20201208152932-35266b937fa6
 ## explicit
 golang.org/x/image/draw
@@ -150,17 +122,11 @@ golang.org/x/mobile/event/paint
 golang.org/x/mobile/event/size
 golang.org/x/mobile/geom
 golang.org/x/mobile/gl
-# golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
-## explicit
 # golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c
 ## explicit
 golang.org/x/sys/internal/unsafeheader
-golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf
-## explicit
-golang.org/x/term
 # golang.org/x/text v0.3.3
 ## explicit
 golang.org/x/text/transform

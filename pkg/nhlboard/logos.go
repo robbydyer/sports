@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	//"github.com/markbates/pkger"
+	"github.com/markbates/pkger"
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 	"gopkg.in/yaml.v2"

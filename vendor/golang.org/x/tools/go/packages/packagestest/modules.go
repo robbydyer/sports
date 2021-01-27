@@ -6,16 +6,16 @@ package packagestest
 
 import (
 	"archive/zip"
-	"context"
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
-	"strings"
 
-	"golang.org/x/tools/internal/gocommand"
+	"golang.org/x/tools/go/packages"
 )
 
 // Modules is the exporter that produces module layouts.
@@ -39,11 +39,6 @@ import (
 var Modules = modules{}
 
 type modules struct{}
-
-type moduleAtVersion struct {
-	module  string
-	version string
-}
 
 func (modules) Name() string {
 	return "Modules"
@@ -69,18 +64,6 @@ func (modules) Finalize(exported *Exported) error {
 		exported.written[exported.primary] = make(map[string]string)
 	}
 
-	// Create a map of modulepath -> {module, version} for modulepaths
-	// that are of the form `repoa/mod1@v1.1.0`.
-	versions := make(map[string]moduleAtVersion)
-	for module := range exported.written {
-		if splt := strings.Split(module, "@"); len(splt) > 1 {
-			versions[module] = moduleAtVersion{
-				module:  splt[0],
-				version: splt[1],
-			}
-		}
-	}
-
 	// If the primary module already has a go.mod, write the contents to a temp
 	// go.mod for now and then we will reset it when we are getting all the markers.
 	if gomod := exported.written[exported.primary]["go.mod"]; gomod != "" {
@@ -99,14 +82,7 @@ func (modules) Finalize(exported *Exported) error {
 		if other == exported.primary {
 			continue
 		}
-		version := moduleVersion(other)
-		// If other is of the form `repo1/mod1@v1.1.0`,
-		// then we need to extract the module and the version.
-		if v, ok := versions[other]; ok {
-			other = v.module
-			version = v.version
-		}
-		primaryGomod += fmt.Sprintf("\t%v %v\n", other, version)
+		primaryGomod += fmt.Sprintf("\t%v %v\n", other, moduleVersion(other))
 	}
 	primaryGomod += ")\n"
 	if err := ioutil.WriteFile(filepath.Join(primaryDir, "go.mod"), []byte(primaryGomod), 0644); err != nil {
@@ -124,12 +100,8 @@ func (modules) Finalize(exported *Exported) error {
 			continue
 		}
 		dir := moduleDir(exported, module)
+
 		modfile := filepath.Join(dir, "go.mod")
-		// If other is of the form `repo1/mod1@v1.1.0`,
-		// then we need to extract the module name without the version.
-		if v, ok := versions[module]; ok {
-			module = v.module
-		}
 		if err := ioutil.WriteFile(modfile, []byte("module "+module+"\n"), 0644); err != nil {
 			return err
 		}
@@ -142,15 +114,9 @@ func (modules) Finalize(exported *Exported) error {
 		if module == exported.primary {
 			continue
 		}
-		version := moduleVersion(module)
-		// If other is of the form `repo1/mod1@v1.1.0`,
-		// then we need to extract the module and the version.
-		if v, ok := versions[module]; ok {
-			module = v.module
-			version = v.version
-		}
 		dir := filepath.Join(proxyDir, module, "@v")
-		if err := writeModuleProxy(dir, module, version, files); err != nil {
+
+		if err := writeModuleProxy(dir, module, files); err != nil {
 			return fmt.Errorf("creating module proxy dir for %v: %v", module, err)
 		}
 	}
@@ -169,33 +135,21 @@ func (modules) Finalize(exported *Exported) error {
 
 	// Run go mod download to recreate the mod cache dir with all the extra
 	// stuff in cache. All the files created by Export should be recreated.
-	inv := gocommand.Invocation{
-		Verb:       "mod",
-		Args:       []string{"download"},
-		Env:        exported.Config.Env,
-		BuildFlags: exported.Config.BuildFlags,
-		WorkingDir: exported.Config.Dir,
-	}
-	if _, err := inv.Run(context.Background()); err != nil {
+	if err := invokeGo(exported.Config, "mod", "download"); err != nil {
 		return err
 	}
 	return nil
 }
 
 // writeModuleProxy creates a directory in the proxy dir for a module.
-func writeModuleProxy(dir, module, ver string, files map[string]string) error {
+func writeModuleProxy(dir, module string, files map[string]string) error {
+	ver := moduleVersion(module)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
 
-	// the modproxy checks for versions by looking at the "list" file,
-	// since we are supporting multiple versions, create the file if it does not exist or
-	// append the version number to the preexisting file.
-	f, err := os.OpenFile(filepath.Join(dir, "list"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	if _, err := f.WriteString(ver + "\n"); err != nil {
+	// list file. Just the single version.
+	if err := ioutil.WriteFile(filepath.Join(dir, "list"), []byte(ver+"\n"), 0644); err != nil {
 		return err
 	}
 
@@ -215,7 +169,7 @@ func writeModuleProxy(dir, module, ver string, files map[string]string) error {
 	}
 
 	// zip of all the source files.
-	f, err = os.OpenFile(filepath.Join(dir, ver+".zip"), os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(filepath.Join(dir, ver+".zip"), os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
@@ -243,6 +197,20 @@ func writeModuleProxy(dir, module, ver string, files map[string]string) error {
 	return nil
 }
 
+func invokeGo(cfg *packages.Config, args ...string) error {
+	stdout := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
+	cmd := exec.Command("go", args...)
+	cmd.Env = append(append([]string{}, cfg.Env...), "PWD="+cfg.Dir)
+	cmd.Dir = cfg.Dir
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("go %v: %s: %s", args, err, stderr)
+	}
+	return nil
+}
+
 func modCache(exported *Exported) string {
 	return filepath.Join(exported.temp, "modcache/pkg/mod")
 }
@@ -252,9 +220,6 @@ func primaryDir(exported *Exported) string {
 }
 
 func moduleDir(exported *Exported, module string) string {
-	if strings.Contains(module, "@") {
-		return filepath.Join(modCache(exported), module)
-	}
 	return filepath.Join(modCache(exported), path.Dir(module), path.Base(module)+"@"+moduleVersion(module))
 }
 

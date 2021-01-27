@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"io/ioutil"
 
-	"github.com/gobuffalo/packr/v2"
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
 
-	//"github.com/markbates/pkger"
+	"github.com/markbates/pkger"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"golang.org/x/image/font"
 )

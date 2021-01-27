@@ -4,10 +4,7 @@
 
 package route
 
-import (
-	"syscall"
-	"unsafe"
-)
+import "unsafe"
 
 func (typ RIBType) parseable() bool { return true }
 
@@ -59,15 +56,6 @@ func probeRoutingStack() (int, map[int]*wireFormat) {
 	ifmam.parse = ifmam.parseInterfaceMulticastAddrMessage
 	ifanm := &wireFormat{extOff: sizeofIfAnnouncemsghdrDragonFlyBSD4, bodyOff: sizeofIfAnnouncemsghdrDragonFlyBSD4}
 	ifanm.parse = ifanm.parseInterfaceAnnounceMessage
-
-	rel, _ := syscall.SysctlUint32("kern.osreldate")
-	if rel >= 500705 {
-		// https://github.com/DragonFlyBSD/DragonFlyBSD/commit/43a373152df2d405c9940983e584e6a25e76632d
-		// but only the size of struct ifa_msghdr actually changed
-		rtmVersion = 7
-		ifam.bodyOff = sizeofIfaMsghdrDragonFlyBSD58
-	}
-
 	return int(unsafe.Sizeof(p)), map[int]*wireFormat{
 		sysRTM_ADD:        rtm,
 		sysRTM_DELETE:     rtm,

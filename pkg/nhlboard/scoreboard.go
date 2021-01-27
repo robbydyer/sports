@@ -3,7 +3,9 @@ package nhlboard
 import (
 	"context"
 	"fmt"
+	"image"
 	"image/color"
+	"image/draw"
 	"strings"
 	"time"
 
@@ -68,14 +70,7 @@ OUTER:
 
 	INNER:
 		for gameIndex, game := range games {
-			fmt.Printf("Checking if %s in %s vs. %s for Game ID %d\n",
-				team.Abbreviation,
-				game.Teams.Home.Team.Abbreviation,
-				game.Teams.Away.Team.Abbreviation,
-				game.ID,
-			)
 			if game.Teams.Away.Team.Abbreviation != team.Abbreviation && game.Teams.Home.Team.Abbreviation != team.Abbreviation {
-				fmt.Println("it is not")
 				continue INNER
 			}
 			// Preload the next game's data
@@ -137,9 +132,73 @@ OUTER:
 			case <-time.After(b.controller.config.boardDelay()):
 			}
 			continue OUTER
-			//break INNER
 		}
 	}
+
+	return nil
+}
+
+func (b *scoreBoard) textAreaWidth() int {
+	return b.controller.matrixBounds.Dx() / 4
+}
+
+func (b *scoreBoard) renderHomeLogo(canvas *rgb.Canvas, logoKey string) error {
+	logo, err := b.controller.getLogo(logoKey)
+	if err != nil {
+		return err
+	}
+	textWdith := b.textAreaWidth()
+	logoWidth := (b.controller.matrixBounds.Dx() - textWdith) / 2
+
+	startX := logoWidth - logo.Bounds().Dx()
+
+	shiftX, shiftY := b.controller.logoShiftPt(logoKey)
+
+	fmt.Printf("Adding shift to %s: %d, %d\n", logoKey, shiftX, shiftY)
+	startX = startX + shiftX
+	startY := 0 + shiftY
+
+	bounds := image.Rect(startX, startY, canvas.Bounds().Dx()-1, canvas.Bounds().Dy()-1)
+
+	i := image.NewRGBA(bounds)
+	draw.Draw(i, bounds, logo, image.ZP, draw.Over)
+
+	fmt.Printf("%s size is %dx%d\n", logoKey, logo.Bounds().Dx(), logo.Bounds().Dy())
+	fmt.Printf("Starting pt for %s is %d, 0 within bounds: %d, %d to %d, %d\n",
+		logoKey,
+		startX,
+		bounds.Min.X,
+		bounds.Min.Y,
+		bounds.Max.X,
+		bounds.Max.Y,
+	)
+
+	draw.Draw(canvas, canvas.Bounds(), i, image.ZP, draw.Over)
+
+	return nil
+}
+func (b *scoreBoard) renderAwayLogo(canvas *rgb.Canvas, logoKey string) error {
+	logo, err := b.controller.getLogo(logoKey)
+	if err != nil {
+		return err
+	}
+	textWdith := b.textAreaWidth()
+	logoWidth := (b.controller.matrixBounds.Dx() - textWdith) / 2
+
+	startX := logoWidth + textWdith
+
+	shiftX, shiftY := b.controller.logoShiftPt(logoKey)
+	fmt.Printf("Adding shift to %s: %d, %d\n", logoKey, shiftX, shiftY)
+
+	startX = startX + shiftX
+	startY := 0 + shiftY
+
+	bounds := image.Rect(startX, startY, canvas.Bounds().Dx()-1, canvas.Bounds().Dy()-1)
+
+	i := image.NewRGBA(bounds)
+	draw.Draw(i, bounds, logo, image.ZP, draw.Over)
+
+	draw.Draw(canvas, canvas.Bounds(), i, image.ZP, draw.Over)
 
 	return nil
 }
@@ -165,36 +224,35 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 		return err
 	}
 
-	homeLogo, err := b.controller.getLogo(hKey)
-	if err != nil {
-		return err
-	}
-	awayLogo, err := b.controller.getLogo(aKey)
-	if err != nil {
-		return err
-	}
+	/*
+		homeLogo, err := b.controller.getLogo(hKey)
+		if err != nil {
+			return err
+		}
+		awayLogo, err := b.controller.getLogo(aKey)
+		if err != nil {
+			return err
+		}
 
-	homeShift, err := b.controller.logoShift(hKey)
-	if err != nil {
-		return err
-	}
-	awayShift, err := b.controller.logoShift(aKey)
-	if err != nil {
-		return err
-	}
+		homeShift, err := b.controller.logoShift(hKey)
+		if err != nil {
+			return err
+		}
+		awayShift, err := b.controller.logoShift(aKey)
+		if err != nil {
+			return err
+		}
 
-	hLogo, err := rgbrender.SetImageAlign(rgbrender.LeftCenter, homeLogo)
-	if err != nil {
-		return err
-	}
-	aLogo, err := rgbrender.SetImageAlign(rgbrender.RightCenter, awayLogo)
-	if err != nil {
-		return err
-	}
-	count := 0
+		hLogo, err := rgbrender.SetImageAlign(rgbrender.LeftCenter, homeLogo)
+		if err != nil {
+			return err
+		}
+		aLogo, err := rgbrender.SetImageAlign(rgbrender.RightCenter, awayLogo)
+		if err != nil {
+			return err
+		}
+	*/
 	for {
-		count++
-		fmt.Printf("NUM in loop %d\n", count)
 
 		/*
 			if err := rgbrender.DrawImage(canvas, homeShift, homeLogo); err != nil {
@@ -204,11 +262,12 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 				return err
 			}
 		*/
-		if err := rgbrender.DrawImage(canvas, homeShift, hLogo); err != nil {
-			return err
+
+		if err := b.renderHomeLogo(canvas, hKey); err != nil {
+			return fmt.Errorf("failed to render home logo: %w", err)
 		}
-		if err := rgbrender.DrawImage(canvas, awayShift, aLogo); err != nil {
-			return err
+		if err := b.renderAwayLogo(canvas, aKey); err != nil {
+			return fmt.Errorf("failed to render away logo: %w", err)
 		}
 
 		wrter, err := rgbrender.DefaultTextWriter()

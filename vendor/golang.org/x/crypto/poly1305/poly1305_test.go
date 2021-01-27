@@ -5,8 +5,6 @@
 package poly1305
 
 import (
-	"crypto/rand"
-	"encoding/binary"
 	"encoding/hex"
 	"flag"
 	"testing"
@@ -16,10 +14,9 @@ import (
 var stressFlag = flag.Bool("stress", false, "run slow stress tests")
 
 type test struct {
-	in    string
-	key   string
-	tag   string
-	state string
+	in  string
+	key string
+	tag string
 }
 
 func (t *test) Input() []byte {
@@ -50,33 +47,9 @@ func (t *test) Tag() [16]byte {
 	return tag
 }
 
-func (t *test) InitialState() [3]uint64 {
-	// state is hex encoded in big-endian byte order
-	if t.state == "" {
-		return [3]uint64{0, 0, 0}
-	}
-	buf, err := hex.DecodeString(t.state)
-	if err != nil {
-		panic(err)
-	}
-	if len(buf) != 3*8 {
-		panic("incorrect state length")
-	}
-	return [3]uint64{
-		binary.BigEndian.Uint64(buf[16:24]),
-		binary.BigEndian.Uint64(buf[8:16]),
-		binary.BigEndian.Uint64(buf[0:8]),
-	}
-}
-
 func testSum(t *testing.T, unaligned bool, sumImpl func(tag *[TagSize]byte, msg []byte, key *[32]byte)) {
 	var tag [16]byte
 	for i, v := range testData {
-		// cannot set initial state before calling sum, so skip those tests
-		if v.InitialState() != [3]uint64{0, 0, 0} {
-			continue
-		}
-
 		in := v.Input()
 		if unaligned {
 			in = unalignBytes(in)
@@ -86,30 +59,6 @@ func testSum(t *testing.T, unaligned bool, sumImpl func(tag *[TagSize]byte, msg 
 		if tag != v.Tag() {
 			t.Errorf("%d: expected %x, got %x", i, v.Tag(), tag[:])
 		}
-		if !Verify(&tag, in, &key) {
-			t.Errorf("%d: tag didn't verify", i)
-		}
-		// If the key is zero, the tag will always be zero, independent of the input.
-		if len(in) > 0 && key != [32]byte{} {
-			in[0] ^= 0xff
-			if Verify(&tag, in, &key) {
-				t.Errorf("%d: tag verified after altering the input", i)
-			}
-			in[0] ^= 0xff
-		}
-		// If the input is empty, the tag only depends on the second half of the key.
-		if len(in) > 0 {
-			key[0] ^= 0xff
-			if Verify(&tag, in, &key) {
-				t.Errorf("%d: tag verified after altering the key", i)
-			}
-			key[0] ^= 0xff
-		}
-		tag[0] ^= 0xff
-		if Verify(&tag, in, &key) {
-			t.Errorf("%d: tag verified after altering the tag", i)
-		}
-		tag[0] ^= 0xff
 	}
 }
 
@@ -166,17 +115,8 @@ func testWriteGeneric(t *testing.T, unaligned bool) {
 			input = unalignBytes(input)
 		}
 		h := newMACGeneric(&key)
-		if s := v.InitialState(); s != [3]uint64{0, 0, 0} {
-			h.macState.h = s
-		}
-		n, err := h.Write(input[:len(input)/3])
-		if err != nil || n != len(input[:len(input)/3]) {
-			t.Errorf("#%d: unexpected Write results: n = %d, err = %v", i, n, err)
-		}
-		n, err = h.Write(input[len(input)/3:])
-		if err != nil || n != len(input[len(input)/3:]) {
-			t.Errorf("#%d: unexpected Write results: n = %d, err = %v", i, n, err)
-		}
+		h.Write(input[:len(input)/2])
+		h.Write(input[len(input)/2:])
 		h.Sum(&out)
 		if tag := v.Tag(); out != tag {
 			t.Errorf("%d: expected %x, got %x", i, tag[:], out[:])
@@ -194,28 +134,11 @@ func testWrite(t *testing.T, unaligned bool) {
 			input = unalignBytes(input)
 		}
 		h := New(&key)
-		if s := v.InitialState(); s != [3]uint64{0, 0, 0} {
-			h.macState.h = s
-		}
-		n, err := h.Write(input[:len(input)/3])
-		if err != nil || n != len(input[:len(input)/3]) {
-			t.Errorf("#%d: unexpected Write results: n = %d, err = %v", i, n, err)
-		}
-		n, err = h.Write(input[len(input)/3:])
-		if err != nil || n != len(input[len(input)/3:]) {
-			t.Errorf("#%d: unexpected Write results: n = %d, err = %v", i, n, err)
-		}
+		h.Write(input[:len(input)/2])
+		h.Write(input[len(input)/2:])
 		h.Sum(out[:0])
-		tag := v.Tag()
-		if out != tag {
+		if tag := v.Tag(); out != tag {
 			t.Errorf("%d: expected %x, got %x", i, tag[:], out[:])
-		}
-		if !h.Verify(tag[:]) {
-			t.Errorf("%d: Verify failed", i)
-		}
-		tag[0] ^= 0xff
-		if h.Verify(tag[:]) {
-			t.Errorf("%d: Verify succeeded after modifying the tag", i)
 		}
 	}
 }
@@ -227,7 +150,6 @@ func benchmarkSum(b *testing.B, size int, unaligned bool) {
 	if unaligned {
 		in = unalignBytes(in)
 	}
-	rand.Read(in)
 	b.SetBytes(int64(len(in)))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -242,7 +164,6 @@ func benchmarkWrite(b *testing.B, size int, unaligned bool) {
 	if unaligned {
 		in = unalignBytes(in)
 	}
-	rand.Read(in)
 	b.SetBytes(int64(len(in)))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

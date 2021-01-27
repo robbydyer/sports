@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"time"
-	//"github.com/markbates/pkger"
+
+	"github.com/markbates/pkger"
 	//"github.com/gobuffalo/packr/v2"
 )
 
@@ -49,13 +51,6 @@ func MockLiveGameGetter(ctx context.Context, link string) (*LiveGame, error) {
 	if err != nil {
 		return nil, err
 	}
-	/*
-		box := packr.NewBox("./assets")
-		dat, err := box.Find("mock_livegames.json")
-		if err != nil {
-			return nil, err
-		}
-	*/
 
 	var gameList []*LiveGame
 
@@ -75,13 +70,6 @@ func MockLiveGameGetter(ctx context.Context, link string) (*LiveGame, error) {
 
 func NewMockAPI() (*MockNHLAPI, error) {
 	today := Today()
-	/*
-		box := packr.NewBox("./assets")
-		dat, err := box.Find("mock_games.json")
-		if err != nil {
-			return nil, err
-		}
-	*/
 	f, err := pkger.Open("github.com/robbydyer/sports:/pkg/nhl/assets/mock_games.json")
 	if err != nil {
 		return nil, err

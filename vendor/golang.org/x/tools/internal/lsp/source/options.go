@@ -26,6 +26,7 @@ import (
 	"golang.org/x/tools/go/analysis/passes/loopclosure"
 	"golang.org/x/tools/go/analysis/passes/lostcancel"
 	"golang.org/x/tools/go/analysis/passes/nilfunc"
+	"golang.org/x/tools/go/analysis/passes/nilness"
 	"golang.org/x/tools/go/analysis/passes/printf"
 	"golang.org/x/tools/go/analysis/passes/shift"
 	"golang.org/x/tools/go/analysis/passes/sortslice"
@@ -47,13 +48,12 @@ import (
 func DefaultOptions() Options {
 	return Options{
 		ClientOptions: ClientOptions{
-			InsertTextFormat:                  protocol.PlainTextTextFormat,
-			PreferredContentFormat:            protocol.Markdown,
-			ConfigurationSupported:            true,
-			DynamicConfigurationSupported:     true,
-			DynamicWatchedFilesSupported:      true,
-			LineFoldingOnly:                   false,
-			HierarchicalDocumentSymbolSupport: true,
+			InsertTextFormat:              protocol.PlainTextTextFormat,
+			PreferredContentFormat:        protocol.Markdown,
+			ConfigurationSupported:        true,
+			DynamicConfigurationSupported: true,
+			DynamicWatchedFilesSupported:  true,
+			LineFoldingOnly:               false,
 		},
 		ServerOptions: ServerOptions{
 			SupportedCodeActions: map[FileKind]map[protocol.CodeActionKind]bool{
@@ -67,13 +67,12 @@ func DefaultOptions() Options {
 				Sum: {},
 			},
 			SupportedCommands: []string{
-				"tidy",               // for go.mod files
-				"upgrade.dependency", // for go.mod dependency upgrades
+				"tidy", // for go.mod files
 			},
 		},
 		UserOptions: UserOptions{
 			Env:                     os.Environ(),
-			HoverKind:               FullDocumentation,
+			HoverKind:               SynopsisDocumentation,
 			LinkTarget:              "pkg.go.dev",
 			Matcher:                 Fuzzy,
 			DeepCompletion:          true,
@@ -84,7 +83,7 @@ func DefaultOptions() Options {
 			CompletionBudget: 100 * time.Millisecond,
 		},
 		ExperimentalOptions: ExperimentalOptions{
-			TempModfile: true,
+			TempModfile: false,
 		},
 		Hooks: Hooks{
 			ComputeEdits: myers.ComputeEdits,
@@ -105,13 +104,12 @@ type Options struct {
 }
 
 type ClientOptions struct {
-	InsertTextFormat                  protocol.InsertTextFormat
-	ConfigurationSupported            bool
-	DynamicConfigurationSupported     bool
-	DynamicWatchedFilesSupported      bool
-	PreferredContentFormat            protocol.MarkupKind
-	LineFoldingOnly                   bool
-	HierarchicalDocumentSymbolSupport bool
+	InsertTextFormat              protocol.InsertTextFormat
+	ConfigurationSupported        bool
+	DynamicConfigurationSupported bool
+	DynamicWatchedFilesSupported  bool
+	PreferredContentFormat        protocol.MarkupKind
+	LineFoldingOnly               bool
 }
 
 type ServerOptions struct {
@@ -275,8 +273,6 @@ func (o *Options) ForClientCapabilities(caps protocol.ClientCapabilities) {
 	// Check if the client supports only line folding.
 	fr := caps.TextDocument.FoldingRange
 	o.LineFoldingOnly = fr.LineFoldingOnly
-	// Check if the client supports hierarchical document symbols.
-	o.HierarchicalDocumentSymbolSupport = caps.TextDocument.DocumentSymbol.HierarchicalDocumentSymbolSupport
 }
 
 func (o *Options) set(name string, value interface{}) OptionResult {
@@ -492,6 +488,7 @@ func defaultAnalyzers() map[string]*analysis.Analyzer {
 
 		// Non-vet analyzers
 		deepequalerrors.Analyzer.Name:  deepequalerrors.Analyzer,
+		nilness.Analyzer.Name:          nilness.Analyzer,
 		sortslice.Analyzer.Name:        sortslice.Analyzer,
 		testinggoroutine.Analyzer.Name: testinggoroutine.Analyzer,
 	}

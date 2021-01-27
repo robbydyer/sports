@@ -19,21 +19,19 @@ import (
 	"golang.org/x/tools/internal/span"
 )
 
-func New(ctx context.Context, options func(*source.Options)) *Cache {
+func New(options func(*source.Options)) source.Cache {
 	index := atomic.AddInt64(&cacheIndex, 1)
-	c := &Cache{
+	c := &cache{
 		fs:      &nativeFileSystem{},
 		id:      strconv.FormatInt(index, 10),
 		fset:    token.NewFileSet(),
 		options: options,
 	}
-	if di := debug.GetInstance(ctx); di != nil {
-		di.State.AddCache(debugCache{c})
-	}
+	debug.AddCache(debugCache{c})
 	return c
 }
 
-type Cache struct {
+type cache struct {
 	fs      source.FileSystem
 	id      string
 	fset    *token.FileSet
@@ -47,7 +45,7 @@ type fileKey struct {
 }
 
 type fileHandle struct {
-	cache      *Cache
+	cache      *cache
 	underlying source.FileHandle
 	handle     *memoize.Handle
 }
@@ -59,7 +57,7 @@ type fileData struct {
 	err   error
 }
 
-func (c *Cache) GetFile(uri span.URI) source.FileHandle {
+func (c *cache) GetFile(uri span.URI) source.FileHandle {
 	underlying := c.fs.GetFile(uri)
 	key := fileKey{
 		identity: underlying.Identity(),
@@ -76,21 +74,19 @@ func (c *Cache) GetFile(uri span.URI) source.FileHandle {
 	}
 }
 
-func (c *Cache) NewSession(ctx context.Context) *Session {
+func (c *cache) NewSession() source.Session {
 	index := atomic.AddInt64(&sessionIndex, 1)
-	s := &Session{
+	s := &session{
 		cache:    c,
 		id:       strconv.FormatInt(index, 10),
 		options:  source.DefaultOptions(),
 		overlays: make(map[span.URI]*overlay),
 	}
-	if di := debug.GetInstance(ctx); di != nil {
-		di.State.AddSession(DebugSession{s})
-	}
+	debug.AddSession(debugSession{s})
 	return s
 }
 
-func (c *Cache) FileSet() *token.FileSet {
+func (c *cache) FileSet() *token.FileSet {
 	return c.fset
 }
 
@@ -119,8 +115,8 @@ func hashContents(contents []byte) string {
 
 var cacheIndex, sessionIndex, viewIndex int64
 
-type debugCache struct{ *Cache }
+type debugCache struct{ *cache }
 
-func (c *Cache) ID() string                         { return c.id }
+func (c *cache) ID() string                         { return c.id }
 func (c debugCache) FileSet() *token.FileSet        { return c.fset }
 func (c debugCache) MemStats() map[reflect.Type]int { return c.store.Stats() }

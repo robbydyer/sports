@@ -7,8 +7,7 @@ import (
 	"image/png"
 	"time"
 
-	//"github.com/markbates/pkger"
-	"github.com/gobuffalo/packr/v2"
+	"github.com/markbates/pkger"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
@@ -25,18 +24,11 @@ func (t *testBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	delay := 10 * time.Second
 	fmt.Println("Rendering testBoard!")
 
-	box := packr.NewBox("../assets")
-	f, err := box.Resolve("images/goal_light.png")
+	f, err := pkger.Open("/assets/images/goal_light.png")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open packed image: %w", err)
 	}
-	/*
-		f, err := pkger.Open("/assets/images/goal_light.png")
-		if err != nil {
-			return fmt.Errorf("failed to open packed image: %w", err)
-		}
-		defer f.Close()
-	*/
+	defer f.Close()
 
 	img, err := png.Decode(f)
 	if err != nil {

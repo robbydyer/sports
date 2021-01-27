@@ -445,18 +445,10 @@ func ParseRequest(bytes []byte) (*Request, error) {
 	}, nil
 }
 
-// ParseResponse parses an OCSP response in DER form. The response must contain
-// only one certificate status. To parse the status of a specific certificate
-// from a response which may contain multiple statuses, use ParseResponseForCert
-// instead.
-//
-// If the response contains an embedded certificate, then that certificate will
-// be used to verify the response signature. If the response contains an
-// embedded certificate and issuer is not nil, then issuer will be used to verify
-// the signature on the embedded certificate.
-//
-// If the response does not contain an embedded certificate and issuer is not
-// nil, then issuer will be used to verify the response signature.
+// ParseResponse parses an OCSP response in DER form. It only supports
+// responses for a single certificate. If the response contains a certificate
+// then the signature over the response is checked. If issuer is not nil then
+// it will be used to validate the signature or embedded certificate.
 //
 // Invalid responses and parse failures will result in a ParseError.
 // Error responses will result in a ResponseError.
@@ -464,11 +456,14 @@ func ParseResponse(bytes []byte, issuer *x509.Certificate) (*Response, error) {
 	return ParseResponseForCert(bytes, nil, issuer)
 }
 
-// ParseResponseForCert acts identically to ParseResponse, except it supports
-// parsing responses that contain multiple statuses. If the response contains
-// multiple statuses and cert is not nil, then ParseResponseForCert will return
-// the first status which contains a matching serial, otherwise it will return an
-// error. If cert is nil, then the first status in the response will be returned.
+// ParseResponseForCert parses an OCSP response in DER form and searches for a
+// Response relating to cert. If such a Response is found and the OCSP response
+// contains a certificate then the signature over the response is checked. If
+// issuer is not nil then it will be used to validate the signature or embedded
+// certificate.
+//
+// Invalid responses and parse failures will result in a ParseError.
+// Error responses will result in a ResponseError.
 func ParseResponseForCert(bytes []byte, cert, issuer *x509.Certificate) (*Response, error) {
 	var resp responseASN1
 	rest, err := asn1.Unmarshal(bytes, &resp)

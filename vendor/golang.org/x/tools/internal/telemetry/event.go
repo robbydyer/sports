@@ -9,17 +9,7 @@ import (
 	"time"
 )
 
-type EventType uint8
-
-const (
-	EventLog = EventType(iota)
-	EventStartSpan
-	EventEndSpan
-	EventTag
-)
-
 type Event struct {
-	Type    EventType
 	At      time.Time
 	Message string
 	Error   error

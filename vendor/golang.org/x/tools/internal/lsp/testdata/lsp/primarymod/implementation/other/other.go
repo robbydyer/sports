@@ -10,18 +10,20 @@ type ImpS struct{} //@mark(OtherImpS, "ImpS")
 func (ImpS) Laugh() { //@mark(OtherLaughS, "Laugh")
 }
 
-type ImpI interface { //@mark(OtherLaugher, "ImpI")
-	Laugh() //@mark(OtherLaugh, "Laugh")
+type ImpI interface {
+	Laugh()
 }
 
-type Foo struct { //@implementations("Foo", Joker)
+type Foo struct {
 }
 
-func (Foo) Joke() { //@mark(ImpJoker, "Joke"),implementations("Joke", Joke)
+func (Foo) U() { //@mark(ImpU, "U")
 }
 
 type CryType int
 
-type Cryer interface { //@Cryer
-	Cry(CryType) //@Cry,implementations("Cry", CryImpl)
+const Sob CryType = 1
+
+type Cryer interface {
+	Cry(CryType) //@implementations("Cry", CryImpl)
 }

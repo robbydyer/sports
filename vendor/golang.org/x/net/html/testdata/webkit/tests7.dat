@@ -12,7 +12,8 @@
 #data
 <!doctype html><table><title>X</title></table>
 #errors
-(1,29): unexpected-start-tag-implies-table-voodoo
+Line: 1 Col: 29 Unexpected start tag (title) in table context caused voodoo mode.
+Line: 1 Col: 38 Unexpected end tag (title) in table context caused voodoo mode.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -25,7 +26,7 @@
 #data
 <!doctype html><head></head><title>X</title>
 #errors
-(1,35): unexpected-start-tag-out-of-my-head
+Line: 1 Col: 35 Unexpected start tag (title) that can be in head. Moved.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -37,7 +38,7 @@
 #data
 <!doctype html></head><title>X</title>
 #errors
-(1,29): unexpected-start-tag-out-of-my-head
+Line: 1 Col: 29 Unexpected start tag (title) that can be in head. Moved.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -49,7 +50,7 @@
 #data
 <!doctype html><table><meta></table>
 #errors
-(1,28): unexpected-start-tag-implies-table-voodoo
+Line: 1 Col: 28 Unexpected start tag (meta) in table context caused voodoo mode.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -61,8 +62,8 @@
 #data
 <!doctype html><table>X<tr><td><table> <meta></table></table>
 #errors
-unexpected text in table
-(1,45): unexpected-start-tag-implies-table-voodoo
+Line: 1 Col: 23 Unexpected non-space characters in table context caused voodoo mode.
+Line: 1 Col: 45 Unexpected start tag (meta) in table context caused voodoo mode.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -136,20 +137,6 @@ unexpected text in table
 |           "X"
 
 #data
-<!doctype html><p><object type="application/x-non-existant-plugin"><p>X</p></object>
-#errors
-#document
-| <!DOCTYPE html>
-| <html>
-|   <head>
-|   <body>
-|     <p>
-|       <object>
-|         type="application/x-non-existant-plugin"
-|         <p>
-|           "X"
-
-#data
 <!doctype html><listing>
 X</listing>
 #errors
@@ -164,7 +151,7 @@ X</listing>
 #data
 <!doctype html><select><input>X
 #errors
-(1,30): unexpected-input-in-select
+Line: 1 Col: 30 Unexpected input start tag in the select phase.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -177,7 +164,7 @@ X</listing>
 #data
 <!doctype html><select><select>X
 #errors
-(1,31): unexpected-select-in-select
+Line: 1 Col: 31 Unexpected select start tag in the select phase treated as select end tag.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -189,7 +176,7 @@ X</listing>
 #data
 <!doctype html><table><input type=hidDEN></table>
 #errors
-(1,41): unexpected-hidden-input-in-table
+Line: 1 Col: 41 Unexpected input with type hidden in table context.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -202,8 +189,7 @@ X</listing>
 #data
 <!doctype html><table>X<input type=hidDEN></table>
 #errors
-(1,23): foster-parenting-character
-(1,42): unexpected-hidden-input-in-table
+Line: 1 Col: 23 Unexpected non-space characters in table context caused voodoo mode.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -217,7 +203,7 @@ X</listing>
 #data
 <!doctype html><table>  <input type=hidDEN></table>
 #errors
-(1,43): unexpected-hidden-input-in-table
+Line: 1 Col: 43 Unexpected input with type hidden in table context.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -231,7 +217,7 @@ X</listing>
 #data
 <!doctype html><table>  <input type='hidDEN'></table>
 #errors
-(1,45): unexpected-hidden-input-in-table
+Line: 1 Col: 45 Unexpected input with type hidden in table context.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -245,8 +231,7 @@ X</listing>
 #data
 <!doctype html><table><input type=" hidden"><input type=hidDEN></table>
 #errors
-(1,44): unexpected-start-tag-implies-table-voodoo
-(1,63): unexpected-hidden-input-in-table
+Line: 1 Col: 44 Unexpected start tag (input) in table context caused voodoo mode.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -261,9 +246,9 @@ X</listing>
 #data
 <!doctype html><table><select>X<tr>
 #errors
-(1,30): unexpected-start-tag-implies-table-voodoo
-(1,35): unexpected-table-element-start-tag-in-select-in-table
-(1,35): eof-in-table
+Line: 1 Col: 30 Unexpected start tag (select) in table context caused voodoo mode.
+Line: 1 Col: 35 Unexpected table element start tag (trs) in the select in table phase.
+Line: 1 Col: 35 Unexpected end of file. Expected table content.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -289,6 +274,7 @@ X</listing>
 #data
 <!DOCTYPE hTmL><html></html>
 #errors
+Line: 1 Col: 28 Unexpected end tag (html) after the (implied) root element.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -298,6 +284,7 @@ X</listing>
 #data
 <!DOCTYPE HTML><html></html>
 #errors
+Line: 1 Col: 28 Unexpected end tag (html) after the (implied) root element.
 #document
 | <!DOCTYPE html>
 | <html>
@@ -307,7 +294,8 @@ X</listing>
 #data
 <body>X</body></body>
 #errors
-(1,21): unexpected-end-tag-after-body
+Line: 1 Col: 21 Unexpected end tag token (body) in the after body phase.
+Line: 1 Col: 21 Unexpected EOF in inner html mode.
 #document-fragment
 html
 #document
@@ -318,9 +306,9 @@ html
 #data
 <div><p>a</x> b
 #errors
-(1,5): expected-doctype-but-got-start-tag
-(1,13): unexpected-end-tag
-(1,15): expected-closing-tag-but-got-eof
+Line: 1 Col: 5 Unexpected start tag (div). Expected DOCTYPE.
+Line: 1 Col: 13 Unexpected end tag (x). Ignored.
+Line: 1 Col: 15 Expected closing tag. Unexpected end of file.
 #document
 | <html>
 |   <head>
@@ -332,7 +320,7 @@ html
 #data
 <table><tr><td><code></code> </table>
 #errors
-(1,7): expected-doctype-but-got-start-tag
+Line: 1 Col: 7 Unexpected start tag (table). Expected DOCTYPE.
 #document
 | <html>
 |   <head>
@@ -347,12 +335,7 @@ html
 #data
 <table><b><tr><td>aaa</td></tr>bbb</table>ccc
 #errors
-(1,7): expected-doctype-but-got-start-tag
-(1,10): foster-parenting-start-tag
-(1,32): foster-parenting-character
-(1,33): foster-parenting-character
-(1,34): foster-parenting-character
-(1,45): expected-closing-tag-but-got-eof
+XXX: Fix me
 #document
 | <html>
 |   <head>
@@ -371,11 +354,7 @@ html
 #data
 A<table><tr> B</tr> B</table>
 #errors
-(1,1): expected-doctype-but-got-chars
-(1,13): foster-parenting-character
-(1,14): foster-parenting-character
-(1,20): foster-parenting-character
-(1,21): foster-parenting-character
+XXX: Fix me
 #document
 | <html>
 |   <head>
@@ -388,12 +367,7 @@ A<table><tr> B</tr> B</table>
 #data
 A<table><tr> B</tr> </em>C</table>
 #errors
-(1,1): expected-doctype-but-got-chars
-(1,13): foster-parenting-character
-(1,14): foster-parenting-character
-(1,20): foster-parenting-character
-(1,25): unexpected-end-tag
-(1,26): foster-parenting-character
+XXX: Fix me
 #document
 | <html>
 |   <head>
@@ -407,8 +381,7 @@ A<table><tr> B</tr> </em>C</table>
 #data
 <select><keygen>
 #errors
-(1,8): expected-doctype-but-got-start-tag
-(1,16): unexpected-input-in-select
+Not known
 #document
 | <html>
 |   <head>

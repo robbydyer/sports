@@ -52,7 +52,9 @@ func (c *nhlCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	c.rArgs.config.NHLConfig.WatchTeams = []string{"NYI", "NJD", "CBJ", "MIN"}
+	if len(c.rArgs.config.NHLConfig.WatchTeams) < 1 {
+		c.rArgs.config.NHLConfig.WatchTeams = []string{"NYI", "NJD", "CBJ", "MIN"}
+	}
 
 	boards, err := nhlboard.New(ctx, bounds, api, nhl.MockLiveGameGetter, c.rArgs.config.NHLConfig)
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	cryptorand "crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"log"
 	mathrand "math/rand"
 	"strconv"
 	"testing"
@@ -219,50 +220,36 @@ func BenchmarkChacha20Poly1305(b *testing.B) {
 	}
 }
 
-func ExampleNewX() {
-	// key should be randomly generated or derived from a function like Argon2.
-	key := make([]byte, KeySize)
-	if _, err := cryptorand.Read(key); err != nil {
-		panic(err)
-	}
+var key = make([]byte, KeySize)
 
+func ExampleNewX() {
 	aead, err := NewX(key)
 	if err != nil {
-		panic(err)
+		log.Fatalln("Failed to instantiate XChaCha20-Poly1305:", err)
 	}
 
-	// Encryption.
-	var encryptedMsg []byte
-	{
-		msg := []byte("Gophers, gophers, gophers everywhere!")
-
-		// Select a random nonce, and leave capacity for the ciphertext.
-		nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(msg)+aead.Overhead())
+	for _, msg := range []string{
+		"Attack at dawn.",
+		"The eagle has landed.",
+		"Gophers, gophers, gophers everywhere!",
+	} {
+		// Encryption.
+		nonce := make([]byte, NonceSizeX)
 		if _, err := cryptorand.Read(nonce); err != nil {
 			panic(err)
 		}
+		ciphertext := aead.Seal(nil, nonce, []byte(msg), nil)
 
-		// Encrypt the message and append the ciphertext to the nonce.
-		encryptedMsg = aead.Seal(nonce, nonce, msg, nil)
-	}
-
-	// Decryption.
-	{
-		if len(encryptedMsg) < aead.NonceSize() {
-			panic("ciphertext too short")
-		}
-
-		// Split nonce and ciphertext.
-		nonce, ciphertext := encryptedMsg[:aead.NonceSize()], encryptedMsg[aead.NonceSize():]
-
-		// Decrypt the message and check it wasn't tampered with.
+		// Decryption.
 		plaintext, err := aead.Open(nil, nonce, ciphertext, nil)
 		if err != nil {
-			panic(err)
+			log.Fatalln("Failed to decrypt or authenticate message:", err)
 		}
 
 		fmt.Printf("%s\n", plaintext)
 	}
 
-	// Output: Gophers, gophers, gophers everywhere!
+	// Output: Attack at dawn.
+	// The eagle has landed.
+	// Gophers, gophers, gophers everywhere!
 }

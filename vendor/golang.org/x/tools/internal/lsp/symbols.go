@@ -10,42 +10,36 @@ import (
 	"golang.org/x/tools/internal/lsp/protocol"
 	"golang.org/x/tools/internal/lsp/source"
 	"golang.org/x/tools/internal/lsp/telemetry"
+	"golang.org/x/tools/internal/span"
 	"golang.org/x/tools/internal/telemetry/log"
 	"golang.org/x/tools/internal/telemetry/trace"
 )
 
-func (s *Server) documentSymbol(ctx context.Context, params *protocol.DocumentSymbolParams) ([]interface{}, error) {
+func (s *Server) documentSymbol(ctx context.Context, params *protocol.DocumentSymbolParams) ([]protocol.DocumentSymbol, error) {
 	ctx, done := trace.StartSpan(ctx, "lsp.Server.documentSymbol")
 	defer done()
 
-	snapshot, fh, ok, err := s.beginFileRequest(params.TextDocument.URI, source.Go)
-	if !ok {
-		return []interface{}{}, err
-	}
-	docSymbols, err := source.DocumentSymbols(ctx, snapshot, fh)
+	uri := span.NewURI(params.TextDocument.URI)
+	view, err := s.session.ViewOf(uri)
 	if err != nil {
-		log.Error(ctx, "DocumentSymbols failed", err, telemetry.URI.Of(fh.Identity().URI))
-		return []interface{}{}, nil
+		return nil, err
 	}
-	// Convert the symbols to an interface array.
-	// TODO: Remove this once the lsp deprecates SymbolInformation.
-	symbols := make([]interface{}, len(docSymbols))
-	for i, s := range docSymbols {
-		if snapshot.View().Options().HierarchicalDocumentSymbolSupport {
-			symbols[i] = s
-			continue
-		}
-		// If the client does not support hierarchical document symbols, then
-		// we need to be backwards compatible for now and return SymbolInformation.
-		symbols[i] = protocol.SymbolInformation{
-			Name:       s.Name,
-			Kind:       s.Kind,
-			Deprecated: s.Deprecated,
-			Location: protocol.Location{
-				URI:   params.TextDocument.URI,
-				Range: s.Range,
-			},
-		}
+	snapshot := view.Snapshot()
+	fh, err := snapshot.GetFile(uri)
+	if err != nil {
+		return nil, err
+	}
+	var symbols []protocol.DocumentSymbol
+	switch fh.Identity().Kind {
+	case source.Go:
+		symbols, err = source.DocumentSymbols(ctx, snapshot, fh)
+	case source.Mod:
+		return []protocol.DocumentSymbol{}, nil
+	}
+
+	if err != nil {
+		log.Error(ctx, "DocumentSymbols failed", err, telemetry.URI.Of(uri))
+		return []protocol.DocumentSymbol{}, nil
 	}
 	return symbols, nil
 }

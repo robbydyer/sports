@@ -6,6 +6,14 @@ import (
 	"testing"
 )
 
+// smallFields is a small size data set for benchmarking
+var loggerFields = Fields{
+	"foo":   "bar",
+	"baz":   "qux",
+	"one":   "two",
+	"three": "four",
+}
+
 func BenchmarkDummyLogger(b *testing.B) {
 	nullf, err := os.OpenFile("/dev/null", os.O_WRONLY, 0666)
 	if err != nil {

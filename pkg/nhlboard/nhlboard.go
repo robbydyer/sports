@@ -92,7 +92,7 @@ func New(ctx context.Context, matrixBounds image.Rectangle, dataAPI DataAPI, liv
 		for _, h := range []string{"_HOME", "_AWAY"} {
 			_, err := controller.getLogo(t + h)
 			if err != nil {
-				return nil, fmt.Errorf("failed to get logo thumbnail for %s: %w", t, err)
+				return nil, fmt.Errorf("failed to get logo thumbnail for %s_%s: %w", t, h, err)
 			}
 		}
 	}
@@ -165,6 +165,10 @@ func (b *nhlBoards) getLogo(logoKey string) (image.Image, error) {
 		return logo, nil
 	}
 
+	if _, ok := b.logos[logoKey]; !ok {
+		return nil, fmt.Errorf("no logo defined for %s", logoKey)
+	}
+
 	var err error
 	b.logoCache[logoKey], err = b.logos[logoKey].logo.GetThumbnail(b.matrixBounds)
 	if err != nil {
@@ -172,6 +176,15 @@ func (b *nhlBoards) getLogo(logoKey string) (image.Image, error) {
 	}
 
 	return b.logoCache[logoKey], nil
+}
+
+func (b *nhlBoards) logoShiftPt(logoKey string) (int, int) {
+	l, ok := b.logos[logoKey]
+	if !ok {
+		return 0, 0
+	}
+
+	return l.XPosition, l.YPosition
 }
 
 func periodStr(period int) string {

@@ -30,8 +30,8 @@ type Layout struct {
 	Zoom float32
 }
 
-func SetImageAlign(align Align, img image.Image) (image.Image, error) {
-	rect, err := AlignPosition(align, img.Bounds(), img.Bounds().Dx(), img.Bounds().Dy())
+func SetImageAlign(canvas *rgb.Canvas, align Align, img image.Image) (image.Image, error) {
+	rect, err := AlignPosition(align, canvas.Bounds(), img.Bounds().Dx(), img.Bounds().Dy())
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func DrawImageAligned(canvas *rgb.Canvas, bounds image.Rectangle, img *image.RGB
 
 // DrawImage draws an image
 func DrawImage(canvas *rgb.Canvas, bounds image.Rectangle, img image.Image) error {
-	draw.Draw(canvas, bounds, img, image.ZP, draw.Over)
+	draw.Draw(canvas, bounds, img, img.Bounds().Min, draw.Over)
 	return nil
 }
 

@@ -2,30 +2,32 @@ package implementation
 
 import "golang.org/x/tools/internal/lsp/implementation/other"
 
-type ImpP struct{} //@ImpP,implementations("ImpP", Laugher, OtherLaugher)
+type ImpP struct{} //@ImpP
 
-func (*ImpP) Laugh() { //@mark(LaughP, "Laugh"),implementations("Laugh", Laugh, OtherLaugh)
+func (*ImpP) Laugh() { //@mark(LaughP, "Laugh")
 }
 
-type ImpS struct{} //@ImpS,implementations("ImpS", Laugher, OtherLaugher)
+type ImpS struct{} //@ImpS
 
-func (ImpS) Laugh() { //@mark(LaughS, "Laugh"),implementations("Laugh", Laugh, OtherLaugh)
+func (ImpS) Laugh() { //@mark(LaughS, "Laugh")
 }
 
-type Laugher interface { //@Laugher,implementations("Laugher", ImpP, OtherImpP, ImpS, OtherImpS)
-	Laugh() //@Laugh,implementations("Laugh", LaughP, OtherLaughP, LaughS, OtherLaughS)
+type ImpI interface {
+	Laugh() //@implementations("Laugh", LaughP, OtherLaughP, LaughS, OtherLaughS)
 }
 
-type Foo struct { //@implementations("Foo", Joker)
+type Laugher interface { //@implementations("Laugher", ImpP, OtherImpP, ImpS, OtherImpS)
+	Laugh() //@implementations("Laugh", LaughP, OtherLaughP, LaughS, OtherLaughS)
+}
+
+type Foo struct {
 	other.Foo
 }
 
-type Joker interface { //@Joker
-	Joke() //@Joke,implementations("Joke", ImpJoker)
+type U interface {
+	U() //@implementations("U", ImpU)
 }
 
-type cryer int //@implementations("cryer", Cryer)
+type cryer int
 
-func (cryer) Cry(other.CryType) {} //@mark(CryImpl, "Cry"),implementations("Cry", Cry)
-
-type Empty interface{} //@implementations("Empty")
+func (cryer) Cry(other.CryType) {} //@mark(CryImpl, "Cry")

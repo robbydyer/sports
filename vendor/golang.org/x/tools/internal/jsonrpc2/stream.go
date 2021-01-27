@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -28,9 +27,6 @@ type Stream interface {
 	// It must be safe for concurrent use.
 	Write(context.Context, []byte) (int64, error)
 }
-
-// ErrDisconnected signals that the stream or connection exited normally.
-var ErrDisconnected = errors.New("disconnected")
 
 // NewStream returns a Stream built on top of an io.Reader and io.Writer
 // The messages are sent with no wrapping, and rely on json decode consistency
@@ -56,9 +52,6 @@ func (s *plainStream) Read(ctx context.Context) ([]byte, int64, error) {
 	}
 	var raw json.RawMessage
 	if err := s.in.Decode(&raw); err != nil {
-		if err == io.EOF {
-			return nil, 0, ErrDisconnected
-		}
 		return nil, 0, err
 	}
 	return raw, int64(len(raw)), nil
@@ -103,10 +96,6 @@ func (s *headerStream) Read(ctx context.Context) ([]byte, int64, error) {
 	for {
 		line, err := s.in.ReadString('\n')
 		total += int64(len(line))
-		if err == io.EOF {
-			// A normal disconnection will terminate with EOF before the next header.
-			return nil, total, ErrDisconnected
-		}
 		if err != nil {
 			return nil, total, fmt.Errorf("failed reading header line %q", err)
 		}

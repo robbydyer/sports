@@ -1,7 +1,6 @@
 #data
 <!doctype html><math><mn DefinitionUrl="foo">
 #errors
-(1,45): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -14,7 +13,6 @@
 #data
 <!doctype html><html></p><!--foo-->
 #errors
-(1,25): end-tag-after-implied-root
 #document
 | <!DOCTYPE html>
 | <html>
@@ -25,7 +23,6 @@
 #data
 <!doctype html><head></head></p><!--foo-->
 #errors
-(1,32): unexpected-end-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -36,7 +33,6 @@
 #data
 <!doctype html><body><p><pre>
 #errors
-(1,29): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -48,7 +44,6 @@
 #data
 <!doctype html><body><p><listing>
 #errors
-(1,33): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -60,7 +55,6 @@
 #data
 <!doctype html><p><plaintext>
 #errors
-(1,29): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -72,7 +66,6 @@
 #data
 <!doctype html><p><h1>
 #errors
-(1,22): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -82,21 +75,84 @@
 |     <h1>
 
 #data
-<!doctype html><isindex type="hidden">
+<!doctype html><form><isindex>
 #errors
-(1,38): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
 |   <head>
 |   <body>
-|     <isindex>
-|       type="hidden"
+|     <form>
+
+#data
+<!doctype html><isindex action="POST">
+#errors
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <body>
+|     <form>
+|       action="POST"
+|       <hr>
+|       <label>
+|         "This is a searchable index. Enter search keywords: "
+|         <input>
+|           name="isindex"
+|       <hr>
+
+#data
+<!doctype html><isindex prompt="this is isindex">
+#errors
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <body>
+|     <form>
+|       <hr>
+|       <label>
+|         "this is isindex"
+|         <input>
+|           name="isindex"
+|       <hr>
+
+#data
+<!doctype html><isindex type="hidden">
+#errors
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <body>
+|     <form>
+|       <hr>
+|       <label>
+|         "This is a searchable index. Enter search keywords: "
+|         <input>
+|           name="isindex"
+|           type="hidden"
+|       <hr>
+
+#data
+<!doctype html><isindex name="foo">
+#errors
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <body>
+|     <form>
+|       <hr>
+|       <label>
+|         "This is a searchable index. Enter search keywords: "
+|         <input>
+|           name="isindex"
+|       <hr>
 
 #data
 <!doctype html><ruby><p><rp>
 #errors
-(1,28): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -109,8 +165,6 @@
 #data
 <!doctype html><ruby><div><span><rp>
 #errors
-(1,36): XXX-undefined-error
-(1,36): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -124,8 +178,6 @@
 #data
 <!doctype html><ruby><div><p><rp>
 #errors
-(1,33): XXX-undefined-error
-(1,33): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -139,7 +191,6 @@
 #data
 <!doctype html><ruby><p><rt>
 #errors
-(1,28): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -152,8 +203,6 @@
 #data
 <!doctype html><ruby><div><span><rt>
 #errors
-(1,36): XXX-undefined-error
-(1,36): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -167,8 +216,6 @@
 #data
 <!doctype html><ruby><div><p><rt>
 #errors
-(1,33): XXX-undefined-error
-(1,33): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -180,68 +227,8 @@
 |         <rt>
 
 #data
-<html><ruby>a<rb>b<rt></ruby></html>
-#errors
-(1,6): expected-doctype-but-got-start-tag
-#document
-| <html>
-|   <head>
-|   <body>
-|     <ruby>
-|       "a"
-|       <rb>
-|         "b"
-|       <rt>
-
-#data
-<html><ruby>a<rp>b<rt></ruby></html>
-#errors
-(1,6): expected-doctype-but-got-start-tag
-#document
-| <html>
-|   <head>
-|   <body>
-|     <ruby>
-|       "a"
-|       <rp>
-|         "b"
-|       <rt>
-
-#data
-<html><ruby>a<rt>b<rt></ruby></html>
-#errors
-(1,6): expected-doctype-but-got-start-tag
-#document
-| <html>
-|   <head>
-|   <body>
-|     <ruby>
-|       "a"
-|       <rt>
-|         "b"
-|       <rt>
-
-#data
-<html><ruby>a<rtc>b<rt>c<rb>d</ruby></html>
-#errors
-(1,6): expected-doctype-but-got-start-tag
-#document
-| <html>
-|   <head>
-|   <body>
-|     <ruby>
-|       "a"
-|       <rtc>
-|         "b"
-|         <rt>
-|           "c"
-|       <rb>
-|         "d"
-
-#data
 <!doctype html><math/><foo>
 #errors
-(1,27): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -253,7 +240,6 @@
 #data
 <!doctype html><svg/><foo>
 #errors
-(1,26): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -265,7 +251,6 @@
 #data
 <!doctype html><div></body><!--foo-->
 #errors
-(1,27): expected-one-end-tag-but-got-another
 #document
 | <!DOCTYPE html>
 | <html>
@@ -277,8 +262,6 @@
 #data
 <!doctype html><h1><div><h3><span></h1>foo
 #errors
-(1,39): end-tag-too-early
-(1,42): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -293,7 +276,6 @@
 #data
 <!doctype html><p></h3>foo
 #errors
-(1,23): end-tag-too-early
 #document
 | <!DOCTYPE html>
 | <html>
@@ -305,7 +287,6 @@
 #data
 <!doctype html><h3><li>abc</h2>foo
 #errors
-(1,31): end-tag-too-early
 #document
 | <!DOCTYPE html>
 | <html>
@@ -319,10 +300,6 @@
 #data
 <!doctype html><table>abc<!--foo-->
 #errors
-(1,23): foster-parenting-character
-(1,24): foster-parenting-character
-(1,25): foster-parenting-character
-(1,35): eof-in-table
 #document
 | <!DOCTYPE html>
 | <html>
@@ -335,7 +312,6 @@
 #data
 <!doctype html><table>  <!--foo-->
 #errors
-(1,34): eof-in-table
 #document
 | <!DOCTYPE html>
 | <html>
@@ -348,10 +324,6 @@
 #data
 <!doctype html><table> b <!--foo-->
 #errors
-(1,23): foster-parenting-character
-(1,24): foster-parenting-character
-(1,25): foster-parenting-character
-(1,35): eof-in-table
 #document
 | <!DOCTYPE html>
 | <html>
@@ -364,7 +336,6 @@
 #data
 <!doctype html><select><option><option>
 #errors
-(1,39): eof-in-select
 #document
 | <!DOCTYPE html>
 | <html>
@@ -377,8 +348,6 @@
 #data
 <!doctype html><select><option></optgroup>
 #errors
-(1,42): unexpected-end-tag-in-select
-(1,42): eof-in-select
 #document
 | <!DOCTYPE html>
 | <html>
@@ -390,8 +359,6 @@
 #data
 <!doctype html><select><option></optgroup>
 #errors
-(1,42): unexpected-end-tag-in-select
-(1,42): eof-in-select
 #document
 | <!DOCTYPE html>
 | <html>
@@ -399,23 +366,10 @@
 |   <body>
 |     <select>
 |       <option>
-
-#data
-<!doctype html><dd><optgroup><dd>
-#errors
-#document
-| <!DOCTYPE html>
-| <html>
-|   <head>
-|   <body>
-|     <dd>
-|       <optgroup>
-|     <dd>
 
 #data
 <!doctype html><p><math><mi><p><h1>
 #errors
-(1,35): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -430,7 +384,6 @@
 #data
 <!doctype html><p><math><mo><p><h1>
 #errors
-(1,35): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -445,7 +398,6 @@
 #data
 <!doctype html><p><math><mn><p><h1>
 #errors
-(1,35): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -460,7 +412,6 @@
 #data
 <!doctype html><p><math><ms><p><h1>
 #errors
-(1,35): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -475,7 +426,6 @@
 #data
 <!doctype html><p><math><mtext><p><h1>
 #errors
-(1,38): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -490,8 +440,6 @@
 #data
 <!doctype html><frameset></noframes>
 #errors
-(1,36): unexpected-end-tag-in-frameset
-(1,36): eof-in-frameset
 #document
 | <!DOCTYPE html>
 | <html>
@@ -501,7 +449,6 @@
 #data
 <!doctype html><html c=d><body></html><html a=b>
 #errors
-(1,48): non-html-root
 #document
 | <!DOCTYPE html>
 | <html>
@@ -513,7 +460,6 @@
 #data
 <!doctype html><html c=d><frameset></frameset></html><html a=b>
 #errors
-(1,63): non-html-root
 #document
 | <!DOCTYPE html>
 | <html>
@@ -545,9 +491,6 @@
 #data
 <!doctype html><html><frameset></frameset></html>abc
 #errors
-(1,50): expected-eof-but-got-char
-(1,51): expected-eof-but-got-char
-(1,52): expected-eof-but-got-char
 #document
 | <!DOCTYPE html>
 | <html>
@@ -557,7 +500,6 @@
 #data
 <!doctype html><html><frameset></frameset></html><p>
 #errors
-(1,52): expected-eof-but-got-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -567,7 +509,6 @@
 #data
 <!doctype html><html><frameset></frameset></html></p>
 #errors
-(1,53): expected-eof-but-got-end-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -577,8 +518,6 @@
 #data
 <html><frameset></frameset></html><!doctype html>
 #errors
-(1,6): expected-doctype-but-got-start-tag
-(1,49): unexpected-doctype
 #document
 | <html>
 |   <head>
@@ -587,7 +526,6 @@
 #data
 <!doctype html><body><frameset>
 #errors
-(1,31): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -597,8 +535,6 @@
 #data
 <!doctype html><p><frameset><frame>
 #errors
-(1,28): unexpected-start-tag
-(1,35): eof-in-frameset
 #document
 | <!DOCTYPE html>
 | <html>
@@ -609,7 +545,6 @@
 #data
 <!doctype html><p>a<frameset>
 #errors
-(1,29): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -621,8 +556,6 @@
 #data
 <!doctype html><p> <frameset><frame>
 #errors
-(1,29): unexpected-start-tag
-(1,36): eof-in-frameset
 #document
 | <!DOCTYPE html>
 | <html>
@@ -633,8 +566,6 @@
 #data
 <!doctype html><pre><frameset>
 #errors
-(1,30): unexpected-start-tag
-(1,30): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -645,8 +576,6 @@
 #data
 <!doctype html><listing><frameset>
 #errors
-(1,34): unexpected-start-tag
-(1,34): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -657,7 +586,6 @@
 #data
 <!doctype html><li><frameset>
 #errors
-(1,29): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -668,7 +596,6 @@
 #data
 <!doctype html><dd><frameset>
 #errors
-(1,29): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -679,7 +606,6 @@
 #data
 <!doctype html><dt><frameset>
 #errors
-(1,29): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -690,8 +616,6 @@
 #data
 <!doctype html><button><frameset>
 #errors
-(1,33): unexpected-start-tag
-(1,33): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -702,8 +626,6 @@
 #data
 <!doctype html><applet><frameset>
 #errors
-(1,33): unexpected-start-tag
-(1,33): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -714,8 +636,6 @@
 #data
 <!doctype html><marquee><frameset>
 #errors
-(1,34): unexpected-start-tag
-(1,34): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -726,8 +646,6 @@
 #data
 <!doctype html><object><frameset>
 #errors
-(1,33): unexpected-start-tag
-(1,33): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -738,9 +656,6 @@
 #data
 <!doctype html><table><frameset>
 #errors
-(1,32): unexpected-start-tag-implies-table-voodoo
-(1,32): unexpected-start-tag
-(1,32): eof-in-table
 #document
 | <!DOCTYPE html>
 | <html>
@@ -751,7 +666,6 @@
 #data
 <!doctype html><area><frameset>
 #errors
-(1,31): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -762,7 +676,6 @@
 #data
 <!doctype html><basefont><frameset>
 #errors
-(1,35): eof-in-frameset
 #document
 | <!DOCTYPE html>
 | <html>
@@ -773,7 +686,6 @@
 #data
 <!doctype html><bgsound><frameset>
 #errors
-(1,34): eof-in-frameset
 #document
 | <!DOCTYPE html>
 | <html>
@@ -784,7 +696,6 @@
 #data
 <!doctype html><br><frameset>
 #errors
-(1,29): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -795,7 +706,6 @@
 #data
 <!doctype html><embed><frameset>
 #errors
-(1,32): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -806,7 +716,6 @@
 #data
 <!doctype html><img><frameset>
 #errors
-(1,30): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -817,7 +726,6 @@
 #data
 <!doctype html><input><frameset>
 #errors
-(1,32): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -828,7 +736,6 @@
 #data
 <!doctype html><keygen><frameset>
 #errors
-(1,33): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -839,7 +746,6 @@
 #data
 <!doctype html><wbr><frameset>
 #errors
-(1,30): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -850,7 +756,6 @@
 #data
 <!doctype html><hr><frameset>
 #errors
-(1,29): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -861,7 +766,6 @@
 #data
 <!doctype html><textarea></textarea><frameset>
 #errors
-(1,46): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -872,7 +776,6 @@
 #data
 <!doctype html><xmp></xmp><frameset>
 #errors
-(1,36): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -883,7 +786,6 @@
 #data
 <!doctype html><iframe></iframe><frameset>
 #errors
-(1,42): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -894,7 +796,6 @@
 #data
 <!doctype html><select></select><frameset>
 #errors
-(1,42): unexpected-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -905,8 +806,6 @@
 #data
 <!doctype html><svg></svg><frameset><frame>
 #errors
-(1,36): unexpected-start-tag
-(1,43): eof-in-frameset
 #document
 | <!DOCTYPE html>
 | <html>
@@ -917,8 +816,6 @@
 #data
 <!doctype html><math></math><frameset><frame>
 #errors
-(1,38): unexpected-start-tag
-(1,45): eof-in-frameset
 #document
 | <!DOCTYPE html>
 | <html>
@@ -929,8 +826,6 @@
 #data
 <!doctype html><svg><foreignObject><div> <frameset><frame>
 #errors
-(1,51): unexpected-start-tag
-(1,58): eof-in-frameset
 #document
 | <!DOCTYPE html>
 | <html>
@@ -941,8 +836,6 @@
 #data
 <!doctype html><svg>a</svg><frameset><frame>
 #errors
-(1,37): unexpected-start-tag
-(1,44): unexpected-start-tag-ignored
 #document
 | <!DOCTYPE html>
 | <html>
@@ -954,8 +847,6 @@
 #data
 <!doctype html><svg> </svg><frameset><frame>
 #errors
-(1,37): unexpected-start-tag
-(1,44): eof-in-frameset
 #document
 | <!DOCTYPE html>
 | <html>
@@ -966,9 +857,6 @@
 #data
 <html>aaa<frameset></frameset>
 #errors
-(1,6): expected-doctype-but-got-start-tag
-(1,19): unexpected-start-tag
-(1,30): unexpected-end-tag
 #document
 | <html>
 |   <head>
@@ -978,9 +866,6 @@
 #data
 <html> a <frameset></frameset>
 #errors
-(1,6): expected-doctype-but-got-start-tag
-(1,19): unexpected-start-tag
-(1,30): unexpected-end-tag
 #document
 | <html>
 |   <head>
@@ -990,8 +875,6 @@
 #data
 <!doctype html><div><frameset>
 #errors
-(1,30): unexpected-start-tag
-(1,30): eof-in-frameset
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1001,9 +884,6 @@
 #data
 <!doctype html><div><body><frameset>
 #errors
-(1,26): unexpected-start-tag
-(1,36): unexpected-start-tag
-(1,36): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1014,8 +894,6 @@
 #data
 <!doctype html><p><math></p>a
 #errors
-(1,28): unexpected-end-tag
-(1,28): unexpected-end-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1028,8 +906,6 @@
 #data
 <!doctype html><p><math><mn><span></p>a
 #errors
-(1,38): unexpected-end-tag
-(1,39): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1045,9 +921,6 @@
 #data
 <!doctype html><math></html>
 #errors
-(1,28): unexpected-end-tag
-(1,28): expected-one-end-tag-but-got-another
-(1,28): unexpected-end-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1093,7 +966,6 @@
 #data
 <!doctype html><html a=b><head></head><html c=d>
 #errors
-(1,48): non-html-root
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1105,7 +977,6 @@
 #data
 <!doctype html><image/>
 #errors
-(1,23): image-start-tag
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1116,15 +987,6 @@
 #data
 <!doctype html>a<i>b<table>c<b>d</i>e</b>f
 #errors
-(1,28): foster-parenting-character
-(1,31): foster-parenting-start-tag
-(1,32): foster-parenting-character
-(1,36): foster-parenting-end-tag
-(1,36): adoption-agency-1.3
-(1,37): foster-parenting-character
-(1,41): foster-parenting-end-tag
-(1,42): foster-parenting-character
-(1,42): eof-in-table
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1141,23 +1003,6 @@
 #data
 <!doctype html><table><i>a<b>b<div>c<a>d</i>e</b>f
 #errors
-(1,25): foster-parenting-start-tag
-(1,26): foster-parenting-character
-(1,29): foster-parenting-start-tag
-(1,30): foster-parenting-character
-(1,35): foster-parenting-start-tag
-(1,36): foster-parenting-character
-(1,39): foster-parenting-start-tag
-(1,40): foster-parenting-character
-(1,44): foster-parenting-end-tag
-(1,44): adoption-agency-1.3
-(1,44): adoption-agency-1.3
-(1,45): foster-parenting-character
-(1,49): foster-parenting-end-tag
-(1,49): adoption-agency-1.3
-(1,49): adoption-agency-1.3
-(1,50): foster-parenting-character
-(1,50): eof-in-table
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1183,11 +1028,6 @@
 #data
 <!doctype html><i>a<b>b<div>c<a>d</i>e</b>f
 #errors
-(1,37): adoption-agency-1.3
-(1,37): adoption-agency-1.3
-(1,42): adoption-agency-1.3
-(1,42): adoption-agency-1.3
-(1,43): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1212,15 +1052,6 @@
 #data
 <!doctype html><table><i>a<b>b<div>c</i>
 #errors
-(1,25): foster-parenting-start-tag
-(1,26): foster-parenting-character
-(1,29): foster-parenting-start-tag
-(1,30): foster-parenting-character
-(1,35): foster-parenting-start-tag
-(1,36): foster-parenting-character
-(1,40): foster-parenting-end-tag
-(1,40): adoption-agency-1.3
-(1,40): eof-in-table
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1239,23 +1070,6 @@
 #data
 <!doctype html><table><i>a<b>b<div>c<a>d</i>e</b>f
 #errors
-(1,25): foster-parenting-start-tag
-(1,26): foster-parenting-character
-(1,29): foster-parenting-start-tag
-(1,30): foster-parenting-character
-(1,35): foster-parenting-start-tag
-(1,36): foster-parenting-character
-(1,39): foster-parenting-start-tag
-(1,40): foster-parenting-character
-(1,44): foster-parenting-end-tag
-(1,44): adoption-agency-1.3
-(1,44): adoption-agency-1.3
-(1,45): foster-parenting-character
-(1,49): foster-parenting-end-tag
-(1,44): adoption-agency-1.3
-(1,44): adoption-agency-1.3
-(1,50): foster-parenting-character
-(1,50): eof-in-table
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1281,17 +1095,6 @@
 #data
 <!doctype html><table><i>a<div>b<tr>c<b>d</i>e
 #errors
-(1,25): foster-parenting-start-tag
-(1,26): foster-parenting-character
-(1,31): foster-parenting-start-tag
-(1,32): foster-parenting-character
-(1,37): foster-parenting-character
-(1,40): foster-parenting-start-tag
-(1,41): foster-parenting-character
-(1,45): foster-parenting-end-tag
-(1,45): adoption-agency-1.3
-(1,46): foster-parenting-character
-(1,46): eof-in-table
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1314,18 +1117,6 @@
 #data
 <!doctype html><table><td><table><i>a<div>b<b>c</i>d
 #errors
-(1,26): unexpected-cell-in-table-body
-(1,36): foster-parenting-start-tag
-(1,37): foster-parenting-character
-(1,42): foster-parenting-start-tag
-(1,43): foster-parenting-character
-(1,46): foster-parenting-start-tag
-(1,47): foster-parenting-character
-(1,51): foster-parenting-end-tag
-(1,51): adoption-agency-1.3
-(1,51): adoption-agency-1.3
-(1,52): foster-parenting-character
-(1,52): eof-in-table
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1369,7 +1160,6 @@
 #data
 <!doctype html><a><b></a><basefont>
 #errors
-(1,25): adoption-agency-1.3
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1382,7 +1172,6 @@
 #data
 <!doctype html><a><b></a><bgsound>
 #errors
-(1,25): adoption-agency-1.3
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1395,7 +1184,6 @@
 #data
 <!doctype html><figcaption><article></figcaption>a
 #errors
-(1,49): end-tag-too-early
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1408,7 +1196,6 @@
 #data
 <!doctype html><summary><article></summary>a
 #errors
-(1,43): end-tag-too-early
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1421,8 +1208,6 @@
 #data
 <!doctype html><p><a><plaintext>b
 #errors
-(1,32): unexpected-end-tag
-(1,33): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -1437,8 +1222,6 @@
 #data
 <!DOCTYPE html><div>a<a></div>b<p>c</p>d
 #errors
-(1,30): end-tag-too-early
-(1,40): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>

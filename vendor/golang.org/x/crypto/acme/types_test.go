@@ -11,18 +11,6 @@ import (
 	"time"
 )
 
-func TestExternalAccountBindingString(t *testing.T) {
-	eab := ExternalAccountBinding{
-		KID: "kid",
-		Key: []byte("key"),
-	}
-	got := eab.String()
-	want := `&{KID: "kid", Key: redacted}`
-	if got != want {
-		t.Errorf("eab.String() = %q, want: %q", got, want)
-	}
-}
-
 func TestRateLimit(t *testing.T) {
 	now := time.Date(2017, 04, 27, 10, 0, 0, 0, time.UTC)
 	f := timeNow
@@ -70,49 +58,6 @@ func TestRateLimit(t *testing.T) {
 		}
 		if res != test.res {
 			t.Errorf("%d: RateLimit(%+v) = %v; want %v", i, test.err, res, test.res)
-		}
-	}
-}
-
-func TestAuthorizationError(t *testing.T) {
-	tests := []struct {
-		desc string
-		err  *AuthorizationError
-		msg  string
-	}{
-		{
-			desc: "when auth error identifier is set",
-			err: &AuthorizationError{
-				Identifier: "domain.com",
-				Errors: []error{
-					(&wireError{
-						Status: 403,
-						Type:   "urn:ietf:params:acme:error:caa",
-						Detail: "CAA record for domain.com prevents issuance",
-					}).error(nil),
-				},
-			},
-			msg: "acme: authorization error for domain.com: 403 urn:ietf:params:acme:error:caa: CAA record for domain.com prevents issuance",
-		},
-
-		{
-			desc: "when auth error identifier is unset",
-			err: &AuthorizationError{
-				Errors: []error{
-					(&wireError{
-						Status: 403,
-						Type:   "urn:ietf:params:acme:error:caa",
-						Detail: "CAA record for domain.com prevents issuance",
-					}).error(nil),
-				},
-			},
-			msg: "acme: authorization error: 403 urn:ietf:params:acme:error:caa: CAA record for domain.com prevents issuance",
-		},
-	}
-
-	for _, tt := range tests {
-		if tt.err.Error() != tt.msg {
-			t.Errorf("got: %s\nwant: %s", tt.err, tt.msg)
 		}
 	}
 }

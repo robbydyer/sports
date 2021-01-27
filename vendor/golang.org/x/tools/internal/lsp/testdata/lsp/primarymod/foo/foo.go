@@ -27,4 +27,4 @@ func _() {
 	}
 }
 
-type IntFoo int //@item(IntFoo, "IntFoo", "int", "type")
+type IntFoo int //@item(IntFoo, "IntFoo", "int", "type"),complete("", Foo, IntFoo, StructFoo)

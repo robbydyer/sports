@@ -1,0 +1,38 @@
+#!/bin/bash
+set -euo pipefail
+
+ROOT=$(git rev-parse --show-toplevel)
+cd "${ROOT}"
+IN_DOCKER="${IN_DOCKER:-no}"
+pibuilder="pibuilder"
+
+if [ "${IN_DOCKER}" = "no" ]; then
+  if ! uname -a | grep raspberry &> /dev/null; then
+    # Run pkger when static assets change
+    #pkger -o ./cmd/sportsmatrix
+    if ! docker images | grep ${pibuilder} &> /dev/null; then
+      docker buildx build -f Dockerfile.${pibuilder} -t ${pibuilder} .
+    fi
+
+    set -x
+    exec docker run -it --rm \
+      -e IN_DOCKER=yes \
+      -v "${ROOT}":/src \
+      -w /src \
+      ${pibuilder} \
+      /src/script/$(basename $0)
+  fi
+fi
+
+# Inside docker
+
+export CGO_ENABLED=1
+export GOCACHE=/src/.cache
+export GOOS=linux
+export GOARCH=arm
+export GOARM=6
+export CC=arm-linux-gnueabi-gcc
+export CXX=arm-linux-gnueabi-g++
+
+cd /src
+bash

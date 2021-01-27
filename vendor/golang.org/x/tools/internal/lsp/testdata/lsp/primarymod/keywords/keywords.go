@@ -1,20 +1,8 @@
 package keywords
 
-//@rank("", type),rank("", func),rank("", var),rank("", const),rank("", import)
-
 func _() {
-	var test int //@rank(" //", int, interface)
+	var test int
 	var tChan chan int
-	var _ m //@complete(" //", map)
-	var _ f //@complete(" //", func)
-	var _ c //@complete(" //", chan)
-
-	var _ str //@rank(" //", string, struct)
-
-	type _ int //@rank(" //", interface, int)
-
-	type _ str //@rank(" //", struct, string)
-
 	switch test {
 	case 1: // TODO: trying to complete case here will break because the parser wont return *ast.Ident
 		b //@complete(" //", break)
@@ -42,7 +30,7 @@ func _() {
 	}
 
 	for index := 0; index < test; index++ {
-		c //@complete(" //", const, continue)
+		c //@complete(" //", continue, const)
 		b //@complete(" //", break)
 	}
 
@@ -54,14 +42,13 @@ func _() {
 
 	f //@complete(" //", for)
 	d //@complete(" //", defer)
-	g //@rank(" //", go),rank(" //", goto)
+	g //@complete(" //", go)
 	r //@complete(" //", return)
 	i //@complete(" //", if)
 	e //@complete(" //", else)
 	v //@complete(" //", var)
 	c //@complete(" //", const)
 
-	for i := r //@complete(" //", range)
 }
 
 /* package */ //@item(package, "package", "", "keyword")
@@ -85,10 +72,3 @@ func _() {
 /* return */ //@item(return, "return", "", "keyword")
 /* var */ //@item(var, "var", "", "keyword")
 /* const */ //@item(const, "const", "", "keyword")
-/* goto */ //@item(goto, "goto", "", "keyword")
-/* struct */ //@item(struct, "struct", "", "keyword")
-/* interface */ //@item(interface, "interface", "", "keyword")
-/* map */ //@item(map, "map", "", "keyword")
-/* func */ //@item(func, "func", "", "keyword")
-/* chan */ //@item(chan, "chan", "", "keyword")
-/* range */ //@item(range, "range", "", "keyword")
