@@ -108,7 +108,7 @@ func DrawRectangle(canvas *rgb.Canvas, startX int, startY int, sizeX int, sizeY 
 		}
 	}
 
-	draw.Draw(canvas, canvas.Bounds(), rgba, image.Pt(0, 0), draw.Over)
+	draw.Draw(canvas, canvas.Bounds(), rgba, image.ZP, draw.Over)
 
 	return nil
 }

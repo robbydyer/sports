@@ -26,17 +26,11 @@ type nhlBoards struct {
 	cancel         chan bool
 }
 
-type Point struct {
-	X int
-	Y int
-}
-
 type Config struct {
-	BoardDelay       string   `json:"boardDelay"`
-	FavoriteTeams    []string `json:"favoriteTeams"`
-	WatchTeams       []string `json:"watchTeams"`
-	LogoPosition     map[string]*Point
-	LogoPositionFile string `json:"logoPositionFile"`
+	BoardDelay    string        `json:"boardDelay"`
+	FavoriteTeams []string      `json:"favoriteTeams"`
+	WatchTeams    []string      `json:"watchTeams"`
+	LogoPosition  []*logoConfig `json:"logoPosition"`
 }
 
 type DataAPI interface {
@@ -65,7 +59,6 @@ func New(ctx context.Context, matrixBounds image.Rectangle, dataAPI DataAPI, liv
 	controller := &nhlBoards{
 		api:            dataAPI,
 		liveGameGetter: liveGameGetter,
-		logos:          make(map[string]*logoInfo),
 		logoCache:      make(map[string]image.Image),
 		matrixBounds:   matrixBounds,
 		config:         config,
@@ -82,17 +75,17 @@ func New(ctx context.Context, matrixBounds image.Rectangle, dataAPI DataAPI, liv
 	controller.scheduler.Every(1).Day().At("05:00").Do(controller.updateGames)
 	controller.scheduler.StartAsync()
 
-	controller.logos, err = getLogos(config.LogoPositionFile)
-	if err != nil {
+	if err := controller.setLogoInfo(); err != nil {
 		return nil, fmt.Errorf("failed to get logos: %w", err)
 	}
 
 	// Initialize logo cache
 	for _, t := range ALL {
-		for _, h := range []string{"_HOME", "_AWAY"} {
-			_, err := controller.getLogo(t + h)
+		for _, h := range []string{"HOME", "AWAY"} {
+			key := fmt.Sprintf("%s_%s", t, h)
+			_, err := controller.getLogo(key)
 			if err != nil {
-				return nil, fmt.Errorf("failed to get logo thumbnail for %s_%s: %w", t, h, err)
+				return nil, fmt.Errorf("failed to get logo thumbnail for %s: %w", key, err)
 			}
 		}
 	}
@@ -181,10 +174,11 @@ func (b *nhlBoards) getLogo(logoKey string) (image.Image, error) {
 func (b *nhlBoards) logoShiftPt(logoKey string) (int, int) {
 	l, ok := b.logos[logoKey]
 	if !ok {
+		fmt.Printf("WARNING! No logo position found for %s\n", logoKey)
 		return 0, 0
 	}
 
-	return l.XPosition, l.YPosition
+	return l.xPosition, l.yPosition
 }
 
 func periodStr(period int) string {

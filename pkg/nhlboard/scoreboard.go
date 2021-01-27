@@ -224,45 +224,7 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 		return err
 	}
 
-	/*
-		homeLogo, err := b.controller.getLogo(hKey)
-		if err != nil {
-			return err
-		}
-		awayLogo, err := b.controller.getLogo(aKey)
-		if err != nil {
-			return err
-		}
-
-		homeShift, err := b.controller.logoShift(hKey)
-		if err != nil {
-			return err
-		}
-		awayShift, err := b.controller.logoShift(aKey)
-		if err != nil {
-			return err
-		}
-
-		hLogo, err := rgbrender.SetImageAlign(rgbrender.LeftCenter, homeLogo)
-		if err != nil {
-			return err
-		}
-		aLogo, err := rgbrender.SetImageAlign(rgbrender.RightCenter, awayLogo)
-		if err != nil {
-			return err
-		}
-	*/
 	for {
-
-		/*
-			if err := rgbrender.DrawImage(canvas, homeShift, homeLogo); err != nil {
-				return err
-			}
-			if err := rgbrender.DrawImage(canvas, awayShift, awayLogo); err != nil {
-				return err
-			}
-		*/
-
 		if err := b.renderHomeLogo(canvas, hKey); err != nil {
 			return fmt.Errorf("failed to render home logo: %w", err)
 		}
@@ -275,7 +237,7 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 			return err
 		}
 
-		center, err := rgbrender.AlignPosition(rgbrender.CenterTop, canvas.Bounds(), 16, 16)
+		center, err := rgbrender.AlignPosition(rgbrender.CenterTop, canvas.Bounds(), b.textAreaWidth(), 32)
 		if err != nil {
 			return err
 		}
@@ -286,7 +248,7 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 			center.Max.X,
 			center.Max.Y,
 		)
-		scoreAlign, err := rgbrender.AlignPosition(rgbrender.CenterBottom, canvas.Bounds(), 16, 16)
+		scoreAlign, err := rgbrender.AlignPosition(rgbrender.CenterBottom, canvas.Bounds(), b.textAreaWidth(), 16)
 		if err != nil {
 			return err
 		}
@@ -295,26 +257,31 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 			scoreAlign.Min.X,
 			scoreAlign.Min.Y,
 			scoreAlign.Max.X,
-			scoreAlign.Max.Y,
+			scoreAlign.Max.Y-1,
 		)
 
-		wrter.Write(
-			canvas,
-			scoreAlign,
-			[]string{
-				scoreStr(liveGame),
-			},
-			color.White,
-		)
 		wrter.Write(
 			canvas,
 			center,
 			[]string{
 				periodStr(liveGame.LiveData.Linescore.CurrentPeriod),
 				liveGame.LiveData.Linescore.CurrentPeriodTimeRemaining,
+				"",
+				"",
+				scoreStr(liveGame),
 			},
 			color.White,
 		)
+		/*
+			wrter.Write(
+				canvas,
+				scoreAlign,
+				[]string{
+					scoreStr(liveGame),
+				},
+				color.White,
+			)
+		*/
 
 		if err := canvas.Render(); err != nil {
 			return fmt.Errorf("failed to render live scoreboard: %w", err)
@@ -359,39 +326,41 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 }
 
 func (b *scoreBoard) RenderUpcomingGame(ctx context.Context, canvas *rgb.Canvas, liveGame *nhl.LiveGame) error {
-	hKey, err := key("HOME", liveGame)
-	if err != nil {
-		return err
-	}
-	aKey, err := key("AWAY", liveGame)
-	if err != nil {
-		return err
-	}
+	/*
+		hKey, err := key("HOME", liveGame)
+		if err != nil {
+			return err
+		}
+		aKey, err := key("AWAY", liveGame)
+		if err != nil {
+			return err
+		}
 
-	homeLogo, err := b.controller.getLogo(hKey)
-	if err != nil {
-		return err
-	}
-	awayLogo, err := b.controller.getLogo(aKey)
-	if err != nil {
-		return err
-	}
+		homeLogo, err := b.controller.getLogo(hKey)
+		if err != nil {
+			return err
+		}
+		awayLogo, err := b.controller.getLogo(aKey)
+		if err != nil {
+			return err
+		}
 
-	homeShift, err := b.controller.logoShift(hKey)
-	if err != nil {
-		return err
-	}
-	awayShift, err := b.controller.logoShift(aKey)
-	if err != nil {
-		return err
-	}
+		homeShift, err := b.controller.logoShift(hKey)
+		if err != nil {
+			return err
+		}
+		awayShift, err := b.controller.logoShift(aKey)
+		if err != nil {
+			return err
+		}
 
-	if err := rgbrender.DrawImage(canvas, homeShift, homeLogo); err != nil {
-		return fmt.Errorf("failed to draw home logo: %w", err)
-	}
-	if err := rgbrender.DrawImage(canvas, awayShift, awayLogo); err != nil {
-		return fmt.Errorf("failed to draw away logo: %w", err)
-	}
+		if err := rgbrender.DrawImage(canvas, homeShift, homeLogo); err != nil {
+			return fmt.Errorf("failed to draw home logo: %w", err)
+		}
+		if err := rgbrender.DrawImage(canvas, awayShift, awayLogo); err != nil {
+			return fmt.Errorf("failed to draw away logo: %w", err)
+		}
+	*/
 	wrter, err := rgbrender.DefaultTextWriter()
 	if err != nil {
 		return fmt.Errorf("failed to get text writer: %w", err)
@@ -418,39 +387,41 @@ func (b *scoreBoard) RenderUpcomingGame(ctx context.Context, canvas *rgb.Canvas,
 }
 
 func (b *scoreBoard) RenderFinal(ctx context.Context, canvas *rgb.Canvas, liveGame *nhl.LiveGame) error {
-	hKey, err := key("HOME", liveGame)
-	if err != nil {
-		return err
-	}
-	aKey, err := key("AWAY", liveGame)
-	if err != nil {
-		return err
-	}
+	/*
+		hKey, err := key("HOME", liveGame)
+		if err != nil {
+			return err
+		}
+		aKey, err := key("AWAY", liveGame)
+		if err != nil {
+			return err
+		}
 
-	homeLogo, err := b.controller.getLogo(hKey)
-	if err != nil {
-		return err
-	}
-	awayLogo, err := b.controller.getLogo(aKey)
-	if err != nil {
-		return err
-	}
+		homeLogo, err := b.controller.getLogo(hKey)
+		if err != nil {
+			return err
+		}
+		awayLogo, err := b.controller.getLogo(aKey)
+		if err != nil {
+			return err
+		}
 
-	homeShift, err := b.controller.logoShift(hKey)
-	if err != nil {
-		return err
-	}
-	awayShift, err := b.controller.logoShift(aKey)
-	if err != nil {
-		return err
-	}
+		homeShift, err := b.controller.logoShift(hKey)
+		if err != nil {
+			return err
+		}
+		awayShift, err := b.controller.logoShift(aKey)
+		if err != nil {
+			return err
+		}
 
-	if err := rgbrender.DrawImage(canvas, homeShift, homeLogo); err != nil {
-		return err
-	}
-	if err := rgbrender.DrawImage(canvas, awayShift, awayLogo); err != nil {
-		return err
-	}
+		if err := rgbrender.DrawImage(canvas, homeShift, homeLogo); err != nil {
+			return err
+		}
+		if err := rgbrender.DrawImage(canvas, awayShift, awayLogo); err != nil {
+			return err
+		}
+	*/
 	wrter, err := rgbrender.DefaultTextWriter()
 	if err != nil {
 		return err

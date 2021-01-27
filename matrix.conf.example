@@ -1,0 +1,342 @@
+---
+enableNHL: true
+sportsMatrixConfig:
+  hardwareConfig:
+    brightness: 59
+    hardwareMapping: adafruit-hat-pwm
+    showRefreshRate: false
+nhlConfig:
+  logoPositionFile: /home/pi/logopos.yaml
+  watchTeams:
+  - "MIN"
+  logoPosition:
+  - abbrev: CBJ_AWAY
+    pt:
+      x: -5
+      y: 0
+      zoom: 1
+  - abbrev: CBJ_HOME
+    pt:
+      x: -15
+      y: 0
+      zoom: 1
+  - abbrev: MIN_AWAY
+    pt:
+      x: 13
+      y: 0
+      zoom: 1
+  - abbrev: MIN_HOME
+    pt:
+      x: -20
+      y: 0
+      zoom: 1
+  - abbrev: ANA_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: ANA_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: ARI_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: ARI_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: BOS_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: BOS_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: BUF_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: BUF_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: CAR_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: CAR_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: CBJ_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: CBJ_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: CGY_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: CGY_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: CHI_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: CHI_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: COL_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: COL_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: DAL_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: DAL_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: DET_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: DET_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: EDM_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: EDM_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: FLA_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: FLA_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: LAK_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: LAK_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: MIN_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: MIN_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: MTL_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: MTL_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: NJD_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: NJD_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: NSH_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: NSH_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: NYI_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: NYI_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: NYR_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: NYR_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: OTT_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: OTT_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: PHI_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: PHI_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: PIT_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: PIT_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: SJS_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: SJS_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: STL_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: STL_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: TBL_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: TBL_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: TOR_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: TOR_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: VAN_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: VAN_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: VGK_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: VGK_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: WPG_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: WPG_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: WSH_HOME
+    pt:
+      x: 0
+      y: 0
+      zoom: 1
+  - abbrev: WSH_AWAY
+    pt:
+      x: 0
+      y: 0
+      zoom: 1

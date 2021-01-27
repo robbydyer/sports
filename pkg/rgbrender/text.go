@@ -15,9 +15,10 @@ import (
 )
 
 type TextWriter struct {
-	context  *freetype.Context
-	font     *truetype.Font
-	FontSize float64
+	context   *freetype.Context
+	font      *truetype.Font
+	FontSize  float64
+	LineSpace float64
 }
 
 func DefaultTextWriter() (*TextWriter, error) {
@@ -35,9 +36,10 @@ func NewTextWriter(font *truetype.Font, fontSize float64) *TextWriter {
 	cntx.SetFontSize(fontSize)
 
 	return &TextWriter{
-		context:  cntx,
-		font:     font,
-		FontSize: fontSize,
+		context:   cntx,
+		font:      font,
+		FontSize:  fontSize,
+		LineSpace: 0.75,
 	}
 }
 
@@ -100,7 +102,7 @@ func (t *TextWriter) Write(canvas *rgb.Canvas, bounds image.Rectangle, str []str
 		if err != nil {
 			return err
 		}
-		point.Y += t.context.PointToFixed(t.FontSize * 0.75)
+		point.Y += t.context.PointToFixed(t.FontSize * t.LineSpace)
 	}
 
 	return nil
