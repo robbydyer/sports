@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"io/ioutil"
 	"os"
 	"strings"
 
 	"github.com/markbates/pkger"
 	"github.com/robbydyer/sports/pkg/logo"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -65,33 +67,31 @@ type logoInfo struct {
 }
 
 func (b *nhlBoards) setLogoInfo() error {
-	/*
-		var dat []byte
-				if _, err := os.Stat(logoPosFile); err != nil {
-					fmt.Println("Using builtin logo positions")
-					f, err := pkger.Open("github.com/robbydyer/sports:/pkg/nhlboard/logo_position.yaml")
-					if err != nil {
-						return nil, err
-					}
-					defer f.Close()
+	fmt.Println("Using builtin logo positions")
+	// Tell pkger to load known assets
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhlboard/assets/logopos_64x32.yaml")
 
-					dat, err = ioutil.ReadAll(f)
-					if err != nil {
-						return nil, err
-					}
-				} else {
-					var err error
-					dat, err = ioutil.ReadFile(logoPosFile)
-					if err != nil {
-						return nil, err
-					}
-				}
-			var err error
-			dat, err = ioutil.ReadFile(logoPosFile)
-			if err != nil {
-				return err
-			}
-	*/
+	logoAsset := fmt.Sprintf("github.com/robbydyer/sports:/pkg/nhlboard/assets/logopos_%dx%d.yaml",
+		b.matrixBounds.Dx(),
+		b.matrixBounds.Dy(),
+	)
+	f, err := pkger.Open(logoAsset)
+	if err != nil {
+		return fmt.Errorf("could not load logoposition asset %s: %w", logoAsset, err)
+	}
+	defer f.Close()
+
+	dat, err := ioutil.ReadAll(f)
+	if err != nil {
+		return err
+	}
+
+	var defaultPos []*logoConfig
+
+	if err := yaml.Unmarshal(dat, &defaultPos); err != nil {
+		return err
+	}
+
 	b.logos = make(map[string]*logoInfo)
 
 	sources, err := logoSources()
@@ -120,6 +120,28 @@ func (b *nhlBoards) setLogoInfo() error {
 			lConf.Pt.Y,
 			lConf.Pt.Zoom,
 		)
+	}
+
+	// Set defaults
+	for _, lConf := range defaultPos {
+		if _, ok := b.logos[lConf.Abbrev]; !ok {
+			parts := strings.Split(lConf.Abbrev, "_")
+			if len(parts) != 2 {
+				return fmt.Errorf("unexpected logo config key '%s'", lConf.Abbrev)
+			}
+			l := logo.New(parts[0], sources[parts[0]], logoCacheDir, lConf.Pt.Zoom)
+			b.logos[lConf.Abbrev] = &logoInfo{
+				logo:      l,
+				xPosition: lConf.Pt.X,
+				yPosition: lConf.Pt.Y,
+			}
+			fmt.Printf("Defining logo FROM DEFAULTS for %s: SHIFT %d, %d zoom: %f\n",
+				lConf.Abbrev,
+				lConf.Pt.X,
+				lConf.Pt.Y,
+				lConf.Pt.Zoom,
+			)
+		}
 	}
 
 	if len(b.logos) != len(ALL)*2 {
