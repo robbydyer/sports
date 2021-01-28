@@ -48,7 +48,7 @@ type API interface {
 	GetTeams(ctx context.Context) ([]Team, error)
 	TeamFromAbbreviation(ctx context.Context, abbreviation string) (Team, error)
 	GetScheduledGames(ctx context.Context, date time.Time) ([]Game, error)
-	DateStr() string
+	DateStr(d time.Time) string
 	League() string
 	GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error)
 }
@@ -70,6 +70,68 @@ type Game interface {
 	GetQuarter() (int, error) // Or a period, hockey fans
 	GetClock() (string, error)
 	GetUpdate(ctx context.Context) (Game, error)
+}
+
+func (c *Config) SetDefaults() {
+	// TODO: fix this
+	c.BoardDelay = 20 * time.Second
+
+	if c.ScoreFont == nil {
+		c.ScoreFont = &FontConfig{
+			Size:      16,
+			LineSpace: 0,
+		}
+	}
+	if c.TimeFont == nil {
+		c.TimeFont = &FontConfig{
+			Size:      8,
+			LineSpace: 0,
+		}
+	}
+	if c.TimeColor == nil {
+		c.TimeColor = color.White
+	}
+	if c.ScoreColor == nil {
+		c.ScoreColor = color.White
+	}
+	if len(c.WatchTeams) == 0 {
+		if len(c.FavoriteTeams) > 0 {
+			c.WatchTeams = c.FavoriteTeams
+		} else {
+			// TODO:fix this
+			c.WatchTeams = []string{"ANA",
+				"ARI",
+				"BOS",
+				"BUF",
+				"CAR",
+				"CBJ",
+				"CGY",
+				"CHI",
+				"COL",
+				"DAL",
+				"DET",
+				"EDM",
+				"FLA",
+				"LAK",
+				"MIN",
+				"MTL",
+				"NJD",
+				"NSH",
+				"NYI",
+				"NYR",
+				"OTT",
+				"PHI",
+				"PIT",
+				"SJS",
+				"STL",
+				"TBL",
+				"TOR",
+				"VAN",
+				"VGK",
+				"WPG",
+				"WSH"}
+		}
+	}
 }
 
 func New(ctx context.Context, api API, bounds image.Rectangle, config *Config) (*SportBoard, error) {

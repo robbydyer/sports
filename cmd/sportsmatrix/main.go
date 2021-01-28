@@ -8,10 +8,13 @@ import (
 	yaml "github.com/ghodss/yaml"
 	"github.com/markbates/pkger"
 	"github.com/robbydyer/sports/internal/config"
-	"github.com/robbydyer/sports/pkg/nhlboard"
+
+	//"github.com/robbydyer/sports/pkg/nhlboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/robbydyer/sports/pkg/sportboard"
 )
 
 type rootArgs struct {
@@ -91,10 +94,10 @@ func (r *rootArgs) setConfigDefaults() {
 	r.config.SportsMatrixConfig.Defaults()
 
 	if r.config.NHLConfig == nil {
-		r.config.NHLConfig = &nhlboard.Config{}
+		r.config.NHLConfig = &sportboard.Config{}
 	}
 
-	r.config.NHLConfig.Defaults()
+	r.config.NHLConfig.SetDefaults()
 }
 
 func includeAssets() {
