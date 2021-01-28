@@ -12,10 +12,13 @@ import (
 	"github.com/robbydyer/sports/pkg/sportboard"
 )
 
+type LiveGameGetter func(ctx context.Context, link string) (sportboard.Game, error)
+
 type Game struct {
-	ID    int    `json:"gamePk"`
-	Link  string `json:"link"`
-	Teams *struct {
+	GameGetter LiveGameGetter
+	ID         int    `json:"gamePk"`
+	Link       string `json:"link"`
+	Teams      *struct {
 		Away *GameTeam `json:"away"`
 		Home *GameTeam `json:"home"`
 	} `json:"teams"`
@@ -119,14 +122,24 @@ func (g *Game) AwayTeam() (sportboard.Team, error) {
 	return nil, fmt.Errorf("could not locate home team in Game")
 }
 func (g *Game) GetQuarter() (int, error) {
+	if g.LiveData != nil && g.LiveData.Linescore != nil {
+		return g.LiveData.Linescore.CurrentPeriod, nil
+	}
+
 	return 0, nil
 }
 func (g *Game) GetClock() (string, error) {
-	return "0:0", nil
+	if g.LiveData != nil && g.LiveData.Linescore != nil {
+		return g.LiveData.Linescore.CurrentPeriodTimeRemaining, nil
+	}
+	return "00:00", nil
 }
 
 func (g *Game) GetUpdate(ctx context.Context) (sportboard.Game, error) {
-	return GetLiveGame(ctx, g.Link)
+	if g.GameGetter == nil {
+		g.GameGetter = GetLiveGame
+	}
+	return g.GameGetter(ctx, g.Link)
 }
 
 func timeFromGameTime(gameTime string) (time.Time, error) {
@@ -140,6 +153,7 @@ func timeFromGameTime(gameTime string) (time.Time, error) {
 	return t, nil
 }
 
+// GetLiveGame is a LiveGameGetter
 func GetLiveGame(ctx context.Context, link string) (sportboard.Game, error) {
 	uri := fmt.Sprintf("%s/%s", LinkBase, link)
 

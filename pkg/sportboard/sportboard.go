@@ -13,6 +13,7 @@ import (
 	"github.com/robbydyer/sports/pkg/logo"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
+	"github.com/robbydyer/sports/pkg/util"
 )
 
 const maxAPITries = 3
@@ -140,7 +141,7 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *log.Logge
 	if _, err := s.api.GetTeams(ctx); err != nil {
 		return nil, err
 	}
-	if _, err := s.api.GetScheduledGames(ctx, Today()); err != nil {
+	if _, err := s.api.GetScheduledGames(ctx, util.Today()); err != nil {
 		return nil, err
 	}
 
@@ -157,7 +158,7 @@ func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	}
 	canvas := rgb.NewCanvas(matrix)
 
-	games, err := s.api.GetScheduledGames(ctx, Today())
+	games, err := s.api.GetScheduledGames(ctx, util.Today())
 	if err != nil {
 		return err
 	}

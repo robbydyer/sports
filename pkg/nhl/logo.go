@@ -48,6 +48,28 @@ func includes() {
 }
 
 func (n *NHL) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
+	fullLogoKey := fmt.Sprintf("%s_%dx%d", logoKey, bounds.Dx(), bounds.Dy())
+	l, ok := n.logos[fullLogoKey]
+	if ok {
+		return l, nil
+	}
+
+	sources, err := n.logoSources()
+	if err != nil {
+		return nil, err
+	}
+
+	l, err = GetLogo(logoKey, logoConf, bounds, sources)
+	if err != nil {
+		return nil, err
+	}
+
+	n.logos[fullLogoKey] = l
+
+	return n.logos[fullLogoKey], nil
+}
+
+func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logoSources map[string]image.Image) (*logo.Logo, error) {
 	p := strings.Split(logoKey, "_")
 	if len(p) < 2 {
 		return nil, fmt.Errorf("invalid logo key '%s'", logoConf.Abbrev)
@@ -55,11 +77,6 @@ func (n *NHL) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectan
 	teamAbbrev := p[0]
 
 	fullLogoKey := fmt.Sprintf("%s_%dx%d", logoKey, bounds.Dx(), bounds.Dy())
-
-	l, ok := n.logos[fullLogoKey]
-	if ok {
-		return l, nil
-	}
 
 	logoAsset := fmt.Sprintf("github.com/robbydyer/sports:/pkg/nhl/assets/logopos_%dx%d.yaml",
 		bounds.Dx(),
@@ -82,20 +99,15 @@ func (n *NHL) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectan
 		return nil, err
 	}
 
-	sources, err := n.logoSources()
-	if err != nil {
-		return nil, err
-	}
-
-	if _, ok := sources[teamAbbrev]; !ok {
+	if _, ok := logoSources[teamAbbrev]; !ok {
 		return nil, fmt.Errorf("did not find logo source for %s", teamAbbrev)
 	}
 
 	if logoConf != nil {
 		fmt.Printf("using provided config for logo %s\n", fullLogoKey)
-		n.logos[fullLogoKey] = logo.New(teamAbbrev, sources[teamAbbrev], logoCacheDir, bounds, logoConf)
+		l := logo.New(teamAbbrev, logoSources[teamAbbrev], logoCacheDir, bounds, logoConf)
 
-		return n.logos[fullLogoKey], nil
+		return l, nil
 	}
 
 	fmt.Printf("using default config for logo %s\n", fullLogoKey)
@@ -108,8 +120,8 @@ func (n *NHL) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectan
 				defConf.Pt.Y,
 				defConf.Pt.Zoom,
 			)
-			n.logos[fullLogoKey] = logo.New(teamAbbrev, sources[teamAbbrev], logoCacheDir, bounds, defConf)
-			return n.logos[fullLogoKey], nil
+			l := logo.New(teamAbbrev, logoSources[teamAbbrev], logoCacheDir, bounds, defConf)
+			return l, nil
 		}
 	}
 
@@ -117,6 +129,7 @@ func (n *NHL) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectan
 }
 
 func (n *NHL) logoSources() (map[string]image.Image, error) {
+
 	if len(n.logoSourceCache) == len(ALL) {
 		return n.logoSourceCache, nil
 	}

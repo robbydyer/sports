@@ -8,6 +8,7 @@ import (
 
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/sportboard"
+	"github.com/robbydyer/sports/pkg/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -71,7 +72,7 @@ func New(ctx context.Context, logger *log.Logger) (*NHL, error) {
 		return nil, err
 	}
 
-	if err := n.UpdateGames(ctx, sportboard.Today().Format(DateFormat)); err != nil {
+	if err := n.UpdateGames(ctx, util.Today().Format(DateFormat)); err != nil {
 		return nil, fmt.Errorf("failed to get today's games: %w", err)
 	}
 

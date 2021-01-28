@@ -3,7 +3,6 @@ package sportboard
 import (
 	"fmt"
 	"image"
-	"time"
 
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
@@ -68,15 +67,6 @@ func (s *SportBoard) isFavorite(abbrev string) bool {
 
 func (b *SportBoard) textAreaWidth() int {
 	return b.matrixBounds.Dx() / 4
-}
-
-// Today is sometimes actually yesterday
-func Today() time.Time {
-	if time.Now().Local().Hour() < 4 {
-		return time.Now().AddDate(0, 0, 01).Local()
-	}
-
-	return time.Now().Local()
 }
 
 func quarterStr(period int) string {
