@@ -8,7 +8,11 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
-func (s *SportBoard) timeWriter() (*rgbrender.TextWriter, image.Rectangle, error) {
+func (s *SportBoard) getTimeWriter() (*rgbrender.TextWriter, image.Rectangle, error) {
+	if s.timeWriter != nil {
+		return s.timeWriter, s.timeAlign, nil
+	}
+
 	var timeAlign image.Rectangle
 	timeWriter, err := rgbrender.DefaultTextWriter()
 	if err != nil {
@@ -22,7 +26,34 @@ func (s *SportBoard) timeWriter() (*rgbrender.TextWriter, image.Rectangle, error
 		return nil, timeAlign, err
 	}
 
+	s.timeWriter = timeWriter
+	s.timeAlign = timeAlign
 	return timeWriter, timeAlign, nil
+}
+
+func (s *SportBoard) getScoreWriter() (*rgbrender.TextWriter, image.Rectangle, error) {
+	if s.scoreWriter != nil {
+		return s.scoreWriter, s.scoreAlign, nil
+	}
+
+	var scoreAlign image.Rectangle
+	fnt, err := rgbrender.FontFromAsset("github.com/robbydyer/sports:/assets/fonts/score.ttf")
+	if err != nil {
+		return nil, scoreAlign, fmt.Errorf("failed to load font for score: %w", err)
+	}
+
+	scoreWriter := rgbrender.NewTextWriter(fnt, s.config.ScoreFont.Size)
+
+	scoreWriter.YStartCorrection = -7
+
+	scoreAlign, err = rgbrender.AlignPosition(rgbrender.CenterBottom, s.matrixBounds, s.textAreaWidth(), s.matrixBounds.Dy()/2)
+	if err != nil {
+		return nil, scoreAlign, err
+	}
+
+	s.scoreWriter = scoreWriter
+	s.scoreAlign = scoreAlign
+	return scoreWriter, scoreAlign, nil
 }
 
 func (s *SportBoard) isFavorite(abbrev string) bool {
@@ -46,19 +77,6 @@ func Today() time.Time {
 	}
 
 	return time.Now().Local()
-}
-
-func scoreWriter(size float64) (*rgbrender.TextWriter, error) {
-	fnt, err := rgbrender.FontFromAsset("github.com/robbydyer/sports:/assets/fonts/score.ttf")
-	if err != nil {
-		return nil, fmt.Errorf("failed to load font for score: %w", err)
-	}
-
-	wrtr := rgbrender.NewTextWriter(fnt, size)
-
-	wrtr.YStartCorrection = -7
-
-	return wrtr, nil
 }
 
 func quarterStr(period int) string {

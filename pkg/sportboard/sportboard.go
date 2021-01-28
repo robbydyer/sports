@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/robbydyer/sports/pkg/logo"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
 const maxAPITries = 3
@@ -27,24 +29,29 @@ type SportBoard struct {
 	logoDrawCache     map[string]image.Image
 	logoSourceCache   map[string]image.Image
 	liveGamePreloader map[int]Game
+	scoreWriter       *rgbrender.TextWriter
+	scoreAlign        image.Rectangle
+	timeWriter        *rgbrender.TextWriter
+	timeAlign         image.Rectangle
 }
 
 type Config struct {
-	Enabled        bool
-	BoardDelay     time.Duration
-	FavoriteSticky bool
-	ScoreFont      *FontConfig
-	TimeFont       *FontConfig
+	boardDelay     time.Duration
 	TimeColor      color.Color
 	ScoreColor     color.Color
-	LogoConfigs    []*logo.Config
-	WatchTeams     []string
-	FavoriteTeams  []string
+	Enabled        bool           `json:"enabled"`
+	BoardDelay     string         `json:"boardDelay"`
+	FavoriteSticky bool           `json:"favoriteSticky"`
+	ScoreFont      *FontConfig    `json:"scoreFont"`
+	TimeFont       *FontConfig    `json:"timeFont"`
+	LogoConfigs    []*logo.Config `json:"logoConfigs"`
+	WatchTeams     []string       `json:"watchTeams"`
+	FavoriteTeams  []string       `json:"favoriteTeams"`
 }
 
 type FontConfig struct {
-	Size      float64
-	LineSpace float64
+	Size      float64 `json:"size"`
+	LineSpace float64 `json:"lineSpace"`
 }
 
 type API interface {
@@ -78,8 +85,13 @@ type Game interface {
 }
 
 func (c *Config) SetDefaults() {
-	// TODO: fix this
-	c.BoardDelay = 20 * time.Second
+	if c.BoardDelay != "" {
+		d, err := time.ParseDuration(c.BoardDelay)
+		if err != nil {
+			c.boardDelay = 20 * time.Second
+		}
+		c.boardDelay = d
+	}
 
 	if c.ScoreFont == nil {
 		c.ScoreFont = &FontConfig{
@@ -101,14 +113,12 @@ func (c *Config) SetDefaults() {
 	}
 }
 
-func New(ctx context.Context, api API, bounds image.Rectangle, config *Config) (*SportBoard, error) {
-	l := log.New()
-	l.Level = log.DebugLevel
+func New(ctx context.Context, api API, bounds image.Rectangle, logger *log.Logger, config *Config) (*SportBoard, error) {
 	s := &SportBoard{
 		config:        config,
 		api:           api,
 		logos:         make(map[string]*logo.Logo),
-		log:           l,
+		log:           logger,
 		logoDrawCache: make(map[string]image.Image),
 		matrixBounds:  bounds,
 	}
@@ -117,6 +127,12 @@ func New(ctx context.Context, api API, bounds image.Rectangle, config *Config) (
 		if len(config.FavoriteTeams) > 0 {
 			config.WatchTeams = config.FavoriteTeams
 		} else {
+			config.WatchTeams = s.api.AllTeamAbbreviations()
+		}
+	}
+
+	for _, i := range config.WatchTeams {
+		if strings.ToUpper(i) == "ALL" {
 			config.WatchTeams = s.api.AllTeamAbbreviations()
 		}
 	}
@@ -136,6 +152,9 @@ func (s *SportBoard) Name() string {
 }
 
 func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
+	if !s.config.Enabled {
+		s.log.Warnf("%s board is not enabled, skipping", s.api.League())
+	}
 	canvas := rgb.NewCanvas(matrix)
 
 	games, err := s.api.GetScheduledGames(ctx, Today())
@@ -183,8 +202,8 @@ OUTER:
 			return fmt.Errorf("context canceled")
 		case <-preloader[game.GetID()]:
 			s.log.Debugf("preloader for %d marked ready", game.GetID())
-		case <-time.After(s.config.BoardDelay):
-			s.log.Warnf("timed out waiting %ds for preloader for %d", s.config.BoardDelay.Seconds(), game.GetID())
+		case <-time.After(s.config.boardDelay):
+			s.log.Warnf("timed out waiting %ds for preloader for %d", s.config.boardDelay.Seconds(), game.GetID())
 		}
 
 		liveGame, ok := s.liveGamePreloader[game.GetID()]
@@ -242,15 +261,21 @@ OUTER:
 					continue INNER
 				}
 			} else if isOver {
-
+				if err := s.renderCompleteGame(ctx, canvas, liveGame); err != nil {
+					s.log.Errorf("failed to render complete game: %s", err.Error())
+					continue INNER
+				}
 			} else {
-				// Game hasn't started yet
+				if err := s.renderUpcomingGame(ctx, canvas, liveGame); err != nil {
+					s.log.Errorf("failed to render upcoming game: %s", err.Error())
+					continue INNER
+				}
 			}
 
 			select {
 			case <-ctx.Done():
 				return fmt.Errorf("context canceled")
-			case <-time.After(s.config.BoardDelay):
+			case <-time.After(s.config.boardDelay):
 			}
 
 			continue OUTER

@@ -1,0 +1,311 @@
+---
+- abbrev: "ANA_HOME"
+  pt:
+    xShift: -1
+    yShift: 3
+    zoom: 1
+- abbrev: "ANA_AWAY"
+  pt:
+    xShift: -1
+    yShift: 3
+    zoom: 1
+- abbrev: "ARI_HOME"
+  pt:
+    xShift: 4
+    yShift: 0
+    zoom: 1
+- abbrev: "ARI_AWAY"
+  pt:
+    xShift: -7
+    yShift: 0
+    zoom: 1
+- abbrev: BOS_HOME
+  pt:
+    xShift: 4
+    yShift: 0
+    zoom: 1
+- abbrev: BOS_AWAY
+  pt:
+    xShift: -7
+    yShift: 0
+    zoom: 1
+- abbrev: BUF_HOME
+  pt:
+    xShift: 2
+    yShift: 2
+    zoom: 0.85
+- abbrev: BUF_AWAY
+  pt:
+    xShift: -6
+    yShift: 2
+    zoom: 0.85
+- abbrev: CAR_HOME
+  pt:
+    xShift: 0
+    yShift: 0
+    zoom: 1
+- abbrev: CAR_AWAY
+  pt:
+    xShift: -2
+    yShift: 0
+    zoom: 1
+- abbrev: "CBJ_AWAY"
+  pt:
+    xShift: -5
+    yShift: 0
+    zoom: 1
+- abbrev: "CBJ_HOME"
+  pt:
+    xShift: 5
+    yShift: 0
+    zoom: 1
+- abbrev: CGY_HOME
+  pt:
+    xShift: 4
+    yShift: 3
+    zoom: 0.85
+- abbrev: CGY_AWAY
+  pt:
+    xShift: -3
+    yShift: 3
+    zoom: 0.85
+- abbrev: CHI_HOME
+  pt:
+    xShift: 5
+    yShift: 0
+    zoom: 1
+- abbrev: CHI_AWAY
+  pt:
+    xShift: -5
+    yShift: 0
+    zoom: 1
+- abbrev: COL_HOME
+  pt:
+    xShift: 3
+    yShift: 0
+    zoom: 0.9
+- abbrev: COL_AWAY
+  pt:
+    xShift: -3
+    yShift: 0
+    zoom: 0.9
+- abbrev: DAL_HOME
+  pt:
+    xShift: 2
+    yShift: 0
+    zoom: 0.85
+- abbrev: DAL_AWAY
+  pt:
+    xShift: -2
+    yShift: 0
+    zoom: 0.85
+- abbrev: DET_HOME
+  pt:
+    xShift: 0
+    yShift: 0
+    zoom: 0.8
+- abbrev: DET_AWAY
+  pt:
+    xShift: 0
+    yShift: 0
+    zoom: 0.8
+- abbrev: EDM_HOME
+  pt:
+    xShift: 3
+    yShift: 3
+    zoom: 0.8
+- abbrev: EDM_AWAY
+  pt:
+    xShift: -3
+    yShift: 3
+    zoom: 0.8
+- abbrev: FLA_HOME
+  pt:
+    xShift: 6
+    yShift: 3
+    zoom: 0.8
+- abbrev: FLA_AWAY
+  pt:
+    xShift: -6
+    yShift: 3
+    zoom: 0.8
+- abbrev: LAK_HOME
+  pt:
+    xShift: 7
+    yShift: 2
+    zoom: 0.85
+- abbrev: LAK_AWAY
+  pt:
+    xShift: -7
+    yShift: 2
+    zoom: 0.85
+- abbrev: "MIN_AWAY"
+  pt:
+    xShift: -1
+    yShift: 0
+    zoom: 1
+- abbrev: "MIN_HOME"
+  pt:
+    xShift: 0
+    yShift: 0
+    zoom: 1
+- abbrev: MTL_HOME
+  pt:
+    xShift: 3
+    yShift: 0
+    zoom: 1
+- abbrev: MTL_AWAY
+  pt:
+    xShift: -2
+    yShift: 0
+    zoom: 1
+- abbrev: NJD_HOME
+  pt:
+    xShift: 5
+    yShift: 2
+    zoom: 0.9
+- abbrev: NJD_AWAY
+  pt:
+    xShift: -5
+    yShift: 2
+    zoom: 0.9
+- abbrev: NSH_HOME
+  pt:
+    xShift: 0
+    yShift: 4
+    zoom: 0.8
+- abbrev: NSH_AWAY
+  pt:
+    xShift: 0
+    yShift: 4
+    zoom: 0.8
+- abbrev: NYI_HOME
+  pt:
+    xShift: 4
+    yShift: 1
+    zoom: 0.9
+- abbrev: NYI_AWAY
+  pt:
+    xShift: -4
+    yShift: 1
+    zoom: 0.9
+- abbrev: NYR_HOME
+  pt:
+    xShift: 7
+    yShift: 3
+    zoom: 0.85
+- abbrev: NYR_AWAY
+  pt:
+    xShift: -7
+    yShift: 3
+    zoom: 0.85
+- abbrev: OTT_HOME
+  pt:
+    xShift: 0
+    yShift: 3
+    zoom: 0.8
+- abbrev: OTT_AWAY
+  pt:
+    xShift: 0
+    yShift: 6
+    zoom: 0.6
+- abbrev: PHI_HOME
+  pt:
+    xShift: 4
+    yShift: 0
+    zoom: 1
+- abbrev: PHI_AWAY
+  pt:
+    xShift: -3
+    yShift: 4
+    zoom: 0.8
+- abbrev: PIT_HOME
+  pt:
+    xShift: 4
+    yShift: 3
+    zoom: 0.8
+- abbrev: PIT_AWAY
+  pt:
+    xShift: -4
+    yShift: 3
+    zoom: 0.8
+- abbrev: SJS_HOME
+  pt:
+    xShift: 2
+    yShift: 2
+    zoom: 0.8
+- abbrev: SJS_AWAY
+  pt:
+    xShift: -1
+    yShift: 2
+    zoom: 0.8
+- abbrev: STL_HOME
+  pt:
+    xShift: 4
+    yShift: 5
+    zoom: 0.7
+- abbrev: STL_AWAY
+  pt:
+    xShift: -6
+    yShift: 0
+    zoom: 1
+- abbrev: TBL_HOME
+  pt:
+    xShift: 3
+    yShift: 1
+    zoom: 0.9
+- abbrev: TBL_AWAY
+  pt:
+    xShift: -2
+    yShift: 0
+    zoom: 0.9
+- abbrev: TOR_HOME
+  pt:
+    xShift: 5
+    yShift: 3
+    zoom: 0.8
+- abbrev: TOR_AWAY
+  pt:
+    xShift: -5
+    yShift: 3
+    zoom: 0.8
+- abbrev: VAN_HOME
+  pt:
+    xShift: 3
+    yShift: 3
+    zoom: 0.8
+- abbrev: VAN_AWAY
+  pt:
+    xShift: -2
+    yShift: 3
+    zoom: 0.8
+- abbrev: VGK_HOME
+  pt:
+    xShift: 6
+    yShift: 2
+    zoom: 0.85
+- abbrev: VGK_AWAY
+  pt:
+    xShift: -6
+    yShift: 2
+    zoom: 0.85
+- abbrev: WPG_HOME
+  pt:
+    xShift: 4
+    yShift: 2
+    zoom: 0.8
+- abbrev: WPG_AWAY
+  pt:
+    xShift: -4
+    yShift: 2
+    zoom: 0.8
+- abbrev: WSH_HOME
+  pt:
+    xShift: 0
+    yShift: 0
+    zoom: 1
+- abbrev: WSH_AWAY
+  pt:
+    xShift: 0
+    yShift: 0
+    zoom: 1

@@ -4,7 +4,6 @@ go 1.15
 
 require (
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-co-op/gocron v0.5.1
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20201108214237-06ea97f0c265 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/markbates/pkger v0.17.1

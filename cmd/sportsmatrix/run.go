@@ -4,17 +4,14 @@ import (
 	"context"
 	"fmt"
 	"image"
-	"image/color"
-	"image/draw"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/robbydyer/sports/pkg/board"
-	"github.com/robbydyer/sports/pkg/newnhl"
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/pkg/nhl"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -56,13 +53,24 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		cancel()
 	}()
 
-	var boards []board.Board
+	logger := log.New()
+	logger.Level = log.DebugLevel
 
-	nhlB, err := nhlBoards(ctx, s.rArgs)
+	bounds := image.Rect(0, 0, s.rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, s.rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
+
+	api, err := nhl.New(ctx, logger)
 	if err != nil {
 		return err
 	}
-	boards = append(boards, nhlB...)
+
+	b, err := sportboard.New(ctx, api, bounds, logger, s.rArgs.config.NHLConfig)
+	if err != nil {
+		return err
+	}
+
+	var boards []board.Board
+
+	boards = append(boards, b)
 
 	if s.testMode {
 		boards = []board.Board{&testBoard{}}
@@ -83,71 +91,5 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return nil
-}
-
-/*
-func nhlBoards(ctx context.Context, rArgs *rootArgs) ([]board.Board, error) {
-	bounds := image.Rect(0, 0, rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
-
-	nhlAPI, err := nhl.New(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	boards, err := nhlboard.New(ctx, bounds, nhlAPI, nhl.GetLiveGame, rArgs.config.NHLConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	return boards, nil
-}
-*/
-func nhlBoards(ctx context.Context, rArgs *rootArgs) ([]board.Board, error) {
-	bounds := image.Rect(0, 0, rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
-
-	api, err := newnhl.New(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	b, err := sportboard.New(ctx, api, bounds, rArgs.config.NHLConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	var boards []board.Board
-
-	boards = append(boards, b)
-
-	return boards, nil
-}
-
-func basicTest() error {
-	fmt.Println("test mode")
-	cfg := &rgb.HardwareConfig{
-		Rows:              32,
-		Cols:              64,
-		ChainLength:       1,
-		Parallel:          1,
-		PWMBits:           11,
-		PWMLSBNanoseconds: 130,
-		Brightness:        60,
-		ScanMode:          rgb.Progressive,
-		HardwareMapping:   "adafruit-hat",
-	}
-	// create a new Matrix instance with the DefaultConfig & DefaultRuntimeOptions
-	m, _ := rgb.NewRGBLedMatrix(cfg, &rgb.DefaultRuntimeOptions)
-
-	// create the Canvas, implements the image.Image interface
-	c := rgb.NewCanvas(m)
-	defer c.Close() // don't forgot close the Matrix, if not your leds will remain on
-
-	// using the standard draw.Draw function we copy a white image onto the Canvas
-	draw.Draw(c, c.Bounds(), &image.Uniform{color.RGBA{255, 255, 0, 255}}, image.ZP, draw.Src)
-
-	// don't forget call Render to display the new led status
-	c.Render()
-	time.Sleep(10 * time.Second)
 	return nil
 }

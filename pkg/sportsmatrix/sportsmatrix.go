@@ -10,11 +10,9 @@ import (
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 
 	"github.com/robbydyer/sports/pkg/board"
-	"github.com/robbydyer/sports/pkg/nhl"
 )
 
 type SportsMatrix struct {
-	nhlAPI *nhl.Nhl
 	cfg    *Config
 	matrix rgb.Matrix
 	boards []board.Board
