@@ -83,30 +83,6 @@ func (t *TextWriter) SetFont(fnt *truetype.Font) {
 }
 
 func (t *TextWriter) Write(canvas *rgb.Canvas, bounds image.Rectangle, str []string, clr color.Color) error {
-	if t.context == nil {
-		return fmt.Errorf("invalid TextWriter, must initialize with NewTextWriter()")
-	}
-	t.context.SetFontSize(t.FontSize)
-
-	textColor := image.NewUniform(clr)
-	t.context.SetClip(bounds)
-	t.context.SetDst(canvas)
-	t.context.SetSrc(textColor)
-	t.context.SetHinting(font.HintingFull)
-
-	point := freetype.Pt(bounds.Min.X, int(t.context.PointToFixed(t.FontSize)>>6))
-	for _, c := range str {
-		_, err := t.context.DrawString(c, point)
-		if err != nil {
-			return err
-		}
-		point.Y += t.context.PointToFixed(t.FontSize * t.LineSpace)
-	}
-
-	return nil
-}
-
-func (t *TextWriter) Write2(canvas *rgb.Canvas, bounds image.Rectangle, str []string, clr color.Color) error {
 	startX := bounds.Min.X + t.XStartCorrection
 	drawer := &font.Drawer{
 		Dst: canvas,

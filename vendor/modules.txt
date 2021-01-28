@@ -44,6 +44,8 @@ github.com/jezek/xgb
 github.com/jezek/xgb/render
 github.com/jezek/xgb/shm
 github.com/jezek/xgb/xproto
+# github.com/konsorten/go-windows-terminal-sequences v1.0.1
+github.com/konsorten/go-windows-terminal-sequences
 # github.com/kr/text v0.1.0
 github.com/kr/text
 # github.com/magiconair/properties v1.8.1
@@ -86,6 +88,9 @@ github.com/robbydyer/exp/shiny/driver/mtldriver/internal/coreanim
 github.com/robbydyer/exp/shiny/driver/windriver
 github.com/robbydyer/exp/shiny/driver/x11driver
 github.com/robbydyer/exp/shiny/screen
+# github.com/sirupsen/logrus v1.2.0
+## explicit
+github.com/sirupsen/logrus
 # github.com/spf13/afero v1.1.2
 github.com/spf13/afero
 github.com/spf13/afero/mem
@@ -107,6 +112,8 @@ github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/subosito/gotenv v1.2.0
 github.com/subosito/gotenv
+# golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
+golang.org/x/crypto/ssh/terminal
 # golang.org/x/image v0.0.0-20201208152932-35266b937fa6
 ## explicit
 golang.org/x/image/draw
@@ -137,5 +144,4 @@ gopkg.in/check.v1
 # gopkg.in/ini.v1 v1.51.0
 gopkg.in/ini.v1
 # gopkg.in/yaml.v2 v2.2.8
-## explicit
 gopkg.in/yaml.v2

@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/robbydyer/sports/pkg/board"
-	"github.com/robbydyer/sports/pkg/nhl"
-	"github.com/robbydyer/sports/pkg/nhlboard"
+	"github.com/robbydyer/sports/pkg/newnhl"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 	"github.com/spf13/cobra"
 )
@@ -86,6 +86,7 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+/*
 func nhlBoards(ctx context.Context, rArgs *rootArgs) ([]board.Board, error) {
 	bounds := image.Rect(0, 0, rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
 
@@ -98,6 +99,26 @@ func nhlBoards(ctx context.Context, rArgs *rootArgs) ([]board.Board, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return boards, nil
+}
+*/
+func nhlBoards(ctx context.Context, rArgs *rootArgs) ([]board.Board, error) {
+	bounds := image.Rect(0, 0, rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
+
+	api, err := newnhl.New(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := sportboard.New(ctx, api, bounds, rArgs.config.NHLConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	var boards []board.Board
+
+	boards = append(boards, b)
 
 	return boards, nil
 }

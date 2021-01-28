@@ -65,7 +65,7 @@ type games struct {
 
 func (n *Nhl) Games(dateStr string) ([]*Game, error) {
 	games, ok := n.games[dateStr]
-	if !ok {
+	if !ok || len(games) == 0 {
 		return nil, fmt.Errorf("no games for date %s", dateStr)
 	}
 
@@ -156,6 +156,7 @@ func getGames(ctx context.Context, dateStr string) ([]*Game, error) {
 
 	for _, d := range gameList.Dates {
 		for _, g := range d.Games {
+			debugGameOutput(g)
 			t, err := timeFromGameTime(g.GameDate)
 			if err != nil {
 				return nil, fmt.Errorf("failed to set GameTime: %w", err)
@@ -166,4 +167,17 @@ func getGames(ctx context.Context, dateStr string) ([]*Game, error) {
 	}
 
 	return retGames, nil
+}
+
+func debugGameOutput(g *Game) {
+	if g == nil || g.Teams == nil || g.Teams.Home == nil || g.Teams.Home.Team == nil {
+		fmt.Printf("WARNING! Got empty game from API: %v\n", g)
+		return
+	}
+
+	fmt.Printf("Game from API: Home team: %d, %s, %s\n",
+		g.Teams.Home.Team.ID,
+		g.Teams.Home.Team.Name,
+		g.Teams.Home.Team.Abbreviation,
+	)
 }

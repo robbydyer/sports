@@ -43,6 +43,8 @@ func (b *scoreBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 		return nil
 	}
 
+	fmt.Printf("There are %d scheduled NHL games today\n", len(games))
+
 	liveGames := make(map[int]*nhl.LiveGame)
 	for _, game := range games {
 		live, err := b.controller.liveGameGetter(ctx, game.Link)
@@ -68,11 +70,9 @@ OUTER:
 			return err
 		}
 
-		fmt.Printf("Checking for games for %s\n", team.Abbreviation)
-
 	INNER:
 		for gameIndex, game := range games {
-			if game.Teams.Away.Team.Abbreviation != team.Abbreviation && game.Teams.Home.Team.Abbreviation != team.Abbreviation {
+			if game.Teams.Away.Team.ID != team.ID && game.Teams.Home.Team.ID != team.ID {
 				continue INNER
 			}
 			// Preload the next game's data
@@ -138,6 +138,9 @@ OUTER:
 					return fmt.Errorf("failed to render live game: %w", err)
 				}
 			}
+
+			seenTeams[liveGame.LiveData.Linescore.Teams.Home.Team.Abbreviation] = true
+			seenTeams[liveGame.LiveData.Linescore.Teams.Away.Team.Abbreviation] = true
 
 			select {
 			case <-ctx.Done():
@@ -279,7 +282,7 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 		if err := b.renderAwayLogo(canvas, aKey); err != nil {
 			return fmt.Errorf("failed to render away logo: %w", err)
 		}
-		wrter.Write2(
+		wrter.Write(
 			canvas,
 			center,
 			[]string{
@@ -288,7 +291,7 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 			color.White,
 		)
 		wrter.FontSize = b.controller.config.FontSizes.PeriodTime
-		wrter.Write2(
+		wrter.Write(
 			canvas,
 			center,
 			[]string{
@@ -298,7 +301,7 @@ func (b *scoreBoard) RenderGameUntilOver(ctx context.Context, canvas *rgb.Canvas
 			color.White,
 		)
 
-		scoreWrtr.Write2(
+		scoreWrtr.Write(
 			canvas,
 			scoreAlign,
 			[]string{
@@ -370,12 +373,39 @@ func (b *scoreBoard) RenderUpcomingGame(ctx context.Context, canvas *rgb.Canvas,
 		return fmt.Errorf("failed to get text writer: %w", err)
 	}
 
-	center, err := rgbrender.AlignPosition(rgbrender.CenterCenter, canvas.Bounds(), 16, 16)
+	wrter.XStartCorrection = -2
+
+	center, err := rgbrender.AlignPosition(rgbrender.CenterTop, canvas.Bounds(), b.textAreaWidth(), 16)
 	if err != nil {
 		return fmt.Errorf("failed to get text align position: %w", err)
 	}
 
-	wrter.Write(canvas, center, []string{"vs."}, color.White)
+	wrter.Write(
+		canvas,
+		center,
+		[]string{
+			fmt.Sprintf("%s", liveGame.GameTime.Format("3:04PM")),
+		},
+		color.White,
+	)
+
+	vsWrtr, err := scoreWriter(b.controller.config.FontSizes.Score)
+	if err != nil {
+		return err
+	}
+	vsAlign, err := rgbrender.AlignPosition(rgbrender.CenterBottom, canvas.Bounds(), b.textAreaWidth(), 16)
+	if err != nil {
+		return err
+	}
+
+	vsWrtr.Write(
+		canvas,
+		vsAlign,
+		[]string{
+			"VS",
+		},
+		color.White,
+	)
 
 	if err := canvas.Render(); err != nil {
 		return fmt.Errorf("failed to render upcoming game: %w", err)
@@ -405,18 +435,45 @@ func (b *scoreBoard) RenderFinal(ctx context.Context, canvas *rgb.Canvas, liveGa
 	if err := b.renderAwayLogo(canvas, aKey); err != nil {
 		return fmt.Errorf("failed to render away logo: %w", err)
 	}
+
 	wrter, err := rgbrender.DefaultTextWriter()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get text writer: %w", err)
 	}
 
-	center, err := rgbrender.AlignPosition(rgbrender.CenterCenter, canvas.Bounds(), 16, 16)
+	wrter.XStartCorrection = -2
+
+	center, err := rgbrender.AlignPosition(rgbrender.CenterTop, canvas.Bounds(), b.textAreaWidth(), 16)
+	if err != nil {
+		return fmt.Errorf("failed to get text align position: %w", err)
+	}
+
+	wrter.Write(
+		canvas,
+		center,
+		[]string{
+			"FINAL",
+		},
+		color.White,
+	)
+
+	vsWrtr, err := scoreWriter(b.controller.config.FontSizes.Score)
+	if err != nil {
+		return err
+	}
+	vsAlign, err := rgbrender.AlignPosition(rgbrender.CenterBottom, canvas.Bounds(), b.textAreaWidth(), 16)
 	if err != nil {
 		return err
 	}
 
-	wrter.Write(canvas, center, []string{"FINAL", scoreStr(liveGame)}, color.White)
-
+	vsWrtr.Write(
+		canvas,
+		vsAlign,
+		[]string{
+			scoreStr(liveGame),
+		},
+		color.White,
+	)
 	if err := canvas.Render(); err != nil {
 		return fmt.Errorf("failed to render game final: %w", err)
 	}
