@@ -33,12 +33,13 @@ type Pt struct {
 
 type OptionFunc func(*Logo) error
 
-func New(key string, sourceLogo image.Image, targetDirectory string, conf *Config) *Logo {
+func New(key string, sourceLogo image.Image, targetDirectory string, matrixBounds image.Rectangle, conf *Config) *Logo {
 	return &Logo{
 		key:             key,
 		targetDirectory: targetDirectory,
 		sourceLogo:      sourceLogo,
 		config:          conf,
+		bounds:          matrixBounds,
 	}
 }
 

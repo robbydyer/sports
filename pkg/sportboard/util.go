@@ -2,10 +2,42 @@ package sportboard
 
 import (
 	"fmt"
+	"image"
 	"time"
 
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
+
+func (s *SportBoard) timeWriter() (*rgbrender.TextWriter, image.Rectangle, error) {
+	var timeAlign image.Rectangle
+	timeWriter, err := rgbrender.DefaultTextWriter()
+	if err != nil {
+		return nil, timeAlign, err
+	}
+	timeWriter.LineSpace = s.config.TimeFont.LineSpace
+	timeWriter.FontSize = s.config.TimeFont.Size
+
+	timeAlign, err = rgbrender.AlignPosition(rgbrender.CenterTop, s.matrixBounds, s.textAreaWidth(), s.matrixBounds.Dy()/2)
+	if err != nil {
+		return nil, timeAlign, err
+	}
+
+	return timeWriter, timeAlign, nil
+}
+
+func (s *SportBoard) isFavorite(abbrev string) bool {
+	for _, a := range s.config.FavoriteTeams {
+		if abbrev == a {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (b *SportBoard) textAreaWidth() int {
+	return b.matrixBounds.Dx() / 4
+}
 
 // Today is sometimes actually yesterday
 func Today() time.Time {

@@ -9,22 +9,6 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
-const scorePollRate = 30 * time.Second
-
-func (s *SportBoard) isFavorite(abbrev string) bool {
-	for _, a := range s.config.FavoriteTeams {
-		if abbrev == a {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (b *SportBoard) textAreaWidth() int {
-	return b.matrixBounds.Dx() / 4
-}
-
 func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liveGame Game) error {
 	awayTeam, err := liveGame.AwayTeam()
 	if err != nil {
@@ -38,14 +22,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 	// If this is a favorite team, we'll watch the scoreboard until the game is over
 	isFavorite := (s.isFavorite(awayTeam.GetAbbreviation()) || s.isFavorite(homeTeam.GetAbbreviation())) && s.config.FavoriteSticky
 
-	timeWriter, err := rgbrender.DefaultTextWriter()
-	if err != nil {
-		return err
-	}
-	timeWriter.LineSpace = s.config.TimeFont.LineSpace
-	timeWriter.FontSize = s.config.TimeFont.Size
-
-	timeAlign, err := rgbrender.AlignPosition(rgbrender.CenterTop, canvas.Bounds(), s.textAreaWidth(), s.matrixBounds.Dy()/2)
+	timeWriter, timeAlign, err := s.timeWriter()
 	if err != nil {
 		return err
 	}
@@ -101,14 +78,18 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 			s.config.ScoreColor,
 		)
 
-		if !isFavorite {
-			return nil
+		if err := canvas.Render(); err != nil {
+			return err
 		}
 
 		select {
 		case <-ctx.Done():
 			return fmt.Errorf("context canceled")
-		case <-time.After(scorePollRate):
+		case <-time.After(s.config.BoardDelay):
+		}
+
+		if !isFavorite {
+			return nil
 		}
 
 		updatedGame, err := liveGame.GetUpdate(ctx)

@@ -107,7 +107,7 @@ func (b *nhlBoards) setLogoInfo() error {
 		if len(parts) != 2 {
 			return fmt.Errorf("unexpected logo config key '%s'", lConf.Abbrev)
 		}
-		l := logo.New(parts[0], sources[parts[0]], logoCacheDir, nil)
+		l := logo.New(parts[0], sources[parts[0]], logoCacheDir, b.matrixBounds.nil)
 
 		b.logos[lConf.Abbrev] = &logoInfo{
 			logo:      l,
@@ -129,7 +129,7 @@ func (b *nhlBoards) setLogoInfo() error {
 			if len(parts) != 2 {
 				return fmt.Errorf("unexpected logo config key '%s'", lConf.Abbrev)
 			}
-			l := logo.New(parts[0], sources[parts[0]], logoCacheDir, nil)
+			l := logo.New(parts[0], sources[parts[0]], logoCacheDir, b.matrixBounds, nil)
 			b.logos[lConf.Abbrev] = &logoInfo{
 				logo:      l,
 				xPosition: lConf.Pt.X,

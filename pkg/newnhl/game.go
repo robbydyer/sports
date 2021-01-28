@@ -64,6 +64,9 @@ func (n *NHL) Games(dateStr string) ([]*Game, error) {
 	return games, nil
 }
 
+func (g *Game) GetStartTime(ctx context.Context) (time.Time, error) {
+	return g.GameTime, nil
+}
 func (g *Game) GetID() int {
 	return g.ID
 }

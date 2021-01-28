@@ -3,6 +3,7 @@ package newnhl
 import (
 	"context"
 	"fmt"
+	"image"
 	"time"
 
 	"github.com/robbydyer/sports/pkg/logo"
@@ -50,14 +51,17 @@ const (
 var ALL = []string{ANA, ARI, BOS, BUF, CAR, CBJ, CGY, CHI, COL, DAL, DET, EDM, FLA, LAK, MIN, MTL, NJD, NSH, NYI, NYR, OTT, PHI, PIT, SJS, STL, TBL, TOR, VAN, VGK, WPG, WSH}
 
 type NHL struct {
-	teams []*Team
-	games map[string][]*Game
-	logos map[string]*logo.Logo
+	teams           []*Team
+	games           map[string][]*Game
+	logos           map[string]*logo.Logo
+	logoSourceCache map[string]image.Image
 }
 
 func New(ctx context.Context) (*NHL, error) {
 	n := &NHL{
-		games: make(map[string][]*Game),
+		games:           make(map[string][]*Game),
+		logos:           make(map[string]*logo.Logo),
+		logoSourceCache: make(map[string]image.Image),
 	}
 
 	if err := n.UpdateTeams(ctx); err != nil {
@@ -69,6 +73,10 @@ func New(ctx context.Context) (*NHL, error) {
 	}
 
 	return n, nil
+}
+
+func (n *NHL) AllTeamAbbreviations() []string {
+	return ALL
 }
 
 func (n *NHL) GetTeams(ctx context.Context) ([]sportboard.Team, error) {

@@ -16,6 +16,7 @@ func (s *SportBoard) logoConfig(logoKey string) (*logo.Config, error) {
 		}
 	}
 
+	s.log.Warnf("no logo config defined in config file for %s. Defaults will be used", logoKey)
 	return nil, fmt.Errorf("no logo config for %s", logoKey)
 }
 
@@ -24,6 +25,7 @@ func (s *SportBoard) RenderHomeLogo(canvas *rgb.Canvas, abbreviation string) err
 
 	i, ok := s.logoDrawCache[logoKey]
 	if ok {
+		s.log.Debugf("drawing %s logo with drawCache", logoKey)
 		draw.Draw(canvas, canvas.Bounds(), i, image.ZP, draw.Over)
 		return nil
 	}
@@ -33,12 +35,15 @@ func (s *SportBoard) RenderHomeLogo(canvas *rgb.Canvas, abbreviation string) err
 		var err error
 		logoConf, _ := s.logoConfig(logoKey)
 
+		s.log.Debugf("fetching logo for %s %dx%d", abbreviation, s.matrixBounds.Dx(), s.matrixBounds.Dy())
 		l, err = s.api.GetLogo(logoKey, logoConf, s.matrixBounds)
 		if err != nil {
 			return err
 		}
 
 		s.logos[logoKey] = l
+	} else {
+		s.log.Debugf("using logo cache for %s", logoKey)
 	}
 
 	textWdith := s.textAreaWidth()
@@ -69,6 +74,7 @@ func (s *SportBoard) RenderAwayLogo(canvas *rgb.Canvas, abbreviation string) err
 		var err error
 		logoConf, _ := s.logoConfig(logoKey)
 
+		s.log.Debugf("fetching logo for %s %dx%d", abbreviation, s.matrixBounds.Dx(), s.matrixBounds.Dy())
 		l, err = s.api.GetLogo(logoKey, logoConf, s.matrixBounds)
 		if err != nil {
 			return err
@@ -80,7 +86,7 @@ func (s *SportBoard) RenderAwayLogo(canvas *rgb.Canvas, abbreviation string) err
 	textWdith := s.textAreaWidth()
 	logoWidth := (s.matrixBounds.Dx() - textWdith) / 2
 
-	renderedLogo, err := l.RenderRightAligned(canvas, logoWidth)
+	renderedLogo, err := l.RenderRightAligned(canvas, logoWidth+textWdith)
 	if err != nil {
 		return err
 	}
