@@ -34,6 +34,7 @@ type SportBoard struct {
 	scoreAlign        image.Rectangle
 	timeWriter        *rgbrender.TextWriter
 	timeAlign         image.Rectangle
+	counter           image.Image
 }
 
 type Config struct {
@@ -163,7 +164,7 @@ func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 		return err
 	}
 
-	log.Debugf("There are %d scheduled %s games today\n", len(games), s.api.League())
+	s.log.Debugf("There are %d scheduled %s games today", len(games), s.api.League())
 
 	if len(games) == 0 {
 		log.Debug("No scheduled games for %s, not rendering", s.api.League())
@@ -254,6 +255,11 @@ OUTER:
 			isOver, err := liveGame.IsComplete()
 			if err != nil {
 				s.log.Errorf("failed to determine if game is complete: %s", err.Error())
+			}
+
+			_, err = s.RenderGameCounter(canvas, len(games), gameIndex, 1)
+			if err != nil {
+				return err
 			}
 
 			if isLive {

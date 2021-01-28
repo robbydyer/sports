@@ -3,6 +3,8 @@ package sportboard
 import (
 	"context"
 	"fmt"
+	"image"
+	"image/draw"
 	"time"
 
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
@@ -71,6 +73,8 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 			},
 			s.config.ScoreColor,
 		)
+
+		draw.Draw(canvas, canvas.Bounds(), s.counter, image.ZP, draw.Over)
 
 		if err := canvas.Render(); err != nil {
 			return err
@@ -157,6 +161,8 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas *rgb.Canvas,
 		s.config.ScoreColor,
 	)
 
+	draw.Draw(canvas, canvas.Bounds(), s.counter, image.ZP, draw.Over)
+
 	return canvas.Render()
 }
 
@@ -208,6 +214,8 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas *rgb.Canvas,
 		},
 		s.config.ScoreColor,
 	)
+
+	draw.Draw(canvas, canvas.Bounds(), s.counter, image.ZP, draw.Over)
 
 	return canvas.Render()
 }
