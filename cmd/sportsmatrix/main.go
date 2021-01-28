@@ -7,18 +7,18 @@ import (
 
 	yaml "github.com/ghodss/yaml"
 	"github.com/markbates/pkger"
-	"github.com/robbydyer/sports/internal/config"
-
-	//"github.com/robbydyer/sports/pkg/nhlboard"
-	"github.com/robbydyer/sports/pkg/sportsmatrix"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/robbydyer/sports/internal/config"
 	"github.com/robbydyer/sports/pkg/sportboard"
+	"github.com/robbydyer/sports/pkg/sportsmatrix"
 )
 
 type rootArgs struct {
-	logLevel   string
+	level      string
+	logLevel   log.Level
 	configFile string
 	config     *config.Config
 }
@@ -55,6 +55,12 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 				args.config = &config.Config{}
 			}
 
+			var err error
+			args.logLevel, err = log.ParseLevel(viper.GetString("log-level"))
+			if err != nil {
+				return err
+			}
+
 			return nil
 		},
 	}
@@ -62,6 +68,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 	f := rootCmd.PersistentFlags()
 
 	f.StringVarP(&args.configFile, "config", "c", "", "Config filename")
+	f.StringVarP(&args.level, "log-level", "l", "info", "Log level. 'info', 'warn', 'debug'")
 
 	_ = viper.BindPFlags(f)
 
