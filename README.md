@@ -16,11 +16,14 @@ I am currently running this with a Pi-zero. It performs perfectly well so far. I
 
 ## Roadmap
 
-### More Sports
+#### More Sports
 My goal is to add new boards for all the major sports that I'm personally interested in. For now, that list includes (order of priority) MLB, College Football, NFL, and possibly something for PGA Tour (maybe in time for the Masters?).
 
-### Web API for on-the-fly config changes
+#### Web API for on-the-fly config changes
 I ultimately would like to integrate a web API that allows certain things to be modified on the fly- this would ideally mean a simple web UI for tweaking things without having to access the Pi and restart the service.
+
+#### More Misc. Boards
+I'd like to add some other basic boards- clock, weather, etc.
 
 ## Installation
 My goal is to soon provide an easy installer script...
@@ -97,4 +100,6 @@ script/build.arm7
 
 ## Examples
 ![NHL example 2](assets/images/nhl_example.jpg)
+
+In real life, this is a GIF of Mario running. This is using the Image Board.
 ![image example](assets/images/mario_board.jpg)
