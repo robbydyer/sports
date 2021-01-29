@@ -59,3 +59,18 @@ sportsMatrixConfig:
     hardwareMapping: adafruit-hat-pwm
     showRefreshRate: false
     ```
+
+## Running the Board
+The app currently only runs in the foreground, there's no builtin daemonizing mechanism. Maybe one day I'll provide systemd (or whatever Raspbian uses) configs. For now, I suggest either running the app in a screen session or manually backgrounding the process. 
+
+NOTE: You *MUST* run the app via sudo. The underlying C library requires it. It does switch to a less-privileged user after the matrix is initialized.
+```
+# Run with defaults
+sudo ./sportsmatrix.bin run
+
+# With config file
+sudo ./sportsmatrix.bin run -c myconfig.conf
+
+# NHL demo mode
+sudo ./sportsmatrix.bin nhltest
+```
