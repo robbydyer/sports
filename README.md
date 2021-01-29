@@ -90,11 +90,15 @@ I'm always open to pull requests for features/bug fixes! Feel free to open an is
 I have tried implementing cross-compile support with docker, because building on a Pi Zero is quite slow. It sort of works, but with some weird caveats: running the cross-compiled binary on the Pi is resulting in brighter/washed out images for me. If anyone can figure out how to make this work better, please let me know.
 
 ```shell
+# Building directly on a Pi. Creates a binary named "sportsmatrix.bin"
+script/build.local
+
 # To build an armv6l image (for a Pi zero) in docker:
 # This results in a binary named "sportsmatrix.armv6l"
 script/build.armv6l
 
-# To build arm7 image (Pi 4?)
+# To build arm7 image (Pi 4?). Results in a binary
+# named "sportsmatrix.arm7"
 script/build.arm7
 ```
 
