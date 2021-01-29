@@ -85,6 +85,9 @@ github.com/robbydyer/exp/shiny/driver/mtldriver/internal/coreanim
 github.com/robbydyer/exp/shiny/driver/windriver
 github.com/robbydyer/exp/shiny/driver/x11driver
 github.com/robbydyer/exp/shiny/screen
+# github.com/robfig/cron/v3 v3.0.1
+## explicit
+github.com/robfig/cron/v3
 # github.com/sirupsen/logrus v1.2.0
 ## explicit
 github.com/sirupsen/logrus

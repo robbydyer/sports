@@ -87,6 +87,11 @@ func (g *Game) IsComplete() (bool, error) {
 	if g.GameData != nil && g.GameData.Status != nil && strings.Contains(strings.ToLower(g.GameData.Status.AbstractGameState), "final") {
 		return true, nil
 	}
+	if g.LiveData != nil &&
+		g.LiveData.Linescore != nil &&
+		strings.Contains(strings.ToLower(g.LiveData.Linescore.CurrentPeriodTimeRemaining), "final") {
+		return true, nil
+	}
 	return false, nil
 }
 func (g *Game) HomeTeam() (sportboard.Team, error) {

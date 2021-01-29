@@ -56,6 +56,13 @@ func (l *Logo) GetThumbnail(size image.Rectangle) (image.Image, error) {
 
 	if _, err := os.Stat(thumbFile); err != nil {
 		if os.IsNotExist(err) {
+			if _, err := os.Stat(l.targetDirectory); err != nil {
+				if os.IsNotExist(err) {
+					if err := os.MkdirAll(l.targetDirectory, 0755); err != nil {
+						return nil, fmt.Errorf("failed to create logo cache dir: %w", err)
+					}
+				}
+			}
 			// Create the thumbnail
 			fmt.Printf("Saving thumbnail logo %s\n", thumbFile)
 			l.thumbnail = rgbrender.ResizeImage(l.sourceLogo, size, l.config.Pt.Zoom)

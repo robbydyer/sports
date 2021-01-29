@@ -80,7 +80,7 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("WAT. No boards?")
 	}
 
-	mtrx, err := sportsmatrix.New(ctx, s.rArgs.config.SportsMatrixConfig, boards...)
+	mtrx, err := sportsmatrix.New(ctx, logger, s.rArgs.config.SportsMatrixConfig, boards...)
 	if err != nil {
 		return err
 	}

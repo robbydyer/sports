@@ -5,24 +5,35 @@ import (
 	"fmt"
 	"image"
 	_ "image/png"
+	"sync"
 	"time"
 
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
+	"github.com/robfig/cron/v3"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/robbydyer/sports/pkg/board"
+	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
 type SportsMatrix struct {
-	cfg    *Config
-	matrix rgb.Matrix
-	boards []board.Board
-	done   chan bool
+	cfg         *Config
+	matrix      rgb.Matrix
+	boards      []board.Board
+	done        chan bool
+	screenIsOn  bool
+	screenOff   chan bool
+	screenOn    chan bool
+	log         *log.Logger
+	boardCtx    context.Context
+	boardCancel context.CancelFunc
+	sync.Mutex
 }
 
 type Config struct {
-	RotationDelay  string
-	EnableNHL      bool `json:"enableNHL,omitempty"`
-	HardwareConfig *rgb.HardwareConfig
+	HardwareConfig *rgb.HardwareConfig `json:"hardwareConfig"`
+	ScreenOffTimes []string            `json:"screenOffTimes"`
+	ScreenOnTimes  []string            `json:"screenOnTimes"`
+	EnableNHL      bool                `json:"enableNHL,omitempty"`
 }
 
 func (c *Config) Defaults() {
@@ -41,9 +52,6 @@ func (c *Config) Defaults() {
 	if c.HardwareConfig.Brightness == 0 || c.HardwareConfig.Brightness == 100 {
 		c.HardwareConfig.Brightness = 60
 	}
-	if c.RotationDelay == "" {
-		c.RotationDelay = "20s"
-	}
 	if c.HardwareConfig.HardwareMapping == "" {
 		c.HardwareConfig.HardwareMapping = "adafruit-hat-pwm"
 	}
@@ -61,27 +69,22 @@ func (c *Config) Defaults() {
 	}
 }
 
-func (c *Config) rotationDelay() time.Duration {
-	d, err := time.ParseDuration(c.RotationDelay)
-	if err != nil {
-		fmt.Printf("could not parse duration '%s', defaulting to 20 sec", c.RotationDelay)
-		return 20 * time.Second
-	}
-	return d
-}
-
-func New(ctx context.Context, cfg *Config, boards ...board.Board) (*SportsMatrix, error) {
+func New(ctx context.Context, logger *log.Logger, cfg *Config, boards ...board.Board) (*SportsMatrix, error) {
 	cfg.Defaults()
 
 	s := &SportsMatrix{
-		boards: boards,
-		cfg:    cfg,
-		done:   make(chan bool, 1),
+		boards:     boards,
+		cfg:        cfg,
+		log:        logger,
+		done:       make(chan bool, 1),
+		screenOff:  make(chan bool, 1),
+		screenOn:   make(chan bool, 1),
+		screenIsOn: true,
 	}
 
 	var err error
 
-	fmt.Printf("Initializing matrix %dx%d\nBrightness:%d\nMapping:%s\n",
+	s.log.Infof("Initializing matrix %dx%d\nBrightness:%d\nMapping:%s\n",
 		s.cfg.HardwareConfig.Cols,
 		s.cfg.HardwareConfig.Rows,
 		s.cfg.HardwareConfig.Brightness,
@@ -94,7 +97,48 @@ func New(ctx context.Context, cfg *Config, boards ...board.Board) (*SportsMatrix
 		return nil, err
 	}
 
+	c := cron.New()
+
+	for _, off := range s.cfg.ScreenOffTimes {
+		s.log.Infof("Screen will be scheduled to turn off at '%s'", off)
+		c.AddFunc(off, func() {
+			s.log.Warn("Turning screen off!")
+			s.screenOff <- true
+		})
+	}
+	for _, on := range s.cfg.ScreenOnTimes {
+		s.log.Infof("Screen will be scheduled to turn on at '%s'", on)
+		c.AddFunc(on, func() {
+			s.log.Warn("Turning screen on!")
+			s.screenOn <- true
+		})
+	}
+	c.Start()
+
 	return s, nil
+}
+func (s *SportsMatrix) screenWatcher(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-s.screenOff:
+			s.Lock()
+			s.log.Warn("screen turning off")
+			s.screenIsOn = false
+			s.boardCancel()
+			c := rgb.NewCanvas(s.matrix)
+			c.Clear()
+			s.boardCtx, s.boardCancel = context.WithCancel(context.Background())
+			s.Unlock()
+		case <-s.screenOn:
+			s.Lock()
+			s.log.Warn("screen turning on")
+			s.screenIsOn = true
+			s.Unlock()
+		case <-time.After(2 * time.Second):
+		}
+	}
 }
 
 // MatrixBounds returns an image.Rectangle of the matrix bounds
@@ -108,14 +152,25 @@ func (s *SportsMatrix) Done() chan bool {
 }
 
 func (s *SportsMatrix) Serve(ctx context.Context) error {
+	s.boardCtx, s.boardCancel = context.WithCancel(context.Background())
+	defer s.boardCancel()
+
+	go s.screenWatcher(ctx)
+
 	if len(s.boards) < 1 {
 		return fmt.Errorf("no boards configured")
 	}
-	fmt.Println("Serving boards...")
+	s.log.Infof("Serving boards...")
 	for {
+		if !s.screenIsOn {
+			time.Sleep(10 * time.Second)
+			s.log.Warn("screen is turned off")
+			continue
+		}
 		select {
 		case <-ctx.Done():
-			fmt.Println("Got context cancel, cleaning up boards")
+			s.boardCancel()
+			s.log.Info("Got context cancel, cleaning up boards")
 			go func() {
 				for _, b := range s.boards {
 					b.Cleanup()
@@ -130,18 +185,13 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 			if s.anyPriorities() && !b.HasPriority() {
 				continue
 			}
-			if b.HasPriority() {
-				fmt.Printf("Rendering board '%s' as priority\n", b.Name())
-				err := b.Render(ctx, s.matrix)
-				if err != nil {
-					fmt.Printf("Error: %s", err.Error())
-				}
-				break INNER
-			}
-			fmt.Printf("Rendering board '%s'\n", b.Name())
-			err := b.Render(ctx, s.matrix)
+			err := b.Render(s.boardCtx, s.matrix)
 			if err != nil {
-				fmt.Printf("Error: %s", err.Error())
+				s.log.Errorf("Error: %s", err.Error())
+			}
+			if b.HasPriority() {
+				s.log.Infof("Rendering board '%s' as priority\n", b.Name())
+				break INNER
 			}
 			b.Cleanup()
 		}
@@ -160,11 +210,11 @@ func (s *SportsMatrix) anyPriorities() bool {
 
 func (s *SportsMatrix) Close() {
 	if len(s.boards) > 1 {
-		fmt.Println("Waiting for boards to clean up")
+		s.log.Info("Waiting for boards to clean up")
 		<-s.done
 	}
 	if s.matrix != nil {
-		fmt.Println("Closing matrix")
+		s.log.Info("Closing matrix")
 		_ = s.matrix.Close()
 	}
 }

@@ -49,6 +49,11 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 	}
 
 	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("context canceled")
+		default:
+		}
 		if err := s.RenderHomeLogo(canvas, homeTeam.GetAbbreviation()); err != nil {
 			return err
 		}
@@ -65,14 +70,18 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 			s.config.TimeColor,
 		)
 
-		scoreWriter.Write(
-			canvas,
-			scoreAlign,
-			[]string{
-				score,
-			},
-			s.config.ScoreColor,
-		)
+		if s.config.HideFavoriteScore && isFavorite {
+			s.log.Warn("hiding score for favorite team")
+		} else {
+			scoreWriter.Write(
+				canvas,
+				scoreAlign,
+				[]string{
+					score,
+				},
+				s.config.ScoreColor,
+			)
+		}
 
 		draw.Draw(canvas, canvas.Bounds(), s.counter, image.ZP, draw.Over)
 

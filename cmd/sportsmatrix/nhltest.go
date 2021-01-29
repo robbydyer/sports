@@ -70,7 +70,7 @@ func (c *nhlCmd) run(cmd *cobra.Command, args []string) error {
 
 	boards = append(boards, b)
 
-	mtrx, err := sportsmatrix.New(ctx, c.rArgs.config.SportsMatrixConfig, boards...)
+	mtrx, err := sportsmatrix.New(ctx, logger, c.rArgs.config.SportsMatrixConfig, boards...)
 	if err != nil {
 		return err
 	}

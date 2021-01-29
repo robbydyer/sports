@@ -39,6 +39,9 @@ func (t *Team) Score() int {
 }
 
 func (t *Team) setGameTimes() error {
+	if t.NextGameSchedule == nil {
+		return nil
+	}
 	for _, d := range t.NextGameSchedule.Dates {
 		for _, g := range d.Games {
 			var err error

@@ -38,17 +38,18 @@ type SportBoard struct {
 }
 
 type Config struct {
-	boardDelay     time.Duration
-	TimeColor      color.Color
-	ScoreColor     color.Color
-	Enabled        bool           `json:"enabled"`
-	BoardDelay     string         `json:"boardDelay"`
-	FavoriteSticky bool           `json:"favoriteSticky"`
-	ScoreFont      *FontConfig    `json:"scoreFont"`
-	TimeFont       *FontConfig    `json:"timeFont"`
-	LogoConfigs    []*logo.Config `json:"logoConfigs"`
-	WatchTeams     []string       `json:"watchTeams"`
-	FavoriteTeams  []string       `json:"favoriteTeams"`
+	boardDelay        time.Duration
+	TimeColor         color.Color
+	ScoreColor        color.Color
+	Enabled           bool           `json:"enabled"`
+	BoardDelay        string         `json:"boardDelay"`
+	FavoriteSticky    bool           `json:"favoriteSticky"`
+	ScoreFont         *FontConfig    `json:"scoreFont"`
+	TimeFont          *FontConfig    `json:"timeFont"`
+	LogoConfigs       []*logo.Config `json:"logoConfigs"`
+	WatchTeams        []string       `json:"watchTeams"`
+	FavoriteTeams     []string       `json:"favoriteTeams"`
+	HideFavoriteScore bool           `json:"hideFavoriteScore"`
 }
 
 type FontConfig struct {
@@ -185,6 +186,12 @@ func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 
 OUTER:
 	for gameIndex, game := range games {
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		default:
+		}
+
 		nextGameIndex := gameIndex + 1
 		s.log.Debugf("Current game index is %d, current ID is %d", gameIndex, game.GetID())
 		// preload data for the next game
@@ -201,7 +208,7 @@ OUTER:
 		// Wait for the preloader to finish getting data, but with a timeout.
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("context canceled")
+			return context.Canceled
 		case <-preloader[game.GetID()]:
 			s.log.Debugf("preloader for %d marked ready", game.GetID())
 		case <-time.After(s.config.boardDelay):
@@ -229,6 +236,11 @@ OUTER:
 
 	INNER:
 		for _, watchTeam := range s.config.WatchTeams {
+			select {
+			case <-ctx.Done():
+				return context.Canceled
+			default:
+			}
 			s.log.Debugf("checking if %s is involved in game between %s vs %s", watchTeam, homeTeam.GetAbbreviation(), awayTeam.GetAbbreviation())
 
 			team, err := s.api.TeamFromAbbreviation(ctx, watchTeam)
@@ -281,7 +293,7 @@ OUTER:
 
 			select {
 			case <-ctx.Done():
-				return fmt.Errorf("context canceled")
+				return context.Canceled
 			case <-time.After(s.config.boardDelay):
 			}
 
