@@ -157,6 +157,11 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 
 	go s.screenWatcher(ctx)
 
+	var once sync.Once
+	logScreenOff := func() {
+		s.log.Warn("screen is turned off")
+	}
+
 	if len(s.boards) < 1 {
 		return fmt.Errorf("no boards configured")
 	}
@@ -164,7 +169,7 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 	for {
 		if !s.screenIsOn {
 			time.Sleep(10 * time.Second)
-			s.log.Warn("screen is turned off")
+			once.Do(logScreenOff)
 			continue
 		}
 		select {
