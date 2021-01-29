@@ -102,6 +102,9 @@ script/build.armv6l
 script/build.arm7
 ```
 
+#### Implementing a new Board
+Any new boards just need to implement the [board.Board](pkg/board/board.go) interface. A new sports type board would be best to implement the API, Team, and Game interfaces in a [sportboard.SportBoard](pkg/sportboard/sportboard.go) (See the [NHL Board](pkg/nhl/nhl.go) for an example).
+
 ## Examples
 ![NHL example 2](assets/images/nhl_example.jpg)
 
