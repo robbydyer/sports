@@ -1,5 +1,4 @@
-vendor/github.com/robbydyer/rgbmatrix-rpi/examples/
-vendor/github.com/robbydyer/rgbmatrix-rpi/lib
+pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/
 sportsmatrix.bin
 sportsmatrix.arm*
 *.swp
