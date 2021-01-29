@@ -31,7 +31,7 @@ The manual steps:
 You can run the app without passing any configuration, it will just use some sane defaults. Currently it only defaults to showing the NHL board. Each board that is enabled will be rotated through.
 
 Example:
-```
+```shell
 ---
 # Image Board. It rotates between all the images in the given directories
 imageConfig:
@@ -62,7 +62,7 @@ sportsMatrixConfig:
     brightness: 60
     hardwareMapping: adafruit-hat-pwm
     showRefreshRate: false
-    ```
+ ```
 
 ## Running the Board
 The app currently only runs in the foreground, there's no builtin daemonizing mechanism. Maybe one day I'll provide systemd (or whatever Raspbian uses) configs. For now, I suggest either running the app in a screen session or manually backgrounding the process. 
