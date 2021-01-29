@@ -68,7 +68,7 @@ sportsMatrixConfig:
 The app currently only runs in the foreground, there's no builtin daemonizing mechanism. Maybe one day I'll provide systemd (or whatever Raspbian uses) configs. For now, I suggest either running the app in a screen session or manually backgrounding the process. 
 
 NOTE: You *MUST* run the app via sudo. The underlying C library requires it. It does switch to a less-privileged user after the matrix is initialized.
-```
+```shell
 # Run with defaults
 sudo ./sportsmatrix.bin run
 
@@ -84,7 +84,7 @@ I'm always open to pull requests for features/bug fixes! Feel free to open an is
 
 I have tried implementing cross-compile support with docker, because building on a Pi Zero is quite slow. It sort of works, but with some weird caveats: running the cross-compiled binary on the Pi is resulting in brighter/washed out images for me. If anyone can figure out how to make this work better, please let me know.
 
-```
+```shell
 # To build an armv6l image (for a Pi zero) in docker:
 # This results in a binary named "sportsmatrix.armv6l"
 script/build.armv6l
