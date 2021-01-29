@@ -3,6 +3,10 @@ Go-based software to control a raspberry pi LED matrix.
 
 This is a Go project for displaying various types of "Boards" on a Raspberry Pi controlled RGB Matrix. The ideas here were heavily inspired by https://github.com/riffnshred/nhl-led-scoreboard . I chose to create my own project based off of those existing ideas because I wanted to be able to easily extend support for additional sports (see Roadmap section). I chose to write this in Go because I prefer it over Python, and theoretically it will run more efficiently than a Python-based one.
 
+I am currently running this with a Pi-zero. It performs perfectly well so far. I've tried to implement caching whenever possible at various layers to make this thing as efficient as possible. It aims to reduce IO my storing images and such in memory.
+
+*WARNING* This project is still very early in development. There will be lots of churn and breakage for a while.
+
 ## Current Board Types
 
 - NHL: Displays the day's games. Either live scores (favorite teams' scores are hideable for those who watch games recorded), Upcoming games, or final scores.
@@ -73,4 +77,18 @@ sudo ./sportsmatrix.bin run -c myconfig.conf
 
 # NHL demo mode
 sudo ./sportsmatrix.bin nhltest
+```
+
+## Contributing / Development
+I'm always open to pull requests for features/bug fixes! Feel free to open an issue if (when) you find a bug.
+
+I have tried implementing cross-compile support with docker, because building on a Pi Zero is quite slow. It sort of works, but with some weird caveats: running the cross-compiled binary on the Pi is resulting in brighter/washed out images for me. If anyone can figure out how to make this work better, please let me know.
+
+```
+# To build an armv6l image (for a Pi zero) in docker:
+# This results in a binary named "sportsmatrix.armv6l"
+script/build.armv6l
+
+# To build arm7 image (Pi 4?)
+script/build.arm7
 ```
