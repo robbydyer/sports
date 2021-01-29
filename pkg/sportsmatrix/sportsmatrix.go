@@ -91,6 +91,10 @@ func New(ctx context.Context, logger *log.Logger, cfg *Config, boards ...board.B
 		s.cfg.HardwareConfig.HardwareMapping,
 	)
 
+	for _, b := range s.boards {
+		s.log.Infof("Registering board: %s", b.Name())
+	}
+
 	rt := &rgb.DefaultRuntimeOptions
 	s.matrix, err = rgb.NewRGBLedMatrix(s.cfg.HardwareConfig, rt)
 	if err != nil {
@@ -121,6 +125,7 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			s.boardCancel()
 			return
 		case <-s.screenOff:
 			s.Lock()
@@ -165,35 +170,42 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 	if len(s.boards) < 1 {
 		return fmt.Errorf("no boards configured")
 	}
+
 	s.log.Infof("Serving boards...")
 	for {
+		select {
+		case <-ctx.Done():
+			s.log.Info("Got context cancel")
+			s.boardCancel()
+			// Wait for boards to cancel
+			time.Sleep(5)
+			return nil
+		default:
+		}
+
 		if !s.screenIsOn {
 			time.Sleep(10 * time.Second)
 			once.Do(logScreenOff)
 			continue
 		}
-		select {
-		case <-ctx.Done():
-			s.boardCancel()
-			s.log.Info("Got context cancel, cleaning up boards")
-			go func() {
-				for _, b := range s.boards {
-					b.Cleanup()
-				}
-			}()
-			s.done <- true
-			return nil
-		default:
-		}
 	INNER:
 		for _, b := range s.boards {
+			s.log.Debugf("Processing board %s", b.Name())
 			if s.anyPriorities() && !b.HasPriority() {
-				continue
+				s.log.Warnf("skipping board %s: another has priority", b.Name())
+				time.Sleep(1 * time.Second)
+				continue INNER
 			}
-			err := b.Render(s.boardCtx, s.matrix)
-			if err != nil {
-				s.log.Errorf("Error: %s", err.Error())
+			if !b.Enabled() {
+				s.log.Warnf("skipping board %s: it is disabled", b.Name())
+				time.Sleep(1 * time.Second)
+				continue INNER
 			}
+
+			if err := b.Render(s.boardCtx, s.matrix); err != nil {
+				s.log.Error(err.Error())
+			}
+
 			if b.HasPriority() {
 				s.log.Infof("Rendering board '%s' as priority\n", b.Name())
 				break INNER
@@ -214,12 +226,8 @@ func (s *SportsMatrix) anyPriorities() bool {
 }
 
 func (s *SportsMatrix) Close() {
-	if len(s.boards) > 1 {
-		s.log.Info("Waiting for boards to clean up")
-		<-s.done
-	}
 	if s.matrix != nil {
-		s.log.Info("Closing matrix")
+		s.log.Warn("Sportsmatrix is shutting down- Closing matrix")
 		_ = s.matrix.Close()
 	}
 }

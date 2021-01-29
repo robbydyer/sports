@@ -1,4 +1,4 @@
-FROM debian:stretch
+FROM debian:buster
 
 ENV GNU_HOST=arm-linux-gnueabihf
 ENV C_COMPILER_ARM_LINUX=$GNU_HOST-gcc

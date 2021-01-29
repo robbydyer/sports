@@ -1,0 +1,28 @@
+#!/bin/bash
+# Run this build script directly on the Raspberry Pi
+set -euo pipefail
+
+if ! uname -a | grep raspberry &> /dev/null; then
+  echo "This build script only works directly on a Raspberry Pi"
+  exit 1
+fi
+
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+cd "${ROOT}"
+SUFFIX="bin"
+
+set -x
+export CGO_ENABLED=1
+export GOCACHE=${ROOT}/.cache
+
+if [ ! -d "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" ]; then
+  cp -r "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
+fi
+
+if [ ! -f ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/lib/librgbmatrix.so.1 ]; then
+  cd ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix
+  make
+fi
+
+cd "${ROOT}"
+go build -mod=vendor -o sportsmatrix.${SUFFIX}  ./cmd/sportsmatrix

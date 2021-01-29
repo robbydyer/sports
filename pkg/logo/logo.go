@@ -124,27 +124,3 @@ func (l *Logo) RenderRightAligned(canvas *rgb.Canvas, width int) (image.Image, e
 
 	return i, nil
 }
-
-func RenderLeftAligned(canvas *rgb.Canvas, img image.Image, width int, xShift int, yShift int) (image.Image, error) {
-	startX := width - img.Bounds().Dx() + xShift
-	startY := 0 + yShift
-
-	bounds := image.Rect(startX, startY, canvas.Bounds().Dx()-1, canvas.Bounds().Dy()-1)
-
-	i := image.NewRGBA(bounds)
-	draw.Draw(i, bounds, img, image.ZP, draw.Over)
-
-	return i, nil
-}
-
-func RenderRightAligned(canvas *rgb.Canvas, img image.Image, width int, xShift int, yShift int) (image.Image, error) {
-	startX := width + xShift
-	startY := 0 + yShift
-
-	bounds := image.Rect(startX, startY, canvas.Bounds().Dx()-1, canvas.Bounds().Dy()-1)
-
-	i := image.NewRGBA(bounds)
-	draw.Draw(i, bounds, img, image.ZP, draw.Over)
-
-	return i, nil
-}

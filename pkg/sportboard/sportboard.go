@@ -151,12 +151,20 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *log.Logge
 }
 
 func (s *SportBoard) Name() string {
+	if l := s.api.League(); l != "" {
+		return l
+	}
 	return "SportBoard"
+}
+
+func (s *SportBoard) Enabled() bool {
+	return s.config.Enabled
 }
 
 func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	if !s.config.Enabled {
 		s.log.Warnf("%s board is not enabled, skipping", s.api.League())
+		return nil
 	}
 	canvas := rgb.NewCanvas(matrix)
 

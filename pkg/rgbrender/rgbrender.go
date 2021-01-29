@@ -4,10 +4,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"image/gif"
-	"io"
 	"math"
-	"time"
 
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
@@ -111,79 +108,4 @@ func DrawRectangle(canvas *rgb.Canvas, startX int, startY int, sizeX int, sizeY 
 	draw.Draw(canvas, canvas.Bounds(), rgba, image.ZP, draw.Over)
 
 	return nil
-}
-
-// DrawImageAligned draws an image aligned within the given bounds
-func DrawImageAligned(canvas *rgb.Canvas, bounds image.Rectangle, img *image.RGBA, align Align) error {
-	aligned, err := AlignPosition(align, bounds, img.Bounds().Dx(), img.Bounds().Dy())
-	if err != nil {
-		return err
-	}
-
-	img.Rect.Min = aligned.Min
-	img.Rect.Max = aligned.Max
-
-	return DrawImage(canvas, canvas.Bounds(), img)
-}
-
-// DrawImage draws an image
-func DrawImage(canvas *rgb.Canvas, bounds image.Rectangle, img image.Image) error {
-	draw.Draw(canvas, bounds, img, img.Bounds().Min, draw.Over)
-	return nil
-}
-
-func PlayImages(canvas *rgb.Canvas, images []image.Image, delay []time.Duration, loop int) (chan bool, chan error) {
-	quit := make(chan bool, 0)
-	errChan := make(chan error)
-
-	go func() {
-		l := len(images)
-		i := 0
-		for {
-			select {
-			case <-quit:
-				return
-			default:
-				if err := DrawImage(canvas, canvas.Bounds(), images[i]); err != nil {
-					errChan <- err
-				}
-				if err := canvas.Render(); err != nil {
-					errChan <- err
-				}
-				time.Sleep(delay[i])
-			}
-
-			i++
-			if i >= l {
-				if loop == 0 {
-					i = 0
-					continue
-				}
-
-				break
-			}
-		}
-	}()
-
-	return quit, errChan
-}
-
-// PlayGIF reads and draw a gif file from r. It use the contained images and
-// delays and loops over it, until a true is sent to the returned chan
-func PlayGIF(canvas *rgb.Canvas, r io.Reader) (chan bool, chan error) {
-	errChan := make(chan error)
-	gif, err := gif.DecodeAll(r)
-	if err != nil {
-		defer func() { errChan <- err }()
-		return nil, errChan
-	}
-
-	delay := make([]time.Duration, len(gif.Delay))
-	images := make([]image.Image, len(gif.Image))
-	for i, image := range gif.Image {
-		images[i] = image
-		delay[i] = time.Millisecond * time.Duration(gif.Delay[i]) * 10
-	}
-
-	return PlayImages(canvas, images, delay, gif.LoopCount)
 }

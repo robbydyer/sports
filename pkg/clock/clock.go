@@ -20,6 +20,10 @@ func (b *basicClock) Name() string {
 	return "Basic Clock"
 }
 
+func (b *basicClock) Enabled() bool {
+	return true
+}
+
 func (b *basicClock) Cleanup() {}
 
 func (b *basicClock) Render(ctx context.Context, matrix rgb.Matrix) error {

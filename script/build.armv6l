@@ -1,5 +1,12 @@
 #!/bin/bash
+# This is an experimental build script for cross-compiling inside of docker.
+# Thus far, the results have been weird
 set -euo pipefail
+
+if uname -a | grep raspberry &> /dev/null; then
+  echo "Wrong script! Run script/build.local on a Pi"
+  exit 1
+fi
 
 ROOT=$(git rev-parse --show-toplevel)
 cd "${ROOT}"
@@ -24,29 +31,26 @@ if [ "${IN_DOCKER}" = "no" ]; then
       ${pibuilder} \
       /src/script/$(basename $0)
   fi
-
-  # Being built on raspberry directly
-  SUFFIX="local"
 fi
 
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 
 export CGO_ENABLED=1
 export GOCACHE=${ROOT}/.cache
-
-# Only cross-compile inside docker
-if [ "${IN_DOCKER}" = "yes" ]; then
-  export GOOS=linux
-  export GOARCH=arm
-  export GOARM=6
-  export CC=arm-linux-gnueabi-gcc
-  export CXX=arm-linux-gnueabi-g++
-fi
+export GOOS=linux
+export GOARCH=arm
+export GOARM=6
+export CC=arm-linux-gnueabi-gcc
+export CXX=arm-linux-gnueabi-g++
 
 set -x
 
-if [ ! -f ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/lib/librgbmatrix.so.1 ]; then
-  cd ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix
+if [ ! -d "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" ]; then
+  cp -r "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
+fi
+
+if [ ! -f "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/lib/librgbmatrix.so.1" ]; then
+  cd "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
   make
 fi
 

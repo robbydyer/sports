@@ -85,6 +85,10 @@ func (t *testBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	return nil
 }
 
+func (y *testBoard) Enabled() bool {
+	return true
+}
+
 func (t *testBoard) Cleanup() {
 	if t.canvas != nil {
 		_ = t.canvas.Clear()

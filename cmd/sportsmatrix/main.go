@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/robbydyer/sports/internal/config"
+	"github.com/robbydyer/sports/pkg/imageboard"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 )
@@ -105,6 +106,11 @@ func (r *rootArgs) setConfigDefaults() {
 	}
 
 	r.config.NHLConfig.SetDefaults()
+
+	if r.config.ImageConfig == nil {
+		r.config.ImageConfig = &imageboard.Config{}
+	}
+	r.config.ImageConfig.SetDefaults()
 }
 
 func includeAssets() {
