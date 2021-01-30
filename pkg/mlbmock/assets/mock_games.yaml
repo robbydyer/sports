@@ -1,0 +1,391 @@
+---
+- gamePk: 133
+  link: "133"
+  teams:
+    away:
+      team:
+        id: 133
+        abbreviation: "OAK"
+        name: "OAK"
+    home:
+      team:
+        id: 133
+        abbreviation: "OAK"
+        name: "OAK"
+- gamePk: 134
+  link: "134"
+  teams:
+    away:
+      team:
+        id: 134
+        abbreviation: "PIT"
+        name: "PIT"
+    home:
+      team:
+        id: 134
+        abbreviation: "PIT"
+        name: "PIT"
+- gamePk: 135
+  link: "135"
+  teams:
+    away:
+      team:
+        id: 135
+        abbreviation: "SD"
+        name: "SD"
+    home:
+      team:
+        id: 135
+        abbreviation: "SD"
+        name: "SD"
+- gamePk: 136
+  link: "136"
+  teams:
+    away:
+      team:
+        id: 136
+        abbreviation: "SEA"
+        name: "SEA"
+    home:
+      team:
+        id: 136
+        abbreviation: "SEA"
+        name: "SEA"
+- gamePk: 137
+  link: "137"
+  teams:
+    away:
+      team:
+        id: 137
+        abbreviation: "SF"
+        name: "SF"
+    home:
+      team:
+        id: 137
+        abbreviation: "SF"
+        name: "SF"
+- gamePk: 138
+  link: "138"
+  teams:
+    away:
+      team:
+        id: 138
+        abbreviation: "STL"
+        name: "STL"
+    home:
+      team:
+        id: 138
+        abbreviation: "STL"
+        name: "STL"
+- gamePk: 139
+  link: "139"
+  teams:
+    away:
+      team:
+        id: 139
+        abbreviation: "TB"
+        name: "TB"
+    home:
+      team:
+        id: 139
+        abbreviation: "TB"
+        name: "TB"
+- gamePk: 140
+  link: "140"
+  teams:
+    away:
+      team:
+        id: 140
+        abbreviation: "TEX"
+        name: "TEX"
+    home:
+      team:
+        id: 140
+        abbreviation: "TEX"
+        name: "TEX"
+- gamePk: 141
+  link: "141"
+  teams:
+    away:
+      team:
+        id: 141
+        abbreviation: "TOR"
+        name: "TOR"
+    home:
+      team:
+        id: 141
+        abbreviation: "TOR"
+        name: "TOR"
+- gamePk: 142
+  link: "142"
+  teams:
+    away:
+      team:
+        id: 142
+        abbreviation: "MIN"
+        name: "MIN"
+    home:
+      team:
+        id: 142
+        abbreviation: "MIN"
+        name: "MIN"
+- gamePk: 143
+  link: "143"
+  teams:
+    away:
+      team:
+        id: 143
+        abbreviation: "PHI"
+        name: "PHI"
+    home:
+      team:
+        id: 143
+        abbreviation: "PHI"
+        name: "PHI"
+- gamePk: 144
+  link: "144"
+  teams:
+    away:
+      team:
+        id: 144
+        abbreviation: "ATL"
+        name: "ATL"
+    home:
+      team:
+        id: 144
+        abbreviation: "ATL"
+        name: "ATL"
+- gamePk: 145
+  link: "145"
+  teams:
+    away:
+      team:
+        id: 145
+        abbreviation: "CWS"
+        name: "CWS"
+    home:
+      team:
+        id: 145
+        abbreviation: "CWS"
+        name: "CWS"
+- gamePk: 146
+  link: "146"
+  teams:
+    away:
+      team:
+        id: 146
+        abbreviation: "MIA"
+        name: "MIA"
+    home:
+      team:
+        id: 146
+        abbreviation: "MIA"
+        name: "MIA"
+- gamePk: 147
+  link: "147"
+  teams:
+    away:
+      team:
+        id: 147
+        abbreviation: "NYY"
+        name: "NYY"
+    home:
+      team:
+        id: 147
+        abbreviation: "NYY"
+        name: "NYY"
+- gamePk: 158
+  link: "158"
+  teams:
+    away:
+      team:
+        id: 158
+        abbreviation: "MIL"
+        name: "MIL"
+    home:
+      team:
+        id: 158
+        abbreviation: "MIL"
+        name: "MIL"
+- gamePk: 108
+  link: "108"
+  teams:
+    away:
+      team:
+        id: 108
+        abbreviation: "LAA"
+        name: "LAA"
+    home:
+      team:
+        id: 108
+        abbreviation: "LAA"
+        name: "LAA"
+- gamePk: 109
+  link: "109"
+  teams:
+    away:
+      team:
+        id: 109
+        abbreviation: "ARI"
+        name: "ARI"
+    home:
+      team:
+        id: 109
+        abbreviation: "ARI"
+        name: "ARI"
+- gamePk: 110
+  link: "110"
+  teams:
+    away:
+      team:
+        id: 110
+        abbreviation: "BAL"
+        name: "BAL"
+    home:
+      team:
+        id: 110
+        abbreviation: "BAL"
+        name: "BAL"
+- gamePk: 111
+  link: "111"
+  teams:
+    away:
+      team:
+        id: 111
+        abbreviation: "BOS"
+        name: "BOS"
+    home:
+      team:
+        id: 111
+        abbreviation: "BOS"
+        name: "BOS"
+- gamePk: 112
+  link: "112"
+  teams:
+    away:
+      team:
+        id: 112
+        abbreviation: "CHC"
+        name: "CHC"
+    home:
+      team:
+        id: 112
+        abbreviation: "CHC"
+        name: "CHC"
+- gamePk: 113
+  link: "113"
+  teams:
+    away:
+      team:
+        id: 113
+        abbreviation: "CIN"
+        name: "CIN"
+    home:
+      team:
+        id: 113
+        abbreviation: "CIN"
+        name: "CIN"
+- gamePk: 114
+  link: "114"
+  teams:
+    away:
+      team:
+        id: 114
+        abbreviation: "CLE"
+        name: "CLE"
+    home:
+      team:
+        id: 114
+        abbreviation: "CLE"
+        name: "CLE"
+- gamePk: 115
+  link: "115"
+  teams:
+    away:
+      team:
+        id: 115
+        abbreviation: "COL"
+        name: "COL"
+    home:
+      team:
+        id: 115
+        abbreviation: "COL"
+        name: "COL"
+- gamePk: 116
+  link: "116"
+  teams:
+    away:
+      team:
+        id: 116
+        abbreviation: "DET"
+        name: "DET"
+    home:
+      team:
+        id: 116
+        abbreviation: "DET"
+        name: "DET"
+- gamePk: 117
+  link: "117"
+  teams:
+    away:
+      team:
+        id: 117
+        abbreviation: "HOU"
+        name: "HOU"
+    home:
+      team:
+        id: 117
+        abbreviation: "HOU"
+        name: "HOU"
+- gamePk: 118
+  link: "118"
+  teams:
+    away:
+      team:
+        id: 118
+        abbreviation: "KC"
+        name: "KC"
+    home:
+      team:
+        id: 118
+        abbreviation: "KC"
+        name: "KC"
+- gamePk: 119
+  link: "119"
+  teams:
+    away:
+      team:
+        id: 119
+        abbreviation: "LAD"
+        name: "LAD"
+    home:
+      team:
+        id: 119
+        abbreviation: "LAD"
+        name: "LAD"
+- gamePk: 120
+  link: "120"
+  teams:
+    away:
+      team:
+        id: 120
+        abbreviation: "WSH"
+        name: "WSH"
+    home:
+      team:
+        id: 120
+        abbreviation: "WSH"
+        name: "WSH"
+- gamePk: 121
+  link: "121"
+  teams:
+    away:
+      team:
+        id: 121
+        abbreviation: "NYM"
+        name: "NYM"
+    home:
+      team:
+        id: 121
+        abbreviation: "NYM"
+        name: "NYM"

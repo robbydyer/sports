@@ -73,6 +73,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 
 	_ = viper.BindPFlags(f)
 
+	rootCmd.AddCommand(newMlbCmd(args))
 	rootCmd.AddCommand(newNhlCmd(args))
 	rootCmd.AddCommand(newRunCmd(args))
 

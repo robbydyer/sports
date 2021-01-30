@@ -64,7 +64,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 			canvas,
 			timeAlign,
 			[]string{
-				quarterStr(quarter),
+				quarter,
 				clock,
 			},
 			s.config.TimeColor,

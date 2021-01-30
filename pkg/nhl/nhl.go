@@ -6,17 +6,18 @@ import (
 	"image"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/util"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
-	BaseURL      = "http://statsapi.web.nhl.com/api/v1/"
-	LinkBase     = "http://statsapi.web.nhl.com"
+	BaseURL      = "https://statsapi.web.nhl.com/api/v1/"
+	LinkBase     = "https://statsapi.web.nhl.com"
 	DateFormat   = "2006-01-02"
-	logoCacheDir = "/tmp/sportsmatrix_logos"
+	logoCacheDir = "/tmp/sportsmatrix_logos/nhl"
 	ANA          = "ANA"
 	ARI          = "ARI"
 	BOS          = "BOS"

@@ -40,6 +40,7 @@ type Game struct {
 				Away *GameTeam `json:"away"`
 			} `json:"teams"`
 			CurrentPeriod              int    `json:"currentPeriod,omitempty"`
+			CurrentPeriodOrdinal       string `json:"currentPeriodOrdinal"`
 			CurrentPeriodTimeRemaining string `json:"currentPeriodTimeRemaining,omitempty"`
 		} `json:"linescore"`
 	} `json:"liveData"`
@@ -126,12 +127,12 @@ func (g *Game) AwayTeam() (sportboard.Team, error) {
 
 	return nil, fmt.Errorf("could not locate home team in Game")
 }
-func (g *Game) GetQuarter() (int, error) {
+func (g *Game) GetQuarter() (string, error) {
 	if g.LiveData != nil && g.LiveData.Linescore != nil {
-		return g.LiveData.Linescore.CurrentPeriod, nil
+		return g.LiveData.Linescore.CurrentPeriodOrdinal, nil
 	}
 
-	return 0, nil
+	return "", nil
 }
 func (g *Game) GetClock() (string, error) {
 	if g.LiveData != nil && g.LiveData.Linescore != nil {

@@ -81,7 +81,7 @@ type Game interface {
 	IsComplete() (bool, error)
 	HomeTeam() (Team, error)
 	AwayTeam() (Team, error)
-	GetQuarter() (int, error) // Or a period, hockey fans
+	GetQuarter() (string, error) // Or a period, inning
 	GetClock() (string, error)
 	GetUpdate(ctx context.Context) (Game, error)
 	GetStartTime(ctx context.Context) (time.Time, error)
