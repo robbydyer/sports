@@ -1,0 +1,38 @@
+run:
+  tests: true
+  modules-download-mode: vendor
+  skip-dirs:
+  - vendor
+  - pkg/rgbmatrix-rpi
+  timeout: 5m
+linters:
+  disable-all: true
+  enable:
+  - deadcode
+  - errcheck
+  - goconst
+  - gofumpt
+  - goimports
+  - golint
+  - gosimple
+  - govet
+  - ineffassign
+  - misspell
+  - nakedret
+  - staticcheck
+  - structcheck
+  - unused
+  - unparam
+  - varcheck
+  - whitespace
+linters-settings:
+  govet:
+    check-shadowing: true
+  goimports:
+    local-prefixes: github.com/robbydyer/sports
+issues:
+  #new-from-rev: origin/master
+  exclude-use-default: false
+  exclude:
+  - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv). is not checked
+  - 'shadow: declaration of "err" shadows declaration at line (\d+)'

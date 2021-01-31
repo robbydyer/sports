@@ -1,0 +1,37 @@
+#!/bin/bash
+set -euo pipefail
+
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+IN_DOCKER="${IN_DOCKER:-no}"
+IMG="sportsmatrixlinter"
+
+if [ "${IN_DOCKER}" = "no" ]; then
+    MOUNTOPTION=""
+    if [ "$(uname -s)" = "Darwin" ]; then
+            MOUNTOPTION=":delegated"
+    fi
+
+    set -x
+    cd "${ROOT}"
+    docker build -f Dockerfile.lint -t "${IMG}" .
+
+    docker run -t --rm \
+        -e IN_DOCKER=yes \
+        -u $(id -u):$(id -g) \
+        -v "${ROOT}":/src${MOUNTOPTION} \
+        -w /src \
+        -e GOCACHE="/src/.cache" \
+        -e GOLANGCI_LINT_CACHE="/src/.cache" \
+        -e GO111MODULE=on \
+        -e CGO_ENABLED=1 \
+        "${IMG}" \
+        /src/script/$(basename $0)
+fi
+
+# Inside docker
+
+if [ ! -d /src/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ]; then
+    cp -r /sportslibs/rpi-rgb-led-matrix /src/pkg/rgbmatrix-rpi/lib/
+fi
+
+golangci-lint run --verbose --fix
