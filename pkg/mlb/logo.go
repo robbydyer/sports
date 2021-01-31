@@ -13,6 +13,7 @@ import (
 	"github.com/robbydyer/sports/pkg/logo"
 )
 
+// GetLogo ...
 func (n *MLB) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
 	fullLogoKey := fmt.Sprintf("%s_%dx%d", logoKey, bounds.Dx(), bounds.Dy())
 	l, ok := n.logos[fullLogoKey]
@@ -35,6 +36,7 @@ func (n *MLB) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectan
 	return n.logos[fullLogoKey], nil
 }
 
+// GetLogo is a generic function that can be used outside the scope of an MLB type. Useful for testing
 func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logoSources map[string]image.Image) (*logo.Logo, error) {
 	p := strings.Split(logoKey, "_")
 	if len(p) < 2 {

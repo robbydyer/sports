@@ -11,6 +11,7 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
+// Logo is used to manage logo rendering
 type Logo struct {
 	key             string
 	sourceLogo      image.Image
@@ -20,19 +21,20 @@ type Logo struct {
 	thumbnail       image.Image
 }
 
+// Config ...
 type Config struct {
 	Abbrev string `json:"abbrev"`
 	Pt     *Pt    `json:"pt"`
 }
 
+// Pt defines the x, y shift and zoom values for a logo
 type Pt struct {
 	X    int     `json:"xShift"`
 	Y    int     `json:"yShift"`
 	Zoom float64 `json:"zoom"`
 }
 
-type OptionFunc func(*Logo) error
-
+// New ...
 func New(key string, sourceLogo image.Image, targetDirectory string, matrixBounds image.Rectangle, conf *Config) *Logo {
 	return &Logo{
 		key:             key,
@@ -43,10 +45,12 @@ func New(key string, sourceLogo image.Image, targetDirectory string, matrixBound
 	}
 }
 
+// ThumbnailFilename returns the filname for the resized thumbnail to use
 func (l *Logo) ThumbnailFilename(size image.Rectangle) string {
 	return fmt.Sprintf("%s/%s_%dx%d_%f.png", l.targetDirectory, l.key, size.Dx(), size.Dy(), l.config.Pt.Zoom)
 }
 
+// GetThumbnail returns the resized image
 func (l *Logo) GetThumbnail(size image.Rectangle) (image.Image, error) {
 	if l.thumbnail != nil {
 		return l.thumbnail, nil
@@ -91,6 +95,7 @@ func (l *Logo) GetThumbnail(size image.Rectangle) (image.Image, error) {
 	return l.thumbnail, nil
 }
 
+// RednerLeftAligned renders the logo on the left side of the matrix
 func (l *Logo) RenderLeftAligned(canvas *rgb.Canvas, width int) (image.Image, error) {
 	thumb, err := l.GetThumbnail(l.bounds)
 	if err != nil {
@@ -108,6 +113,7 @@ func (l *Logo) RenderLeftAligned(canvas *rgb.Canvas, width int) (image.Image, er
 	return i, nil
 }
 
+// RenderRightAligned renders the logo on the right side of the matrix
 func (l *Logo) RenderRightAligned(canvas *rgb.Canvas, width int) (image.Image, error) {
 	thumb, err := l.GetThumbnail(l.bounds)
 	if err != nil {

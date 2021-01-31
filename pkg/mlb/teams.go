@@ -15,6 +15,7 @@ type teams struct {
 	Teams []*Team `json:"teams"`
 }
 
+// Team implements a sportboard.Team
 type Team struct {
 	ID           int    `json:"id"`
 	Name         string `json:"name"`
@@ -23,22 +24,27 @@ type Team struct {
 	Runs         int
 }
 
+// GetID ...
 func (t *Team) GetID() int {
 	return t.ID
 }
 
+// GetName ...
 func (t *Team) GetName() string {
 	return t.Name
 }
 
+// GetAbbreviation ...
 func (t *Team) GetAbbreviation() string {
 	return t.Abbreviation
 }
 
+// Score ...
 func (t *Team) Score() int {
 	return 0
 }
 
+// GetTeams ...
 func GetTeams(ctx context.Context) ([]*Team, error) {
 	uri, err := url.Parse(fmt.Sprintf("%s/v1/teams", BaseURL))
 	if err != nil {

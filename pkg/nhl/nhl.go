@@ -54,6 +54,7 @@ const (
 
 var ALL = []string{ANA, ARI, BOS, BUF, CAR, CBJ, CGY, CHI, COL, DAL, DET, EDM, FLA, LAK, MIN, MTL, NJD, NSH, NYI, NYR, OTT, PHI, PIT, SJS, STL, TBL, TOR, VAN, VGK, WPG, WSH}
 
+// NHL implements sportboard.API
 type NHL struct {
 	teams           []*Team
 	games           map[string][]*Game
@@ -62,6 +63,7 @@ type NHL struct {
 	log             *log.Logger
 }
 
+// New ...
 func New(ctx context.Context, logger *log.Logger) (*NHL, error) {
 	n := &NHL{
 		games:           make(map[string][]*Game),
@@ -79,13 +81,14 @@ func New(ctx context.Context, logger *log.Logger) (*NHL, error) {
 	}
 
 	c := cron.New()
-	c.AddFunc("0 5 * * *", n.CacheClear)
+	c.AddFunc("0 5 * * *", n.cacheClear)
 	c.Start()
 
 	return n, nil
 }
 
-func (n *NHL) CacheClear() {
+// CacheClear ...
+func (n *NHL) cacheClear() {
 	for k := range n.games {
 		delete(n.games, k)
 	}
@@ -94,10 +97,12 @@ func (n *NHL) CacheClear() {
 	}
 }
 
+// AllTeamAbbreviations ...
 func (n *NHL) AllTeamAbbreviations() []string {
 	return ALL
 }
 
+// GetTeams ...
 func (n *NHL) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 	if n.teams == nil {
 		if err := n.UpdateTeams(ctx); err != nil {
@@ -114,6 +119,7 @@ func (n *NHL) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 	return tList, nil
 }
 
+// TeamFromAbbreviation ...
 func (n *NHL) TeamFromAbbreviation(ctx context.Context, abbreviation string) (sportboard.Team, error) {
 	for _, t := range n.teams {
 		if t.Abbreviation == abbreviation {
@@ -124,6 +130,7 @@ func (n *NHL) TeamFromAbbreviation(ctx context.Context, abbreviation string) (sp
 	return nil, fmt.Errorf("could not find team '%s'", abbreviation)
 }
 
+// GetScheduledGames ...
 func (n *NHL) GetScheduledGames(ctx context.Context, date time.Time) ([]sportboard.Game, error) {
 	dateStr := n.DateStr(date)
 	games, ok := n.games[dateStr]
@@ -142,14 +149,17 @@ func (n *NHL) GetScheduledGames(ctx context.Context, date time.Time) ([]sportboa
 	return gList, nil
 }
 
+// DateStr
 func (n *NHL) DateStr(d time.Time) string {
 	return d.Format(DateFormat)
 }
 
+// League ...
 func (n *NHL) League() string {
 	return "NHL"
 }
 
+// UpdateTeams ...
 func (n *NHL) UpdateTeams(ctx context.Context) error {
 	teamList, err := GetTeams(ctx)
 	if err != nil {
@@ -161,6 +171,7 @@ func (n *NHL) UpdateTeams(ctx context.Context) error {
 	return nil
 }
 
+// UpdateGames ...
 func (n *NHL) UpdateGames(ctx context.Context, dateStr string) error {
 	games, err := getGames(ctx, dateStr)
 	if err != nil {

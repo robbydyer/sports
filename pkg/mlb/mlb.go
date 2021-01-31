@@ -20,8 +20,10 @@ const (
 	ATL          = "ATL"
 )
 
+// ALL contains all of the teams in the league
 var ALL = []string{ATL}
 
+// MLB implements a sportboard.API
 type MLB struct {
 	teams           []*Team
 	games           map[string][]*Game
@@ -30,6 +32,7 @@ type MLB struct {
 	log             *log.Logger
 }
 
+// New ...
 func New(ctx context.Context, logger *log.Logger) (*MLB, error) {
 	m := &MLB{
 		games:           make(map[string][]*Game),
@@ -49,30 +52,37 @@ func New(ctx context.Context, logger *log.Logger) (*MLB, error) {
 	return m, nil
 }
 
+// GetTeams ...
 func (m *MLB) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 	return nil, nil
 }
 
+// TeamFromAbbreviation ...
 func (m *MLB) TeamFromAbbreviation(ctx context.Context, abbreviation string) (sportboard.Team, error) {
 	return nil, nil
 }
 
+// GetScheduledGames ...
 func (m *MLB) GetScheduledGames(ctx context.Context, date time.Time) ([]sportboard.Game, error) {
 	return nil, nil
 }
 
+// DateStr
 func (m *MLB) DateStr(d time.Time) string {
-	return ""
+	return d.Format(DateFormat)
 }
 
+// League ...
 func (m *MLB) League() string {
 	return "MLB"
 }
 
+// AllTeamAbbreviations returns a list of all teams in the league
 func (m *MLB) AllTeamAbbreviations() []string {
 	return ALL
 }
 
+// UpdateTeams ...
 func (m *MLB) UpdateTeams(ctx context.Context) error {
 	teamList, err := GetTeams(ctx)
 	if err != nil {
@@ -84,6 +94,7 @@ func (m *MLB) UpdateTeams(ctx context.Context) error {
 	return nil
 }
 
+// UpdateGames updates scheduled games
 func (m *MLB) UpdateGames(ctx context.Context, dateStr string) error {
 	return nil
 }

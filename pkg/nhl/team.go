@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// Team implements sportboard.Team
 type Team struct {
 	ID               int    `json:"id"`
 	Name             string `json:"name"`
@@ -25,18 +26,22 @@ type teams struct {
 	Teams []*Team `json:"teams"`
 }
 
+// GetID ...
 func (t *Team) GetID() int {
 	return t.ID
 }
 
+// GetName ...
 func (t *Team) GetName() string {
 	return t.Name
 }
 
+// GetAbbreviation ...
 func (t *Team) GetAbbreviation() string {
 	return t.Abbreviation
 }
 
+// Score ...
 func (t *Team) Score() int {
 	return t.score
 }

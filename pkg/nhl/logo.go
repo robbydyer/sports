@@ -13,41 +13,7 @@ import (
 	"github.com/robbydyer/sports/pkg/logo"
 )
 
-func includes() {
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logopos_64x32.yaml")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/ANA.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/ARI.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/BOS.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/BUF.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/CAR.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/CBJ.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/CGY.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/CHI.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/COL.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/DAL.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/DET.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/EDM.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/FLA.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/LAK.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/MIN.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/MTL.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/NJD.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/NSH.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/NYI.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/NYR.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/OTT.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/PHI.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/PIT.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/SJS.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/STL.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/TBL.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/TOR.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/VAN.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/VGK.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/WPG.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/WSH.png")
-}
-
+// GetLogo ...
 func (n *NHL) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
 	fullLogoKey := fmt.Sprintf("%s_%dx%d", logoKey, bounds.Dx(), bounds.Dy())
 	l, ok := n.logos[fullLogoKey]
@@ -70,6 +36,7 @@ func (n *NHL) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectan
 	return n.logos[fullLogoKey], nil
 }
 
+// GetLogo is a generic logo getter. Useful for testing
 func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logoSources map[string]image.Image) (*logo.Logo, error) {
 	p := strings.Split(logoKey, "_")
 	if len(p) < 2 {
@@ -150,4 +117,39 @@ func (n *NHL) logoSources() (map[string]image.Image, error) {
 	}
 
 	return n.logoSourceCache, nil
+}
+
+func includes() {
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logopos_64x32.yaml")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/ANA.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/ARI.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/BOS.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/BUF.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/CAR.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/CBJ.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/CGY.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/CHI.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/COL.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/DAL.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/DET.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/EDM.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/FLA.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/LAK.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/MIN.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/MTL.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/NJD.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/NSH.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/NYI.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/NYR.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/OTT.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/PHI.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/PIT.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/SJS.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/STL.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/TBL.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/TOR.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/VAN.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/VGK.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/WPG.png")
+	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/WSH.png")
 }

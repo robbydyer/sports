@@ -12,15 +12,17 @@ import (
 	"github.com/robbydyer/sports/pkg/sportboard"
 )
 
+// LiveGameGetter retrieves a live game from a game link
 type LiveGameGetter func(ctx context.Context, link string) (sportboard.Game, error)
 
+// Game implements sportboard.Game
 type Game struct {
 	GameGetter LiveGameGetter
 	ID         int    `json:"gamePk"`
 	Link       string `json:"link"`
 	Teams      *struct {
-		Away *GameTeam `json:"away"`
-		Home *GameTeam `json:"home"`
+		Away *gameTeam `json:"away"`
+		Home *gameTeam `json:"home"`
 	} `json:"teams"`
 	GameTime time.Time
 	GameDate string `json:"gameDate"`
@@ -36,8 +38,8 @@ type Game struct {
 	LiveData *struct {
 		Linescore *struct {
 			Teams *struct {
-				Home *GameTeam `json:"home"`
-				Away *GameTeam `json:"away"`
+				Home *gameTeam `json:"home"`
+				Away *gameTeam `json:"away"`
 			} `json:"teams"`
 			CurrentPeriod              int    `json:"currentPeriod,omitempty"`
 			CurrentPeriodOrdinal       string `json:"currentPeriodOrdinal"`
@@ -46,7 +48,7 @@ type Game struct {
 	} `json:"liveData"`
 }
 
-type GameTeam struct {
+type gameTeam struct {
 	Score       int   `json:"score,omitempty"`
 	Team        *Team `json:"team"`
 	Goals       int   `json:"goals,omitempty"`
@@ -60,6 +62,7 @@ type games struct {
 	} `json:"dates"`
 }
 
+// Games ...
 func (n *NHL) Games(dateStr string) ([]*Game, error) {
 	games, ok := n.games[dateStr]
 	if !ok || len(games) == 0 {
@@ -69,18 +72,22 @@ func (n *NHL) Games(dateStr string) ([]*Game, error) {
 	return games, nil
 }
 
+// GetStartTime ...
 func (g *Game) GetStartTime(ctx context.Context) (time.Time, error) {
 	return g.GameTime, nil
 }
 
+// GetID ...
 func (g *Game) GetID() int {
 	return g.ID
 }
 
+// GetLink ...
 func (g *Game) GetLink() (string, error) {
 	return g.Link, nil
 }
 
+// IsLive ...
 func (g *Game) IsLive() (bool, error) {
 	if g.LiveData != nil && g.LiveData.Linescore != nil && g.LiveData.Linescore.CurrentPeriod > 0 {
 		return true, nil
@@ -88,6 +95,7 @@ func (g *Game) IsLive() (bool, error) {
 	return false, nil
 }
 
+// IsComplete ...
 func (g *Game) IsComplete() (bool, error) {
 	if g.GameData != nil && g.GameData.Status != nil && strings.Contains(strings.ToLower(g.GameData.Status.AbstractGameState), "final") {
 		return true, nil
@@ -100,6 +108,7 @@ func (g *Game) IsComplete() (bool, error) {
 	return false, nil
 }
 
+// HomeTeam ...
 func (g *Game) HomeTeam() (sportboard.Team, error) {
 	if g.Teams != nil && g.Teams.Home != nil && g.Teams.Home.Team != nil {
 		return g.Teams.Home.Team, nil
@@ -117,6 +126,7 @@ func (g *Game) HomeTeam() (sportboard.Team, error) {
 	return nil, fmt.Errorf("could not locate home team in Game")
 }
 
+// AwayTeam ...
 func (g *Game) AwayTeam() (sportboard.Team, error) {
 	if g.Teams != nil && g.Teams.Away != nil && g.Teams.Away.Team != nil {
 		return g.Teams.Away.Team, nil
@@ -133,6 +143,7 @@ func (g *Game) AwayTeam() (sportboard.Team, error) {
 	return nil, fmt.Errorf("could not locate home team in Game")
 }
 
+// GetQuarter ...
 func (g *Game) GetQuarter() (string, error) {
 	if g.LiveData != nil && g.LiveData.Linescore != nil {
 		return g.LiveData.Linescore.CurrentPeriodOrdinal, nil
@@ -141,6 +152,7 @@ func (g *Game) GetQuarter() (string, error) {
 	return "", nil
 }
 
+// GetClock ...
 func (g *Game) GetClock() (string, error) {
 	if g.LiveData != nil && g.LiveData.Linescore != nil {
 		return g.LiveData.Linescore.CurrentPeriodTimeRemaining, nil
@@ -148,6 +160,7 @@ func (g *Game) GetClock() (string, error) {
 	return "00:00", nil
 }
 
+// GetUpdate ...
 func (g *Game) GetUpdate(ctx context.Context) (sportboard.Game, error) {
 	if g.GameGetter == nil {
 		g.GameGetter = GetLiveGame

@@ -18,6 +18,7 @@ import (
 	"github.com/robbydyer/sports/pkg/util"
 )
 
+// MockNHLAPI implements sportboard.API. Used for testing
 type MockNHLAPI struct {
 	teams           []*nhl.Team
 	games           map[string][]*nhl.Game
@@ -26,6 +27,7 @@ type MockNHLAPI struct {
 	log             *log.Logger
 }
 
+// GetTeams ...
 func (m *MockNHLAPI) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 	var tList []sportboard.Team
 
@@ -36,6 +38,7 @@ func (m *MockNHLAPI) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 	return tList, nil
 }
 
+// GetScheduledGames ...
 func (m *MockNHLAPI) GetScheduledGames(ctx context.Context, date time.Time) ([]sportboard.Game, error) {
 	dateStr := m.DateStr(date)
 	var gList []sportboard.Game
@@ -47,14 +50,17 @@ func (m *MockNHLAPI) GetScheduledGames(ctx context.Context, date time.Time) ([]s
 	return gList, nil
 }
 
+// DateStr ...
 func (m *MockNHLAPI) DateStr(d time.Time) string {
 	return d.Format(nhl.DateFormat)
 }
 
+// League ...
 func (m *MockNHLAPI) League() string {
 	return "Fake NHL"
 }
 
+// GetLogo ...
 func (m *MockNHLAPI) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
 	fullLogoKey := fmt.Sprintf("%s_%dx%d", logoKey, bounds.Dx(), bounds.Dy())
 	l, ok := m.logos[fullLogoKey]
@@ -100,18 +106,22 @@ func (m *MockNHLAPI) logoSources() (map[string]image.Image, error) {
 	return m.logoSourceCache, nil
 }
 
+// AllTeamAbbreviations ...
 func (m *MockNHLAPI) AllTeamAbbreviations() []string {
 	return nhl.ALL
 }
 
+// UpdateTeams ...
 func (m *MockNHLAPI) UpdateTeams(ctx context.Context) error {
 	return nil
 }
 
+// UpdateGames ...
 func (m *MockNHLAPI) UpdateGames(ctx context.Context, dateStr string) error {
 	return nil
 }
 
+// TeamFromAbbreviation ...
 func (m *MockNHLAPI) TeamFromAbbreviation(ctx context.Context, abbrev string) (sportboard.Team, error) {
 	for _, t := range m.teams {
 		if t.Abbreviation == abbrev {
@@ -122,6 +132,7 @@ func (m *MockNHLAPI) TeamFromAbbreviation(ctx context.Context, abbrev string) (s
 	return nil, fmt.Errorf("could not find team with abbreviation '%s'", abbrev)
 }
 
+// MockLiveGameGetter implements nhl.LiveGameGetter
 func MockLiveGameGetter(ctx context.Context, link string) (sportboard.Game, error) {
 	f, err := pkger.Open("github.com/robbydyer/sports:/pkg/nhlmock/assets/mock_livegames.yaml")
 	if err != nil {
@@ -150,6 +161,7 @@ func MockLiveGameGetter(ctx context.Context, link string) (sportboard.Game, erro
 	return nil, fmt.Errorf("could not locate live game with Link '%s'", link)
 }
 
+// New ...
 func New() (*MockNHLAPI, error) {
 	// Load Teams
 	f, err := pkger.Open("github.com/robbydyer/sports:/pkg/nhlmock/assets/mock_teams.yaml")

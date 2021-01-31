@@ -12,6 +12,7 @@ import (
 	"github.com/robbydyer/sports/pkg/sportboard"
 )
 
+// LiveGameGetter is a func used to retrieve an updated sportboard.Game
 type LiveGameGetter func(ctx context.Context, link string) (sportboard.Game, error)
 
 type schedule struct {
@@ -20,13 +21,14 @@ type schedule struct {
 	} `json:"dates"`
 }
 
+// Game ...
 type Game struct {
 	GameGetter LiveGameGetter
 	ID         int    `json:"gamePk"`
 	Link       string `json:"link"`
 	Teams      *struct {
-		Home *GameTeam `json:"home"`
-		Away *GameTeam `json:"away"`
+		Home *gameTeam `json:"home"`
+		Away *gameTeam `json:"away"`
 	} `json:"teams"`
 	GameTime time.Time
 	GameDate string `json:"gameDate"`
@@ -46,14 +48,14 @@ type Game struct {
 			CurrentInningOrdinal string `json:"currentInningOrdinal"`
 			InningState          string `json:"inningState"`
 			Teams                *struct {
-				Home *GameTeam `json:"home"`
-				Away *GameTeam `json:"away"`
+				Home *gameTeam `json:"home"`
+				Away *gameTeam `json:"away"`
 			} `json:"teams"`
 		} `json:"linescore"`
 	} `json:"liveData"`
 }
 
-type GameTeam struct {
+type gameTeam struct {
 	Score    int   `json:"score,omitempty"`
 	Runs     int   `json:"runs,omitempty"`
 	Team     *Team `json:"team"`

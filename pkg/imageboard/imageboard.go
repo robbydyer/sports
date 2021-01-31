@@ -25,6 +25,7 @@ const (
 
 var supportedImageTypes = []string{"png", "gif"}
 
+// Imageboard is a board for displaying image files
 type ImageBoard struct {
 	config       *Config
 	log          *log.Logger
@@ -34,6 +35,7 @@ type ImageBoard struct {
 	matrixBounds image.Rectangle
 }
 
+// Config ...
 type Config struct {
 	boardDelay   time.Duration
 	BoardDelay   string   `json:"boardDelay"`
@@ -42,6 +44,7 @@ type Config struct {
 	UseDiskCache bool     `json:"useDiskCache"`
 }
 
+// SetDefaults sets some Config defaults
 func (c *Config) SetDefaults() {
 	if c.BoardDelay != "" {
 		d, err := time.ParseDuration(c.BoardDelay)
@@ -55,6 +58,7 @@ func (c *Config) SetDefaults() {
 	}
 }
 
+// New ...
 func New(fs afero.Fs, bounds image.Rectangle, cfg *Config, logger *log.Logger) (*ImageBoard, error) {
 	if fs == nil {
 		fs = afero.NewOsFs()
@@ -75,14 +79,17 @@ func New(fs afero.Fs, bounds image.Rectangle, cfg *Config, logger *log.Logger) (
 	return i, nil
 }
 
+// Name ...
 func (i *ImageBoard) Name() string {
 	return "Image Board"
 }
 
+// Enabled ...
 func (i *ImageBoard) Enabled() bool {
 	return i.config.Enabled
 }
 
+// Render ...
 func (i *ImageBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	if !i.config.Enabled {
 		i.log.Warn("ImageBoard is disabled, not rendering")
@@ -257,9 +264,12 @@ func (i *ImageBoard) dirWalk(path string, info os.FileInfo, err error) error {
 	return nil
 }
 
+// HasPriority ...
 func (i *ImageBoard) HasPriority() bool {
 	return false
 }
+
+// Cleanup ...
 func (i *ImageBoard) Cleanup() {}
 
 func (i *ImageBoard) validateDirectories() error {
