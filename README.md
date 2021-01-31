@@ -59,6 +59,7 @@ nhlConfig:
   
 # Primary configuration for the matrix  
 sportsMatrixConfig:
+  httpListenPort: 8080 # Listen port for the HTTP server. Defaults to 8080
   screenOffTimes: # Cron values for when the screen should be turned off
   - "38 0 * * *"
   screenOnTimes: # Cron values for when the screen should be turned on
