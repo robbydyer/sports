@@ -17,6 +17,7 @@ import (
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
+// TextWriter ...
 type TextWriter struct {
 	context          *freetype.Context
 	font             *truetype.Font
@@ -26,6 +27,7 @@ type TextWriter struct {
 	LineSpace        float64
 }
 
+// DefaultTextWriter ...
 func DefaultTextWriter() (*TextWriter, error) {
 	fnt, err := DefaultFont()
 	if err != nil {
@@ -38,6 +40,7 @@ func DefaultTextWriter() (*TextWriter, error) {
 	return t, nil
 }
 
+// NewTextWriter ...
 func NewTextWriter(font *truetype.Font, fontSize float64) *TextWriter {
 	cntx := freetype.NewContext()
 	cntx.SetFont(font)
@@ -51,10 +54,12 @@ func NewTextWriter(font *truetype.Font, fontSize float64) *TextWriter {
 	}
 }
 
+// DefaultFont ...
 func DefaultFont() (*truetype.Font, error) {
 	return FontFromAsset("github.com/robbydyer/sports:/assets/fonts/04b24.ttf")
 }
 
+// FontFromAsset ...
 func FontFromAsset(asset string) (*truetype.Font, error) {
 	f, err := pkger.Open(asset)
 	if err != nil {
@@ -75,6 +80,7 @@ func FontFromAsset(asset string) (*truetype.Font, error) {
 	return fnt, nil
 }
 
+// SetFont ...
 func (t *TextWriter) SetFont(fnt *truetype.Font) {
 	t.font = fnt
 	if t.context == nil {
@@ -83,6 +89,7 @@ func (t *TextWriter) SetFont(fnt *truetype.Font) {
 	t.context.SetFont(fnt)
 }
 
+// Write ...
 func (t *TextWriter) Write(canvas *rgb.Canvas, bounds image.Rectangle, str []string, clr color.Color) error {
 	startX := bounds.Min.X + t.XStartCorrection
 	drawer := &font.Drawer{

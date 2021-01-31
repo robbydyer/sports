@@ -17,6 +17,7 @@ import (
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
+// ResizeImage ...
 func ResizeImage(img image.Image, bounds image.Rectangle, zoom float64) image.Image {
 	// Ignore Y, so that we maintain aspect ratio
 	sizeX, sizeY := ZoomImageSize(bounds, zoom)
@@ -24,6 +25,7 @@ func ResizeImage(img image.Image, bounds image.Rectangle, zoom float64) image.Im
 	return resize.Thumbnail(uint(sizeX), uint(sizeY), img, resize.Lanczos3)
 }
 
+// ResizeGIF ...
 func ResizeGIF(g *gif.GIF, bounds image.Rectangle, zoom float64) error {
 	var newPals []*image.Paletted
 	for _, i := range g.Image {
@@ -45,6 +47,7 @@ func ResizeGIF(g *gif.GIF, bounds image.Rectangle, zoom float64) error {
 	return nil
 }
 
+// SavePng ...
 func SavePng(img image.Image, fileName string) error {
 	f, err := os.Create(fileName)
 	if err != nil {
@@ -55,6 +58,7 @@ func SavePng(img image.Image, fileName string) error {
 	return png.Encode(f, img)
 }
 
+// SaveGif ...
 func SaveGif(img *gif.GIF, fileName string) error {
 	f, err := os.Create(fileName)
 	if err != nil {
@@ -65,6 +69,7 @@ func SaveGif(img *gif.GIF, fileName string) error {
 	return gif.EncodeAll(f, img)
 }
 
+// SavePngAfero ...
 func SavePngAfero(fs afero.Fs, img image.Image, fileName string) error {
 	f, err := fs.Create(fileName)
 	if err != nil {
@@ -75,6 +80,7 @@ func SavePngAfero(fs afero.Fs, img image.Image, fileName string) error {
 	return png.Encode(f, img)
 }
 
+// SaveGifAfero ...
 func SaveGifAfero(fs afero.Fs, img *gif.GIF, fileName string) error {
 	f, err := fs.Create(fileName)
 	if err != nil {

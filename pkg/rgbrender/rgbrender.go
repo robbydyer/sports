@@ -23,10 +23,7 @@ const (
 	LeftBottom
 )
 
-type Layout struct {
-	Zoom float32
-}
-
+// SetImageAlign
 func SetImageAlign(canvas *rgb.Canvas, align Align, img image.Image) (image.Image, error) {
 	rect, err := AlignPosition(align, canvas.Bounds(), img.Bounds().Dx(), img.Bounds().Dy())
 	if err != nil {
@@ -94,6 +91,7 @@ func ZoomImageSize(img image.Image, zoom float64) (int, int) {
 	return int(math.Round(float64(fullX) * zoom)), int(math.Round(float64(fullY) * zoom))
 }
 
+// DrawRectangle ...
 func DrawRectangle(canvas *rgb.Canvas, startX int, startY int, sizeX int, sizeY int, fillColor color.Color) error {
 	rect := image.Rect(startX, startY, startX+sizeX, startY+sizeY)
 
