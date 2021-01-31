@@ -66,7 +66,7 @@ func (n *NHL) cacheClear() {
 		delete(n.games, k)
 	}
 	if err := n.UpdateGames(context.Background(), util.Today().Format(DateFormat)); err != nil {
-		n.log.Errorf("failed to get today's games: %w", err)
+		n.log.Errorf("failed to get today's games: %s", err.Error())
 	}
 }
 
@@ -122,7 +122,7 @@ func (n *NHL) GetScheduledGames(ctx context.Context, date time.Time) ([]sportboa
 	return gList, nil
 }
 
-// DateStr
+// DateStr ...
 func (n *NHL) DateStr(d time.Time) string {
 	return d.Format(DateFormat)
 }

@@ -20,7 +20,6 @@ import (
 
 type runCmd struct {
 	rArgs    *rootArgs
-	port     int
 	testMode bool
 }
 

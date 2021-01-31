@@ -6,11 +6,11 @@ import (
 	"image"
 	"image/png"
 	"io/ioutil"
-	"log"
 	"time"
 
 	yaml "github.com/ghodss/yaml"
 	"github.com/markbates/pkger"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/nhl"
@@ -162,7 +162,7 @@ func MockLiveGameGetter(ctx context.Context, link string) (sportboard.Game, erro
 }
 
 // New ...
-func New() (*MockNHLAPI, error) {
+func New(logger *log.Logger) (*MockNHLAPI, error) {
 	// Load Teams
 	f, err := pkger.Open("github.com/robbydyer/sports:/pkg/nhlmock/assets/mock_teams.yaml")
 	if err != nil {
@@ -211,6 +211,7 @@ func New() (*MockNHLAPI, error) {
 		teams:           teamList,
 		logos:           make(map[string]*logo.Logo),
 		logoSourceCache: make(map[string]image.Image),
+		log:             logger,
 	}
 
 	return m, nil

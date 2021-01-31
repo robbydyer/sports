@@ -258,7 +258,7 @@ OUTER:
 		case <-preloader[game.GetID()]:
 			s.log.Debugf("preloader for %d marked ready", game.GetID())
 		case <-time.After(s.config.boardDelay):
-			s.log.Warnf("timed out waiting %ds for preloader for %d", s.config.boardDelay.Seconds(), game.GetID())
+			s.log.Warnf("timed out waiting %fs for preloader for %d", s.config.boardDelay.Seconds(), game.GetID())
 		}
 
 		liveGame, ok := s.cachedLiveGames[game.GetID()]

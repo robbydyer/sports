@@ -65,7 +65,7 @@ func (c *nhlCmd) run(cmd *cobra.Command, args []string) error {
 	logger := log.New()
 	logger.Level = c.rArgs.logLevel
 
-	api, err := nhlmock.New()
+	api, err := nhlmock.New(logger)
 	if err != nil {
 		return err
 	}

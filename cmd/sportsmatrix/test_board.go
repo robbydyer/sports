@@ -86,7 +86,7 @@ func (t *testBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	return nil
 }
 
-func (y *testBoard) Enabled() bool {
+func (t *testBoard) Enabled() bool {
 	return true
 }
 

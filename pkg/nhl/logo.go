@@ -119,7 +119,7 @@ func (n *NHL) logoSources() (map[string]image.Image, error) {
 	return n.logoSourceCache, nil
 }
 
-// nolint:deadcode
+// nolint:deadcode,unused
 func includes() {
 	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logopos_64x32.yaml")
 	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/ANA.png")

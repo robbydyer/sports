@@ -65,7 +65,7 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 	logger := log.New()
 	logger.Level = c.rArgs.logLevel
 
-	api, err := mlbmock.New()
+	api, err := mlbmock.New(logger)
 	if err != nil {
 		return fmt.Errorf("failed to init mlbmock: %w", err)
 	}

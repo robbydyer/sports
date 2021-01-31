@@ -15,7 +15,7 @@ if [ "${IN_DOCKER}" = "no" ]; then
     cd "${ROOT}"
     docker build -f Dockerfile.lint -t "${IMG}" .
 
-    docker run -t --rm \
+    exec docker run -t --rm \
         -e IN_DOCKER=yes \
         -u $(id -u):$(id -g) \
         -v "${ROOT}":/src${MOUNTOPTION} \
@@ -31,7 +31,7 @@ fi
 # Inside docker
 
 if [ ! -d /src/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ]; then
-    cp -r /sportslibs/rpi-rgb-led-matrix /src/pkg/rgbmatrix-rpi/lib/
+  cp -r /sportslibs/rpi-rgb-led-matrix /src/pkg/rgbmatrix-rpi/lib/
 fi
 
 golangci-lint run --verbose --fix
