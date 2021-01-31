@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/robbydyer/sports/pkg/logo"
@@ -23,7 +24,7 @@ type SportBoard struct {
 	config            *Config
 	api               API
 	teams             map[int]Team
-	scheduledGames    map[string]Game
+	cachedLiveGames   map[int]Game
 	logos             map[string]*logo.Logo
 	log               *log.Logger
 	matrixBounds      image.Rectangle
@@ -118,12 +119,13 @@ func (c *Config) SetDefaults() {
 
 func New(ctx context.Context, api API, bounds image.Rectangle, logger *log.Logger, config *Config) (*SportBoard, error) {
 	s := &SportBoard{
-		config:        config,
-		api:           api,
-		logos:         make(map[string]*logo.Logo),
-		log:           logger,
-		logoDrawCache: make(map[string]image.Image),
-		matrixBounds:  bounds,
+		config:          config,
+		api:             api,
+		logos:           make(map[string]*logo.Logo),
+		log:             logger,
+		logoDrawCache:   make(map[string]image.Image),
+		matrixBounds:    bounds,
+		cachedLiveGames: make(map[int]Game),
 	}
 
 	if len(config.WatchTeams) == 0 {
@@ -147,7 +149,19 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *log.Logge
 		return nil, err
 	}
 
+	c := cron.New()
+
+	c.AddFunc("0 4 * * *", s.CacheClear)
+	c.Start()
+
 	return s, nil
+}
+
+func (s *SportBoard) CacheClear() {
+	s.log.Warn("Clearing cached live games")
+	for k, _ := range s.cachedLiveGames {
+		delete(s.cachedLiveGames, k)
+	}
 }
 
 func (s *SportBoard) Name() string {
@@ -180,12 +194,27 @@ func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 		return nil
 	}
 
-	s.liveGamePreloader = make(map[int]Game)
-	// preload the first live game
-	s.liveGamePreloader[games[0].GetID()], err = games[0].GetUpdate(ctx)
-	if err != nil {
-		s.log.Errorf("failed to get live game update: %s", err.Error())
-		return err
+	gameOver := false
+	cached, hasCached := s.cachedLiveGames[games[0].GetID()]
+	if !hasCached {
+		s.log.Debugf("no cached game data for %d", games[0].GetID())
+	} else {
+		gameOver, err = cached.IsComplete()
+		if err != nil {
+			s.log.Warnf("Failed to determine if game %d is over: %s", games[0].GetID(), err.Error())
+			gameOver = false
+		}
+	}
+
+	if gameOver && hasCached && cached != nil {
+		s.log.Debugf("Game %d is over, using cached data", games[0].GetID())
+	} else {
+		// preload the first live game
+		s.log.Debugf("fetching live data for game %d", games[0].GetID())
+		s.cachedLiveGames[games[0].GetID()], err = games[0].GetUpdate(ctx)
+		if err != nil {
+			s.log.Errorf("failed to get live game update: %s", err.Error())
+		}
 	}
 
 	preloader := make(map[int]chan bool)
@@ -223,7 +252,7 @@ OUTER:
 			s.log.Warnf("timed out waiting %ds for preloader for %d", s.config.boardDelay.Seconds(), game.GetID())
 		}
 
-		liveGame, ok := s.liveGamePreloader[game.GetID()]
+		liveGame, ok := s.cachedLiveGames[game.GetID()]
 		if !ok {
 			s.log.Warnf("live game data for ID %d was not ready in time: UNDEFINED", game.GetID())
 			continue OUTER
@@ -318,9 +347,26 @@ func (s *SportBoard) HasPriority() bool {
 func (s *SportBoard) Cleanup() {}
 
 func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload chan bool) error {
+	defer func() { preload <- true }()
+
+	gameOver := false
+	cached, hasCached := s.cachedLiveGames[game.GetID()]
+	if hasCached {
+		var err error
+		gameOver, err = cached.IsComplete()
+		if err != nil {
+			gameOver = false
+		}
+	}
+
+	if gameOver && hasCached && cached != nil {
+		s.log.Debugf("Game %d is complete, not fetching any more data", game.GetID())
+
+		return nil
+	}
+
 	s.log.Debugf("preloading live game data for game ID %d", game.GetID())
 	tries := 0
-	defer func() { preload <- true }()
 	for {
 		select {
 		case <-ctx.Done():
@@ -337,7 +383,7 @@ func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload cha
 		if err != nil {
 			s.log.Errorf("api call to get live game failed on attempt %d: %s", tries, err.Error())
 		} else {
-			s.liveGamePreloader[game.GetID()] = g
+			s.cachedLiveGames[game.GetID()] = g
 			s.log.Debugf("successfully set preloader data for game ID %d", game.GetID())
 			return nil
 		}

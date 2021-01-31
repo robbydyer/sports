@@ -6,6 +6,7 @@ import (
 	"image"
 	"time"
 
+	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/robbydyer/sports/pkg/logo"
@@ -77,7 +78,20 @@ func New(ctx context.Context, logger *log.Logger) (*NHL, error) {
 		return nil, fmt.Errorf("failed to get today's games: %w", err)
 	}
 
+	c := cron.New()
+	c.AddFunc("0 5 * * *", n.CacheClear)
+	c.Start()
+
 	return n, nil
+}
+
+func (n *NHL) CacheClear() {
+	for k := range n.games {
+		delete(n.games, k)
+	}
+	if err := n.UpdateGames(context.Background(), util.Today().Format(DateFormat)); err != nil {
+		n.log.Errorf("failed to get today's games: %w", err)
+	}
 }
 
 func (n *NHL) AllTeamAbbreviations() []string {

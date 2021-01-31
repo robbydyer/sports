@@ -21,7 +21,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 	}
 
 	// If this is a favorite team, we'll watch the scoreboard until the game is over
-	isFavorite := (s.isFavorite(awayTeam.GetAbbreviation()) || s.isFavorite(homeTeam.GetAbbreviation())) && s.config.FavoriteSticky
+	isFavorite := (s.isFavorite(awayTeam.GetAbbreviation()) || s.isFavorite(homeTeam.GetAbbreviation()))
 
 	timeWriter, timeAlign, err := s.getTimeWriter()
 	if err != nil {
@@ -89,7 +89,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 			return err
 		}
 
-		if !isFavorite {
+		if !(isFavorite && s.config.FavoriteSticky) {
 			return nil
 		}
 
