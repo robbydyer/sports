@@ -1,8 +1,5 @@
 # dmitri.shuralyov.com/gpu/mtl v0.0.0-20201218220906-28db891af037
 dmitri.shuralyov.com/gpu/mtl
-# github.com/andybons/gogif v0.0.0-20140526152223-16d573594812
-## explicit
-github.com/andybons/gogif
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/fsnotify/fsnotify v1.4.7
