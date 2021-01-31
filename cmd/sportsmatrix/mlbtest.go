@@ -48,6 +48,12 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 		cancel()
 	}()
 
+	if c.rArgs.config.MLBConfig == nil {
+		c.rArgs.config.MLBConfig = &sportboard.Config{}
+	}
+
+	c.rArgs.config.MLBConfig.Enabled = true
+
 	if len(c.rArgs.config.MLBConfig.WatchTeams) < 1 {
 		c.rArgs.config.MLBConfig.WatchTeams = []string{"ATL"}
 	}
@@ -59,7 +65,7 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 
 	api, err := mlbmock.New()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to init mlbmock: %w", err)
 	}
 
 	b, err := sportboard.New(ctx, api, bounds, logger, c.rArgs.config.MLBConfig)

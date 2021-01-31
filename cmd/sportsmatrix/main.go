@@ -49,7 +49,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 			if configFile != "" {
 				fmt.Printf("Loading config from file %s\n", configFile)
 				if err := args.setConfig(configFile); err != nil {
-					return err
+					return fmt.Errorf("failed to load config file: %w", err)
 				}
 			} else {
 				fmt.Println("Using default config")
@@ -59,7 +59,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 			var err error
 			args.logLevel, err = log.ParseLevel(viper.GetString("log-level"))
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to parse log level: %w", err)
 			}
 
 			return nil
