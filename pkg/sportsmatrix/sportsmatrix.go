@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"image"
-	_ "image/png"
 	"sync"
 	"time"
 
@@ -105,17 +104,23 @@ func New(ctx context.Context, logger *log.Logger, cfg *Config, boards ...board.B
 
 	for _, off := range s.cfg.ScreenOffTimes {
 		s.log.Infof("Screen will be scheduled to turn off at '%s'", off)
-		c.AddFunc(off, func() {
+		_, err := c.AddFunc(off, func() {
 			s.log.Warn("Turning screen off!")
 			s.screenOff <- true
 		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to add cron for screen off times: %w", err)
+		}
 	}
 	for _, on := range s.cfg.ScreenOnTimes {
 		s.log.Infof("Screen will be scheduled to turn on at '%s'", on)
-		c.AddFunc(on, func() {
+		_, err := c.AddFunc(on, func() {
 			s.log.Warn("Turning screen on!")
 			s.screenOn <- true
 		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to add cron for screen on times: %w", err)
+		}
 	}
 	c.Start()
 
@@ -134,7 +139,7 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 			s.screenIsOn = false
 			s.boardCancel()
 			c := rgb.NewCanvas(s.matrix)
-			c.Clear()
+			_ = c.Clear()
 			s.boardCtx, s.boardCancel = context.WithCancel(context.Background())
 			s.Unlock()
 		case <-s.screenOn:
