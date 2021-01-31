@@ -83,7 +83,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 			)
 		}
 
-		draw.Draw(canvas, canvas.Bounds(), s.counter, image.ZP, draw.Over)
+		draw.Draw(canvas, canvas.Bounds(), s.counter, image.Point{}, draw.Over)
 
 		if err := canvas.Render(); err != nil {
 			return err
@@ -170,7 +170,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas *rgb.Canvas,
 		s.config.ScoreColor,
 	)
 
-	draw.Draw(canvas, canvas.Bounds(), s.counter, image.ZP, draw.Over)
+	draw.Draw(canvas, canvas.Bounds(), s.counter, image.Point{}, draw.Over)
 
 	return canvas.Render()
 }
@@ -224,7 +224,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas *rgb.Canvas,
 		s.config.ScoreColor,
 	)
 
-	draw.Draw(canvas, canvas.Bounds(), s.counter, image.ZP, draw.Over)
+	draw.Draw(canvas, canvas.Bounds(), s.counter, image.Point{}, draw.Over)
 
 	return canvas.Render()
 }

@@ -39,7 +39,7 @@ func (tk *ToolKit) PlayImage(i image.Image, delay time.Duration) error {
 		i = tk.Transform(i)
 	}
 
-	draw.Draw(tk.Canvas, tk.Canvas.Bounds(), i, image.ZP, draw.Over)
+	draw.Draw(tk.Canvas, tk.Canvas.Bounds(), i, image.Point{}, draw.Over)
 	return tk.Canvas.Render()
 }
 
@@ -82,7 +82,7 @@ func (tk *ToolKit) PlayImageUntil(i image.Image, notify <-chan time.Time) error 
 		i = tk.Transform(i)
 	}
 
-	draw.Draw(tk.Canvas, tk.Canvas.Bounds(), i, image.ZP, draw.Over)
+	draw.Draw(tk.Canvas, tk.Canvas.Bounds(), i, image.Point{}, draw.Over)
 	return tk.Canvas.Render()
 }
 

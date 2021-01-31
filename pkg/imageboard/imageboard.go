@@ -128,7 +128,7 @@ func (i *ImageBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 		default:
 		}
 
-		draw.Draw(canvas, canvas.Bounds(), img, image.ZP, draw.Over)
+		draw.Draw(canvas, canvas.Bounds(), img, image.Point{}, draw.Over)
 
 		if err := canvas.Render(); err != nil {
 			return err

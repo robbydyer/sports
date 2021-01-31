@@ -26,7 +26,7 @@ func (s *SportBoard) RenderHomeLogo(canvas *rgb.Canvas, abbreviation string) err
 	i, ok := s.logoDrawCache[logoKey]
 	if ok {
 		s.log.Debugf("drawing %s logo with drawCache", logoKey)
-		draw.Draw(canvas, canvas.Bounds(), i, image.ZP, draw.Over)
+		draw.Draw(canvas, canvas.Bounds(), i, image.Point{}, draw.Over)
 		return nil
 	}
 
@@ -55,7 +55,7 @@ func (s *SportBoard) RenderHomeLogo(canvas *rgb.Canvas, abbreviation string) err
 
 	s.logoDrawCache[logoKey] = renderedLogo
 
-	draw.Draw(canvas, canvas.Bounds(), renderedLogo, image.ZP, draw.Over)
+	draw.Draw(canvas, canvas.Bounds(), renderedLogo, image.Point{}, draw.Over)
 
 	return nil
 }
@@ -65,7 +65,7 @@ func (s *SportBoard) RenderAwayLogo(canvas *rgb.Canvas, abbreviation string) err
 
 	i, ok := s.logoDrawCache[logoKey]
 	if ok {
-		draw.Draw(canvas, canvas.Bounds(), i, image.ZP, draw.Over)
+		draw.Draw(canvas, canvas.Bounds(), i, image.Point{}, draw.Over)
 		return nil
 	}
 
@@ -93,7 +93,7 @@ func (s *SportBoard) RenderAwayLogo(canvas *rgb.Canvas, abbreviation string) err
 
 	s.logoDrawCache[logoKey] = renderedLogo
 
-	draw.Draw(canvas, canvas.Bounds(), renderedLogo, image.ZP, draw.Over)
+	draw.Draw(canvas, canvas.Bounds(), renderedLogo, image.Point{}, draw.Over)
 
 	return nil
 }

@@ -34,7 +34,7 @@ func ResizeGIF(g *gif.GIF, bounds image.Rectangle, zoom float64) error {
 		/*
 			resizedPal := image.NewPaletted(resizedI.Bounds(), nil)
 			quantizer := gogif.MedianCutQuantizer{NumColor: 64}
-			quantizer.Quantize(resizedPal, resizedI.Bounds(), resizedI, image.ZP)
+			quantizer.Quantize(resizedPal, resizedI.Bounds(), resizedI, image.Point{})
 		*/
 
 		resizedPal := image.NewPaletted(resizedI.Bounds(), palette.Plan9)
@@ -136,7 +136,7 @@ func PlayImages(ctx context.Context, canvas *rgb.Canvas, images []image.Image, d
 			return fmt.Errorf("nil canvas passed to PlayImages")
 		}
 
-		draw.Draw(canvas, canvas.Bounds(), images[i], image.ZP, draw.Over)
+		draw.Draw(canvas, canvas.Bounds(), images[i], image.Point{}, draw.Over)
 
 		if err := canvas.Render(); err != nil {
 			return err
