@@ -4,6 +4,7 @@ run:
   skip-dirs:
   - vendor
   - pkg/rgbmatrix-rpi
+  - pkg/clock
   timeout: 5m
 linters:
   disable-all: true

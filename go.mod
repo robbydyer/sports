@@ -3,7 +3,6 @@ module github.com/robbydyer/sports
 go 1.15
 
 require (
-	github.com/andybons/gogif v0.0.0-20140526152223-16d573594812
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20201108214237-06ea97f0c265 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
@@ -22,4 +21,5 @@ require (
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
 	golang.org/x/text v0.3.3 // indirect
 	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b
+	gopkg.in/yaml.v2 v2.2.8
 )
