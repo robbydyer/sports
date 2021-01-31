@@ -113,6 +113,7 @@ func (n *NHL) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 
 	return tList, nil
 }
+
 func (n *NHL) TeamFromAbbreviation(ctx context.Context, abbreviation string) (sportboard.Team, error) {
 	for _, t := range n.teams {
 		if t.Abbreviation == abbreviation {
@@ -144,6 +145,7 @@ func (n *NHL) GetScheduledGames(ctx context.Context, date time.Time) ([]sportboa
 func (n *NHL) DateStr(d time.Time) string {
 	return d.Format(DateFormat)
 }
+
 func (n *NHL) League() string {
 	return "NHL"
 }

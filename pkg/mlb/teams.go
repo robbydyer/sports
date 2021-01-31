@@ -26,12 +26,15 @@ type Team struct {
 func (t *Team) GetID() int {
 	return t.ID
 }
+
 func (t *Team) GetName() string {
 	return t.Name
 }
+
 func (t *Team) GetAbbreviation() string {
 	return t.Abbreviation
 }
+
 func (t *Team) Score() int {
 	return 0
 }

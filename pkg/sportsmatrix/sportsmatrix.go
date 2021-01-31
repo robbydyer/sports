@@ -121,6 +121,7 @@ func New(ctx context.Context, logger *log.Logger, cfg *Config, boards ...board.B
 
 	return s, nil
 }
+
 func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 	for {
 		select {

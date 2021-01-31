@@ -336,11 +336,11 @@ OUTER:
 
 			continue OUTER
 		}
-
 	}
 
 	return nil
 }
+
 func (s *SportBoard) HasPriority() bool {
 	return false
 }

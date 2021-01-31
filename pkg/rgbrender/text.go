@@ -11,9 +11,10 @@ import (
 	"github.com/golang/freetype/truetype"
 
 	"github.com/markbates/pkger"
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
+
+	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
 type TextWriter struct {

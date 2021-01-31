@@ -7,12 +7,13 @@ import (
 	"os"
 	"os/signal"
 
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/nhlmock"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 )
 
 type nhlCmd struct {

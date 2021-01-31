@@ -19,6 +19,7 @@ type schedule struct {
 		Games []*Game `json:"games"`
 	} `json:"dates"`
 }
+
 type Game struct {
 	GameGetter LiveGameGetter
 	ID         int    `json:"gamePk"`
@@ -62,15 +63,19 @@ type GameTeam struct {
 func (g *Game) GetID() int {
 	return g.ID
 }
+
 func (g *Game) GetLink() (string, error) {
 	return "", nil
 }
+
 func (g *Game) IsLive() (bool, error) {
 	return true, nil
 }
+
 func (g *Game) IsComplete() (bool, error) {
 	return false, nil
 }
+
 func (g *Game) HomeTeam() (sportboard.Team, error) {
 	if g.Teams != nil && g.Teams.Home != nil && g.Teams.Home.Team != nil {
 		return g.Teams.Home.Team, nil
@@ -80,7 +85,6 @@ func (g *Game) HomeTeam() (sportboard.Team, error) {
 		g.LiveData.Linescore != nil &&
 		g.LiveData.Linescore.Teams != nil &&
 		g.LiveData.Linescore.Teams.Home != nil {
-
 		g.LiveData.Linescore.Teams.Home.Team.Runs = g.LiveData.Linescore.Teams.Home.Runs
 
 		return g.LiveData.Linescore.Teams.Home.Team, nil
@@ -88,6 +92,7 @@ func (g *Game) HomeTeam() (sportboard.Team, error) {
 
 	return nil, fmt.Errorf("could not locate home team in Game")
 }
+
 func (g *Game) AwayTeam() (sportboard.Team, error) {
 	if g.Teams != nil && g.Teams.Away != nil && g.Teams.Away.Team != nil {
 		return g.Teams.Away.Team, nil
@@ -97,7 +102,6 @@ func (g *Game) AwayTeam() (sportboard.Team, error) {
 		g.LiveData.Linescore != nil &&
 		g.LiveData.Linescore.Teams != nil &&
 		g.LiveData.Linescore.Teams.Away != nil {
-
 		g.LiveData.Linescore.Teams.Away.Team.Runs = g.LiveData.Linescore.Teams.Away.Runs
 
 		return g.LiveData.Linescore.Teams.Away.Team, nil

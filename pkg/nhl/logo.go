@@ -9,6 +9,7 @@ import (
 
 	yaml "github.com/ghodss/yaml"
 	"github.com/markbates/pkger"
+
 	"github.com/robbydyer/sports/pkg/logo"
 )
 
@@ -129,7 +130,6 @@ func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logo
 }
 
 func (n *NHL) logoSources() (map[string]image.Image, error) {
-
 	if len(n.logoSourceCache) == len(ALL) {
 		return n.logoSourceCache, nil
 	}

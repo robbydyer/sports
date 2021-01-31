@@ -20,6 +20,7 @@ type Team struct {
 	} `json:"nextGameSchedule,omitempty"`
 	score int
 }
+
 type teams struct {
 	Teams []*Team `json:"teams"`
 }
@@ -27,9 +28,11 @@ type teams struct {
 func (t *Team) GetID() int {
 	return t.ID
 }
+
 func (t *Team) GetName() string {
 	return t.Name
 }
+
 func (t *Team) GetAbbreviation() string {
 	return t.Abbreviation
 }

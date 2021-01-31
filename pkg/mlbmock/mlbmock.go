@@ -11,6 +11,7 @@ import (
 
 	yaml "github.com/ghodss/yaml"
 	"github.com/markbates/pkger"
+
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/mlb"
 	"github.com/robbydyer/sports/pkg/sportboard"
@@ -34,6 +35,7 @@ func (m *MockMLBAPI) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 
 	return tList, nil
 }
+
 func (m *MockMLBAPI) GetScheduledGames(ctx context.Context, date time.Time) ([]sportboard.Game, error) {
 	dateStr := m.DateStr(date)
 	var gList []sportboard.Game
@@ -44,12 +46,15 @@ func (m *MockMLBAPI) GetScheduledGames(ctx context.Context, date time.Time) ([]s
 
 	return gList, nil
 }
+
 func (m *MockMLBAPI) DateStr(d time.Time) string {
 	return d.Format(mlb.DateFormat)
 }
+
 func (m *MockMLBAPI) League() string {
 	return "Fake MLB"
 }
+
 func (m *MockMLBAPI) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
 	fullLogoKey := fmt.Sprintf("%s_%dx%d", logoKey, bounds.Dx(), bounds.Dy())
 	l, ok := m.logos[fullLogoKey]
@@ -71,8 +76,8 @@ func (m *MockMLBAPI) GetLogo(logoKey string, logoConf *logo.Config, bounds image
 
 	return l, nil
 }
-func (m *MockMLBAPI) logoSources() (map[string]image.Image, error) {
 
+func (m *MockMLBAPI) logoSources() (map[string]image.Image, error) {
 	if len(m.logoSourceCache) == len(mlb.ALL) {
 		return m.logoSourceCache, nil
 	}
@@ -94,6 +99,7 @@ func (m *MockMLBAPI) logoSources() (map[string]image.Image, error) {
 
 	return m.logoSourceCache, nil
 }
+
 func (m *MockMLBAPI) AllTeamAbbreviations() []string {
 	return mlb.ALL
 }
@@ -101,9 +107,11 @@ func (m *MockMLBAPI) AllTeamAbbreviations() []string {
 func (m *MockMLBAPI) UpdateTeams(ctx context.Context) error {
 	return nil
 }
+
 func (m *MockMLBAPI) UpdateGames(ctx context.Context, dateStr string) error {
 	return nil
 }
+
 func (m *MockMLBAPI) TeamFromAbbreviation(ctx context.Context, abbrev string) (sportboard.Team, error) {
 	for _, t := range m.teams {
 		if t.Abbreviation == abbrev {

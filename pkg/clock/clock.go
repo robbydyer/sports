@@ -30,7 +30,7 @@ func (b *basicClock) Render(ctx context.Context, matrix rgb.Matrix) error {
 	cv := rgb.NewCanvas(matrix)
 	cv.Clear()
 
-	//rgbrender.DrawRectangle(cv, )
+	// rgbrender.DrawRectangle(cv, )
 
 	return nil
 }

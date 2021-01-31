@@ -78,6 +78,7 @@ func New(fs afero.Fs, bounds image.Rectangle, cfg *Config, logger *log.Logger) (
 func (i *ImageBoard) Name() string {
 	return "Image Board"
 }
+
 func (i *ImageBoard) Enabled() bool {
 	return i.config.Enabled
 }

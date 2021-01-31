@@ -72,18 +72,22 @@ func (n *NHL) Games(dateStr string) ([]*Game, error) {
 func (g *Game) GetStartTime(ctx context.Context) (time.Time, error) {
 	return g.GameTime, nil
 }
+
 func (g *Game) GetID() int {
 	return g.ID
 }
+
 func (g *Game) GetLink() (string, error) {
 	return g.Link, nil
 }
+
 func (g *Game) IsLive() (bool, error) {
 	if g.LiveData != nil && g.LiveData.Linescore != nil && g.LiveData.Linescore.CurrentPeriod > 0 {
 		return true, nil
 	}
 	return false, nil
 }
+
 func (g *Game) IsComplete() (bool, error) {
 	if g.GameData != nil && g.GameData.Status != nil && strings.Contains(strings.ToLower(g.GameData.Status.AbstractGameState), "final") {
 		return true, nil
@@ -95,6 +99,7 @@ func (g *Game) IsComplete() (bool, error) {
 	}
 	return false, nil
 }
+
 func (g *Game) HomeTeam() (sportboard.Team, error) {
 	if g.Teams != nil && g.Teams.Home != nil && g.Teams.Home.Team != nil {
 		return g.Teams.Home.Team, nil
@@ -111,6 +116,7 @@ func (g *Game) HomeTeam() (sportboard.Team, error) {
 
 	return nil, fmt.Errorf("could not locate home team in Game")
 }
+
 func (g *Game) AwayTeam() (sportboard.Team, error) {
 	if g.Teams != nil && g.Teams.Away != nil && g.Teams.Away.Team != nil {
 		return g.Teams.Away.Team, nil
@@ -120,13 +126,13 @@ func (g *Game) AwayTeam() (sportboard.Team, error) {
 		g.LiveData.Linescore != nil &&
 		g.LiveData.Linescore.Teams != nil &&
 		g.LiveData.Linescore.Teams.Away != nil {
-
 		g.LiveData.Linescore.Teams.Away.Team.score = g.LiveData.Linescore.Teams.Away.Goals
 		return g.LiveData.Linescore.Teams.Away.Team, nil
 	}
 
 	return nil, fmt.Errorf("could not locate home team in Game")
 }
+
 func (g *Game) GetQuarter() (string, error) {
 	if g.LiveData != nil && g.LiveData.Linescore != nil {
 		return g.LiveData.Linescore.CurrentPeriodOrdinal, nil
@@ -134,6 +140,7 @@ func (g *Game) GetQuarter() (string, error) {
 
 	return "", nil
 }
+
 func (g *Game) GetClock() (string, error) {
 	if g.LiveData != nil && g.LiveData.Linescore != nil {
 		return g.LiveData.Linescore.CurrentPeriodTimeRemaining, nil

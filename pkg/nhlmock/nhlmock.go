@@ -11,6 +11,7 @@ import (
 
 	yaml "github.com/ghodss/yaml"
 	"github.com/markbates/pkger"
+
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/nhl"
 	"github.com/robbydyer/sports/pkg/sportboard"
@@ -34,6 +35,7 @@ func (m *MockNHLAPI) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 
 	return tList, nil
 }
+
 func (m *MockNHLAPI) GetScheduledGames(ctx context.Context, date time.Time) ([]sportboard.Game, error) {
 	dateStr := m.DateStr(date)
 	var gList []sportboard.Game
@@ -44,12 +46,15 @@ func (m *MockNHLAPI) GetScheduledGames(ctx context.Context, date time.Time) ([]s
 
 	return gList, nil
 }
+
 func (m *MockNHLAPI) DateStr(d time.Time) string {
 	return d.Format(nhl.DateFormat)
 }
+
 func (m *MockNHLAPI) League() string {
 	return "Fake NHL"
 }
+
 func (m *MockNHLAPI) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
 	fullLogoKey := fmt.Sprintf("%s_%dx%d", logoKey, bounds.Dx(), bounds.Dy())
 	l, ok := m.logos[fullLogoKey]
@@ -71,8 +76,8 @@ func (m *MockNHLAPI) GetLogo(logoKey string, logoConf *logo.Config, bounds image
 
 	return l, nil
 }
-func (m *MockNHLAPI) logoSources() (map[string]image.Image, error) {
 
+func (m *MockNHLAPI) logoSources() (map[string]image.Image, error) {
 	if len(m.logoSourceCache) == len(nhl.ALL) {
 		return m.logoSourceCache, nil
 	}
@@ -94,6 +99,7 @@ func (m *MockNHLAPI) logoSources() (map[string]image.Image, error) {
 
 	return m.logoSourceCache, nil
 }
+
 func (m *MockNHLAPI) AllTeamAbbreviations() []string {
 	return nhl.ALL
 }
@@ -101,9 +107,11 @@ func (m *MockNHLAPI) AllTeamAbbreviations() []string {
 func (m *MockNHLAPI) UpdateTeams(ctx context.Context) error {
 	return nil
 }
+
 func (m *MockNHLAPI) UpdateGames(ctx context.Context, dateStr string) error {
 	return nil
 }
+
 func (m *MockNHLAPI) TeamFromAbbreviation(ctx context.Context, abbrev string) (sportboard.Team, error) {
 	for _, t := range m.teams {
 		if t.Abbreviation == abbrev {

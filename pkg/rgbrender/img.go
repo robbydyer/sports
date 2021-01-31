@@ -12,8 +12,9 @@ import (
 	"time"
 
 	"github.com/nfnt/resize"
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/spf13/afero"
+
+	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
 func ResizeImage(img image.Image, bounds image.Rectangle, zoom float64) image.Image {

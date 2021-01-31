@@ -52,18 +52,23 @@ func New(ctx context.Context, logger *log.Logger) (*MLB, error) {
 func (m *MLB) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 	return nil, nil
 }
+
 func (m *MLB) TeamFromAbbreviation(ctx context.Context, abbreviation string) (sportboard.Team, error) {
 	return nil, nil
 }
+
 func (m *MLB) GetScheduledGames(ctx context.Context, date time.Time) ([]sportboard.Game, error) {
 	return nil, nil
 }
+
 func (m *MLB) DateStr(d time.Time) string {
 	return ""
 }
+
 func (m *MLB) League() string {
 	return "MLB"
 }
+
 func (m *MLB) AllTeamAbbreviations() []string {
 	return ALL
 }
