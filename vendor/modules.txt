@@ -23,6 +23,9 @@ github.com/gobuffalo/here
 github.com/golang/freetype
 github.com/golang/freetype/raster
 github.com/golang/freetype/truetype
+# github.com/gorilla/mux v1.8.0
+## explicit
+github.com/gorilla/mux
 # github.com/hashicorp/hcl v1.0.0
 github.com/hashicorp/hcl
 github.com/hashicorp/hcl/hcl/ast

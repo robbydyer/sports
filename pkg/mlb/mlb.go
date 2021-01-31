@@ -51,6 +51,10 @@ func New(ctx context.Context, logger *log.Logger) (*MLB, error) {
 	return m, nil
 }
 
+func (m *MLB) HTTPPathPrefix() string {
+	return "mlb"
+}
+
 // GetTeams ...
 func (m *MLB) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 	return nil, nil

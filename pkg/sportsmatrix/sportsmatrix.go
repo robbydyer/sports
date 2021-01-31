@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"net/http"
 	"sync"
 	"time"
 
@@ -16,21 +17,24 @@ import (
 
 // SportsMatrix controls the RGB matrix. It rotates through a list of given board.Board
 type SportsMatrix struct {
-	cfg         *Config
-	matrix      rgb.Matrix
-	boards      []board.Board
-	done        chan bool
-	screenIsOn  bool
-	screenOff   chan bool
-	screenOn    chan bool
-	log         *log.Logger
-	boardCtx    context.Context
-	boardCancel context.CancelFunc
+	cfg           *Config
+	matrix        rgb.Matrix
+	boards        []board.Board
+	done          chan bool
+	screenIsOn    bool
+	screenOff     chan bool
+	screenOn      chan bool
+	log           *log.Logger
+	boardCtx      context.Context
+	boardCancel   context.CancelFunc
+	server        http.Server
+	screenLogOnce *sync.Once
 	sync.Mutex
 }
 
 // Config ...
 type Config struct {
+	HttpListenPort int                 `json:"httpListenPort"`
 	HardwareConfig *rgb.HardwareConfig `json:"hardwareConfig"`
 	ScreenOffTimes []string            `json:"screenOffTimes"`
 	ScreenOnTimes  []string            `json:"screenOnTimes"`
@@ -38,6 +42,9 @@ type Config struct {
 
 // Defaults sets some sane config defaults
 func (c *Config) Defaults() {
+	if c.HttpListenPort == 0 {
+		c.HttpListenPort = 8080
+	}
 	if c.HardwareConfig == nil {
 		c.HardwareConfig = &rgb.DefaultConfig
 	}
@@ -127,6 +134,29 @@ func New(ctx context.Context, logger *log.Logger, cfg *Config, boards ...board.B
 	}
 	c.Start()
 
+	errChan := s.startHTTP()
+
+	// check for startup error
+	s.log.Debug("checking http server for startup error")
+	select {
+	case <-ctx.Done():
+		return nil, context.Canceled
+	case err := <-errChan:
+		if err != nil {
+			return nil, err
+		}
+	default:
+	}
+
+	go func() {
+		for {
+			select {
+			case err := <-errChan:
+				s.log.Error(err)
+			}
+		}
+	}()
+
 	return s, nil
 }
 
@@ -139,6 +169,7 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 		case <-s.screenOff:
 			s.Lock()
 			s.log.Warn("screen turning off")
+			s.screenLogOnce = &sync.Once{}
 			s.screenIsOn = false
 			s.boardCancel()
 			c := rgb.NewCanvas(s.matrix)
@@ -173,7 +204,6 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 
 	go s.screenWatcher(ctx)
 
-	var once sync.Once
 	logScreenOff := func() {
 		s.log.Warn("screen is turned off")
 	}
@@ -196,7 +226,7 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 
 		if !s.screenIsOn {
 			time.Sleep(10 * time.Second)
-			once.Do(logScreenOff)
+			s.screenLogOnce.Do(logScreenOff)
 			continue
 		}
 	INNER:
@@ -242,4 +272,5 @@ func (s *SportsMatrix) Close() {
 		s.log.Warn("Sportsmatrix is shutting down- Closing matrix")
 		_ = s.matrix.Close()
 	}
+	s.server.Close()
 }

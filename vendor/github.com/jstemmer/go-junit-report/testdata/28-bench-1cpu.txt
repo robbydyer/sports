@@ -1,4 +1,0 @@
-pkg: single/cpu
-BenchmarkRing        	20000000	        74.2 ns/op
-PASS
-ok  	single/cpu	9.467s

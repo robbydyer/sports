@@ -15,6 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 
+	"github.com/robbydyer/sports/pkg/board"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
@@ -87,6 +88,12 @@ func (i *ImageBoard) Name() string {
 // Enabled ...
 func (i *ImageBoard) Enabled() bool {
 	return i.config.Enabled
+}
+
+// GetHTTPHandlers ...
+func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
+	var h []*board.HTTPHandler
+	return h, nil
 }
 
 // Render ...

@@ -70,6 +70,10 @@ func (n *NHL) cacheClear() {
 	}
 }
 
+func (n *NHL) HTTPPathPrefix() string {
+	return "nhl"
+}
+
 // AllTeamAbbreviations ...
 func (n *NHL) AllTeamAbbreviations() []string {
 	return ALL

@@ -2,9 +2,15 @@ package board
 
 import (
 	"context"
+	"net/http"
 
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
+
+type HTTPHandler struct {
+	Handler func(http.ResponseWriter, *http.Request)
+	Path    string
+}
 
 // Board is the interface to implement for displaying on the matrix
 type Board interface {
@@ -13,4 +19,5 @@ type Board interface {
 	HasPriority() bool
 	Enabled() bool
 	Cleanup()
+	GetHTTPHandlers() ([]*HTTPHandler, error)
 }

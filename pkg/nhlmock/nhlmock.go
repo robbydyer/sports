@@ -27,6 +27,11 @@ type MockNHLAPI struct {
 	log             *log.Logger
 }
 
+// HTTPPathPrefix ...
+func (m *MockNHLAPI) HTTPPathPrefix() string {
+	return "nhl"
+}
+
 // GetTeams ...
 func (m *MockNHLAPI) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 	var tList []sportboard.Team

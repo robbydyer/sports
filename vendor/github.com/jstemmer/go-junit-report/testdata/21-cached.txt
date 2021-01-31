@@ -1,4 +1,0 @@
-=== RUN   TestOne
---- PASS: TestOne (0.00s)
-PASS
-ok  	package/one	(cached)

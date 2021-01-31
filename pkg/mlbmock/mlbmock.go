@@ -60,6 +60,11 @@ func (m *MockMLBAPI) League() string {
 	return "Fake MLB"
 }
 
+// HTTPPathPrefix ...
+func (m *MockMLBAPI) HTTPPathPrefix() string {
+	return "mlb"
+}
+
 // GetLogo ...
 func (m *MockMLBAPI) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
 	fullLogoKey := fmt.Sprintf("%s_%dx%d", logoKey, bounds.Dx(), bounds.Dy())

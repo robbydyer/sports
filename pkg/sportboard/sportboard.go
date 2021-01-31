@@ -64,6 +64,7 @@ type API interface {
 	GetScheduledGames(ctx context.Context, date time.Time) ([]Game, error)
 	DateStr(d time.Time) string
 	League() string
+	HTTPPathPrefix() string
 	GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error)
 	AllTeamAbbreviations() []string
 }
