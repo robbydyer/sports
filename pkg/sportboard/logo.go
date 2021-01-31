@@ -20,6 +20,7 @@ func (s *SportBoard) logoConfig(logoKey string) (*logo.Config, error) {
 	return nil, fmt.Errorf("no logo config for %s", logoKey)
 }
 
+// RenderHomeLogo ...
 func (s *SportBoard) RenderHomeLogo(canvas *rgb.Canvas, abbreviation string) error {
 	logoKey := fmt.Sprintf("%s_HOME", abbreviation)
 
@@ -60,6 +61,7 @@ func (s *SportBoard) RenderHomeLogo(canvas *rgb.Canvas, abbreviation string) err
 	return nil
 }
 
+// RenderAwayLogo ...
 func (s *SportBoard) RenderAwayLogo(canvas *rgb.Canvas, abbreviation string) error {
 	logoKey := fmt.Sprintf("%s_AWAY", abbreviation)
 

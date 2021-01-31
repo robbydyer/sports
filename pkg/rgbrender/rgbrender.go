@@ -51,8 +51,9 @@ func SetImageAlign(canvas *rgb.Canvas, align Align, img image.Image) (image.Imag
 func AlignPosition(align Align, bounds image.Rectangle, sizeX int, sizeY int) (image.Rectangle, error) {
 	startX := 0
 	startY := 0
-	endX := sizeX
-	endY := sizeY
+	endX := 0
+	endY := 0
+
 	if align == CenterTop || align == CenterCenter || align == CenterBottom {
 		startX = int(math.Ceil(float64(bounds.Max.X-sizeX) / 2))
 		endX = startX + sizeX - 1

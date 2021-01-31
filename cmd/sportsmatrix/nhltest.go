@@ -58,6 +58,8 @@ func (c *nhlCmd) run(cmd *cobra.Command, args []string) error {
 		c.rArgs.config.NHLConfig.WatchTeams = []string{"NYI", "NJD", "CBJ", "MIN"}
 	}
 
+	c.rArgs.config.MLBConfig.SetDefaults()
+
 	bounds := image.Rect(0, 0, c.rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, c.rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
 
 	logger := log.New()

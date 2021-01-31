@@ -15,43 +15,14 @@ import (
 )
 
 const (
-	BaseURL      = "https://statsapi.web.nhl.com/api/v1/"
-	LinkBase     = "https://statsapi.web.nhl.com"
+	baseURL  = "https://statsapi.web.nhl.com/api/v1/"
+	linkBase = "https://statsapi.web.nhl.com"
+	// DateFormat ...
 	DateFormat   = "2006-01-02"
 	logoCacheDir = "/tmp/sportsmatrix_logos/nhl"
-	ANA          = "ANA"
-	ARI          = "ARI"
-	BOS          = "BOS"
-	BUF          = "BUF"
-	CAR          = "CAR"
-	CBJ          = "CBJ"
-	CGY          = "CGY"
-	CHI          = "CHI"
-	COL          = "COL"
-	DAL          = "DAL"
-	DET          = "DET"
-	EDM          = "EDM"
-	FLA          = "FLA"
-	LAK          = "LAK"
-	MIN          = "MIN"
-	MTL          = "MTL"
-	NJD          = "NJD"
-	NSH          = "NSH"
-	NYI          = "NYI"
-	NYR          = "NYR"
-	OTT          = "OTT"
-	PHI          = "PHI"
-	PIT          = "PIT"
-	SJS          = "SJS"
-	STL          = "STL"
-	TBL          = "TBL"
-	TOR          = "TOR"
-	VAN          = "VAN"
-	VGK          = "VGK"
-	WPG          = "WPG"
-	WSH          = "WSH"
 )
 
+// ALL is a list of all teams in the league
 var ALL = []string{ANA, ARI, BOS, BUF, CAR, CBJ, CGY, CHI, COL, DAL, DET, EDM, FLA, LAK, MIN, MTL, NJD, NSH, NYI, NYR, OTT, PHI, PIT, SJS, STL, TBL, TOR, VAN, VGK, WPG, WSH}
 
 // NHL implements sportboard.API
@@ -81,7 +52,9 @@ func New(ctx context.Context, logger *log.Logger) (*NHL, error) {
 	}
 
 	c := cron.New()
-	c.AddFunc("0 5 * * *", n.cacheClear)
+	if _, err := c.AddFunc("0 5 * * *", n.cacheClear); err != nil {
+		return nil, fmt.Errorf("failed to set cron job for cacheClear: %w", err)
+	}
 	c.Start()
 
 	return n, nil

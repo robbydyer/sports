@@ -58,6 +58,8 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 		c.rArgs.config.MLBConfig.WatchTeams = []string{"ATL"}
 	}
 
+	c.rArgs.config.MLBConfig.SetDefaults()
+
 	bounds := image.Rect(0, 0, c.rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, c.rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
 
 	logger := log.New()

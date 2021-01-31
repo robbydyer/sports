@@ -21,23 +21,21 @@ const maxAPITries = 3
 
 // SportBoard implements board.Board
 type SportBoard struct {
-	config            *Config
-	api               API
-	teams             map[int]Team
-	cachedLiveGames   map[int]Game
-	logos             map[string]*logo.Logo
-	log               *log.Logger
-	matrixBounds      image.Rectangle
-	logoDrawCache     map[string]image.Image
-	logoSourceCache   map[string]image.Image
-	liveGamePreloader map[int]Game
-	scoreWriter       *rgbrender.TextWriter
-	scoreAlign        image.Rectangle
-	timeWriter        *rgbrender.TextWriter
-	timeAlign         image.Rectangle
-	counter           image.Image
+	config          *Config
+	api             API
+	cachedLiveGames map[int]Game
+	logos           map[string]*logo.Logo
+	log             *log.Logger
+	matrixBounds    image.Rectangle
+	logoDrawCache   map[string]image.Image
+	scoreWriter     *rgbrender.TextWriter
+	scoreAlign      image.Rectangle
+	timeWriter      *rgbrender.TextWriter
+	timeAlign       image.Rectangle
+	counter         image.Image
 }
 
+// Config ...
 type Config struct {
 	boardDelay        time.Duration
 	TimeColor         color.Color
@@ -53,11 +51,13 @@ type Config struct {
 	HideFavoriteScore bool           `json:"hideFavoriteScore"`
 }
 
+// FontConfig ...
 type FontConfig struct {
 	Size      float64 `json:"size"`
 	LineSpace float64 `json:"lineSpace"`
 }
 
+// API ...
 type API interface {
 	GetTeams(ctx context.Context) ([]Team, error)
 	TeamFromAbbreviation(ctx context.Context, abbreviation string) (Team, error)
@@ -68,6 +68,7 @@ type API interface {
 	AllTeamAbbreviations() []string
 }
 
+// Team ...
 type Team interface {
 	GetID() int
 	GetName() string
@@ -75,6 +76,7 @@ type Team interface {
 	Score() int
 }
 
+// Game ...
 type Game interface {
 	GetID() int
 	GetLink() (string, error)
@@ -88,6 +90,7 @@ type Game interface {
 	GetStartTime(ctx context.Context) (time.Time, error)
 }
 
+// SetDefaults sets config defaults
 func (c *Config) SetDefaults() {
 	if c.BoardDelay != "" {
 		d, err := time.ParseDuration(c.BoardDelay)
@@ -117,6 +120,7 @@ func (c *Config) SetDefaults() {
 	}
 }
 
+// New ...
 func New(ctx context.Context, api API, bounds image.Rectangle, logger *log.Logger, config *Config) (*SportBoard, error) {
 	s := &SportBoard{
 		config:          config,
@@ -161,11 +165,12 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *log.Logge
 
 func (s *SportBoard) cacheClear() {
 	s.log.Warn("Clearing cached live games")
-	for k, _ := range s.cachedLiveGames {
+	for k := range s.cachedLiveGames {
 		delete(s.cachedLiveGames, k)
 	}
 }
 
+// Name ...
 func (s *SportBoard) Name() string {
 	if l := s.api.League(); l != "" {
 		return l
@@ -173,10 +178,12 @@ func (s *SportBoard) Name() string {
 	return "SportBoard"
 }
 
+// Enabled ...
 func (s *SportBoard) Enabled() bool {
 	return s.config.Enabled
 }
 
+// Render ...
 func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	if !s.config.Enabled {
 		s.log.Warnf("%s board is not enabled, skipping", s.api.League())
@@ -192,7 +199,7 @@ func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	s.log.Debugf("There are %d scheduled %s games today", len(games), s.api.League())
 
 	if len(games) == 0 {
-		log.Debug("No scheduled games for %s, not rendering", s.api.League())
+		log.Debugf("No scheduled games for %s, not rendering", s.api.League())
 		return nil
 	}
 
@@ -319,7 +326,7 @@ OUTER:
 					continue INNER
 				}
 			} else if isOver {
-				if err := s.renderCompleteGame(ctx, canvas, liveGame); err != nil {
+				if err := s.renderCompleteGame(canvas, liveGame); err != nil {
 					s.log.Errorf("failed to render complete game: %s", err.Error())
 					continue INNER
 				}
@@ -343,9 +350,12 @@ OUTER:
 	return nil
 }
 
+// HasPriority ...
 func (s *SportBoard) HasPriority() bool {
 	return false
 }
+
+// Cleanup ...
 func (s *SportBoard) Cleanup() {}
 
 func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload chan bool) error {

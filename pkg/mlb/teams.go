@@ -46,7 +46,7 @@ func (t *Team) Score() int {
 
 // GetTeams ...
 func GetTeams(ctx context.Context) ([]*Team, error) {
-	uri, err := url.Parse(fmt.Sprintf("%s/v1/teams", BaseURL))
+	uri, err := url.Parse(fmt.Sprintf("%s/v1/teams", baseURL))
 	if err != nil {
 		return nil, err
 	}

@@ -132,6 +132,7 @@ func (g *Game) GetClock() (string, error) {
 	return "", nil
 }
 
+// GetUpdate ...
 func (g *Game) GetUpdate(ctx context.Context) (sportboard.Game, error) {
 	if g.GameGetter == nil {
 		g.GameGetter = GetLiveGame
@@ -139,12 +140,14 @@ func (g *Game) GetUpdate(ctx context.Context) (sportboard.Game, error) {
 	return g.GameGetter(ctx, g.Link)
 }
 
+// GetStartTime ...
 func (g *Game) GetStartTime(ctx context.Context) (time.Time, error) {
 	return g.GameTime, nil
 }
 
+// GetLiveGame ...
 func GetLiveGame(ctx context.Context, link string) (sportboard.Game, error) {
-	uri := fmt.Sprintf("%s/%s", LinkBase, link)
+	uri := fmt.Sprintf("%s/%s", linkBase, link)
 
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
@@ -182,7 +185,7 @@ func GetLiveGame(ctx context.Context, link string) (sportboard.Game, error) {
 }
 
 func getGames(ctx context.Context, dateStr string) ([]*Game, error) {
-	uri := fmt.Sprintf("%s/v1/schedule?date=%s", BaseURL, dateStr)
+	uri := fmt.Sprintf("%s/v1/schedule?date=%s", baseURL, dateStr)
 
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {

@@ -84,8 +84,8 @@ func (s *SportBoard) isFavorite(abbrev string) bool {
 	return false
 }
 
-func (b *SportBoard) textAreaWidth() int {
-	return b.matrixBounds.Dx() / 4
+func (s *SportBoard) textAreaWidth() int {
+	return s.matrixBounds.Dx() / 4
 }
 
 func scoreStr(g Game) (string, error) {

@@ -64,7 +64,7 @@ func (t *Team) setGameTimes() error {
 }
 
 func GetTeams(ctx context.Context) ([]*Team, error) {
-	uri := fmt.Sprintf("%s/teams?expand=team.stats,team.schedule.previous,team.schedule.next", BaseURL)
+	uri := fmt.Sprintf("%s/teams?expand=team.stats,team.schedule.previous,team.schedule.next", baseURL)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, err

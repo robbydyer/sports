@@ -13,11 +13,10 @@ import (
 )
 
 const (
-	BaseURL      = "https://statsapi.mlb.com/api"
-	LinkBase     = "https://statsapi.mlb.com"
+	baseURL      = "https://statsapi.mlb.com/api"
+	linkBase     = "https://statsapi.mlb.com"
 	logoCacheDir = "/tmp/sportsmatrix_logos/mlb"
 	DateFormat   = "2006-01-02"
-	ATL          = "ATL"
 )
 
 // ALL contains all of the teams in the league

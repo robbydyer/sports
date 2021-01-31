@@ -181,7 +181,7 @@ func timeFromGameTime(gameTime string) (time.Time, error) {
 
 // GetLiveGame is a LiveGameGetter
 func GetLiveGame(ctx context.Context, link string) (sportboard.Game, error) {
-	uri := fmt.Sprintf("%s/%s", LinkBase, link)
+	uri := fmt.Sprintf("%s/%s", linkBase, link)
 
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
@@ -219,7 +219,7 @@ func GetLiveGame(ctx context.Context, link string) (sportboard.Game, error) {
 }
 
 func getGames(ctx context.Context, dateStr string) ([]*Game, error) {
-	uri := fmt.Sprintf("%s/schedule?date=%s&expand=schedule.linescore", BaseURL, dateStr)
+	uri := fmt.Sprintf("%s/schedule?date=%s&expand=schedule.linescore", baseURL, dateStr)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, err

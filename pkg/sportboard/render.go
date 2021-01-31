@@ -60,7 +60,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 		if err := s.RenderAwayLogo(canvas, awayTeam.GetAbbreviation()); err != nil {
 			return err
 		}
-		_ = timeWriter.Write(
+		if err := timeWriter.Write(
 			canvas,
 			timeAlign,
 			[]string{
@@ -68,19 +68,23 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 				clock,
 			},
 			s.config.TimeColor,
-		)
+		); err != nil {
+			return fmt.Errorf("failed to write quarter and clock: %w", err)
+		}
 
 		if s.config.HideFavoriteScore && isFavorite {
 			s.log.Warn("hiding score for favorite team")
 		} else {
-			_ = scoreWriter.Write(
+			if err := scoreWriter.Write(
 				canvas,
 				scoreAlign,
 				[]string{
 					score,
 				},
 				s.config.ScoreColor,
-			)
+			); err != nil {
+				return fmt.Errorf("failed to write score: %w", err)
+			}
 		}
 
 		draw.Draw(canvas, canvas.Bounds(), s.counter, image.Point{}, draw.Over)
@@ -175,7 +179,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas *rgb.Canvas,
 	return canvas.Render()
 }
 
-func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas *rgb.Canvas, liveGame Game) error {
+func (s *SportBoard) renderCompleteGame(canvas *rgb.Canvas, liveGame Game) error {
 	awayTeam, err := liveGame.AwayTeam()
 	if err != nil {
 		return err

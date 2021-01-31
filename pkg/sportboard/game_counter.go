@@ -8,6 +8,7 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
+// RenderGameCounter ...
 func (s *SportBoard) RenderGameCounter(canvas *rgb.Canvas, numGames int, activeIndex int, spacing int) (image.Image, error) {
 	totalWidth := (numGames * spacing) + numGames - 1
 

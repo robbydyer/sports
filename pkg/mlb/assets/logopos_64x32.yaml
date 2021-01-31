@@ -1,0 +1,11 @@
+---
+- abbrev: ATL_HOME
+  pt:
+    xShift: 0
+    yShift: 0
+    zoom: 1
+- abbrev: ATL_AWAY
+  pt:
+    xShift: 0
+    yShift: 0
+    zoom: 1
