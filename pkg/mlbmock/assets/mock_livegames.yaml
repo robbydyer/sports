@@ -4,18 +4,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 133
             abbreviation: "OAK"
             name: "OAK"
         home:
-          runs 2
+          runs: 2
           team:
             id: 133
             abbreviation: "OAK"
@@ -25,18 +25,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 134
             abbreviation: "PIT"
             name: "PIT"
         home:
-          runs 2
+          runs: 2
           team:
             id: 134
             abbreviation: "PIT"
@@ -46,18 +46,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 135
             abbreviation: "SD"
             name: "SD"
         home:
-          runs 2
+          runs: 2
           team:
             id: 135
             abbreviation: "SD"
@@ -67,18 +67,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 136
             abbreviation: "SEA"
             name: "SEA"
         home:
-          runs 2
+          runs: 2
           team:
             id: 136
             abbreviation: "SEA"
@@ -88,18 +88,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 137
             abbreviation: "SF"
             name: "SF"
         home:
-          runs 2
+          runs: 2
           team:
             id: 137
             abbreviation: "SF"
@@ -109,18 +109,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 138
             abbreviation: "STL"
             name: "STL"
         home:
-          runs 2
+          runs: 2
           team:
             id: 138
             abbreviation: "STL"
@@ -130,18 +130,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 139
             abbreviation: "TB"
             name: "TB"
         home:
-          runs 2
+          runs: 2
           team:
             id: 139
             abbreviation: "TB"
@@ -151,18 +151,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 140
             abbreviation: "TEX"
             name: "TEX"
         home:
-          runs 2
+          runs: 2
           team:
             id: 140
             abbreviation: "TEX"
@@ -172,18 +172,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 141
             abbreviation: "TOR"
             name: "TOR"
         home:
-          runs 2
+          runs: 2
           team:
             id: 141
             abbreviation: "TOR"
@@ -193,18 +193,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 142
             abbreviation: "MIN"
             name: "MIN"
         home:
-          runs 2
+          runs: 2
           team:
             id: 142
             abbreviation: "MIN"
@@ -214,18 +214,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 143
             abbreviation: "PHI"
             name: "PHI"
         home:
-          runs 2
+          runs: 2
           team:
             id: 143
             abbreviation: "PHI"
@@ -235,18 +235,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 144
             abbreviation: "ATL"
             name: "ATL"
         home:
-          runs 2
+          runs: 2
           team:
             id: 144
             abbreviation: "ATL"
@@ -256,18 +256,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 145
             abbreviation: "CWS"
             name: "CWS"
         home:
-          runs 2
+          runs: 2
           team:
             id: 145
             abbreviation: "CWS"
@@ -277,18 +277,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 146
             abbreviation: "MIA"
             name: "MIA"
         home:
-          runs 2
+          runs: 2
           team:
             id: 146
             abbreviation: "MIA"
@@ -298,18 +298,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 147
             abbreviation: "NYY"
             name: "NYY"
         home:
-          runs 2
+          runs: 2
           team:
             id: 147
             abbreviation: "NYY"
@@ -319,18 +319,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 158
             abbreviation: "MIL"
             name: "MIL"
         home:
-          runs 2
+          runs: 2
           team:
             id: 158
             abbreviation: "MIL"
@@ -340,18 +340,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 108
             abbreviation: "LAA"
             name: "LAA"
         home:
-          runs 2
+          runs: 2
           team:
             id: 108
             abbreviation: "LAA"
@@ -361,18 +361,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 109
             abbreviation: "ARI"
             name: "ARI"
         home:
-          runs 2
+          runs: 2
           team:
             id: 109
             abbreviation: "ARI"
@@ -382,18 +382,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 110
             abbreviation: "BAL"
             name: "BAL"
         home:
-          runs 2
+          runs: 2
           team:
             id: 110
             abbreviation: "BAL"
@@ -403,18 +403,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 111
             abbreviation: "BOS"
             name: "BOS"
         home:
-          runs 2
+          runs: 2
           team:
             id: 111
             abbreviation: "BOS"
@@ -424,18 +424,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 112
             abbreviation: "CHC"
             name: "CHC"
         home:
-          runs 2
+          runs: 2
           team:
             id: 112
             abbreviation: "CHC"
@@ -445,18 +445,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 113
             abbreviation: "CIN"
             name: "CIN"
         home:
-          runs 2
+          runs: 2
           team:
             id: 113
             abbreviation: "CIN"
@@ -466,18 +466,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 114
             abbreviation: "CLE"
             name: "CLE"
         home:
-          runs 2
+          runs: 2
           team:
             id: 114
             abbreviation: "CLE"
@@ -487,18 +487,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 115
             abbreviation: "COL"
             name: "COL"
         home:
-          runs 2
+          runs: 2
           team:
             id: 115
             abbreviation: "COL"
@@ -508,18 +508,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 116
             abbreviation: "DET"
             name: "DET"
         home:
-          runs 2
+          runs: 2
           team:
             id: 116
             abbreviation: "DET"
@@ -529,18 +529,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 117
             abbreviation: "HOU"
             name: "HOU"
         home:
-          runs 2
+          runs: 2
           team:
             id: 117
             abbreviation: "HOU"
@@ -550,18 +550,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 118
             abbreviation: "KC"
             name: "KC"
         home:
-          runs 2
+          runs: 2
           team:
             id: 118
             abbreviation: "KC"
@@ -571,18 +571,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 119
             abbreviation: "LAD"
             name: "LAD"
         home:
-          runs 2
+          runs: 2
           team:
             id: 119
             abbreviation: "LAD"
@@ -592,18 +592,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 120
             abbreviation: "WSH"
             name: "WSH"
         home:
-          runs 2
+          runs: 2
           team:
             id: 120
             abbreviation: "WSH"
@@ -613,18 +613,18 @@
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: 121
             abbreviation: "NYM"
             name: "NYM"
         home:
-          runs 2
+          runs: 2
           team:
             id: 121
             abbreviation: "NYM"

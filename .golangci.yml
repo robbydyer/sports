@@ -5,6 +5,7 @@ run:
   - vendor
   - pkg/rgbmatrix-rpi
   - pkg/clock
+  - pkg/mlb
   timeout: 5m
 linters:
   disable-all: true

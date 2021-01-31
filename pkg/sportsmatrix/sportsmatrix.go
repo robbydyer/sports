@@ -14,6 +14,7 @@ import (
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
+// SportsMatrix controls the RGB matrix. It rotates through a list of given board.Board
 type SportsMatrix struct {
 	cfg         *Config
 	matrix      rgb.Matrix
@@ -28,13 +29,14 @@ type SportsMatrix struct {
 	sync.Mutex
 }
 
+// Config ...
 type Config struct {
 	HardwareConfig *rgb.HardwareConfig `json:"hardwareConfig"`
 	ScreenOffTimes []string            `json:"screenOffTimes"`
 	ScreenOnTimes  []string            `json:"screenOnTimes"`
-	EnableNHL      bool                `json:"enableNHL,omitempty"`
 }
 
+// Defaults sets some sane config defaults
 func (c *Config) Defaults() {
 	if c.HardwareConfig == nil {
 		c.HardwareConfig = &rgb.DefaultConfig
@@ -68,6 +70,7 @@ func (c *Config) Defaults() {
 	}
 }
 
+// New ...
 func New(ctx context.Context, logger *log.Logger, cfg *Config, boards ...board.Board) (*SportsMatrix, error) {
 	cfg.Defaults()
 
@@ -158,10 +161,12 @@ func (s *SportsMatrix) MatrixBounds() image.Rectangle {
 	return image.Rect(0, 0, w-1, h-1)
 }
 
+// Done ...
 func (s *SportsMatrix) Done() chan bool {
 	return s.done
 }
 
+// Serve blocks until the context is canceled
 func (s *SportsMatrix) Serve(ctx context.Context) error {
 	s.boardCtx, s.boardCancel = context.WithCancel(context.Background())
 	defer s.boardCancel()
@@ -184,7 +189,7 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 			s.log.Info("Got context cancel")
 			s.boardCancel()
 			// Wait for boards to cancel
-			time.Sleep(5)
+			time.Sleep(2 * time.Second)
 			return nil
 		default:
 		}
@@ -231,6 +236,7 @@ func (s *SportsMatrix) anyPriorities() bool {
 	return false
 }
 
+// Close closes the matrix
 func (s *SportsMatrix) Close() {
 	if s.matrix != nil {
 		s.log.Warn("Sportsmatrix is shutting down- Closing matrix")

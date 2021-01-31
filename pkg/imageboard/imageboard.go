@@ -23,9 +23,9 @@ const (
 	diskCacheDir = "/tmp/sportsmatrix/imageboard"
 )
 
-var supportedImageTypes = []string{"png", "gif"}
+// var supportedImageTypes = []string{"png", "gif"}
 
-// Imageboard is a board for displaying image files
+// ImageBoard is a board for displaying image files
 type ImageBoard struct {
 	config       *Config
 	log          *log.Logger

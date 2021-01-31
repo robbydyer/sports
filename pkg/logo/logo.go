@@ -95,7 +95,7 @@ func (l *Logo) GetThumbnail(size image.Rectangle) (image.Image, error) {
 	return l.thumbnail, nil
 }
 
-// RednerLeftAligned renders the logo on the left side of the matrix
+// RenderLeftAligned renders the logo on the left side of the matrix
 func (l *Logo) RenderLeftAligned(canvas *rgb.Canvas, width int) (image.Image, error) {
 	thumb, err := l.GetThumbnail(l.bounds)
 	if err != nil {
@@ -108,7 +108,7 @@ func (l *Logo) RenderLeftAligned(canvas *rgb.Canvas, width int) (image.Image, er
 	bounds := image.Rect(startX, startY, canvas.Bounds().Dx()-1, canvas.Bounds().Dy()-1)
 
 	i := image.NewRGBA(bounds)
-	draw.Draw(i, bounds, thumb, image.ZP, draw.Over)
+	draw.Draw(i, bounds, thumb, image.Point{}, draw.Over)
 
 	return i, nil
 }
@@ -126,7 +126,7 @@ func (l *Logo) RenderRightAligned(canvas *rgb.Canvas, width int) (image.Image, e
 	bounds := image.Rect(startX, startY, canvas.Bounds().Dx()-1, canvas.Bounds().Dy()-1)
 
 	i := image.NewRGBA(bounds)
-	draw.Draw(i, bounds, thumb, image.ZP, draw.Over)
+	draw.Draw(i, bounds, thumb, image.Point{}, draw.Over)
 
 	return i, nil
 }

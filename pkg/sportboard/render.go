@@ -60,7 +60,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 		if err := s.RenderAwayLogo(canvas, awayTeam.GetAbbreviation()); err != nil {
 			return err
 		}
-		timeWriter.Write(
+		_ = timeWriter.Write(
 			canvas,
 			timeAlign,
 			[]string{
@@ -73,7 +73,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 		if s.config.HideFavoriteScore && isFavorite {
 			s.log.Warn("hiding score for favorite team")
 		} else {
-			scoreWriter.Write(
+			_ = scoreWriter.Write(
 				canvas,
 				scoreAlign,
 				[]string{
@@ -152,7 +152,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas *rgb.Canvas,
 	if err := s.RenderAwayLogo(canvas, awayTeam.GetAbbreviation()); err != nil {
 		return err
 	}
-	timeWriter.Write(
+	_ = timeWriter.Write(
 		canvas,
 		timeAlign,
 		[]string{
@@ -161,7 +161,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas *rgb.Canvas,
 		s.config.TimeColor,
 	)
 
-	scoreWriter.Write(
+	_ = scoreWriter.Write(
 		canvas,
 		scoreAlign,
 		[]string{
@@ -206,7 +206,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas *rgb.Canvas,
 	if err := s.RenderAwayLogo(canvas, awayTeam.GetAbbreviation()); err != nil {
 		return err
 	}
-	timeWriter.Write(
+	_ = timeWriter.Write(
 		canvas,
 		timeAlign,
 		[]string{
@@ -215,7 +215,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas *rgb.Canvas,
 		s.config.TimeColor,
 	)
 
-	scoreWriter.Write(
+	_ = scoreWriter.Write(
 		canvas,
 		scoreAlign,
 		[]string{

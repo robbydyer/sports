@@ -17,8 +17,16 @@ func (s *SportBoard) getTimeWriter() (*rgbrender.TextWriter, image.Rectangle, er
 	if err != nil {
 		return nil, timeAlign, err
 	}
-	timeWriter.LineSpace = s.config.TimeFont.LineSpace
-	timeWriter.FontSize = s.config.TimeFont.Size
+
+	if s.config.TimeFont == nil {
+		s.config.TimeFont = &FontConfig{
+			Size:      8,
+			LineSpace: 0,
+		}
+	}
+	if timeWriter.FontSize == 0 {
+		timeWriter.FontSize = 8
+	}
 
 	timeAlign, err = rgbrender.AlignPosition(rgbrender.CenterTop, s.matrixBounds, s.textAreaWidth(), s.matrixBounds.Dy()/2)
 	if err != nil {
@@ -39,6 +47,17 @@ func (s *SportBoard) getScoreWriter() (*rgbrender.TextWriter, image.Rectangle, e
 	fnt, err := rgbrender.FontFromAsset("github.com/robbydyer/sports:/assets/fonts/score.ttf")
 	if err != nil {
 		return nil, scoreAlign, fmt.Errorf("failed to load font for score: %w", err)
+	}
+
+	if s.config.ScoreFont == nil {
+		s.config.ScoreFont = &FontConfig{
+			Size:      16,
+			LineSpace: 0,
+		}
+	}
+
+	if s.config.ScoreFont.Size == 0 {
+		s.config.ScoreFont.Size = 16
 	}
 
 	scoreWriter := rgbrender.NewTextWriter(fnt, s.config.ScoreFont.Size)
@@ -67,21 +86,6 @@ func (s *SportBoard) isFavorite(abbrev string) bool {
 
 func (b *SportBoard) textAreaWidth() int {
 	return b.matrixBounds.Dx() / 4
-}
-
-func quarterStr(period int) string {
-	switch period {
-	case 1:
-		return "1st"
-	case 2:
-		return "2nd"
-	case 3:
-		return "3rd"
-	case 4:
-		return "4th"
-	default:
-		return ""
-	}
 }
 
 func scoreStr(g Game) (string, error) {

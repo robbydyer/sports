@@ -151,13 +151,15 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *log.Logge
 
 	c := cron.New()
 
-	c.AddFunc("0 4 * * *", s.CacheClear)
+	if _, err := c.AddFunc("0 4 * * *", s.cacheClear); err != nil {
+		return nil, fmt.Errorf("failed to set cron for cacheClear: %w", err)
+	}
 	c.Start()
 
 	return s, nil
 }
 
-func (s *SportBoard) CacheClear() {
+func (s *SportBoard) cacheClear() {
 	s.log.Warn("Clearing cached live games")
 	for k, _ := range s.cachedLiveGames {
 		delete(s.cachedLiveGames, k)

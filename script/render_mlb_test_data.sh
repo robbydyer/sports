@@ -38,18 +38,18 @@ cat <<EOF >> "${ROOT}/pkg/mlbmock/assets/mock_livegames.yaml"
   gameData:
   liveData:
     linescore:
-      currentInning 3
+      currentInning: 3
       currentInningOrdinal: "3rd"
       inningState: "Bottom"
       teams:
-        runs 1
+        runs: 1
         away:
           team:
             id: ${id}
             abbreviation: "${t}"
             name: "${t}"
         home:
-          runs 2
+          runs: 2
           team:
             id: ${id}
             abbreviation: "${t}"
