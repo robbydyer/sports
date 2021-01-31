@@ -57,6 +57,7 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 
 	logger := log.New()
 	logger.Level = s.rArgs.logLevel
+	logger.Out = os.Stdout
 
 	bounds := image.Rect(0, 0, s.rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, s.rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/markbates/pkger"
 
+	"github.com/robbydyer/sports/pkg/board"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
@@ -19,6 +20,11 @@ type testBoard struct {
 
 func (t *testBoard) Name() string {
 	return "Test Board"
+}
+
+func (t *testBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
+	var h []*board.HTTPHandler
+	return h, nil
 }
 
 func (t *testBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
