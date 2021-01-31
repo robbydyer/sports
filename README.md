@@ -84,6 +84,33 @@ sudo ./sportsmatrix.bin run -c myconfig.conf
 sudo ./sportsmatrix.bin nhltest
 ```
 
+## HTTP endpoints
+The sportsmatrix creates some HTTP endpoints for on-the-fly changes. The matrix itself registers some endpoints, and each board is capable of registering it's own.
+
+The matrix defines the following:
+- `/screenon` => Turns the board on
+- `/screenoff` => Turns the board off
+Examples:
+```shell
+curl http://127.0.0.1:8080/screenon
+curl http://127.0.0.1:8080/screenoff
+```
+
+The sportboard.SportBoard type (which all the team sport types use) implements the following:
+- `/[sport_path]/disable` => Disable the board. The matrix will skip this board in the rotation
+- `/[sport_path]/enable` => Enable the board.
+- `/[sport_path]/hidefavoritescore` => Hide scores for games that favorite teams are playing in. 
+- `/[sport_path]/showfavoritescore` => Show scores for games that favorite teams are in.
+- `/[sport_path]/favoritesticky` => Pins the matrix to a live game that a favorite team is participating in.
+- `/[sport_path]/favoriteunstick` => Unsticks a favorite team game
+
+Examples:
+```shell
+curl http://127.0.0.1:8080/nhl/showfavoritescore
+
+curl http://127.0.0.1:8080/mlb/favoritesticky
+```
+
 ## Contributing / Development
 I'm always open to pull requests for features/bug fixes! Feel free to open an issue if (when) you find a bug.
 
