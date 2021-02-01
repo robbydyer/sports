@@ -60,6 +60,11 @@ nhlConfig:
   watchTeams: # The list of teams to show games for. Leaving this out or setting to ALL will show all teams in the league
   - ALL
   
+# Clock Board
+clockConfig:
+  enabled: true
+  boardDelay: "10s"
+  
 # Primary configuration for the matrix  
 sportsMatrixConfig:
   httpListenPort: 8080 # Listen port for the HTTP server. Defaults to 8080
