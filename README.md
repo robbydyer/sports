@@ -13,6 +13,8 @@ I am currently running this with a Pi-zero. It performs perfectly well so far. I
 
 - NHL: Displays the day's games. Either live scores (favorite teams' scores are hideable for those who watch games recorded), Upcoming games, or final scores.
 - Image Board: Takes a list of directories containg images and displays them. Works with GIF's too!
+- Clock: It's...a clock
+- MLB: Currently still in progress
 
 ## Roadmap
 
@@ -20,10 +22,11 @@ I am currently running this with a Pi-zero. It performs perfectly well so far. I
 My goal is to add new boards for all the major sports that I'm personally interested in. For now, that list includes (order of priority) MLB, College Football, NFL, and possibly something for PGA Tour (maybe in time for the Masters?).
 
 #### Web API for on-the-fly config changes
-I ultimately would like to integrate a web API that allows certain things to be modified on the fly- this would ideally mean a simple web UI for tweaking things without having to access the Pi and restart the service.
+~I ultimately would like to integrate a web API that allows certain things to be modified on the fly- this would ideally mean a simple web UI for tweaking things without having to access the Pi and restart the service.~
+The Web API is a thing now! Check out [HTTP Endpoints](#http-endpoints)
 
 #### More Misc. Boards
-I'd like to add some other basic boards- clock, weather, etc.
+I'd like to add some other basic boards- ~clock~, weather, etc.
 
 ## Installation
 My goal is to soon provide an easy installer script...
@@ -108,8 +111,14 @@ The sportboard.SportBoard type (which all the team sport types use) implements t
 Examples:
 ```shell
 curl http://127.0.0.1:8080/nhl/showfavoritescore
-
 curl http://127.0.0.1:8080/mlb/favoritesticky
+```
+
+The imageboard can be turned on/off and also have it's cache cleared
+```shell
+curl http://127.0.0.1:8080/img/enable
+curl http://127.0.0.1:8080/img/disable
+curl http://127.0.0.1:8080/img/clearcache
 ```
 
 ## Contributing / Development
