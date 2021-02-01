@@ -72,7 +72,7 @@ sportsMatrixConfig:
   - "38 0 * * *"
   screenOnTimes: # Cron values for when the screen should be turned on
   - "39 0 * * *"
-  hardwareConfig: # Hardware config based straight through to the https://github.com/hzeller/rpi-rgb-led-matrix library
+  hardwareConfig: # Hardware config passed straight through to the https://github.com/hzeller/rpi-rgb-led-matrix library
     brightness: 60
     hardwareMapping: adafruit-hat-pwm
     showRefreshRate: false
