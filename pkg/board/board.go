@@ -7,6 +7,7 @@ import (
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
+// HTTPHandler is the type returned to the sportsmatrix for HTTP endpoints
 type HTTPHandler struct {
 	Handler func(http.ResponseWriter, *http.Request)
 	Path    string
@@ -18,6 +19,5 @@ type Board interface {
 	Render(ctx context.Context, matrix rgb.Matrix) error
 	HasPriority() bool
 	Enabled() bool
-	Cleanup()
 	GetHTTPHandlers() ([]*HTTPHandler, error)
 }

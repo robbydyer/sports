@@ -15,7 +15,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 
-	"github.com/robbydyer/sports/pkg/board"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
@@ -80,6 +79,15 @@ func New(fs afero.Fs, bounds image.Rectangle, cfg *Config, logger *log.Logger) (
 	return i, nil
 }
 
+func (i *ImageBoard) cacheClear() {
+	for k := range i.gifCache {
+		delete(i.gifCache, k)
+	}
+	for k := range i.imageCache {
+		delete(i.imageCache, k)
+	}
+}
+
 // Name ...
 func (i *ImageBoard) Name() string {
 	return "Image Board"
@@ -88,12 +96,6 @@ func (i *ImageBoard) Name() string {
 // Enabled ...
 func (i *ImageBoard) Enabled() bool {
 	return i.config.Enabled
-}
-
-// GetHTTPHandlers ...
-func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
-	var h []*board.HTTPHandler
-	return h, nil
 }
 
 // Render ...
@@ -118,6 +120,10 @@ func (i *ImageBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	}
 
 	for _, dir := range i.config.Directories {
+		if !i.config.Enabled {
+			i.log.Warn("ImageBoard is disabled, not rendering")
+			return nil
+		}
 		i.log.Debugf("walking directory %s", dir)
 
 		err := afero.Walk(i.fs, dir, i.dirWalk)
@@ -128,6 +134,10 @@ func (i *ImageBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 
 	canvas := rgb.NewCanvas(matrix)
 	for _, img := range i.imageCache {
+		if !i.config.Enabled {
+			i.log.Warn("ImageBoard is disabled, not rendering")
+			return nil
+		}
 		i.log.Debug("playing image")
 		select {
 		case <-ctx.Done():
@@ -135,7 +145,12 @@ func (i *ImageBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 		default:
 		}
 
-		draw.Draw(canvas, canvas.Bounds(), img, image.Point{}, draw.Over)
+		align, err := rgbrender.AlignPosition(rgbrender.CenterCenter, canvas.Bounds(), img.Bounds().Dx(), img.Bounds().Dy())
+		if err != nil {
+			return err
+		}
+
+		draw.Draw(canvas, align, img, image.Point{}, draw.Over)
 
 		if err := canvas.Render(); err != nil {
 			return err
@@ -149,6 +164,10 @@ func (i *ImageBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	}
 
 	for _, g := range i.gifCache {
+		if !i.config.Enabled {
+			i.log.Warn("ImageBoard is disabled, not rendering")
+			return nil
+		}
 		i.log.Debug("playing GIF")
 		gifCtx, gifCancel := context.WithCancel(context.Background())
 		select {
@@ -275,9 +294,6 @@ func (i *ImageBoard) dirWalk(path string, info os.FileInfo, err error) error {
 func (i *ImageBoard) HasPriority() bool {
 	return false
 }
-
-// Cleanup ...
-func (i *ImageBoard) Cleanup() {}
 
 func (i *ImageBoard) validateDirectories() error {
 	for _, dir := range i.config.Directories {

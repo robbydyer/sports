@@ -29,12 +29,13 @@ type SportsMatrix struct {
 	boardCancel   context.CancelFunc
 	server        http.Server
 	screenLogOnce *sync.Once
+	close         chan bool
 	sync.Mutex
 }
 
 // Config ...
 type Config struct {
-	HttpListenPort int                 `json:"httpListenPort"`
+	HTTPListenPort int                 `json:"httpListenPort"`
 	HardwareConfig *rgb.HardwareConfig `json:"hardwareConfig"`
 	ScreenOffTimes []string            `json:"screenOffTimes"`
 	ScreenOnTimes  []string            `json:"screenOnTimes"`
@@ -42,8 +43,8 @@ type Config struct {
 
 // Defaults sets some sane config defaults
 func (c *Config) Defaults() {
-	if c.HttpListenPort == 0 {
-		c.HttpListenPort = 8080
+	if c.HTTPListenPort == 0 {
+		c.HTTPListenPort = 8080
 	}
 	if c.HardwareConfig == nil {
 		c.HardwareConfig = &rgb.DefaultConfig
@@ -88,6 +89,7 @@ func New(ctx context.Context, logger *log.Logger, cfg *Config, boards ...board.B
 		done:       make(chan bool, 1),
 		screenOff:  make(chan bool, 1),
 		screenOn:   make(chan bool, 1),
+		close:      make(chan bool, 1),
 		screenIsOn: true,
 	}
 
@@ -153,6 +155,8 @@ func New(ctx context.Context, logger *log.Logger, cfg *Config, boards ...board.B
 			select {
 			case err := <-errChan:
 				s.log.Error(err)
+			case <-s.close:
+				return
 			}
 		}
 	}()
@@ -251,7 +255,6 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 				s.log.Infof("Rendering board '%s' as priority\n", b.Name())
 				break INNER
 			}
-			b.Cleanup()
 		}
 	}
 }
@@ -268,6 +271,7 @@ func (s *SportsMatrix) anyPriorities() bool {
 
 // Close closes the matrix
 func (s *SportsMatrix) Close() {
+	s.close <- true
 	if s.matrix != nil {
 		s.log.Warn("Sportsmatrix is shutting down- Closing matrix")
 		_ = s.matrix.Close()

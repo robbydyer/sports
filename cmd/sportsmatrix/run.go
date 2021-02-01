@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/clock"
 	"github.com/robbydyer/sports/pkg/imageboard"
 	"github.com/robbydyer/sports/pkg/nhl"
 	"github.com/robbydyer/sports/pkg/sportboard"
@@ -19,8 +20,7 @@ import (
 )
 
 type runCmd struct {
-	rArgs    *rootArgs
-	testMode bool
+	rArgs *rootArgs
 }
 
 func newRunCmd(args *rootArgs) *cobra.Command {
@@ -33,10 +33,6 @@ func newRunCmd(args *rootArgs) *cobra.Command {
 		Short: "Runs the matrix",
 		RunE:  c.run,
 	}
-
-	f := cmd.Flags()
-
-	f.BoolVarP(&c.testMode, "test-mode", "t", false, "test mode")
 
 	return cmd
 }
@@ -75,12 +71,16 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 
 	boards = append(boards, b)
 
-	if s.testMode {
-		boards = []board.Board{&testBoard{}}
-	}
-
 	if s.rArgs.config.ImageConfig != nil {
 		b, err := imageboard.New(afero.NewOsFs(), bounds, s.rArgs.config.ImageConfig, logger)
+		if err != nil {
+			return err
+		}
+		boards = append(boards, b)
+	}
+
+	if s.rArgs.config.ClockConfig != nil {
+		b, err := clock.New(s.rArgs.config.ClockConfig)
 		if err != nil {
 			return err
 		}

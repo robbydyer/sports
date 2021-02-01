@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/robbydyer/sports/internal/config"
+	"github.com/robbydyer/sports/pkg/clock"
 	"github.com/robbydyer/sports/pkg/imageboard"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
@@ -112,10 +113,16 @@ func (r *rootArgs) setConfigDefaults() {
 		r.config.ImageConfig = &imageboard.Config{}
 	}
 	r.config.ImageConfig.SetDefaults()
+
+	if r.config.ClockConfig == nil {
+		r.config.ClockConfig = &clock.Config{}
+	}
+	r.config.ClockConfig.SetDefaults()
 }
 
 func includeAssets() {
 	_ = pkger.Include("/assets/fonts/04b24.ttf")
+	_ = pkger.Include("/assets/fonts/04B_03__.TTF")
 	_ = pkger.Include("/assets/fonts/score.ttf")
 	_ = pkger.Include("/assets/fonts/BlockStockRegular-A71p.ttf")
 }

@@ -117,3 +117,38 @@ func (t *TextWriter) Write(canvas *rgb.Canvas, bounds image.Rectangle, str []str
 
 	return nil
 }
+
+// WriteCentered writes text in the center of the canvas, horizontally and vertically
+func (t *TextWriter) WriteCentered(canvas *rgb.Canvas, bounds image.Rectangle, str []string, clr color.Color) error {
+	startX := bounds.Min.X + t.XStartCorrection
+	drawer := &font.Drawer{
+		Dst: canvas,
+		Src: image.NewUniform(clr),
+		Face: truetype.NewFace(t.font,
+			&truetype.Options{
+				Size:    t.FontSize,
+				Hinting: font.HintingFull,
+			},
+		),
+	}
+
+	// lineY represents how much space to add for the newline
+	lineY := int(math.Floor(t.FontSize + t.LineSpace))
+
+	y := int(math.Floor(t.FontSize)) + bounds.Min.Y + t.YStartCorrection
+	drawer.Dot = fixed.P(startX, y)
+
+	for _, s := range str {
+		width := drawer.MeasureString(s).Ceil()
+		align, err := AlignPosition(CenterCenter, bounds, width, lineY)
+		if err != nil {
+			return err
+		}
+		drawer.Dot = fixed.P(align.Min.X, align.Max.Y)
+		drawer.DrawString(s)
+		y += lineY + t.YStartCorrection
+		drawer.Dot = fixed.P(align.Min.X, y)
+	}
+
+	return nil
+}

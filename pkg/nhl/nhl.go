@@ -70,6 +70,7 @@ func (n *NHL) cacheClear() {
 	}
 }
 
+// HTTPPathPrefix returns the prefix of HTTP calls to this board. i.e. /nhl/foo
 func (n *NHL) HTTPPathPrefix() string {
 	return "nhl"
 }

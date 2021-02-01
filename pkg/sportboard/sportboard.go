@@ -233,6 +233,10 @@ func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 
 OUTER:
 	for gameIndex, game := range games {
+		if !s.config.Enabled {
+			s.log.Warnf("%s board is not enabled, skipping", s.api.League())
+			return nil
+		}
 		select {
 		case <-ctx.Done():
 			return context.Canceled
@@ -355,9 +359,6 @@ OUTER:
 func (s *SportBoard) HasPriority() bool {
 	return false
 }
-
-// Cleanup ...
-func (s *SportBoard) Cleanup() {}
 
 func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload chan bool) error {
 	defer func() { preload <- true }()

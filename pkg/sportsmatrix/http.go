@@ -29,7 +29,7 @@ func (s *SportsMatrix) startHTTP() chan error {
 	}
 
 	s.server = http.Server{
-		Addr:    fmt.Sprintf(":%d", s.cfg.HttpListenPort),
+		Addr:    fmt.Sprintf(":%d", s.cfg.HTTPListenPort),
 		Handler: router,
 	}
 
@@ -49,6 +49,7 @@ func (s *SportsMatrix) startHTTP() chan error {
 func (s *SportsMatrix) turnScreenOff(respWriter http.ResponseWriter, req *http.Request) {
 	s.screenOff <- true
 }
+
 func (s *SportsMatrix) turnScreenOn(respWriter http.ResponseWriter, req *http.Request) {
 	s.screenOn <- true
 }

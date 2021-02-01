@@ -122,6 +122,11 @@ func DrawImage(canvas *rgb.Canvas, bounds image.Rectangle, img image.Image) erro
 
 // PlayImages plays s series of images. If loop == 0, it will play forever until the context is canceled
 func PlayImages(ctx context.Context, canvas *rgb.Canvas, images []image.Image, delay []time.Duration, loop int) error {
+	center, err := AlignPosition(CenterCenter, canvas.Bounds(), images[0].Bounds().Dx(), images[0].Bounds().Dy())
+	if err != nil {
+		return err
+	}
+
 	l := len(images)
 	i := 0
 	for {
@@ -136,7 +141,7 @@ func PlayImages(ctx context.Context, canvas *rgb.Canvas, images []image.Image, d
 			return fmt.Errorf("nil canvas passed to PlayImages")
 		}
 
-		draw.Draw(canvas, canvas.Bounds(), images[i], image.Point{}, draw.Over)
+		draw.Draw(canvas, center, images[i], image.Point{}, draw.Over)
 
 		if err := canvas.Render(); err != nil {
 			return err
