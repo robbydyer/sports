@@ -84,3 +84,6 @@ RUN RPI_DIR=/raspberrypi && \
   make install DESTDIR=$CROSS_INSTALL_PREFIX PREFIX="" && \
   cd / && \
   rm -rf $WPI_DIR
+
+RUN git clone --progress --verbose https://github.com/raspberrypi/tools.git --depth=1 pitools
+

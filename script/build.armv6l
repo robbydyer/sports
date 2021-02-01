@@ -8,22 +8,18 @@ if uname -a | grep raspberry &> /dev/null; then
   exit 1
 fi
 
-ROOT=$(git rev-parse --show-toplevel)
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 cd "${ROOT}"
 IN_DOCKER="${IN_DOCKER:-no}"
 SRC="/src"
 SUFFIX="armv6l"
-pibuilder="pibuilder"
 
 if [ "${IN_DOCKER}" = "no" ]; then
   if ! uname -a | grep raspberry &> /dev/null; then
-    # Run pkger when static assets change
-    #pkger -o ./cmd/sportsmatrix
-    if ! docker images | grep ${pibuilder} &> /dev/null; then
-      docker buildx build -f Dockerfile.${pibuilder} -t ${pibuilder} .
-    fi
-
     set -x
+    source "${ROOT}/script/build.pibuilder"
+    pibuilder=$(latestpibuilder)
+    buildpibuilder
     exec docker run -t --rm \
       -e IN_DOCKER=yes \
       -v "${ROOT}":/src \
@@ -32,8 +28,6 @@ if [ "${IN_DOCKER}" = "no" ]; then
       /src/script/$(basename $0)
   fi
 fi
-
-ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 
 export CGO_ENABLED=1
 export GOCACHE=${ROOT}/.cache
@@ -46,7 +40,11 @@ export CXX=arm-linux-gnueabi-g++
 set -x
 
 if [ ! -d "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" ]; then
-  cp -r "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
+  if [ -d "${ROOT}/pkg/rgmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" ]; then
+    mv "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
+  else
+    cp -r "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
+  fi
 fi
 
 if [ ! -f "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/lib/librgbmatrix.so.1" ]; then
@@ -56,3 +54,5 @@ fi
 
 cd "${ROOT}"
 go build -mod=vendor -o sportsmatrix.${SUFFIX}  ./cmd/sportsmatrix
+
+mv "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}"
