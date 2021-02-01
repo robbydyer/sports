@@ -105,32 +105,36 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 		}
 	}()
 
-	for {
-		select {
-		case <-ctx.Done():
-			return context.Canceled
-		case <-update:
-		}
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-update:
+			}
 
-		c.textWriter.WriteCentered(
-			canvas,
-			canvas.Bounds(),
-			[]string{
-				fmt.Sprintf("%d:%d%s", h, m, ampm),
-			},
-			color.White,
-		)
+			c.textWriter.WriteCentered(
+				canvas,
+				canvas.Bounds(),
+				[]string{
+					fmt.Sprintf("%d:%d%s", h, m, ampm),
+				},
+				color.White,
+			)
 
-		if err := canvas.Render(); err != nil {
-			return err
+			if err := canvas.Render(); err != nil {
+				return
+			}
 		}
+	}()
 
-		select {
-		case <-ctx.Done():
-			return context.Canceled
-		case <-time.After(10 * time.Second):
-		}
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	case <-time.After(10 * time.Second):
 	}
+
+	return nil
 }
 
 func (c *Clock) HasPriority() bool {

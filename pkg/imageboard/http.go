@@ -16,7 +16,7 @@ func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 		},
 	}
 	enable := &board.HTTPHandler{
-		Path: "/img/disable",
+		Path: "/img/enable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			i.log.Info("enabling image board")
 			i.config.Enabled = true
