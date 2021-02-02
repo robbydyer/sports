@@ -8,7 +8,6 @@ import (
 	"time"
 
 	yaml "github.com/ghodss/yaml"
-	"github.com/markbates/pkger"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/robbydyer/sports/pkg/logo"
@@ -92,9 +91,9 @@ func (m *MockMLBAPI) logoSources() (map[string]image.Image, error) {
 	}
 
 	for _, t := range ALL {
-		f, err := pkger.Open(fmt.Sprintf("github.com/robbydyer/sports:/pkg/mlb/assets/logos/%s.png", t))
+		f, err := assets.Open(fmt.Sprintf("assets/logos/%s.png", t))
 		if err != nil {
-			return nil, fmt.Errorf("failed to locate logo asset: %w", err)
+			return nil, err
 		}
 		defer f.Close()
 

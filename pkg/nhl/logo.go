@@ -94,14 +94,6 @@ func (n *NHL) logoSources() (map[string]image.Image, error) {
 	}
 
 	for _, t := range ALL {
-		/*
-			f, err := pkger.Open(fmt.Sprintf("github.com/robbydyer/sports:/pkg/nhl/assets/logos/%s.png", t))
-			if err != nil {
-				return nil, fmt.Errorf("failed to locate logo asset: %w", err)
-			}
-			defer f.Close()
-		*/
-
 		f, err := assets.Open(fmt.Sprintf("assets/logos/%s.png", t))
 		if err != nil {
 			return nil, err

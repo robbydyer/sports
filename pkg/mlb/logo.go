@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	yaml "github.com/ghodss/yaml"
-	"github.com/markbates/pkger"
 
 	"github.com/robbydyer/sports/pkg/logo"
 )
@@ -95,9 +94,9 @@ func (n *MLB) logoSources() (map[string]image.Image, error) {
 	}
 
 	for _, t := range ALL {
-		f, err := pkger.Open(fmt.Sprintf("github.com/robbydyer/sports:/pkg/mlb/assets/logos/%s.png", t))
+		f, err := assets.Open(fmt.Sprintf("assets/logos/%s.png", t))
 		if err != nil {
-			return nil, fmt.Errorf("failed to locate logo asset: %w", err)
+			return nil, err
 		}
 		defer f.Close()
 
@@ -110,10 +109,4 @@ func (n *MLB) logoSources() (map[string]image.Image, error) {
 	}
 
 	return n.logoSourceCache, nil
-}
-
-// nolint:deadcode,unused
-func includes() {
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/mlb/assets/logopos_64x32.yaml")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/mlb/assets/logos/ATL.png")
 }
