@@ -1,10 +1,10 @@
 package mlb
 
 import (
+	"embed"
 	"fmt"
 	"image"
 	"image/png"
-	"io/ioutil"
 	"strings"
 
 	yaml "github.com/ghodss/yaml"
@@ -12,6 +12,9 @@ import (
 
 	"github.com/robbydyer/sports/pkg/logo"
 )
+
+//go:embed assets
+var assets embed.FS
 
 // GetLogo ...
 func (n *MLB) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
@@ -46,17 +49,7 @@ func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logo
 
 	fullLogoKey := fmt.Sprintf("%s_%dx%d", logoKey, bounds.Dx(), bounds.Dy())
 
-	logoAsset := fmt.Sprintf("github.com/robbydyer/sports:/pkg/mlb/assets/logopos_%dx%d.yaml",
-		bounds.Dx(),
-		bounds.Dy(),
-	)
-	f, err := pkger.Open(logoAsset)
-	if err != nil {
-		return nil, fmt.Errorf("could not load logoposition asset %s: %w", logoAsset, err)
-	}
-	defer f.Close()
-
-	dat, err := ioutil.ReadAll(f)
+	dat, err := assets.ReadFile(fmt.Sprintf("assets/logopos_%dx%d.yaml", bounds.Dx(), bounds.Dy()))
 	if err != nil {
 		return nil, err
 	}

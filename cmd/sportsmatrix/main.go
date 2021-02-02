@@ -25,7 +25,6 @@ type rootArgs struct {
 }
 
 func main() {
-	includeAssets()
 	args := &rootArgs{}
 
 	rootCmd := newRootCmd(args)

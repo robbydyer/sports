@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/robbydyer/sports/pkg/board"
-	"github.com/robbydyer/sports/pkg/mlbmock"
+	"github.com/robbydyer/sports/pkg/mlb"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 )
@@ -65,7 +65,7 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 	logger := log.New()
 	logger.Level = c.rArgs.logLevel
 
-	api, err := mlbmock.New(logger)
+	api, err := mlb.NewMock(logger)
 	if err != nil {
 		return fmt.Errorf("failed to init mlbmock: %w", err)
 	}

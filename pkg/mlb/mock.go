@@ -1,11 +1,10 @@
-package mlbmock
+package mlb
 
 import (
 	"context"
 	"fmt"
 	"image"
 	"image/png"
-	"io/ioutil"
 	"time"
 
 	yaml "github.com/ghodss/yaml"
@@ -13,15 +12,14 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/robbydyer/sports/pkg/logo"
-	"github.com/robbydyer/sports/pkg/mlb"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/util"
 )
 
 // MockMLBAPI implements a sportboard.API. Used to test the MLB board
 type MockMLBAPI struct {
-	teams           []*mlb.Team
-	games           map[string][]*mlb.Game
+	teams           []*Team
+	games           map[string][]*Game
 	logos           map[string]*logo.Logo
 	logoSourceCache map[string]image.Image
 	log             *log.Logger
@@ -52,7 +50,7 @@ func (m *MockMLBAPI) GetScheduledGames(ctx context.Context, date time.Time) ([]s
 
 // DateStr ...
 func (m *MockMLBAPI) DateStr(d time.Time) string {
-	return d.Format(mlb.DateFormat)
+	return d.Format(DateFormat)
 }
 
 // League ...
@@ -78,7 +76,7 @@ func (m *MockMLBAPI) GetLogo(logoKey string, logoConf *logo.Config, bounds image
 		return nil, err
 	}
 
-	l, err = mlb.GetLogo(logoKey, logoConf, bounds, sources)
+	l, err = GetLogo(logoKey, logoConf, bounds, sources)
 	if err != nil {
 		return nil, err
 	}
@@ -89,11 +87,11 @@ func (m *MockMLBAPI) GetLogo(logoKey string, logoConf *logo.Config, bounds image
 }
 
 func (m *MockMLBAPI) logoSources() (map[string]image.Image, error) {
-	if len(m.logoSourceCache) == len(mlb.ALL) {
+	if len(m.logoSourceCache) == len(ALL) {
 		return m.logoSourceCache, nil
 	}
 
-	for _, t := range mlb.ALL {
+	for _, t := range ALL {
 		f, err := pkger.Open(fmt.Sprintf("github.com/robbydyer/sports:/pkg/mlb/assets/logos/%s.png", t))
 		if err != nil {
 			return nil, fmt.Errorf("failed to locate logo asset: %w", err)
@@ -113,7 +111,7 @@ func (m *MockMLBAPI) logoSources() (map[string]image.Image, error) {
 
 // AllTeamAbbreviations ...
 func (m *MockMLBAPI) AllTeamAbbreviations() []string {
-	return mlb.ALL
+	return ALL
 }
 
 // UpdateTeams ...
@@ -139,18 +137,12 @@ func (m *MockMLBAPI) TeamFromAbbreviation(ctx context.Context, abbrev string) (s
 
 // MockLiveGameGetter implements an mlb.LiveGameGetter
 func MockLiveGameGetter(ctx context.Context, link string) (sportboard.Game, error) {
-	f, err := pkger.Open("github.com/robbydyer/sports:/pkg/mlbmock/assets/mock_livegames.yaml")
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	dat, err := ioutil.ReadAll(f)
+	dat, err := assets.ReadFile("assets/mock_livegames.yaml")
 	if err != nil {
 		return nil, err
 	}
 
-	var gameList []*mlb.Game
+	var gameList []*Game
 
 	if err := yaml.Unmarshal(dat, &gameList); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal live game mock yaml: %w", err)
@@ -167,38 +159,26 @@ func MockLiveGameGetter(ctx context.Context, link string) (sportboard.Game, erro
 }
 
 // New ...
-func New(logger *log.Logger) (*MockMLBAPI, error) {
+func NewMock(logger *log.Logger) (*MockMLBAPI, error) {
 	// Load Teams
-	f, err := pkger.Open("github.com/robbydyer/sports:/pkg/mlbmock/assets/mock_teams.yaml")
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	dat, err := ioutil.ReadAll(f)
+	dat, err := assets.ReadFile("assets/mock_teams.yaml")
 	if err != nil {
 		return nil, err
 	}
 
-	var teamList []*mlb.Team
+	var teamList []*Team
 
 	if err := yaml.Unmarshal(dat, &teamList); err != nil {
 		return nil, err
 	}
 
 	// Load Games
-	gamef, err := pkger.Open("github.com/robbydyer/sports:/pkg/mlbmock/assets/mock_games.yaml")
-	if err != nil {
-		return nil, err
-	}
-	defer gamef.Close()
-
-	dat, err = ioutil.ReadAll(gamef)
+	dat, err = assets.ReadFile("assets/mock_games.yaml")
 	if err != nil {
 		return nil, err
 	}
 
-	var gameList []*mlb.Game
+	var gameList []*Game
 
 	if err := yaml.Unmarshal(dat, &gameList); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal mock yaml: %w", err)
@@ -208,9 +188,9 @@ func New(logger *log.Logger) (*MockMLBAPI, error) {
 		g.GameGetter = MockLiveGameGetter
 	}
 
-	today := util.Today().Format(mlb.DateFormat)
+	today := util.Today().Format(DateFormat)
 	m := &MockMLBAPI{
-		games: map[string][]*mlb.Game{
+		games: map[string][]*Game{
 			today: gameList,
 		},
 		teams:           teamList,
