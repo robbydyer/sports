@@ -1,17 +1,36 @@
 import React, { useState } from 'react';
-import Button from 'react-bootstrap/Button';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import Home from './Home.js';
+import Nhl from './Nhl.js';
+import TopNav from './Nav.js';
+import { BrowserRouter as Router, Route } from 'react-router-dom';
+
+const MATRIX = "http://matrix.local:8080"
 
 class App extends React.Component {
+  screenOn() {
+    console.log("Turning screen on")
+    fetch(`${MATRIX}/screenon`, {
+      method: "GET",
+      mode: "cors",
+    });
+  }
+  screenOff() {
+    console.log("Turning screen off")
+    fetch(`${MATRIX}/screenoff`, {
+      method: "GET",
+      mode: "cors",
+    });
+  }
   render() {
     return (
-      <Container fluid>
-        <Row><Col><Button href="http://matrix.local:8080/screenoff">Screen Off</Button></Col></Row>
-        <Row><Col><Button href="http://matrix.local:8080/screenon">Screen On</Button></Col></Row>
-      </Container>
+      <>
+        <Router>
+          <TopNav />
+          <Route path="/" exact component={Home} />
+          <Route path="/nhl" exact component={Nhl} />
+        </Router>
+      </>
     );
   }
 }
