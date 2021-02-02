@@ -8,11 +8,18 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 const MATRIX = "http://matrix.local:8080"
 
 class Home extends React.Component {
+    callmatrix(path) {
+        console.log(`Calling matrix API ${path}`)
+        fetch(`${MATRIX}/${path}`, {
+            method: "GET",
+            mode: "cors",
+        });
+    }
     render() {
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Button onClick={this.screenOn}>Screen On </Button></Col></Row>
-                <Row className="text-center"><Col><Button onClick={this.screenOff}>Screen Off </Button></Col></Row>
+                <Row className="text-center"><Col><Button onClick={() => this.callmatrix("screenon")}>Screen On </Button></Col></Row>
+                <Row className="text-center"><Col><Button onClick={() => this.callmatrix("screenoff")}>Screen Off </Button></Col></Row>
             </Container>
         );
     }

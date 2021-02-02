@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Home from './Home.js';
-import Nhl from './Nhl.js';
+import Sport from './Sport.js';
 import TopNav from './Nav.js';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
@@ -28,7 +28,8 @@ class App extends React.Component {
         <Router>
           <TopNav />
           <Route path="/" exact component={Home} />
-          <Route path="/nhl" exact component={Nhl} />
+          <Route path="/nhl" render={() => <Sport sport="nhl" />} />
+          <Route path="/mlb" render={() => <Sport sport="mlb" />} />
         </Router>
       </>
     );
