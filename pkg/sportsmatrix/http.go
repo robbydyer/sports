@@ -47,9 +47,13 @@ func (s *SportsMatrix) startHTTP() chan error {
 }
 
 func (s *SportsMatrix) turnScreenOff(respWriter http.ResponseWriter, req *http.Request) {
+	s.Lock()
+	defer s.Unlock()
 	s.screenOff <- true
 }
 
 func (s *SportsMatrix) turnScreenOn(respWriter http.ResponseWriter, req *http.Request) {
+	s.Lock()
+	defer s.Unlock()
 	s.screenOn <- true
 }

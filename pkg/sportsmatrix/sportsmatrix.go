@@ -182,6 +182,9 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context, renderDone chan bool) 
 			select {
 			case <-renderDone:
 			case <-time.After(30 * time.Second):
+				go func() {
+					<-renderDone
+				}()
 			}
 
 			c := rgb.NewCanvas(s.matrix)
@@ -261,7 +264,10 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 				s.log.Error(err.Error())
 			}
 
-			renderDone <- true
+			if !s.screenIsOn {
+				s.log.Debugf("Marking rendering done for %s", b.Name())
+				renderDone <- true
+			}
 
 			if b.HasPriority() {
 				s.log.Infof("Rendering board '%s' as priority\n", b.Name())

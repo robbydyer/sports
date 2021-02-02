@@ -33,7 +33,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 	unstick := &board.HTTPHandler{
 		Path: fmt.Sprintf("/%s/favoriteunstick", s.api.HTTPPathPrefix()),
 		Handler: func(wrter http.ResponseWriter, req *http.Request) {
-			s.log.Info("setting favorite teams to sticky")
+			s.log.Info("setting favorite teams to not stick")
 			s.config.FavoriteSticky = false
 		},
 	}
@@ -47,7 +47,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 	enable := &board.HTTPHandler{
 		Path: fmt.Sprintf("/%s/enable", s.api.HTTPPathPrefix()),
 		Handler: func(wrter http.ResponseWriter, req *http.Request) {
-			s.log.Infof("disabling board %s", s.Name())
+			s.log.Infof("enabling board %s", s.Name())
 			s.config.Enabled = true
 		},
 	}
