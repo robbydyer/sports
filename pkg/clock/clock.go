@@ -49,7 +49,7 @@ func New(config *Config) (*Clock, error) {
 	}
 
 	var err error
-	c.font, err = rgbrender.FontFromAsset("github.com/robbydyer/sports:/assets/fonts/04B_03__.TTF")
+	c.font, err = rgbrender.GetFont("04B_03__.ttf")
 	if err != nil {
 		return nil, err
 	}

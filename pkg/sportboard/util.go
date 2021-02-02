@@ -44,7 +44,7 @@ func (s *SportBoard) getScoreWriter() (*rgbrender.TextWriter, image.Rectangle, e
 	}
 
 	var scoreAlign image.Rectangle
-	fnt, err := rgbrender.FontFromAsset("github.com/robbydyer/sports:/assets/fonts/score.ttf")
+	fnt, err := rgbrender.GetFont("score.ttf")
 	if err != nil {
 		return nil, scoreAlign, fmt.Errorf("failed to load font for score: %w", err)
 	}

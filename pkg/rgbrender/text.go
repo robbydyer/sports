@@ -1,21 +1,36 @@
 package rgbrender
 
 import (
-	"fmt"
+	"embed"
 	"image"
 	"image/color"
-	"io/ioutil"
 	"math"
+	"path/filepath"
+	"strings"
 
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
 
-	"github.com/markbates/pkger"
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
 
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
+
+//go:embed assets/fonts
+var fontDir embed.FS
+
+const (
+	defaultFont = "04b24.ttf"
+)
+
+// BuiltinFonts is a list of fonts names this pkg provides
+var BuiltinFonts = []string{
+	"04b24.ttf",
+	"BlockStockRegular-A71p.ttf",
+	"04B_03__.ttf",
+	"score.ttf",
+}
 
 // TextWriter ...
 type TextWriter struct {
@@ -25,11 +40,12 @@ type TextWriter struct {
 	YStartCorrection int
 	FontSize         float64
 	LineSpace        float64
+	fontDir          embed.FS
 }
 
 // DefaultTextWriter ...
 func DefaultTextWriter() (*TextWriter, error) {
-	fnt, err := DefaultFont()
+	fnt, err := GetFont(defaultFont)
 	if err != nil {
 		return nil, err
 	}
@@ -54,39 +70,17 @@ func NewTextWriter(font *truetype.Font, fontSize float64) *TextWriter {
 	}
 }
 
-// DefaultFont ...
-func DefaultFont() (*truetype.Font, error) {
-	return FontFromAsset("github.com/robbydyer/sports:/assets/fonts/04b24.ttf")
-}
-
-// FontFromAsset ...
-func FontFromAsset(asset string) (*truetype.Font, error) {
-	f, err := pkger.Open(asset)
+// GetFont gets a builtin font by the given name
+func GetFont(name string) (*truetype.Font, error) {
+	if !strings.HasPrefix("assets/fonts", name) {
+		name = filepath.Join("assets/fonts", name)
+	}
+	f, err := fontDir.ReadFile(name)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open asset %s with pkger: %w", asset, err)
-	}
-	defer f.Close()
-
-	fBytes, err := ioutil.ReadAll(f)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read font bytes: %w", err)
+		return nil, err
 	}
 
-	fnt, err := freetype.ParseFont(fBytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse font: %w", err)
-	}
-
-	return fnt, nil
-}
-
-// SetFont ...
-func (t *TextWriter) SetFont(fnt *truetype.Font) {
-	t.font = fnt
-	if t.context == nil {
-		t.context = freetype.NewContext()
-	}
-	t.context.SetFont(fnt)
+	return freetype.ParseFont(f)
 }
 
 // Write ...
