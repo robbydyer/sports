@@ -164,7 +164,7 @@ func New(ctx context.Context, logger *log.Logger, cfg *Config, boards ...board.B
 	return s, nil
 }
 
-func (s *SportsMatrix) screenWatcher(ctx context.Context) {
+func (s *SportsMatrix) screenWatcher(ctx context.Context, renderDone chan bool) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -176,6 +176,14 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 			s.screenLogOnce = &sync.Once{}
 			s.screenIsOn = false
 			s.boardCancel()
+
+			// Wait for the boards to finish rendering
+			// before clearing the matrix
+			select {
+			case <-renderDone:
+			case <-time.After(30 * time.Second):
+			}
+
 			c := rgb.NewCanvas(s.matrix)
 			_ = c.Clear()
 			s.boardCtx, s.boardCancel = context.WithCancel(context.Background())
@@ -206,7 +214,9 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 	s.boardCtx, s.boardCancel = context.WithCancel(context.Background())
 	defer s.boardCancel()
 
-	go s.screenWatcher(ctx)
+	renderDone := make(chan bool, 1)
+
+	go s.screenWatcher(ctx, renderDone)
 
 	logScreenOff := func() {
 		s.log.Warn("screen is turned off")
@@ -250,6 +260,8 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 			if err := b.Render(s.boardCtx, s.matrix); err != nil {
 				s.log.Error(err.Error())
 			}
+
+			renderDone <- true
 
 			if b.HasPriority() {
 				s.log.Infof("Rendering board '%s' as priority\n", b.Name())
