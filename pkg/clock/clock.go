@@ -102,6 +102,9 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 			} else {
 				ampm = "AM"
 			}
+			if h == 0 {
+				h = 12
+			}
 			if h != prevH || m != prevM {
 				update <- true
 			}
@@ -119,11 +122,16 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 			case <-update:
 			}
 
+			z := ""
+			if m < 10 {
+				z = "0"
+			}
+
 			c.textWriter.WriteCentered(
 				canvas,
 				canvas.Bounds(),
 				[]string{
-					fmt.Sprintf("%d:%d%s", h, m, ampm),
+					fmt.Sprintf("%d:%s%d%s", h, z, m, ampm),
 				},
 				color.White,
 			)
