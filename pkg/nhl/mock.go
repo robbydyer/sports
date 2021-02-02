@@ -1,27 +1,24 @@
-package nhlmock
+package nhl
 
 import (
 	"context"
 	"fmt"
 	"image"
 	"image/png"
-	"io/ioutil"
 	"time"
 
 	yaml "github.com/ghodss/yaml"
-	"github.com/markbates/pkger"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/robbydyer/sports/pkg/logo"
-	"github.com/robbydyer/sports/pkg/nhl"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/util"
 )
 
 // MockNHLAPI implements sportboard.API. Used for testing
 type MockNHLAPI struct {
-	teams           []*nhl.Team
-	games           map[string][]*nhl.Game
+	teams           []*Team
+	games           map[string][]*Game
 	logos           map[string]*logo.Logo
 	logoSourceCache map[string]image.Image
 	log             *log.Logger
@@ -57,7 +54,7 @@ func (m *MockNHLAPI) GetScheduledGames(ctx context.Context, date time.Time) ([]s
 
 // DateStr ...
 func (m *MockNHLAPI) DateStr(d time.Time) string {
-	return d.Format(nhl.DateFormat)
+	return d.Format(DateFormat)
 }
 
 // League ...
@@ -78,7 +75,7 @@ func (m *MockNHLAPI) GetLogo(logoKey string, logoConf *logo.Config, bounds image
 		return nil, err
 	}
 
-	l, err = nhl.GetLogo(logoKey, logoConf, bounds, sources)
+	l, err = GetLogo(logoKey, logoConf, bounds, sources)
 	if err != nil {
 		return nil, err
 	}
@@ -89,14 +86,14 @@ func (m *MockNHLAPI) GetLogo(logoKey string, logoConf *logo.Config, bounds image
 }
 
 func (m *MockNHLAPI) logoSources() (map[string]image.Image, error) {
-	if len(m.logoSourceCache) == len(nhl.ALL) {
+	if len(m.logoSourceCache) == len(ALL) {
 		return m.logoSourceCache, nil
 	}
 
-	for _, t := range nhl.ALL {
-		f, err := pkger.Open(fmt.Sprintf("github.com/robbydyer/sports:/pkg/nhl/assets/logos/%s.png", t))
+	for _, t := range ALL {
+		f, err := assets.Open(fmt.Sprintf("assets/logos/%s.png", t))
 		if err != nil {
-			return nil, fmt.Errorf("failed to locate logo asset: %w", err)
+			return nil, err
 		}
 		defer f.Close()
 
@@ -113,7 +110,7 @@ func (m *MockNHLAPI) logoSources() (map[string]image.Image, error) {
 
 // AllTeamAbbreviations ...
 func (m *MockNHLAPI) AllTeamAbbreviations() []string {
-	return nhl.ALL
+	return ALL
 }
 
 // UpdateTeams ...
@@ -139,18 +136,12 @@ func (m *MockNHLAPI) TeamFromAbbreviation(ctx context.Context, abbrev string) (s
 
 // MockLiveGameGetter implements nhl.LiveGameGetter
 func MockLiveGameGetter(ctx context.Context, link string) (sportboard.Game, error) {
-	f, err := pkger.Open("github.com/robbydyer/sports:/pkg/nhlmock/assets/mock_livegames.yaml")
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	dat, err := ioutil.ReadAll(f)
+	dat, err := assets.ReadFile("assets/mock_livegames.yaml")
 	if err != nil {
 		return nil, err
 	}
 
-	var gameList []*nhl.Game
+	var gameList []*Game
 
 	if err := yaml.Unmarshal(dat, &gameList); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal live game mock yaml: %w", err)
@@ -167,38 +158,26 @@ func MockLiveGameGetter(ctx context.Context, link string) (sportboard.Game, erro
 }
 
 // New ...
-func New(logger *log.Logger) (*MockNHLAPI, error) {
+func NewMock(logger *log.Logger) (*MockNHLAPI, error) {
 	// Load Teams
-	f, err := pkger.Open("github.com/robbydyer/sports:/pkg/nhlmock/assets/mock_teams.yaml")
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	dat, err := ioutil.ReadAll(f)
+	dat, err := assets.ReadFile("assets/mock_teams.yaml")
 	if err != nil {
 		return nil, err
 	}
 
-	var teamList []*nhl.Team
+	var teamList []*Team
 
 	if err := yaml.Unmarshal(dat, &teamList); err != nil {
 		return nil, err
 	}
 
 	// Load Games
-	gamef, err := pkger.Open("github.com/robbydyer/sports:/pkg/nhlmock/assets/mock_games.yaml")
-	if err != nil {
-		return nil, err
-	}
-	defer gamef.Close()
-
-	dat, err = ioutil.ReadAll(gamef)
+	dat, err = assets.ReadFile("assets/mock_games.yaml")
 	if err != nil {
 		return nil, err
 	}
 
-	var gameList []*nhl.Game
+	var gameList []*Game
 
 	if err := yaml.Unmarshal(dat, &gameList); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal mock yaml: %w", err)
@@ -208,9 +187,9 @@ func New(logger *log.Logger) (*MockNHLAPI, error) {
 		g.GameGetter = MockLiveGameGetter
 	}
 
-	today := util.Today().Format(nhl.DateFormat)
+	today := util.Today().Format(DateFormat)
 	m := &MockNHLAPI{
-		games: map[string][]*nhl.Game{
+		games: map[string][]*Game{
 			today: gameList,
 		},
 		teams:           teamList,

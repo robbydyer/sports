@@ -6,7 +6,6 @@ import (
 	"os"
 
 	yaml "github.com/ghodss/yaml"
-	"github.com/markbates/pkger"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -118,11 +117,4 @@ func (r *rootArgs) setConfigDefaults() {
 		r.config.ClockConfig = &clock.Config{}
 	}
 	r.config.ClockConfig.SetDefaults()
-}
-
-func includeAssets() {
-	_ = pkger.Include("/assets/fonts/04b24.ttf")
-	_ = pkger.Include("/assets/fonts/04B_03__.TTF")
-	_ = pkger.Include("/assets/fonts/score.ttf")
-	_ = pkger.Include("/assets/fonts/BlockStockRegular-A71p.ttf")
 }
