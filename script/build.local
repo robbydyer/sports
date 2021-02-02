@@ -2,11 +2,6 @@
 # Run this build script directly on the Raspberry Pi
 set -euo pipefail
 
-if ! uname -a | grep raspberry &> /dev/null; then
-  echo "This build script only works directly on a Raspberry Pi"
-  exit 1
-fi
-
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 cd "${ROOT}"
 SUFFIX="bin"
