@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/robbydyer/sports/pkg/board"
-	"github.com/robbydyer/sports/pkg/nhlmock"
+	"github.com/robbydyer/sports/pkg/nhl"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 )
@@ -65,7 +65,7 @@ func (c *nhlCmd) run(cmd *cobra.Command, args []string) error {
 	logger := log.New()
 	logger.Level = c.rArgs.logLevel
 
-	api, err := nhlmock.New(logger)
+	api, err := nhl.NewMock(logger)
 	if err != nil {
 		return err
 	}
