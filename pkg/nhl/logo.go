@@ -1,17 +1,19 @@
 package nhl
 
 import (
+	"embed"
 	"fmt"
 	"image"
 	"image/png"
-	"io/ioutil"
 	"strings"
 
 	yaml "github.com/ghodss/yaml"
-	"github.com/markbates/pkger"
 
 	"github.com/robbydyer/sports/pkg/logo"
 )
+
+//go:embed assets
+var assets embed.FS
 
 // GetLogo ...
 func (n *NHL) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
@@ -46,17 +48,7 @@ func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logo
 
 	fullLogoKey := fmt.Sprintf("%s_%dx%d", logoKey, bounds.Dx(), bounds.Dy())
 
-	logoAsset := fmt.Sprintf("github.com/robbydyer/sports:/pkg/nhl/assets/logopos_%dx%d.yaml",
-		bounds.Dx(),
-		bounds.Dy(),
-	)
-	f, err := pkger.Open(logoAsset)
-	if err != nil {
-		return nil, fmt.Errorf("could not load logoposition asset %s: %w", logoAsset, err)
-	}
-	defer f.Close()
-
-	dat, err := ioutil.ReadAll(f)
+	dat, err := assets.ReadFile(fmt.Sprintf("assets/logopos_%dx%d.yaml", bounds.Dx(), bounds.Dy()))
 	if err != nil {
 		return nil, err
 	}
@@ -102,9 +94,17 @@ func (n *NHL) logoSources() (map[string]image.Image, error) {
 	}
 
 	for _, t := range ALL {
-		f, err := pkger.Open(fmt.Sprintf("github.com/robbydyer/sports:/pkg/nhl/assets/logos/%s.png", t))
+		/*
+			f, err := pkger.Open(fmt.Sprintf("github.com/robbydyer/sports:/pkg/nhl/assets/logos/%s.png", t))
+			if err != nil {
+				return nil, fmt.Errorf("failed to locate logo asset: %w", err)
+			}
+			defer f.Close()
+		*/
+
+		f, err := assets.Open(fmt.Sprintf("assets/logos/%s.png", t))
 		if err != nil {
-			return nil, fmt.Errorf("failed to locate logo asset: %w", err)
+			return nil, err
 		}
 		defer f.Close()
 
@@ -117,40 +117,4 @@ func (n *NHL) logoSources() (map[string]image.Image, error) {
 	}
 
 	return n.logoSourceCache, nil
-}
-
-// nolint:deadcode,unused
-func includes() {
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logopos_64x32.yaml")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/ANA.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/ARI.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/BOS.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/BUF.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/CAR.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/CBJ.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/CGY.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/CHI.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/COL.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/DAL.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/DET.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/EDM.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/FLA.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/LAK.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/MIN.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/MTL.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/NJD.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/NSH.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/NYI.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/NYR.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/OTT.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/PHI.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/PIT.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/SJS.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/STL.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/TBL.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/TOR.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/VAN.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/VGK.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/WPG.png")
-	_ = pkger.Include("github.com/robbydyer/sports:/pkg/nhl/assets/logos/WSH.png")
 }
