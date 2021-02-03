@@ -138,12 +138,13 @@ func (i *ImageBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 			i.log.Warn("ImageBoard is disabled, not rendering")
 			return nil
 		}
-		i.log.Debug("playing image")
 		select {
 		case <-ctx.Done():
 			return context.Canceled
 		default:
 		}
+
+		i.log.Debug("playing image")
 
 		align, err := rgbrender.AlignPosition(rgbrender.CenterCenter, canvas.Bounds(), img.Bounds().Dx(), img.Bounds().Dy())
 		if err != nil {

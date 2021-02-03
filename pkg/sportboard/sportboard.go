@@ -234,7 +234,7 @@ func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	}
 
 	preloader := make(map[int]chan struct{})
-	preloader[games[0].GetID()] = make(chan struct{})
+	preloader[games[0].GetID()] = make(chan struct{}, 1)
 	preloader[games[0].GetID()] <- struct{}{}
 
 OUTER:
@@ -255,7 +255,7 @@ OUTER:
 		// preload data for the next game
 		if nextGameIndex < len(games) {
 			nextID := games[nextGameIndex].GetID()
-			preloader[nextID] = make(chan struct{})
+			preloader[nextID] = make(chan struct{}, 1)
 			go func() {
 				if err := s.preloadLiveGame(ctx, games[nextGameIndex], preloader[nextID]); err != nil {
 					s.log.Errorf("error while preloading next game: %s", err.Error())

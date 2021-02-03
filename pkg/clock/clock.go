@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"image/color"
+	"net/http"
 	"time"
 
 	"github.com/golang/freetype/truetype"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/robbydyer/sports/pkg/board"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
@@ -18,6 +20,7 @@ type Clock struct {
 	config     *Config
 	font       *truetype.Font
 	textWriter *rgbrender.TextWriter
+	log        *log.Logger
 }
 
 type Config struct {
@@ -38,7 +41,7 @@ func (c *Config) SetDefaults() {
 	}
 }
 
-func New(config *Config) (*Clock, error) {
+func New(config *Config, logger *log.Logger) (*Clock, error) {
 	if config == nil {
 		config = &Config{
 			Enabled: true,
@@ -46,6 +49,7 @@ func New(config *Config) (*Clock, error) {
 	}
 	c := &Clock{
 		config: config,
+		log:    logger,
 	}
 
 	var err error
@@ -64,7 +68,7 @@ func (c *Clock) Name() string {
 }
 
 func (c *Clock) Enabled() bool {
-	return true
+	return c.config.Enabled
 }
 
 func (c *Clock) Cleanup() {}
@@ -76,9 +80,11 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 		return nil
 	}
 
-	update := make(chan bool, 1)
-	done := make(chan bool, 1)
-	defer func() { done <- true }()
+	update := make(chan struct{})
+	timeDone := make(chan struct{})
+	clockDone := make(chan struct{})
+	defer func() { timeDone <- struct{}{} }()
+	defer func() { clockDone <- struct{}{} }()
 
 	var h int
 	var m int
@@ -89,7 +95,7 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 			select {
 			case <-ctx.Done():
 				return
-			case <-done:
+			case <-timeDone:
 				return
 			default:
 			}
@@ -106,7 +112,7 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 				h = 12
 			}
 			if h != prevH || m != prevM {
-				update <- true
+				update <- struct{}{}
 			}
 			time.Sleep(1 * time.Second)
 		}
@@ -117,7 +123,7 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 			select {
 			case <-ctx.Done():
 				return
-			case <-done:
+			case <-clockDone:
 				return
 			case <-update:
 			}
@@ -145,7 +151,7 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 	select {
 	case <-ctx.Done():
 		return context.Canceled
-	case <-time.After(10 * time.Second):
+	case <-time.After(c.config.boardDelay):
 	}
 
 	return nil
@@ -156,5 +162,23 @@ func (c *Clock) HasPriority() bool {
 }
 
 func (c *Clock) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
-	return nil, nil
+	disable := &board.HTTPHandler{
+		Path: "/clock/disable",
+		Handler: func(http.ResponseWriter, *http.Request) {
+			c.log.Info("disabling clock board")
+			c.config.Enabled = false
+		},
+	}
+	enable := &board.HTTPHandler{
+		Path: "/clock/enable",
+		Handler: func(http.ResponseWriter, *http.Request) {
+			c.log.Info("enabling clock board")
+			c.config.Enabled = true
+		},
+	}
+
+	return []*board.HTTPHandler{
+		disable,
+		enable,
+	}, nil
 }

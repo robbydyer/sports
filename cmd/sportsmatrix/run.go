@@ -80,7 +80,7 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	if s.rArgs.config.ClockConfig != nil {
-		b, err := clock.New(s.rArgs.config.ClockConfig)
+		b, err := clock.New(s.rArgs.config.ClockConfig, logger)
 		if err != nil {
 			return err
 		}

@@ -102,18 +102,24 @@ func (r *rootArgs) setConfigDefaults() {
 	r.config.SportsMatrixConfig.Defaults()
 
 	if r.config.NHLConfig == nil {
-		r.config.NHLConfig = &sportboard.Config{}
+		r.config.NHLConfig = &sportboard.Config{
+			Enabled: false,
+		}
 	}
 
 	r.config.NHLConfig.SetDefaults()
 
 	if r.config.ImageConfig == nil {
-		r.config.ImageConfig = &imageboard.Config{}
+		r.config.ImageConfig = &imageboard.Config{
+			Enabled: false,
+		}
 	}
 	r.config.ImageConfig.SetDefaults()
 
 	if r.config.ClockConfig == nil {
-		r.config.ClockConfig = &clock.Config{}
+		r.config.ClockConfig = &clock.Config{
+			Enabled: false,
+		}
 	}
 	r.config.ClockConfig.SetDefaults()
 }

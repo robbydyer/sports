@@ -218,12 +218,26 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 		return fmt.Errorf("no boards configured")
 	}
 
+	clearer := sync.Once{}
+
 	for {
 		select {
 		case <-ctx.Done():
 			return context.Canceled
 		default:
 		}
+
+		if s.allDisabled() {
+			clearer.Do(func() {
+				if err := rgb.NewCanvas(s.matrix).Clear(); err != nil {
+					s.log.Errorf("failed to clear matrix when all boards were disabled: %s", err.Error())
+				}
+			})
+
+			continue
+		}
+
+		clearer = sync.Once{}
 
 		if !s.screenIsOn {
 			time.Sleep(1 * time.Second)
@@ -238,6 +252,7 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 }
 
 func (s *SportsMatrix) serveLoop(ctx context.Context) {
+	renderDone := make(chan struct{})
 	for _, b := range s.boards {
 		select {
 		case <-ctx.Done():
@@ -252,8 +267,21 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 			continue
 		}
 
+		go func() {
+			select {
+			case <-renderDone:
+				return
+			case <-time.After(5 * time.Minute):
+				s.log.Errorf("Board '%s' rendered longer than normal", b.Name())
+			}
+		}()
+
 		if err := b.Render(ctx, s.matrix); err != nil {
 			s.log.Error(err.Error())
+		}
+		select {
+		case renderDone <- struct{}{}:
+		default:
 		}
 	}
 }
@@ -266,4 +294,14 @@ func (s *SportsMatrix) Close() {
 		_ = s.matrix.Close()
 	}
 	s.server.Close()
+}
+
+func (s *SportsMatrix) allDisabled() bool {
+	for _, b := range s.boards {
+		if b.Enabled() {
+			return false
+		}
+	}
+
+	return true
 }
