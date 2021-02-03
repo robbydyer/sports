@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Home from './Home.js';
 import Sport from './Sport.js';
+import ImageBoard from './ImageBoard.js';
+import Clock from './Clock.js';
 import TopNav from './Nav.js';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
@@ -30,6 +32,8 @@ class App extends React.Component {
           <Route path="/" exact component={Home} />
           <Route path="/nhl" render={() => <Sport sport="nhl" />} />
           <Route path="/mlb" render={() => <Sport sport="mlb" />} />
+          <Route path="/img" exact component={ImageBoard} />
+          <Route path="/clock" exact component={Clock} />
         </Router>
       </>
     );
