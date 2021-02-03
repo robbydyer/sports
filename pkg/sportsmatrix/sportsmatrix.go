@@ -118,7 +118,6 @@ func New(ctx context.Context, logger *log.Logger, cfg *Config, boards ...board.B
 			s.log.Warn("Turning screen off!")
 			s.Lock()
 			s.screenOff <- struct{}{}
-			s.screenOff <- struct{}{}
 			s.Unlock()
 		})
 		if err != nil {
