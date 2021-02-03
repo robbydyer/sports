@@ -237,6 +237,8 @@ func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	preloader[games[0].GetID()] = make(chan struct{}, 1)
 	preloader[games[0].GetID()] <- struct{}{}
 
+	preloaderTimeout := s.config.boardDelay + (10 * time.Second)
+
 OUTER:
 	for gameIndex, game := range games {
 		select {
@@ -269,8 +271,8 @@ OUTER:
 			return context.Canceled
 		case <-preloader[game.GetID()]:
 			s.log.Debugf("preloader for %d marked ready", game.GetID())
-		case <-time.After(s.config.boardDelay):
-			s.log.Warnf("timed out waiting %fs for preloader for %d", s.config.boardDelay.Seconds(), game.GetID())
+		case <-time.After(preloaderTimeout):
+			s.log.Warnf("timed out waiting %fs for preloader for %d", preloaderTimeout.Seconds(), game.GetID())
 		}
 
 		liveGame, ok := s.cachedLiveGames[game.GetID()]
@@ -368,7 +370,12 @@ func (s *SportBoard) HasPriority() bool {
 }
 
 func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload chan struct{}) error {
-	defer func() { preload <- struct{}{} }()
+	defer func() {
+		select {
+		case preload <- struct{}{}:
+		default:
+		}
+	}()
 
 	gameOver := false
 	cached, hasCached := s.cachedLiveGames[game.GetID()]
