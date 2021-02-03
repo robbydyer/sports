@@ -34,11 +34,9 @@ func (s *SportBoard) RenderGameCounter(canvas *rgb.Canvas, numGames int, activeI
 	for i := 0; i < totalWidth; i += spacing + 1 {
 		xPix := aligned.Min.X + i
 		if i == realActive || (i == 0 && activeIndex == 0) {
-			s.log.Debugf("Setting pixel %d, %d to red", xPix, yPix)
 			img.Set(xPix, yPix, color.RGBA{255, 0, 0, 255})
 			continue
 		}
-		s.log.Debugf("Setting pixel %d, %d to white", xPix, yPix)
 		img.Set(xPix, yPix, color.White)
 	}
 

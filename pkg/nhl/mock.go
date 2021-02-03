@@ -157,7 +157,7 @@ func MockLiveGameGetter(ctx context.Context, link string) (sportboard.Game, erro
 	return nil, fmt.Errorf("could not locate live game with Link '%s'", link)
 }
 
-// New ...
+// NewMock ...
 func NewMock(logger *log.Logger) (*MockNHLAPI, error) {
 	// Load Teams
 	dat, err := assets.ReadFile("assets/mock_teams.yaml")

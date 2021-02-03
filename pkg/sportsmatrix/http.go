@@ -49,11 +49,11 @@ func (s *SportsMatrix) startHTTP() chan error {
 func (s *SportsMatrix) turnScreenOff(respWriter http.ResponseWriter, req *http.Request) {
 	s.Lock()
 	defer s.Unlock()
-	s.screenOff <- true
+	s.screenOff <- struct{}{}
 }
 
 func (s *SportsMatrix) turnScreenOn(respWriter http.ResponseWriter, req *http.Request) {
 	s.Lock()
 	defer s.Unlock()
-	s.screenOn <- true
+	s.screenOn <- struct{}{}
 }

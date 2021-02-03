@@ -197,7 +197,7 @@ func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 		return err
 	}
 
-	s.log.Debugf("There are %d scheduled %s games today", len(games), s.api.League())
+	s.log.Debugf("There are %d scheduled %s games today (%s)", len(games), s.api.League(), util.Today())
 
 	if len(games) == 0 {
 		log.Debugf("No scheduled games for %s, not rendering", s.api.League())
@@ -216,6 +216,12 @@ func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 		}
 	}
 
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	default:
+	}
+
 	if gameOver && hasCached && cached != nil {
 		s.log.Debugf("Game %d is over, using cached data", games[0].GetID())
 	} else {
@@ -227,20 +233,21 @@ func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 		}
 	}
 
-	preloader := make(map[int]chan bool)
-	preloader[games[0].GetID()] = make(chan bool, 1)
-	preloader[games[0].GetID()] <- true
+	preloader := make(map[int]chan struct{})
+	preloader[games[0].GetID()] = make(chan struct{})
+	preloader[games[0].GetID()] <- struct{}{}
 
 OUTER:
 	for gameIndex, game := range games {
-		if !s.config.Enabled {
-			s.log.Warnf("%s board is not enabled, skipping", s.api.League())
-			return nil
-		}
 		select {
 		case <-ctx.Done():
 			return context.Canceled
 		default:
+		}
+
+		if !s.config.Enabled {
+			s.log.Warnf("%s board is not enabled, skipping", s.api.League())
+			return nil
 		}
 
 		nextGameIndex := gameIndex + 1
@@ -248,7 +255,7 @@ OUTER:
 		// preload data for the next game
 		if nextGameIndex < len(games) {
 			nextID := games[nextGameIndex].GetID()
-			preloader[nextID] = make(chan bool, 1)
+			preloader[nextID] = make(chan struct{})
 			go func() {
 				if err := s.preloadLiveGame(ctx, games[nextGameIndex], preloader[nextID]); err != nil {
 					s.log.Errorf("error while preloading next game: %s", err.Error())
@@ -360,8 +367,8 @@ func (s *SportBoard) HasPriority() bool {
 	return false
 }
 
-func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload chan bool) error {
-	defer func() { preload <- true }()
+func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload chan struct{}) error {
+	defer func() { preload <- struct{}{} }()
 
 	gameOver := false
 	cached, hasCached := s.cachedLiveGames[game.GetID()]

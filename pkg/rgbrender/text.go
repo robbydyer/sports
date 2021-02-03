@@ -40,7 +40,6 @@ type TextWriter struct {
 	YStartCorrection int
 	FontSize         float64
 	LineSpace        float64
-	fontDir          embed.FS
 }
 
 // DefaultTextWriter ...

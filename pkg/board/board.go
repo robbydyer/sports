@@ -17,7 +17,6 @@ type HTTPHandler struct {
 type Board interface {
 	Name() string
 	Render(ctx context.Context, matrix rgb.Matrix) error
-	HasPriority() bool
 	Enabled() bool
 	GetHTTPHandlers() ([]*HTTPHandler, error)
 }
