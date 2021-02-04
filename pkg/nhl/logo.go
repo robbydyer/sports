@@ -1,6 +1,7 @@
 package nhl
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"image"
@@ -16,14 +17,14 @@ import (
 var assets embed.FS
 
 // GetLogo ...
-func (n *NHL) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
+func (n *NHL) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
 	fullLogoKey := fmt.Sprintf("%s_%dx%d", logoKey, bounds.Dx(), bounds.Dy())
 	l, ok := n.logos[fullLogoKey]
 	if ok {
 		return l, nil
 	}
 
-	sources, err := n.logoSources()
+	sources, err := n.logoSources(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -32,6 +33,8 @@ func (n *NHL) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectan
 	if err != nil {
 		return nil, err
 	}
+
+	l.SetLogger(n.log)
 
 	n.logos[fullLogoKey] = l
 
@@ -48,17 +51,6 @@ func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logo
 
 	fullLogoKey := fmt.Sprintf("%s_%dx%d", logoKey, bounds.Dx(), bounds.Dy())
 
-	dat, err := assets.ReadFile(fmt.Sprintf("assets/logopos_%dx%d.yaml", bounds.Dx(), bounds.Dy()))
-	if err != nil {
-		return nil, err
-	}
-
-	var defaultPos []*logo.Config
-
-	if err := yaml.Unmarshal(dat, &defaultPos); err != nil {
-		return nil, err
-	}
-
 	if _, ok := logoSources[teamAbbrev]; !ok {
 		return nil, fmt.Errorf("did not find logo source for %s", teamAbbrev)
 	}
@@ -70,7 +62,17 @@ func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logo
 		return l, nil
 	}
 
-	fmt.Printf("using default config for logo %s\n", fullLogoKey)
+	dat, err := assets.ReadFile(fmt.Sprintf("assets/logopos_%dx%d.yaml", bounds.Dx(), bounds.Dy()))
+	if err != nil {
+		return nil, err
+	}
+
+	var defaultPos []*logo.Config
+
+	if err := yaml.Unmarshal(dat, &defaultPos); err != nil {
+		return nil, err
+	}
+
 	// Use defaults for this logo
 	for _, defConf := range defaultPos {
 		if defConf.Abbrev == logoKey {
@@ -88,12 +90,17 @@ func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logo
 	return nil, fmt.Errorf("could not find logo config for %s", logoKey)
 }
 
-func (n *NHL) logoSources() (map[string]image.Image, error) {
+func (n *NHL) logoSources(ctx context.Context) (map[string]image.Image, error) {
 	if len(n.logoSourceCache) == len(ALL) {
 		return n.logoSourceCache, nil
 	}
 
 	for _, t := range ALL {
+		select {
+		case <-ctx.Done():
+			return nil, context.Canceled
+		default:
+		}
 		f, err := assets.Open(fmt.Sprintf("assets/logos/%s.png", t))
 		if err != nil {
 			return nil, err

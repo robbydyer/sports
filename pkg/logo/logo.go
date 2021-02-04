@@ -7,6 +7,8 @@ import (
 	"image/png"
 	"os"
 
+	log "github.com/sirupsen/logrus"
+
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
@@ -19,6 +21,7 @@ type Logo struct {
 	targetDirectory string
 	config          *Config
 	thumbnail       image.Image
+	log             *log.Logger
 }
 
 // Config ...
@@ -45,6 +48,16 @@ func New(key string, sourceLogo image.Image, targetDirectory string, matrixBound
 	}
 }
 
+func (l *Logo) SetLogger(logger *log.Logger) {
+	l.log = logger
+}
+
+func (l *Logo) ensureLogger() {
+	if l.log == nil {
+		l.log = log.New()
+	}
+}
+
 // ThumbnailFilename returns the filname for the resized thumbnail to use
 func (l *Logo) ThumbnailFilename(size image.Rectangle) string {
 	return fmt.Sprintf("%s/%s_%dx%d_%f.png", l.targetDirectory, l.key, size.Dx(), size.Dy(), l.config.Pt.Zoom)
@@ -68,12 +81,15 @@ func (l *Logo) GetThumbnail(size image.Rectangle) (image.Image, error) {
 				}
 			}
 			// Create the thumbnail
-			fmt.Printf("Saving thumbnail logo %s\n", thumbFile)
 			l.thumbnail = rgbrender.ResizeImage(l.sourceLogo, size, l.config.Pt.Zoom)
 
-			if err := rgbrender.SavePng(l.thumbnail, thumbFile); err != nil {
-				return nil, fmt.Errorf("failed to save logo %s: %w", thumbFile, err)
-			}
+			go func() {
+				l.ensureLogger()
+				l.log.Infof("Saving thumbnail logo %s\n", thumbFile)
+				if err := rgbrender.SavePng(l.thumbnail, thumbFile); err != nil {
+					l.log.Error("Failed to save logo PNG", err)
+				}
+			}()
 
 			return l.thumbnail, nil
 		}

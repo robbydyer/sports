@@ -48,17 +48,7 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 		cancel()
 	}()
 
-	if c.rArgs.config.MLBConfig == nil {
-		c.rArgs.config.MLBConfig = &sportboard.Config{}
-	}
-
 	c.rArgs.config.MLBConfig.Enabled = true
-
-	if len(c.rArgs.config.MLBConfig.WatchTeams) < 1 {
-		c.rArgs.config.MLBConfig.WatchTeams = []string{"ATL"}
-	}
-
-	c.rArgs.config.MLBConfig.SetDefaults()
 
 	bounds := image.Rect(0, 0, c.rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, c.rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
 

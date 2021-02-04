@@ -63,14 +63,14 @@ func (m *MockMLBAPI) HTTPPathPrefix() string {
 }
 
 // GetLogo ...
-func (m *MockMLBAPI) GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
+func (m *MockMLBAPI) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
 	fullLogoKey := fmt.Sprintf("%s_%dx%d", logoKey, bounds.Dx(), bounds.Dy())
 	l, ok := m.logos[fullLogoKey]
 	if ok {
 		return l, nil
 	}
 
-	sources, err := m.logoSources()
+	sources, err := m.logoSources(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -80,17 +80,24 @@ func (m *MockMLBAPI) GetLogo(logoKey string, logoConf *logo.Config, bounds image
 		return nil, err
 	}
 
+	l.SetLogger(m.log)
+
 	m.logos[fullLogoKey] = l
 
 	return l, nil
 }
 
-func (m *MockMLBAPI) logoSources() (map[string]image.Image, error) {
+func (m *MockMLBAPI) logoSources(ctx context.Context) (map[string]image.Image, error) {
 	if len(m.logoSourceCache) == len(ALL) {
 		return m.logoSourceCache, nil
 	}
 
 	for _, t := range ALL {
+		select {
+		case <-ctx.Done():
+			return nil, context.Canceled
+		default:
+		}
 		f, err := assets.Open(fmt.Sprintf("assets/logos/%s.png", t))
 		if err != nil {
 			return nil, err

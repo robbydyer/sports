@@ -19,9 +19,6 @@ const (
 	DateFormat   = "2006-01-02"
 )
 
-// ALL contains all of the teams in the league
-var ALL = []string{ATL}
-
 // MLB implements a sportboard.API
 type MLB struct {
 	teams           []*Team

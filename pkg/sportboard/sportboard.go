@@ -65,7 +65,7 @@ type API interface {
 	DateStr(d time.Time) string
 	League() string
 	HTTPPathPrefix() string
-	GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error)
+	GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error)
 	AllTeamAbbreviations() []string
 }
 
@@ -239,6 +239,9 @@ func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 
 	preloaderTimeout := s.config.boardDelay + (10 * time.Second)
 
+	gameCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 OUTER:
 	for gameIndex, game := range games {
 		select {
@@ -301,7 +304,6 @@ OUTER:
 				return context.Canceled
 			default:
 			}
-			s.log.Debugf("checking if %s is involved in game between %s vs %s", watchTeam, homeTeam.GetAbbreviation(), awayTeam.GetAbbreviation())
 
 			team, err := s.api.TeamFromAbbreviation(ctx, watchTeam)
 			if err != nil {
@@ -309,14 +311,6 @@ OUTER:
 			}
 
 			if awayTeam.GetID() != team.GetID() && homeTeam.GetID() != team.GetID() {
-				s.log.Debugf("team %s with ID %d is not in %s (%d) or %s (%d)",
-					watchTeam,
-					team.GetID(),
-					homeTeam.GetAbbreviation(),
-					homeTeam.GetID(),
-					awayTeam.GetAbbreviation(),
-					awayTeam.GetID(),
-				)
 				continue INNER
 			}
 
@@ -335,17 +329,17 @@ OUTER:
 			}
 
 			if isLive {
-				if err := s.renderLiveGame(ctx, canvas, liveGame); err != nil {
+				if err := s.renderLiveGame(gameCtx, canvas, liveGame); err != nil {
 					s.log.Errorf("failed to render live game: %s", err.Error())
 					continue INNER
 				}
 			} else if isOver {
-				if err := s.renderCompleteGame(canvas, liveGame); err != nil {
+				if err := s.renderCompleteGame(gameCtx, canvas, liveGame); err != nil {
 					s.log.Errorf("failed to render complete game: %s", err.Error())
 					continue INNER
 				}
 			} else {
-				if err := s.renderUpcomingGame(ctx, canvas, liveGame); err != nil {
+				if err := s.renderUpcomingGame(gameCtx, canvas, liveGame); err != nil {
 					s.log.Errorf("failed to render upcoming game: %s", err.Error())
 					continue INNER
 				}

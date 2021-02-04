@@ -189,8 +189,7 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 			s.screenIsOn = false
 			s.boardCancel()
 
-			c := rgb.NewCanvas(s.matrix)
-			_ = c.Clear()
+			_ = rgb.NewCanvas(s.matrix).Clear()
 			s.boardCtx, s.boardCancel = context.WithCancel(context.Background())
 			s.Unlock()
 		case <-s.screenOn:
@@ -222,6 +221,7 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
+			s.boardCancel()
 			return context.Canceled
 		default:
 		}
@@ -268,8 +268,8 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 
 		go func() {
 			select {
+			case <-ctx.Done():
 			case <-renderDone:
-				return
 			case <-time.After(5 * time.Minute):
 				s.log.Errorf("Board '%s' rendered longer than normal", b.Name())
 			}

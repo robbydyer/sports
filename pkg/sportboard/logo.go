@@ -1,6 +1,7 @@
 package sportboard
 
 import (
+	"context"
 	"fmt"
 	"image"
 	"image/draw"
@@ -21,7 +22,7 @@ func (s *SportBoard) logoConfig(logoKey string) (*logo.Config, error) {
 }
 
 // RenderHomeLogo ...
-func (s *SportBoard) RenderHomeLogo(canvas *rgb.Canvas, abbreviation string) error {
+func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas *rgb.Canvas, abbreviation string) error {
 	logoKey := fmt.Sprintf("%s_HOME", abbreviation)
 
 	i, ok := s.logoDrawCache[logoKey]
@@ -37,7 +38,7 @@ func (s *SportBoard) RenderHomeLogo(canvas *rgb.Canvas, abbreviation string) err
 		logoConf, _ := s.logoConfig(logoKey)
 
 		s.log.Debugf("fetching logo for %s %dx%d", abbreviation, s.matrixBounds.Dx(), s.matrixBounds.Dy())
-		l, err = s.api.GetLogo(logoKey, logoConf, s.matrixBounds)
+		l, err = s.api.GetLogo(ctx, logoKey, logoConf, s.matrixBounds)
 		if err != nil {
 			return err
 		}
@@ -62,7 +63,7 @@ func (s *SportBoard) RenderHomeLogo(canvas *rgb.Canvas, abbreviation string) err
 }
 
 // RenderAwayLogo ...
-func (s *SportBoard) RenderAwayLogo(canvas *rgb.Canvas, abbreviation string) error {
+func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvas *rgb.Canvas, abbreviation string) error {
 	logoKey := fmt.Sprintf("%s_AWAY", abbreviation)
 
 	i, ok := s.logoDrawCache[logoKey]
@@ -77,7 +78,7 @@ func (s *SportBoard) RenderAwayLogo(canvas *rgb.Canvas, abbreviation string) err
 		logoConf, _ := s.logoConfig(logoKey)
 
 		s.log.Debugf("fetching logo for %s %dx%d", abbreviation, s.matrixBounds.Dx(), s.matrixBounds.Dy())
-		l, err = s.api.GetLogo(logoKey, logoConf, s.matrixBounds)
+		l, err = s.api.GetLogo(ctx, logoKey, logoConf, s.matrixBounds)
 		if err != nil {
 			return err
 		}

@@ -122,4 +122,11 @@ func (r *rootArgs) setConfigDefaults() {
 		}
 	}
 	r.config.ClockConfig.SetDefaults()
+
+	if r.config.MLBConfig == nil {
+		r.config.MLBConfig = &sportboard.Config{
+			Enabled: false,
+		}
+	}
+	r.config.MLBConfig.SetDefaults()
 }

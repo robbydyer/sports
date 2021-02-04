@@ -1,5 +1,8 @@
 package mlb
 
+// ALL contains all of the teams in the league
+var ALL = []string{ARI, ATL, BAL, BOS, CHC, CIN, CLE, COL, CWS, DET, HOU, KC, LAA, LAD, MIA, MIL, MIN, NYM, NYY, OAK, PHI, PIT, SD, SEA, SF, STL, TB, TEX, TOR, WSH}
+
 const (
 	// ARI ...
 	ARI = "ARI"

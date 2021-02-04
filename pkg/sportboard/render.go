@@ -11,6 +11,9 @@ import (
 )
 
 func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liveGame Game) error {
+	renderCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	awayTeam, err := liveGame.AwayTeam()
 	if err != nil {
 		return err
@@ -54,11 +57,11 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 			return fmt.Errorf("context canceled")
 		default:
 		}
-		if err := s.RenderHomeLogo(canvas, homeTeam.GetAbbreviation()); err != nil {
-			return err
+		if err := s.RenderHomeLogo(renderCtx, canvas, homeTeam.GetAbbreviation()); err != nil {
+			return fmt.Errorf("failed to render home logo: %w", err)
 		}
-		if err := s.RenderAwayLogo(canvas, awayTeam.GetAbbreviation()); err != nil {
-			return err
+		if err := s.RenderAwayLogo(renderCtx, canvas, awayTeam.GetAbbreviation()); err != nil {
+			return fmt.Errorf("failed to render away logo: %w", err)
 		}
 		if err := timeWriter.Write(
 			canvas,
@@ -125,6 +128,8 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 }
 
 func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas *rgb.Canvas, liveGame Game) error {
+	renderCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	awayTeam, err := liveGame.AwayTeam()
 	if err != nil {
 		return err
@@ -150,10 +155,10 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas *rgb.Canvas,
 	}
 	gameTimeStr := gameTime.Local().Format("3:04PM")
 
-	if err := s.RenderHomeLogo(canvas, homeTeam.GetAbbreviation()); err != nil {
+	if err := s.RenderHomeLogo(renderCtx, canvas, homeTeam.GetAbbreviation()); err != nil {
 		return err
 	}
-	if err := s.RenderAwayLogo(canvas, awayTeam.GetAbbreviation()); err != nil {
+	if err := s.RenderAwayLogo(renderCtx, canvas, awayTeam.GetAbbreviation()); err != nil {
 		return err
 	}
 	_ = timeWriter.Write(
@@ -179,7 +184,9 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas *rgb.Canvas,
 	return canvas.Render()
 }
 
-func (s *SportBoard) renderCompleteGame(canvas *rgb.Canvas, liveGame Game) error {
+func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas *rgb.Canvas, liveGame Game) error {
+	renderCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	awayTeam, err := liveGame.AwayTeam()
 	if err != nil {
 		return err
@@ -204,10 +211,10 @@ func (s *SportBoard) renderCompleteGame(canvas *rgb.Canvas, liveGame Game) error
 		return err
 	}
 
-	if err := s.RenderHomeLogo(canvas, homeTeam.GetAbbreviation()); err != nil {
+	if err := s.RenderHomeLogo(renderCtx, canvas, homeTeam.GetAbbreviation()); err != nil {
 		return err
 	}
-	if err := s.RenderAwayLogo(canvas, awayTeam.GetAbbreviation()); err != nil {
+	if err := s.RenderAwayLogo(renderCtx, canvas, awayTeam.GetAbbreviation()); err != nil {
 		return err
 	}
 	_ = timeWriter.Write(

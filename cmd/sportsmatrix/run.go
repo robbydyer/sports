@@ -14,6 +14,7 @@ import (
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/clock"
 	"github.com/robbydyer/sports/pkg/imageboard"
+	"github.com/robbydyer/sports/pkg/mlb"
 	"github.com/robbydyer/sports/pkg/nhl"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
@@ -57,19 +58,35 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 
 	bounds := image.Rect(0, 0, s.rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, s.rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
 
-	api, err := nhl.New(ctx, logger)
-	if err != nil {
-		return err
-	}
-
-	b, err := sportboard.New(ctx, api, bounds, logger, s.rArgs.config.NHLConfig)
-	if err != nil {
-		return err
-	}
-
 	var boards []board.Board
 
-	boards = append(boards, b)
+	if s.rArgs.config.NHLConfig != nil {
+		api, err := nhl.New(ctx, logger)
+		if err != nil {
+			return err
+		}
+
+		b, err := sportboard.New(ctx, api, bounds, logger, s.rArgs.config.NHLConfig)
+		if err != nil {
+			return err
+		}
+
+		boards = append(boards, b)
+	}
+
+	if s.rArgs.config.MLBConfig != nil {
+		api, err := mlb.NewMock(logger)
+		if err != nil {
+			return err
+		}
+
+		b, err := sportboard.New(ctx, api, bounds, logger, s.rArgs.config.MLBConfig)
+		if err != nil {
+			return err
+		}
+
+		boards = append(boards, b)
+	}
 
 	if s.rArgs.config.ImageConfig != nil {
 		b, err := imageboard.New(afero.NewOsFs(), bounds, s.rArgs.config.ImageConfig, logger)

@@ -10,8 +10,8 @@ echo "---" > "${ROOT}/pkg/mlbmock/assets/mock_livegames.yaml"
 echo "---" > "${ROOT}/pkg/mlbmock/assets/mock_teams.yaml"
 
 for i in `cat "${ROOT}/script/mlb_ids.txt"`; do
-id=$(echo $i | cut -f1 -d,)
-t=$(echo $i | cut -f2 -d,)
+t=$(echo $i | cut -f1 -d,)
+id=$(echo $i | cut -f2 -d,)
 cat <<EOF >> "${ROOT}/pkg/mlbmock/assets/mock_teams.yaml"
 - id: ${id}
   abbreviation: ${t}
