@@ -246,6 +246,9 @@ OUTER:
 	for gameIndex, game := range games {
 		select {
 		case <-ctx.Done():
+			cancel()
+			return context.Canceled
+		case <-gameCtx.Done():
 			return context.Canceled
 		default:
 		}
@@ -271,6 +274,9 @@ OUTER:
 		// Wait for the preloader to finish getting data, but with a timeout.
 		select {
 		case <-ctx.Done():
+			cancel()
+			return context.Canceled
+		case <-gameCtx.Done():
 			return context.Canceled
 		case <-preloader[game.GetID()]:
 			s.log.Debugf("preloader for %d marked ready", game.GetID())
@@ -301,6 +307,9 @@ OUTER:
 		for _, watchTeam := range s.config.WatchTeams {
 			select {
 			case <-ctx.Done():
+				cancel()
+				return context.Canceled
+			case <-gameCtx.Done():
 				return context.Canceled
 			default:
 			}
@@ -347,6 +356,9 @@ OUTER:
 
 			select {
 			case <-ctx.Done():
+				cancel()
+				return context.Canceled
+			case <-gameCtx.Done():
 				return context.Canceled
 			case <-time.After(s.config.boardDelay):
 			}

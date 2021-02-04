@@ -137,7 +137,19 @@ func (g *Game) GetUpdate(ctx context.Context) (sportboard.Game, error) {
 	if g.GameGetter == nil {
 		g.GameGetter = GetLiveGame
 	}
-	return g.GameGetter(ctx, g.Link)
+	newGame, err := g.GameGetter(ctx, g.Link)
+	if err != nil {
+		return nil, err
+	}
+
+	newG, ok := newGame.(*Game)
+	if !ok {
+		return newGame, nil
+	}
+
+	newG.GameGetter = g.GameGetter
+
+	return newG, nil
 }
 
 // GetStartTime ...

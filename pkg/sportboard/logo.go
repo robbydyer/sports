@@ -23,6 +23,11 @@ func (s *SportBoard) logoConfig(logoKey string) (*logo.Config, error) {
 
 // RenderHomeLogo ...
 func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas *rgb.Canvas, abbreviation string) error {
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	default:
+	}
 	logoKey := fmt.Sprintf("%s_HOME", abbreviation)
 
 	i, ok := s.logoDrawCache[logoKey]
@@ -64,10 +69,16 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas *rgb.Canvas, abb
 
 // RenderAwayLogo ...
 func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvas *rgb.Canvas, abbreviation string) error {
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	default:
+	}
 	logoKey := fmt.Sprintf("%s_AWAY", abbreviation)
 
 	i, ok := s.logoDrawCache[logoKey]
 	if ok {
+		s.log.Debugf("drawing %s logo with drawCache", logoKey)
 		draw.Draw(canvas, canvas.Bounds(), i, image.Point{}, draw.Over)
 		return nil
 	}

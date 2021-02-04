@@ -22,6 +22,7 @@ type MockNHLAPI struct {
 	logos           map[string]*logo.Logo
 	logoSourceCache map[string]image.Image
 	log             *log.Logger
+	defaultLogoConf *[]*logo.Config
 }
 
 // HTTPPathPrefix ...
@@ -75,7 +76,11 @@ func (m *MockNHLAPI) GetLogo(ctx context.Context, logoKey string, logoConf *logo
 		return nil, err
 	}
 
-	l, err = GetLogo(logoKey, logoConf, bounds, sources)
+	if m.defaultLogoConf == nil {
+		m.defaultLogoConf = &[]*logo.Config{}
+	}
+
+	l, err = GetLogo(logoKey, logoConf, bounds, sources, m.defaultLogoConf)
 	if err != nil {
 		return nil, err
 	}
@@ -157,6 +162,7 @@ func MockLiveGameGetter(ctx context.Context, link string) (sportboard.Game, erro
 	for _, liveGame := range gameList {
 		if liveGame.Link == link {
 			liveGame.GameTime = time.Now().Local()
+			liveGame.GameGetter = MockLiveGameGetter
 			return liveGame, nil
 		}
 	}

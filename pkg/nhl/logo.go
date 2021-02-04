@@ -29,7 +29,11 @@ func (n *NHL) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config
 		return nil, err
 	}
 
-	l, err = GetLogo(logoKey, logoConf, bounds, sources)
+	if n.defaultLogoConf == nil {
+		n.defaultLogoConf = &[]*logo.Config{}
+	}
+
+	l, err = GetLogo(logoKey, logoConf, bounds, sources, n.defaultLogoConf)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +46,7 @@ func (n *NHL) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config
 }
 
 // GetLogo is a generic logo getter. Useful for testing
-func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logoSources map[string]image.Image) (*logo.Logo, error) {
+func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logoSources map[string]image.Image, defaultConfigs *[]*logo.Config) (*logo.Logo, error) {
 	p := strings.Split(logoKey, "_")
 	if len(p) < 2 {
 		return nil, fmt.Errorf("invalid logo key '%s'", logoConf.Abbrev)
@@ -62,19 +66,19 @@ func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logo
 		return l, nil
 	}
 
-	dat, err := assets.ReadFile(fmt.Sprintf("assets/logopos_%dx%d.yaml", bounds.Dx(), bounds.Dy()))
-	if err != nil {
-		return nil, err
-	}
+	if defaultConfigs == nil || len(*defaultConfigs) < 1 {
+		dat, err := assets.ReadFile(fmt.Sprintf("assets/logopos_%dx%d.yaml", bounds.Dx(), bounds.Dy()))
+		if err != nil {
+			return nil, err
+		}
 
-	var defaultPos []*logo.Config
-
-	if err := yaml.Unmarshal(dat, &defaultPos); err != nil {
-		return nil, err
+		if err := yaml.Unmarshal(dat, &defaultConfigs); err != nil {
+			return nil, err
+		}
 	}
 
 	// Use defaults for this logo
-	for _, defConf := range defaultPos {
+	for _, defConf := range *defaultConfigs {
 		if defConf.Abbrev == logoKey {
 			fmt.Printf("default logo config for %s:\n%d, %d zoom %f\n",
 				logoKey,

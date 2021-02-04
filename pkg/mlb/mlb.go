@@ -19,6 +19,8 @@ const (
 	DateFormat   = "2006-01-02"
 )
 
+type DefaultLogoConfigs *[]*logo.Config
+
 // MLB implements a sportboard.API
 type MLB struct {
 	teams           []*Team
@@ -26,6 +28,7 @@ type MLB struct {
 	logos           map[string]*logo.Logo
 	logoSourceCache map[string]image.Image
 	log             *log.Logger
+	defaultLogoConf *[]*logo.Config
 }
 
 // New ...

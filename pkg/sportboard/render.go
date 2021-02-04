@@ -11,9 +11,6 @@ import (
 )
 
 func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liveGame Game) error {
-	renderCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
 	awayTeam, err := liveGame.AwayTeam()
 	if err != nil {
 		return err
@@ -57,10 +54,15 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 			return fmt.Errorf("context canceled")
 		default:
 		}
-		if err := s.RenderHomeLogo(renderCtx, canvas, homeTeam.GetAbbreviation()); err != nil {
+		if err := s.RenderHomeLogo(ctx, canvas, homeTeam.GetAbbreviation()); err != nil {
 			return fmt.Errorf("failed to render home logo: %w", err)
 		}
-		if err := s.RenderAwayLogo(renderCtx, canvas, awayTeam.GetAbbreviation()); err != nil {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("context canceled")
+		default:
+		}
+		if err := s.RenderAwayLogo(ctx, canvas, awayTeam.GetAbbreviation()); err != nil {
 			return fmt.Errorf("failed to render away logo: %w", err)
 		}
 		if err := timeWriter.Write(
@@ -91,6 +93,12 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 		}
 
 		draw.Draw(canvas, canvas.Bounds(), s.counter, image.Point{}, draw.Over)
+
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("context canceled")
+		default:
+		}
 
 		if err := canvas.Render(); err != nil {
 			return err

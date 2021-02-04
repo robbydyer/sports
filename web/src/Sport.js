@@ -36,8 +36,8 @@ class Sport extends React.Component {
                 <Row className="text-center"><Col><Button onClick={() => this.callmatrix("disable")}>Disable</Button></Col></Row>
                 <Row className="text-center"><Col><Button onClick={() => this.callmatrix("hidefavoritescore")}>Hide Favorite Scores</Button></Col></Row>
                 <Row className="text-center"><Col><Button onClick={() => this.callmatrix("showfavoritescore")}>Show Favorite Scores</Button></Col></Row>
-                <Row className="text-center"><Col><Button onClick={() => this.callmatrix("favoritesticky")}>Sticky Favorite Game</Button></Col></Row>
-                <Row className="text-center"><Col><Button onClick={() => this.callmatrix("favoriteunstick")}>Unstick Favorite Game</Button></Col></Row>
+                <Row className="text-center"><Col><Button onClick={() => this.callmatrix("favoritesticky")}>Sticky Favorite Team</Button></Col></Row>
+                <Row className="text-center"><Col><Button onClick={() => this.callmatrix("favoriteunstick")}>Unstick Favorite Team</Button></Col></Row>
             </Container>
         )
     }

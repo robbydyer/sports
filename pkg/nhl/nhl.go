@@ -32,6 +32,7 @@ type NHL struct {
 	logos           map[string]*logo.Logo
 	logoSourceCache map[string]image.Image
 	log             *log.Logger
+	defaultLogoConf *[]*logo.Config
 }
 
 // New ...
