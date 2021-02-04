@@ -5,19 +5,19 @@ ROOT="$(git rev-parse --show-toplevel)"
 
 cd "${ROOT}"
 
-echo "---" > "${ROOT}/pkg/mlbmock/assets/mock_games.yaml"
-echo "---" > "${ROOT}/pkg/mlbmock/assets/mock_livegames.yaml"
-echo "---" > "${ROOT}/pkg/mlbmock/assets/mock_teams.yaml"
+echo "---" > "${ROOT}/pkg/mlb/assets/mock_games.yaml"
+echo "---" > "${ROOT}/pkg/mlb/assets/mock_livegames.yaml"
+echo "---" > "${ROOT}/pkg/mlb/assets/mock_teams.yaml"
 
 for i in `cat "${ROOT}/script/mlb_ids.txt"`; do
 t=$(echo $i | cut -f1 -d,)
 id=$(echo $i | cut -f2 -d,)
-cat <<EOF >> "${ROOT}/pkg/mlbmock/assets/mock_teams.yaml"
+cat <<EOF >> "${ROOT}/pkg/mlb/assets/mock_teams.yaml"
 - id: ${id}
   abbreviation: ${t}
   name: ${t}
 EOF
-cat <<EOF >> "${ROOT}/pkg/mlbmock/assets/mock_games.yaml"
+cat <<EOF >> "${ROOT}/pkg/mlb/assets/mock_games.yaml"
 - gamePk: ${id}
   link: "${id}"
   teams:
@@ -32,7 +32,7 @@ cat <<EOF >> "${ROOT}/pkg/mlbmock/assets/mock_games.yaml"
         abbreviation: "${t}"
         name: "${t}"
 EOF
-cat <<EOF >> "${ROOT}/pkg/mlbmock/assets/mock_livegames.yaml"
+cat <<EOF >> "${ROOT}/pkg/mlb/assets/mock_livegames.yaml"
 - gamePk: ${id}
   link: "${id}"
   gameData:

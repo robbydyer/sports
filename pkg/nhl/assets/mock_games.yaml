@@ -1,69 +1,30 @@
 ---
-- gamePk: 1
-  link: "1"
+- gamePk: 24
+  link: "24"
   teams:
     away:
       team:
-        id: 1
-        abbreviation: "NJD"
-        name: "NJD"
+        id: 24
+        abbreviation: "ANA"
+        name: "ANA"
     home:
       team:
-        id: 1
-        abbreviation: "NJD"
-        name: "NJD"
-- gamePk: 2
-  link: "2"
+        id: 24
+        abbreviation: "ANA"
+        name: "ANA"
+- gamePk: 53
+  link: "53"
   teams:
     away:
       team:
-        id: 2
-        abbreviation: "NYI"
-        name: "NYI"
+        id: 53
+        abbreviation: "ARI"
+        name: "ARI"
     home:
       team:
-        id: 2
-        abbreviation: "NYI"
-        name: "NYI"
-- gamePk: 3
-  link: "3"
-  teams:
-    away:
-      team:
-        id: 3
-        abbreviation: "NYR"
-        name: "NYR"
-    home:
-      team:
-        id: 3
-        abbreviation: "NYR"
-        name: "NYR"
-- gamePk: 4
-  link: "4"
-  teams:
-    away:
-      team:
-        id: 4
-        abbreviation: "PHI"
-        name: "PHI"
-    home:
-      team:
-        id: 4
-        abbreviation: "PHI"
-        name: "PHI"
-- gamePk: 5
-  link: "5"
-  teams:
-    away:
-      team:
-        id: 5
-        abbreviation: "PIT"
-        name: "PIT"
-    home:
-      team:
-        id: 5
-        abbreviation: "PIT"
-        name: "PIT"
+        id: 53
+        abbreviation: "ARI"
+        name: "ARI"
 - gamePk: 6
   link: "6"
   teams:
@@ -90,45 +51,6 @@
         id: 7
         abbreviation: "BUF"
         name: "BUF"
-- gamePk: 8
-  link: "8"
-  teams:
-    away:
-      team:
-        id: 8
-        abbreviation: "MTL"
-        name: "MTL"
-    home:
-      team:
-        id: 8
-        abbreviation: "MTL"
-        name: "MTL"
-- gamePk: 9
-  link: "9"
-  teams:
-    away:
-      team:
-        id: 9
-        abbreviation: "OTT"
-        name: "OTT"
-    home:
-      team:
-        id: 9
-        abbreviation: "OTT"
-        name: "OTT"
-- gamePk: 10
-  link: "10"
-  teams:
-    away:
-      team:
-        id: 10
-        abbreviation: "TOR"
-        name: "TOR"
-    home:
-      team:
-        id: 10
-        abbreviation: "TOR"
-        name: "TOR"
 - gamePk: 12
   link: "12"
   teams:
@@ -142,201 +64,6 @@
         id: 12
         abbreviation: "CAR"
         name: "CAR"
-- gamePk: 13
-  link: "13"
-  teams:
-    away:
-      team:
-        id: 13
-        abbreviation: "FLA"
-        name: "FLA"
-    home:
-      team:
-        id: 13
-        abbreviation: "FLA"
-        name: "FLA"
-- gamePk: 14
-  link: "14"
-  teams:
-    away:
-      team:
-        id: 14
-        abbreviation: "TBL"
-        name: "TBL"
-    home:
-      team:
-        id: 14
-        abbreviation: "TBL"
-        name: "TBL"
-- gamePk: 15
-  link: "15"
-  teams:
-    away:
-      team:
-        id: 15
-        abbreviation: "WSH"
-        name: "WSH"
-    home:
-      team:
-        id: 15
-        abbreviation: "WSH"
-        name: "WSH"
-- gamePk: 16
-  link: "16"
-  teams:
-    away:
-      team:
-        id: 16
-        abbreviation: "CHI"
-        name: "CHI"
-    home:
-      team:
-        id: 16
-        abbreviation: "CHI"
-        name: "CHI"
-- gamePk: 17
-  link: "17"
-  teams:
-    away:
-      team:
-        id: 17
-        abbreviation: "DET"
-        name: "DET"
-    home:
-      team:
-        id: 17
-        abbreviation: "DET"
-        name: "DET"
-- gamePk: 18
-  link: "18"
-  teams:
-    away:
-      team:
-        id: 18
-        abbreviation: "NSH"
-        name: "NSH"
-    home:
-      team:
-        id: 18
-        abbreviation: "NSH"
-        name: "NSH"
-- gamePk: 19
-  link: "19"
-  teams:
-    away:
-      team:
-        id: 19
-        abbreviation: "STL"
-        name: "STL"
-    home:
-      team:
-        id: 19
-        abbreviation: "STL"
-        name: "STL"
-- gamePk: 20
-  link: "20"
-  teams:
-    away:
-      team:
-        id: 20
-        abbreviation: "CGY"
-        name: "CGY"
-    home:
-      team:
-        id: 20
-        abbreviation: "CGY"
-        name: "CGY"
-- gamePk: 21
-  link: "21"
-  teams:
-    away:
-      team:
-        id: 21
-        abbreviation: "COL"
-        name: "COL"
-    home:
-      team:
-        id: 21
-        abbreviation: "COL"
-        name: "COL"
-- gamePk: 22
-  link: "22"
-  teams:
-    away:
-      team:
-        id: 22
-        abbreviation: "EDM"
-        name: "EDM"
-    home:
-      team:
-        id: 22
-        abbreviation: "EDM"
-        name: "EDM"
-- gamePk: 23
-  link: "23"
-  teams:
-    away:
-      team:
-        id: 23
-        abbreviation: "VAN"
-        name: "VAN"
-    home:
-      team:
-        id: 23
-        abbreviation: "VAN"
-        name: "VAN"
-- gamePk: 24
-  link: "24"
-  teams:
-    away:
-      team:
-        id: 24
-        abbreviation: "ANA"
-        name: "ANA"
-    home:
-      team:
-        id: 24
-        abbreviation: "ANA"
-        name: "ANA"
-- gamePk: 25
-  link: "25"
-  teams:
-    away:
-      team:
-        id: 25
-        abbreviation: "DAL"
-        name: "DAL"
-    home:
-      team:
-        id: 25
-        abbreviation: "DAL"
-        name: "DAL"
-- gamePk: 26
-  link: "26"
-  teams:
-    away:
-      team:
-        id: 26
-        abbreviation: "LAK"
-        name: "LAK"
-    home:
-      team:
-        id: 26
-        abbreviation: "LAK"
-        name: "LAK"
-- gamePk: 28
-  link: "28"
-  teams:
-    away:
-      team:
-        id: 28
-        abbreviation: "SJS"
-        name: "SJS"
-    home:
-      team:
-        id: 28
-        abbreviation: "SJS"
-        name: "SJS"
 - gamePk: 29
   link: "29"
   teams:
@@ -350,6 +77,110 @@
         id: 29
         abbreviation: "CBJ"
         name: "CBJ"
+- gamePk: 20
+  link: "20"
+  teams:
+    away:
+      team:
+        id: 20
+        abbreviation: "CGY"
+        name: "CGY"
+    home:
+      team:
+        id: 20
+        abbreviation: "CGY"
+        name: "CGY"
+- gamePk: 16
+  link: "16"
+  teams:
+    away:
+      team:
+        id: 16
+        abbreviation: "CHI"
+        name: "CHI"
+    home:
+      team:
+        id: 16
+        abbreviation: "CHI"
+        name: "CHI"
+- gamePk: 21
+  link: "21"
+  teams:
+    away:
+      team:
+        id: 21
+        abbreviation: "COL"
+        name: "COL"
+    home:
+      team:
+        id: 21
+        abbreviation: "COL"
+        name: "COL"
+- gamePk: 25
+  link: "25"
+  teams:
+    away:
+      team:
+        id: 25
+        abbreviation: "DAL"
+        name: "DAL"
+    home:
+      team:
+        id: 25
+        abbreviation: "DAL"
+        name: "DAL"
+- gamePk: 17
+  link: "17"
+  teams:
+    away:
+      team:
+        id: 17
+        abbreviation: "DET"
+        name: "DET"
+    home:
+      team:
+        id: 17
+        abbreviation: "DET"
+        name: "DET"
+- gamePk: 22
+  link: "22"
+  teams:
+    away:
+      team:
+        id: 22
+        abbreviation: "EDM"
+        name: "EDM"
+    home:
+      team:
+        id: 22
+        abbreviation: "EDM"
+        name: "EDM"
+- gamePk: 13
+  link: "13"
+  teams:
+    away:
+      team:
+        id: 13
+        abbreviation: "FLA"
+        name: "FLA"
+    home:
+      team:
+        id: 13
+        abbreviation: "FLA"
+        name: "FLA"
+- gamePk: 26
+  link: "26"
+  teams:
+    away:
+      team:
+        id: 26
+        abbreviation: "LAK"
+        name: "LAK"
+    home:
+      team:
+        id: 26
+        abbreviation: "LAK"
+        name: "LAK"
 - gamePk: 30
   link: "30"
   teams:
@@ -363,32 +194,175 @@
         id: 30
         abbreviation: "MIN"
         name: "MIN"
-- gamePk: 52
-  link: "52"
+- gamePk: 8
+  link: "8"
   teams:
     away:
       team:
-        id: 52
-        abbreviation: "WPG"
-        name: "WPG"
+        id: 8
+        abbreviation: "MTL"
+        name: "MTL"
     home:
       team:
-        id: 52
-        abbreviation: "WPG"
-        name: "WPG"
-- gamePk: 53
-  link: "53"
+        id: 8
+        abbreviation: "MTL"
+        name: "MTL"
+- gamePk: 1
+  link: "1"
   teams:
     away:
       team:
-        id: 53
-        abbreviation: "ARI"
-        name: "ARI"
+        id: 1
+        abbreviation: "NJD"
+        name: "NJD"
     home:
       team:
-        id: 53
-        abbreviation: "ARI"
-        name: "ARI"
+        id: 1
+        abbreviation: "NJD"
+        name: "NJD"
+- gamePk: 18
+  link: "18"
+  teams:
+    away:
+      team:
+        id: 18
+        abbreviation: "NSH"
+        name: "NSH"
+    home:
+      team:
+        id: 18
+        abbreviation: "NSH"
+        name: "NSH"
+- gamePk: 2
+  link: "2"
+  teams:
+    away:
+      team:
+        id: 2
+        abbreviation: "NYI"
+        name: "NYI"
+    home:
+      team:
+        id: 2
+        abbreviation: "NYI"
+        name: "NYI"
+- gamePk: 3
+  link: "3"
+  teams:
+    away:
+      team:
+        id: 3
+        abbreviation: "NYR"
+        name: "NYR"
+    home:
+      team:
+        id: 3
+        abbreviation: "NYR"
+        name: "NYR"
+- gamePk: 9
+  link: "9"
+  teams:
+    away:
+      team:
+        id: 9
+        abbreviation: "OTT"
+        name: "OTT"
+    home:
+      team:
+        id: 9
+        abbreviation: "OTT"
+        name: "OTT"
+- gamePk: 4
+  link: "4"
+  teams:
+    away:
+      team:
+        id: 4
+        abbreviation: "PHI"
+        name: "PHI"
+    home:
+      team:
+        id: 4
+        abbreviation: "PHI"
+        name: "PHI"
+- gamePk: 5
+  link: "5"
+  teams:
+    away:
+      team:
+        id: 5
+        abbreviation: "PIT"
+        name: "PIT"
+    home:
+      team:
+        id: 5
+        abbreviation: "PIT"
+        name: "PIT"
+- gamePk: 28
+  link: "28"
+  teams:
+    away:
+      team:
+        id: 28
+        abbreviation: "SJS"
+        name: "SJS"
+    home:
+      team:
+        id: 28
+        abbreviation: "SJS"
+        name: "SJS"
+- gamePk: 19
+  link: "19"
+  teams:
+    away:
+      team:
+        id: 19
+        abbreviation: "STL"
+        name: "STL"
+    home:
+      team:
+        id: 19
+        abbreviation: "STL"
+        name: "STL"
+- gamePk: 14
+  link: "14"
+  teams:
+    away:
+      team:
+        id: 14
+        abbreviation: "TBL"
+        name: "TBL"
+    home:
+      team:
+        id: 14
+        abbreviation: "TBL"
+        name: "TBL"
+- gamePk: 10
+  link: "10"
+  teams:
+    away:
+      team:
+        id: 10
+        abbreviation: "TOR"
+        name: "TOR"
+    home:
+      team:
+        id: 10
+        abbreviation: "TOR"
+        name: "TOR"
+- gamePk: 23
+  link: "23"
+  teams:
+    away:
+      team:
+        id: 23
+        abbreviation: "VAN"
+        name: "VAN"
+    home:
+      team:
+        id: 23
+        abbreviation: "VAN"
+        name: "VAN"
 - gamePk: 54
   link: "54"
   teams:
@@ -402,3 +376,29 @@
         id: 54
         abbreviation: "VGK"
         name: "VGK"
+- gamePk: 52
+  link: "52"
+  teams:
+    away:
+      team:
+        id: 52
+        abbreviation: "WPG"
+        name: "WPG"
+    home:
+      team:
+        id: 52
+        abbreviation: "WPG"
+        name: "WPG"
+- gamePk: 15
+  link: "15"
+  teams:
+    away:
+      team:
+        id: 15
+        abbreviation: "WSH"
+        name: "WSH"
+    home:
+      team:
+        id: 15
+        abbreviation: "WSH"
+        name: "WSH"
