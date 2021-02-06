@@ -16,18 +16,21 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
+// SysBoard implements board.Board. Provides System info
 type SysBoard struct {
 	config     *Config
 	log        *zap.Logger
 	textWriter *rgbrender.TextWriter
 }
 
+// Config ...
 type Config struct {
 	boardDelay time.Duration
 	Enabled    bool   `json:"enabled"`
 	BoardDelay string `json:"boardDelay"`
 }
 
+// SetDefaults ...
 func (c *Config) SetDefaults() {
 	if c.BoardDelay != "" {
 		var err error
@@ -40,6 +43,7 @@ func (c *Config) SetDefaults() {
 	}
 }
 
+// New ...
 func New(logger *zap.Logger, config *Config) (*SysBoard, error) {
 	writer, err := rgbrender.DefaultTextWriter()
 	if err != nil {
@@ -53,9 +57,12 @@ func New(logger *zap.Logger, config *Config) (*SysBoard, error) {
 	}, nil
 }
 
+// Name ...
 func (s *SysBoard) Name() string {
 	return "SysBoard"
 }
+
+// Render ...
 func (s *SysBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	if !s.config.Enabled {
 		return nil
@@ -89,7 +96,7 @@ func (s *SysBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 		zap.Int64("cpu pct", cpuPct),
 	)
 
-	s.textWriter.WriteCentered(
+	if err := s.textWriter.WriteCentered(
 		canvas,
 		canvas.Bounds(),
 		[]string{
@@ -97,7 +104,9 @@ func (s *SysBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 			fmt.Sprintf("CPU: %d%%", cpuPct),
 		},
 		color.White,
-	)
+	); err != nil {
+		return err
+	}
 
 	if err := canvas.Render(); err != nil {
 		return err
@@ -110,9 +119,13 @@ func (s *SysBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 
 	return nil
 }
+
+// Enabled ...
 func (s *SysBoard) Enabled() bool {
 	return s.config.Enabled
 }
+
+// GetHTTPHandlers ...
 func (s *SysBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 	disable := &board.HTTPHandler{
 		Path: "/sys/disable",

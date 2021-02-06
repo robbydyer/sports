@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/robbydyer/sports/pkg/board"
 	"go.uber.org/zap"
+
+	"github.com/robbydyer/sports/pkg/board"
 )
 
 // GetHTTPHandlers ...

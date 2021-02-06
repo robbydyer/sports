@@ -7,8 +7,9 @@ import (
 	"image/draw"
 	"time"
 
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"go.uber.org/zap"
+
+	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
 func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liveGame Game) error {

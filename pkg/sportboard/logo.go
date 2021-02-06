@@ -6,9 +6,10 @@ import (
 	"image"
 	"image/draw"
 
+	"go.uber.org/zap"
+
 	"github.com/robbydyer/sports/pkg/logo"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
-	"go.uber.org/zap"
 )
 
 func (s *SportBoard) logoConfig(logoKey string) (*logo.Config, error) {

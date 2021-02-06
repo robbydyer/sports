@@ -48,6 +48,7 @@ func New(key string, sourceLogo image.Image, targetDirectory string, matrixBound
 	}
 }
 
+// SetLogger ...
 func (l *Logo) SetLogger(logger *zap.Logger) {
 	l.log = logger
 }

@@ -4,9 +4,10 @@ import (
 	"image"
 	"image/color"
 
+	"go.uber.org/zap"
+
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
-	"go.uber.org/zap"
 )
 
 // RenderGameCounter ...
