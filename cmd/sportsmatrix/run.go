@@ -18,6 +18,7 @@ import (
 	"github.com/robbydyer/sports/pkg/nhl"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
+	"github.com/robbydyer/sports/pkg/sysboard"
 )
 
 type runCmd struct {
@@ -98,6 +99,14 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 
 	if s.rArgs.config.ClockConfig != nil {
 		b, err := clock.New(s.rArgs.config.ClockConfig, logger)
+		if err != nil {
+			return err
+		}
+		boards = append(boards, b)
+	}
+
+	if s.rArgs.config.SysConfig != nil {
+		b, err := sysboard.New(logger, s.rArgs.config.SysConfig)
 		if err != nil {
 			return err
 		}

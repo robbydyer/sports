@@ -4,6 +4,7 @@ import Home from './Home.js';
 import Sport from './Sport.js';
 import ImageBoard from './ImageBoard.js';
 import Clock from './Clock.js';
+import Sys from './Sys.js';
 import TopNav from './Nav.js';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
@@ -34,6 +35,7 @@ class App extends React.Component {
           <Route path="/mlb" render={() => <Sport sport="mlb" />} />
           <Route path="/img" exact component={ImageBoard} />
           <Route path="/clock" exact component={Clock} />
+          <Route path="/sys" exact component={Sys} />
         </Router>
       </>
     );

@@ -44,6 +44,10 @@ github.com/jezek/xgb/shm
 github.com/jezek/xgb/xproto
 # github.com/kr/text v0.1.0
 github.com/kr/text
+# github.com/mackerelio/go-osstat v0.1.0
+## explicit
+github.com/mackerelio/go-osstat/cpu
+github.com/mackerelio/go-osstat/memory
 # github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
 # github.com/mitchellh/mapstructure v1.1.2

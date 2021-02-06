@@ -81,10 +81,6 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 	}
 
 	update := make(chan struct{})
-	timeDone := make(chan struct{})
-	clockDone := make(chan struct{})
-	defer func() { timeDone <- struct{}{} }()
-	defer func() { clockDone <- struct{}{} }()
 
 	var h int
 	var m int
@@ -94,8 +90,6 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 		for {
 			select {
 			case <-ctx.Done():
-				return
-			case <-timeDone:
 				return
 			default:
 			}
@@ -112,7 +106,13 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 				h = 12
 			}
 			if h != prevH || m != prevM {
-				update <- struct{}{}
+				select {
+				case update <- struct{}{}:
+				case <-ctx.Done():
+					return
+				default:
+					continue
+				}
 			}
 			time.Sleep(1 * time.Second)
 		}
@@ -122,8 +122,6 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 		for {
 			select {
 			case <-ctx.Done():
-				return
-			case <-clockDone:
 				return
 			case <-update:
 			}

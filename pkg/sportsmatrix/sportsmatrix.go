@@ -210,15 +210,6 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 	s.boardCtx, s.boardCancel = context.WithCancel(ctx)
 	defer s.boardCancel()
 
-	/*
-		go func() {
-			select {
-			case <-ctx.Done():
-				s.boardCancel()
-			}
-		}()
-	*/
-
 	go s.screenWatcher(ctx)
 
 	if len(s.boards) < 1 {

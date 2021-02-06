@@ -15,6 +15,7 @@ import (
 	"github.com/robbydyer/sports/pkg/imageboard"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
+	"github.com/robbydyer/sports/pkg/sysboard"
 )
 
 type rootArgs struct {
@@ -129,4 +130,11 @@ func (r *rootArgs) setConfigDefaults() {
 		}
 	}
 	r.config.MLBConfig.SetDefaults()
+
+	if r.config.SysConfig == nil {
+		r.config.SysConfig = &sysboard.Config{
+			Enabled: false,
+		}
+	}
+	r.config.SysConfig.SetDefaults()
 }

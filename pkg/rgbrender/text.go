@@ -113,7 +113,6 @@ func (t *TextWriter) Write(canvas *rgb.Canvas, bounds image.Rectangle, str []str
 
 // WriteCentered writes text in the center of the canvas, horizontally and vertically
 func (t *TextWriter) WriteCentered(canvas *rgb.Canvas, bounds image.Rectangle, str []string, clr color.Color) error {
-	startX := bounds.Min.X + t.XStartCorrection
 	drawer := &font.Drawer{
 		Dst: canvas,
 		Src: image.NewUniform(clr),
@@ -125,22 +124,31 @@ func (t *TextWriter) WriteCentered(canvas *rgb.Canvas, bounds image.Rectangle, s
 		),
 	}
 
+	var maxXWidth fixed.Int26_6
+	for _, s := range str {
+		if width := drawer.MeasureString(s); width > fixed.Int26_6(maxXWidth) {
+			maxXWidth = width
+		}
+	}
+
+	yHeight := len(str) * int(math.Floor(t.FontSize+t.LineSpace))
+
+	writeBox, err := AlignPosition(CenterCenter, bounds, maxXWidth.Floor(), yHeight)
+	if err != nil {
+		return err
+	}
+
 	// lineY represents how much space to add for the newline
 	lineY := int(math.Floor(t.FontSize + t.LineSpace))
 
-	y := int(math.Floor(t.FontSize)) + bounds.Min.Y + t.YStartCorrection
+	startX := writeBox.Min.X + t.XStartCorrection
+	y := int(math.Floor(t.FontSize)) + writeBox.Min.Y + t.YStartCorrection
 	drawer.Dot = fixed.P(startX, y)
 
 	for _, s := range str {
-		width := drawer.MeasureString(s).Ceil()
-		align, err := AlignPosition(CenterCenter, bounds, width, lineY)
-		if err != nil {
-			return err
-		}
-		drawer.Dot = fixed.P(align.Min.X, align.Max.Y)
 		drawer.DrawString(s)
 		y += lineY + t.YStartCorrection
-		drawer.Dot = fixed.P(align.Min.X, y)
+		drawer.Dot = fixed.P(startX, y)
 	}
 
 	return nil
