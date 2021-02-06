@@ -5,6 +5,7 @@ import (
 	"github.com/robbydyer/sports/pkg/imageboard"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
+	"github.com/robbydyer/sports/pkg/sysboard"
 )
 
 // Config holds configuration for the RGB matrix and all of its supported Boards
@@ -14,5 +15,6 @@ type Config struct {
 	MLBConfig          *sportboard.Config   `json:"mlbConfig,omitempty"`
 	ImageConfig        *imageboard.Config   `json:"imageConfig"`
 	ClockConfig        *clock.Config        `json:"clockConfig"`
+	SysConfig          *sysboard.Config     `json:"sysConfig"`
 	SportsMatrixConfig *sportsmatrix.Config `json:"sportsMatrixConfig,omitempty"`
 }
