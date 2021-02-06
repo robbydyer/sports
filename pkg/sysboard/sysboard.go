@@ -9,7 +9,7 @@ import (
 
 	"github.com/mackerelio/go-osstat/cpu"
 	"github.com/mackerelio/go-osstat/memory"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
@@ -18,7 +18,7 @@ import (
 
 type SysBoard struct {
 	config     *Config
-	log        *log.Logger
+	log        *zap.Logger
 	textWriter *rgbrender.TextWriter
 }
 
@@ -40,7 +40,7 @@ func (c *Config) SetDefaults() {
 	}
 }
 
-func New(logger *log.Logger, config *Config) (*SysBoard, error) {
+func New(logger *zap.Logger, config *Config) (*SysBoard, error) {
 	writer, err := rgbrender.DefaultTextWriter()
 	if err != nil {
 		return nil, err
@@ -82,7 +82,12 @@ func (s *SysBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 
 	cpuPct := int64(float64(after.User-before.User) / float64(after.Total-before.Total) * 100)
 
-	s.log.Debugf("Mem: %d/%d -> %d%%, CPU: %d%%", mem.Used, mem.Total, memPct, cpuPct)
+	s.log.Debug("sys info",
+		zap.Int("mem used", int(mem.Used)),
+		zap.Int("mem total", int(mem.Total)),
+		zap.Int64("mem Pct", memPct),
+		zap.Int64("cpu pct", cpuPct),
+	)
 
 	s.textWriter.WriteCentered(
 		canvas,

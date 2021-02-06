@@ -5,7 +5,7 @@ import (
 	"image"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/sportboard"
@@ -27,12 +27,12 @@ type MLB struct {
 	games           map[string][]*Game
 	logos           map[string]*logo.Logo
 	logoSourceCache map[string]image.Image
-	log             *log.Logger
+	log             *zap.Logger
 	defaultLogoConf *[]*logo.Config
 }
 
 // New ...
-func New(ctx context.Context, logger *log.Logger) (*MLB, error) {
+func New(ctx context.Context, logger *zap.Logger) (*MLB, error) {
 	m := &MLB{
 		games:           make(map[string][]*Game),
 		logos:           make(map[string]*logo.Logo),

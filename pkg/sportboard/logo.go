@@ -8,6 +8,7 @@ import (
 
 	"github.com/robbydyer/sports/pkg/logo"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
+	"go.uber.org/zap"
 )
 
 func (s *SportBoard) logoConfig(logoKey string) (*logo.Config, error) {
@@ -17,7 +18,7 @@ func (s *SportBoard) logoConfig(logoKey string) (*logo.Config, error) {
 		}
 	}
 
-	s.log.Warnf("no logo config defined in config file for %s. Defaults will be used", logoKey)
+	s.log.Warn("no logo config defined, defaults will be used", zap.String("logo key", logoKey))
 	return nil, fmt.Errorf("no logo config for %s", logoKey)
 }
 
@@ -32,7 +33,7 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas *rgb.Canvas, abb
 
 	i, ok := s.logoDrawCache[logoKey]
 	if ok {
-		s.log.Debugf("drawing %s logo with drawCache", logoKey)
+		s.log.Debug("drawing logo with drawCache", zap.String("logo key", logoKey))
 		draw.Draw(canvas, canvas.Bounds(), i, image.Point{}, draw.Over)
 		return nil
 	}
@@ -42,7 +43,11 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas *rgb.Canvas, abb
 		var err error
 		logoConf, _ := s.logoConfig(logoKey)
 
-		s.log.Debugf("fetching logo for %s %dx%d", abbreviation, s.matrixBounds.Dx(), s.matrixBounds.Dy())
+		s.log.Debug("fetching logo",
+			zap.String("abbreviation", abbreviation),
+			zap.Int("X", s.matrixBounds.Dx()),
+			zap.Int("Y", s.matrixBounds.Dy()),
+		)
 		l, err = s.api.GetLogo(ctx, logoKey, logoConf, s.matrixBounds)
 		if err != nil {
 			return err
@@ -50,7 +55,7 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas *rgb.Canvas, abb
 
 		s.logos[logoKey] = l
 	} else {
-		s.log.Debugf("using logo cache for %s", logoKey)
+		s.log.Debug("using logo cache", zap.String("logo key", logoKey))
 	}
 
 	textWdith := s.textAreaWidth()
@@ -78,7 +83,7 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvas *rgb.Canvas, abb
 
 	i, ok := s.logoDrawCache[logoKey]
 	if ok {
-		s.log.Debugf("drawing %s logo with drawCache", logoKey)
+		s.log.Debug("drawing logo with drawCache", zap.String("logo key", logoKey))
 		draw.Draw(canvas, canvas.Bounds(), i, image.Point{}, draw.Over)
 		return nil
 	}
@@ -88,7 +93,11 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvas *rgb.Canvas, abb
 		var err error
 		logoConf, _ := s.logoConfig(logoKey)
 
-		s.log.Debugf("fetching logo for %s %dx%d", abbreviation, s.matrixBounds.Dx(), s.matrixBounds.Dy())
+		s.log.Debug("fetching logo",
+			zap.String("abbreviation", abbreviation),
+			zap.Int("X", s.matrixBounds.Dx()),
+			zap.Int("Y", s.matrixBounds.Dy()),
+		)
 		l, err = s.api.GetLogo(ctx, logoKey, logoConf, s.matrixBounds)
 		if err != nil {
 			return err

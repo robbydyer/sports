@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/robbydyer/sports/pkg/board"
+	"go.uber.org/zap"
 )
 
 // GetHTTPHandlers ...
@@ -40,14 +41,14 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 	disable := &board.HTTPHandler{
 		Path: fmt.Sprintf("/%s/disable", s.api.HTTPPathPrefix()),
 		Handler: func(wrter http.ResponseWriter, req *http.Request) {
-			s.log.Infof("disabling board %s", s.Name())
+			s.log.Info("disabling board", zap.String("board", s.Name()))
 			s.config.Enabled = false
 		},
 	}
 	enable := &board.HTTPHandler{
 		Path: fmt.Sprintf("/%s/enable", s.api.HTTPPathPrefix()),
 		Handler: func(wrter http.ResponseWriter, req *http.Request) {
-			s.log.Infof("enabling board %s", s.Name())
+			s.log.Info("enabling board", zap.String("board", s.Name()))
 			s.config.Enabled = true
 		},
 	}

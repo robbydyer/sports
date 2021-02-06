@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/robfig/cron/v3"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/sportboard"
@@ -31,12 +31,12 @@ type NHL struct {
 	games           map[string][]*Game
 	logos           map[string]*logo.Logo
 	logoSourceCache map[string]image.Image
-	log             *log.Logger
+	log             *zap.Logger
 	defaultLogoConf *[]*logo.Config
 }
 
 // New ...
-func New(ctx context.Context, logger *log.Logger) (*NHL, error) {
+func New(ctx context.Context, logger *zap.Logger) (*NHL, error) {
 	n := &NHL{
 		games:           make(map[string][]*Game),
 		logos:           make(map[string]*logo.Logo),
@@ -67,7 +67,7 @@ func (n *NHL) cacheClear() {
 		delete(n.games, k)
 	}
 	if err := n.UpdateGames(context.Background(), util.Today().Format(DateFormat)); err != nil {
-		n.log.Errorf("failed to get today's games: %s", err.Error())
+		n.log.Error("failed to get today's games", zap.Error(err))
 	}
 }
 

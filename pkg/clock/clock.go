@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/golang/freetype/truetype"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
@@ -20,7 +20,7 @@ type Clock struct {
 	config     *Config
 	font       *truetype.Font
 	textWriter *rgbrender.TextWriter
-	log        *log.Logger
+	log        *zap.Logger
 }
 
 type Config struct {
@@ -41,7 +41,7 @@ func (c *Config) SetDefaults() {
 	}
 }
 
-func New(config *Config, logger *log.Logger) (*Clock, error) {
+func New(config *Config, logger *zap.Logger) (*Clock, error) {
 	if config == nil {
 		config = &Config{
 			Enabled: true,

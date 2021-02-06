@@ -8,6 +8,7 @@ import (
 	"time"
 
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
+	"go.uber.org/zap"
 )
 
 func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liveGame Game) error {
@@ -112,7 +113,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 		go func() {
 			updatedGame, err = liveGame.GetUpdate(ctx)
 			if err != nil {
-				s.log.Errorf("failed to update game for board refresh: %s", err.Error())
+				s.log.Error("failed to update game for board refresh", zap.Error(err))
 				return
 			}
 			liveGame = updatedGame
@@ -129,7 +130,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 			return err
 		}
 		if over {
-			s.log.Infof("live game %d is over", liveGame.GetID())
+			s.log.Info("live game is over", zap.Int("game ID", liveGame.GetID()))
 			return nil
 		}
 	}

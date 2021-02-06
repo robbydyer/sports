@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
 
 func (s *SportsMatrix) startHTTP() chan error {
@@ -23,7 +24,7 @@ func (s *SportsMatrix) startHTTP() chan error {
 			return errChan
 		}
 		for _, h := range handlers {
-			s.log.Infof("registering http handler for board %s %s", b.Name(), h.Path)
+			s.log.Info("registering http handler", zap.String("board", b.Name()), zap.String("path", h.Path))
 			router.HandleFunc(h.Path, h.Handler)
 		}
 	}
