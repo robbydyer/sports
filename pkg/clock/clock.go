@@ -81,6 +81,8 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 	}
 
 	update := make(chan struct{})
+	clockCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	var h int
 	var m int
@@ -90,6 +92,8 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 		for {
 			select {
 			case <-ctx.Done():
+				return
+			case <-clockCtx.Done():
 				return
 			default:
 			}
@@ -122,6 +126,8 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 		for {
 			select {
 			case <-ctx.Done():
+				return
+			case <-clockCtx.Done():
 				return
 			case <-update:
 			}
