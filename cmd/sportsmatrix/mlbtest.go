@@ -7,8 +7,8 @@ import (
 	"os"
 	"os/signal"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/mlb"
@@ -52,8 +52,10 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 
 	bounds := image.Rect(0, 0, c.rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, c.rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
 
-	logger := log.New()
-	logger.Level = c.rArgs.logLevel
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		return err
+	}
 
 	api, err := mlb.NewMock(logger)
 	if err != nil {

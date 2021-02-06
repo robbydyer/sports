@@ -8,7 +8,7 @@ import (
 	"time"
 
 	yaml "github.com/ghodss/yaml"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/sportboard"
@@ -21,7 +21,7 @@ type MockNHLAPI struct {
 	games           map[string][]*Game
 	logos           map[string]*logo.Logo
 	logoSourceCache map[string]image.Image
-	log             *log.Logger
+	log             *zap.Logger
 	defaultLogoConf *[]*logo.Config
 }
 
@@ -171,7 +171,7 @@ func MockLiveGameGetter(ctx context.Context, link string) (sportboard.Game, erro
 }
 
 // NewMock ...
-func NewMock(logger *log.Logger) (*MockNHLAPI, error) {
+func NewMock(logger *zap.Logger) (*MockNHLAPI, error) {
 	// Load Teams
 	dat, err := assets.ReadFile("assets/mock_teams.yaml")
 	if err != nil {

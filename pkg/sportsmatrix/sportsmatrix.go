@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/robfig/cron/v3"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
@@ -23,7 +23,7 @@ type SportsMatrix struct {
 	screenIsOn    bool
 	screenOff     chan struct{}
 	screenOn      chan struct{}
-	log           *log.Logger
+	log           *zap.Logger
 	boardCtx      context.Context
 	boardCancel   context.CancelFunc
 	server        http.Server
@@ -78,7 +78,7 @@ func (c *Config) Defaults() {
 }
 
 // New ...
-func New(ctx context.Context, logger *log.Logger, cfg *Config, boards ...board.Board) (*SportsMatrix, error) {
+func New(ctx context.Context, logger *zap.Logger, cfg *Config, boards ...board.Board) (*SportsMatrix, error) {
 	cfg.Defaults()
 
 	s := &SportsMatrix{
@@ -93,15 +93,15 @@ func New(ctx context.Context, logger *log.Logger, cfg *Config, boards ...board.B
 
 	var err error
 
-	s.log.Infof("Initializing matrix %dx%d\nBrightness:%d\nMapping:%s\n",
-		s.cfg.HardwareConfig.Cols,
-		s.cfg.HardwareConfig.Rows,
-		s.cfg.HardwareConfig.Brightness,
-		s.cfg.HardwareConfig.HardwareMapping,
+	s.log.Info("initializing matrix",
+		zap.Int("Cols", s.cfg.HardwareConfig.Cols),
+		zap.Int("Rows", s.cfg.HardwareConfig.Rows),
+		zap.Int("Brightness", s.cfg.HardwareConfig.Brightness),
+		zap.String("Mapping", s.cfg.HardwareConfig.HardwareMapping),
 	)
 
 	for _, b := range s.boards {
-		s.log.Infof("Registering board: %s", b.Name())
+		s.log.Info("Registering board", zap.String("board", b.Name()))
 	}
 
 	rt := &rgb.DefaultRuntimeOptions
@@ -113,7 +113,7 @@ func New(ctx context.Context, logger *log.Logger, cfg *Config, boards ...board.B
 	c := cron.New()
 
 	for _, off := range s.cfg.ScreenOffTimes {
-		s.log.Infof("Screen will be scheduled to turn off at '%s'", off)
+		s.log.Info("Screen will be scheduled to turn off", zap.String("turn off", off))
 		_, err := c.AddFunc(off, func() {
 			s.log.Warn("Turning screen off!")
 			s.Lock()
@@ -125,7 +125,7 @@ func New(ctx context.Context, logger *log.Logger, cfg *Config, boards ...board.B
 		}
 	}
 	for _, on := range s.cfg.ScreenOnTimes {
-		s.log.Infof("Screen will be scheduled to turn on at '%s'", on)
+		s.log.Info("Screen will be scheduled to turn on", zap.String("turn on", on))
 		_, err := c.AddFunc(on, func() {
 			s.log.Warn("Turning screen on!")
 			s.Lock()
@@ -156,7 +156,7 @@ func New(ctx context.Context, logger *log.Logger, cfg *Config, boards ...board.B
 		for {
 			select {
 			case err := <-errChan:
-				s.log.Error(err)
+				s.log.Error("http server failed", zap.Error(err))
 			case <-s.close:
 				return
 			}
@@ -229,7 +229,7 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 		if s.allDisabled() {
 			clearer.Do(func() {
 				if err := rgb.NewCanvas(s.matrix).Clear(); err != nil {
-					s.log.Errorf("failed to clear matrix when all boards were disabled: %s", err.Error())
+					s.log.Error("failed to clear matrix when all board were disabled", zap.Error(err))
 				}
 			})
 
@@ -260,10 +260,10 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 		default:
 		}
 
-		s.log.Debugf("Processing board %s", b.Name())
+		s.log.Debug("Processing board", zap.String("board", b.Name()))
 
 		if !b.Enabled() {
-			s.log.Warnf("skipping board %s: it is disabled", b.Name())
+			s.log.Warn("skipping disabled board", zap.String("board", b.Name()))
 			continue
 		}
 
@@ -273,7 +273,7 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 				return
 			case <-renderDone:
 			case <-time.After(5 * time.Minute):
-				s.log.Errorf("Board '%s' rendered longer than normal", b.Name())
+				s.log.Error("board rendered longer than normal", zap.String("board", b.Name()))
 			}
 		}()
 

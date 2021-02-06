@@ -6,9 +6,9 @@ import (
 	"os"
 
 	yaml "github.com/ghodss/yaml"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/robbydyer/sports/internal/config"
 	"github.com/robbydyer/sports/pkg/clock"
@@ -20,7 +20,7 @@ import (
 
 type rootArgs struct {
 	level      string
-	logLevel   log.Level
+	logLevel   zapcore.Level
 	configFile string
 	config     *config.Config
 }
@@ -56,10 +56,16 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 				args.config = &config.Config{}
 			}
 
-			var err error
-			args.logLevel, err = log.ParseLevel(viper.GetString("log-level"))
-			if err != nil {
-				return fmt.Errorf("failed to parse log level: %w", err)
+			lvl := viper.GetString("log-level")
+
+			if lvl == "" {
+				args.logLevel = zapcore.InfoLevel
+			} else {
+				var l zapcore.Level
+				if err := l.Set(lvl); err != nil {
+					return err
+				}
+				args.logLevel = l
 			}
 
 			return nil

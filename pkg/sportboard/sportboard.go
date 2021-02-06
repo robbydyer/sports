@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/robfig/cron/v3"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/logo"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
@@ -25,7 +25,7 @@ type SportBoard struct {
 	api             API
 	cachedLiveGames map[int]Game
 	logos           map[string]*logo.Logo
-	log             *log.Logger
+	log             *zap.Logger
 	matrixBounds    image.Rectangle
 	logoDrawCache   map[string]image.Image
 	scoreWriter     *rgbrender.TextWriter
@@ -122,7 +122,7 @@ func (c *Config) SetDefaults() {
 }
 
 // New ...
-func New(ctx context.Context, api API, bounds image.Rectangle, logger *log.Logger, config *Config) (*SportBoard, error) {
+func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logger, config *Config) (*SportBoard, error) {
 	s := &SportBoard{
 		config:          config,
 		api:             api,
@@ -187,7 +187,7 @@ func (s *SportBoard) Enabled() bool {
 // Render ...
 func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	if !s.config.Enabled {
-		s.log.Warnf("%s board is not enabled, skipping", s.api.League())
+		s.log.Warn("skipping disabled board", zap.String("board", s.api.League()))
 		return nil
 	}
 	canvas := rgb.NewCanvas(matrix)
@@ -197,21 +197,28 @@ func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 		return err
 	}
 
-	s.log.Debugf("There are %d scheduled %s games today (%s)", len(games), s.api.League(), util.Today())
+	s.log.Debug("scheduled games today",
+		zap.Int("num games", len(games)),
+		zap.String("today", util.Today().String()),
+		zap.String("league", s.api.League()),
+	)
 
 	if len(games) == 0 {
-		log.Debugf("No scheduled games for %s, not rendering", s.api.League())
+		s.log.Debug("no scheduled games, not rendering", zap.String("league", s.api.League()))
 		return nil
 	}
 
 	gameOver := false
 	cached, hasCached := s.cachedLiveGames[games[0].GetID()]
 	if !hasCached {
-		s.log.Debugf("no cached game data for %d", games[0].GetID())
+		s.log.Debug("no cached game data", zap.Int("game ID", games[0].GetID()))
 	} else {
 		gameOver, err = cached.IsComplete()
 		if err != nil {
-			s.log.Warnf("Failed to determine if game %d is over: %s", games[0].GetID(), err.Error())
+			s.log.Warn("failed to determine if game is over", zap.Int("game ID",
+				games[0].GetID()),
+				zap.Error(err),
+			)
 			gameOver = false
 		}
 	}
@@ -223,13 +230,13 @@ func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	}
 
 	if gameOver && hasCached && cached != nil {
-		s.log.Debugf("Game %d is over, using cached data", games[0].GetID())
+		s.log.Debug("game is over, using cached data", zap.Int("game ID", games[0].GetID()))
 	} else {
 		// preload the first live game
-		s.log.Debugf("fetching live data for game %d", games[0].GetID())
+		s.log.Debug("fetching live game data", zap.Int("game ID", games[0].GetID()))
 		s.cachedLiveGames[games[0].GetID()], err = games[0].GetUpdate(ctx)
 		if err != nil {
-			s.log.Errorf("failed to get live game update: %s", err.Error())
+			s.log.Error("failed to get live game update", zap.Error(err), zap.Int("game ID", games[0].GetID()))
 		}
 	}
 
@@ -254,19 +261,19 @@ OUTER:
 		}
 
 		if !s.config.Enabled {
-			s.log.Warnf("%s board is not enabled, skipping", s.api.League())
+			s.log.Warn("skipping disabled board", zap.String("board", s.api.League()))
 			return nil
 		}
 
 		nextGameIndex := gameIndex + 1
-		s.log.Debugf("Current game index is %d, current ID is %d", gameIndex, game.GetID())
+		s.log.Debug("current game", zap.Int("index", gameIndex), zap.Int("game ID", game.GetID()))
 		// preload data for the next game
 		if nextGameIndex < len(games) {
 			nextID := games[nextGameIndex].GetID()
 			preloader[nextID] = make(chan struct{}, 1)
 			go func() {
 				if err := s.preloadLiveGame(ctx, games[nextGameIndex], preloader[nextID]); err != nil {
-					s.log.Errorf("error while preloading next game: %s", err.Error())
+					s.log.Error("error while preloading next game", zap.Error(err))
 				}
 			}()
 		}
@@ -279,18 +286,21 @@ OUTER:
 		case <-gameCtx.Done():
 			return context.Canceled
 		case <-preloader[game.GetID()]:
-			s.log.Debugf("preloader for %d marked ready", game.GetID())
+			s.log.Debug("preloader marked readt", zap.Int("game ID", game.GetID()))
 		case <-time.After(preloaderTimeout):
-			s.log.Warnf("timed out waiting %fs for preloader for %d", preloaderTimeout.Seconds(), game.GetID())
+			s.log.Warn("timed out waiting for preload",
+				zap.Duration("timeout", preloaderTimeout),
+				zap.Int("game ID", game.GetID()),
+			)
 		}
 
 		liveGame, ok := s.cachedLiveGames[game.GetID()]
 		if !ok {
-			s.log.Warnf("live game data for ID %d was not ready in time: UNDEFINED", game.GetID())
+			s.log.Warn("live game data no ready in time, UNDEFINED", zap.Int("game ID", game.GetID()))
 			continue OUTER
 		}
 		if liveGame == nil {
-			s.log.Warnf("live game data for ID %d was not ready in time: NIL", game.GetID())
+			s.log.Warn("live game data no ready in time, NIL", zap.Int("game ID", game.GetID()))
 			continue OUTER
 		}
 
@@ -325,11 +335,11 @@ OUTER:
 
 			isLive, err := liveGame.IsLive()
 			if err != nil {
-				s.log.Errorf("failed to determine if game is live: %s", err.Error())
+				s.log.Error("failed to determine if game is live", zap.Error(err))
 			}
 			isOver, err := liveGame.IsComplete()
 			if err != nil {
-				s.log.Errorf("failed to determine if game is complete: %s", err.Error())
+				s.log.Error("failed to determine if game is complete", zap.Error(err))
 			}
 
 			_, err = s.RenderGameCounter(canvas, len(games), gameIndex, 1)
@@ -339,17 +349,17 @@ OUTER:
 
 			if isLive {
 				if err := s.renderLiveGame(gameCtx, canvas, liveGame); err != nil {
-					s.log.Errorf("failed to render live game: %s", err.Error())
+					s.log.Error("failed to render live game", zap.Error(err))
 					continue INNER
 				}
 			} else if isOver {
 				if err := s.renderCompleteGame(gameCtx, canvas, liveGame); err != nil {
-					s.log.Errorf("failed to render complete game: %s", err.Error())
+					s.log.Error("failed to render complete game", zap.Error(err))
 					continue INNER
 				}
 			} else {
 				if err := s.renderUpcomingGame(gameCtx, canvas, liveGame); err != nil {
-					s.log.Errorf("failed to render upcoming game: %s", err.Error())
+					s.log.Error("failed to render upcomingh game", zap.Error(err))
 					continue INNER
 				}
 			}
@@ -394,12 +404,12 @@ func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload cha
 	}
 
 	if gameOver && hasCached && cached != nil {
-		s.log.Debugf("Game %d is complete, not fetching any more data", game.GetID())
+		s.log.Debug("game is complete, not fetching any more data", zap.Int("game ID", game.GetID()))
 
 		return nil
 	}
 
-	s.log.Debugf("preloading live game data for game ID %d", game.GetID())
+	s.log.Debug("preloading live game data", zap.Int("game ID", game.GetID()))
 	tries := 0
 	for {
 		select {
@@ -415,10 +425,10 @@ func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload cha
 
 		g, err := game.GetUpdate(ctx)
 		if err != nil {
-			s.log.Errorf("api call to get live game failed on attempt %d: %s", tries, err.Error())
+			s.log.Error("api call to get live game failed", zap.Int("attempt", tries), zap.Error(err))
 		} else {
 			s.cachedLiveGames[game.GetID()] = g
-			s.log.Debugf("successfully set preloader data for game ID %d", game.GetID())
+			s.log.Debug("successfully set preloeader data", zap.Int("game ID", game.GetID()))
 			return nil
 		}
 

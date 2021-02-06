@@ -7,9 +7,9 @@ import (
 	"os"
 	"os/signal"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/clock"
@@ -53,9 +53,12 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		cancel()
 	}()
 
-	logger := log.New()
-	logger.Level = s.rArgs.logLevel
-	logger.Out = os.Stdout
+	logger, err := zap.NewProduction(
+		zap.IncreaseLevel(s.rArgs.logLevel),
+	)
+	if err != nil {
+		return err
+	}
 
 	bounds := image.Rect(0, 0, s.rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, s.rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
 

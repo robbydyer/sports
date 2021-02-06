@@ -4,6 +4,8 @@ import (
 	"image"
 	"image/color"
 
+	"go.uber.org/zap"
+
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
@@ -19,13 +21,13 @@ func (s *SportBoard) RenderGameCounter(canvas *rgb.Canvas, numGames int, activeI
 
 	realActive := activeIndex + (activeIndex * spacing)
 
-	s.log.Debugf("Rendering counter: ActiveIndex: %d -> %d. From %d, %d to %d, %d",
-		activeIndex,
-		realActive,
-		aligned.Min.X,
-		aligned.Min.Y,
-		aligned.Max.X,
-		aligned.Max.Y,
+	s.log.Debug("Rendering counter",
+		zap.Int("active index", activeIndex),
+		zap.Int("real active", realActive),
+		zap.Int("start x", aligned.Min.X),
+		zap.Int("start y", aligned.Min.Y),
+		zap.Int("end x", aligned.Max.X),
+		zap.Int("end y", aligned.Max.Y),
 	)
 
 	img := image.NewRGBA(canvas.Bounds())

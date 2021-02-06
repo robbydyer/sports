@@ -7,7 +7,7 @@ import (
 	"image/png"
 	"os"
 
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
@@ -21,7 +21,7 @@ type Logo struct {
 	targetDirectory string
 	config          *Config
 	thumbnail       image.Image
-	log             *log.Logger
+	log             *zap.Logger
 }
 
 // Config ...
@@ -48,13 +48,14 @@ func New(key string, sourceLogo image.Image, targetDirectory string, matrixBound
 	}
 }
 
-func (l *Logo) SetLogger(logger *log.Logger) {
+// SetLogger ...
+func (l *Logo) SetLogger(logger *zap.Logger) {
 	l.log = logger
 }
 
 func (l *Logo) ensureLogger() {
 	if l.log == nil {
-		l.log = log.New()
+		l.log, _ = zap.NewDevelopment()
 	}
 }
 
@@ -85,9 +86,9 @@ func (l *Logo) GetThumbnail(size image.Rectangle) (image.Image, error) {
 
 			go func() {
 				l.ensureLogger()
-				l.log.Infof("Saving thumbnail logo %s\n", thumbFile)
+				l.log.Info("saving thumbnail logo", zap.String("filename", thumbFile))
 				if err := rgbrender.SavePng(l.thumbnail, thumbFile); err != nil {
-					l.log.Error("Failed to save logo PNG", err)
+					l.log.Error("failed to save logo PNG", zap.Error(err))
 				}
 			}()
 

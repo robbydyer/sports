@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"go.uber.org/zap"
 
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
@@ -28,7 +28,7 @@ const (
 // ImageBoard is a board for displaying image files
 type ImageBoard struct {
 	config       *Config
-	log          *log.Logger
+	log          *zap.Logger
 	fs           afero.Fs
 	imageCache   map[string]image.Image
 	gifCache     map[string]*gif.GIF
@@ -59,7 +59,7 @@ func (c *Config) SetDefaults() {
 }
 
 // New ...
-func New(fs afero.Fs, bounds image.Rectangle, cfg *Config, logger *log.Logger) (*ImageBoard, error) {
+func New(fs afero.Fs, bounds image.Rectangle, cfg *Config, logger *zap.Logger) (*ImageBoard, error) {
 	if fs == nil {
 		fs = afero.NewOsFs()
 	}
@@ -124,11 +124,11 @@ func (i *ImageBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 			i.log.Warn("ImageBoard is disabled, not rendering")
 			return nil
 		}
-		i.log.Debugf("walking directory %s", dir)
+		i.log.Debug("walking directory", zap.String("directory", dir))
 
 		err := afero.Walk(i.fs, dir, i.dirWalk)
 		if err != nil {
-			i.log.Errorf("failed to prepare image for board: %s", err.Error())
+			i.log.Error("failed to prepare image for board", zap.Error(err))
 		}
 	}
 
@@ -184,7 +184,7 @@ func (i *ImageBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 		}()
 
 		if err := rgbrender.PlayGIF(gifCtx, canvas, g); err != nil {
-			i.log.Errorf("GIF player failed: %s", err.Error())
+			i.log.Error("GIF player failed", zap.Error(err))
 		}
 	}
 
@@ -209,20 +209,20 @@ func (i *ImageBoard) dirWalk(path string, info os.FileInfo, err error) error {
 	_, imgOk := i.imageCache[path]
 	_, gifOk := i.gifCache[path]
 	if imgOk || gifOk {
-		i.log.Debugf("using cached image for %s", path)
+		i.log.Debug("using cached image", zap.String("path", path))
 		return nil
 	}
 
 	// Check file cache
 	cacheFileName := i.cachedFile(info.Name())
 
-	i.log.Debugf("processing image file %s", path)
+	i.log.Debug("processing image file", zap.String("path", path))
 
 	var f io.ReadCloser
 
 	noCache := false
 	if i.config.UseDiskCache {
-		i.log.Debugf("checking for cached file %s", cacheFileName)
+		i.log.Debug("checking for cached file", zap.String("file", cacheFileName))
 		if exists, err := afero.Exists(i.fs, cacheFileName); err == nil && exists {
 			f, err = i.fs.Open(cacheFileName)
 			if err != nil {
@@ -247,25 +247,25 @@ func (i *ImageBoard) dirWalk(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		i.log.Debugf("resizing %s to %dx%d. GIF contains %d images and %d delays",
-			info.Name(),
-			i.matrixBounds.Dx(),
-			i.matrixBounds.Dy(),
-			len(g.Image),
-			len(g.Delay),
+		i.log.Debug("resizing GIF",
+			zap.String("name", info.Name()),
+			zap.Int("X Size", i.matrixBounds.Dx()),
+			zap.Int("Y Size", i.matrixBounds.Dy()),
+			zap.Int("num images", len(g.Image)),
+			zap.Int("delays", len(g.Delay)),
 		)
 		if err := rgbrender.ResizeGIF(g, i.matrixBounds, 1); err != nil {
 			return err
 		}
-		i.log.Debugf("after resizing GIF contains %d images and %d delays",
-			len(g.Image),
-			len(g.Delay),
+		i.log.Debug("after GIF resize",
+			zap.Int("num images", len(g.Image)),
+			zap.Int("delays", len(g.Delay)),
 		)
 
 		if i.config.UseDiskCache {
-			i.log.Debugf("saving resized GIF to disk cache %s", cacheFileName)
+			i.log.Debug("saving resized GIF", zap.String("filename", cacheFileName))
 			if err := rgbrender.SaveGifAfero(i.fs, g, cacheFileName); err != nil {
-				i.log.Errorf("failed to save resized GIF to disk: %s", err.Error())
+				i.log.Error("failed to save resized GIF to disk", zap.Error(err))
 			}
 		}
 
@@ -279,12 +279,16 @@ func (i *ImageBoard) dirWalk(path string, info os.FileInfo, err error) error {
 		return fmt.Errorf("failed to decode image: %w", err)
 	}
 	// Resize to matrix bounds
-	i.log.Debugf("resizing %s to %dx%d", info.Name(), i.matrixBounds.Dx(), i.matrixBounds.Dy())
+	i.log.Debug("resizing image",
+		zap.String("name", info.Name()),
+		zap.Int("size X", i.matrixBounds.Dx()),
+		zap.Int("size Y", i.matrixBounds.Dy()),
+	)
 	i.imageCache[path] = rgbrender.ResizeImage(img, i.matrixBounds, 1)
 
 	if i.config.UseDiskCache {
 		if err := rgbrender.SavePngAfero(i.fs, img, cacheFileName); err != nil {
-			i.log.Errorf("failed to cache resized PNG to disk: %s", err.Error())
+			i.log.Error("failed to save resized PNG to disk", zap.Error(err))
 		}
 	}
 
