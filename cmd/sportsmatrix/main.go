@@ -119,14 +119,14 @@ func (r *rootArgs) setConfigDefaults() {
 
 	if r.config.ImageConfig == nil {
 		r.config.ImageConfig = &imageboard.Config{
-			Enabled: false,
+			Enabled: atomic.NewBool(false),
 		}
 	}
 	r.config.ImageConfig.SetDefaults()
 
 	if r.config.ClockConfig == nil {
 		r.config.ClockConfig = &clock.Config{
-			Enabled: false,
+			Enabled: atomic.NewBool(false),
 		}
 	}
 	r.config.ClockConfig.SetDefaults()
@@ -140,7 +140,7 @@ func (r *rootArgs) setConfigDefaults() {
 
 	if r.config.SysConfig == nil {
 		r.config.SysConfig = &sysboard.Config{
-			Enabled: false,
+			Enabled: atomic.NewBool(false),
 		}
 	}
 	r.config.SysConfig.SetDefaults()

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/robfig/cron/v3"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
@@ -20,7 +21,7 @@ type SportsMatrix struct {
 	cfg           *Config
 	matrix        rgb.Matrix
 	boards        []board.Board
-	screenIsOn    bool
+	screenIsOn    *atomic.Bool
 	screenOff     chan struct{}
 	screenOn      chan struct{}
 	log           *zap.Logger
@@ -88,7 +89,7 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, boards ...board.B
 		screenOff:  make(chan struct{}),
 		screenOn:   make(chan struct{}),
 		close:      make(chan struct{}),
-		screenIsOn: true,
+		screenIsOn: atomic.NewBool(true),
 	}
 
 	var err error
@@ -178,29 +179,26 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-s.screenOff:
-			s.Lock()
-			if !s.screenIsOn {
-				s.Unlock()
+			changed := s.screenIsOn.CAS(true, false)
+			if !changed {
 				s.log.Warn("Screen is already off")
 				continue
 			}
 			s.log.Warn("screen turning off")
 			s.screenLogOnce = &sync.Once{}
-			s.screenIsOn = false
-			s.boardCancel()
 
+			s.Lock()
+			s.boardCancel()
 			_ = rgb.NewCanvas(s.matrix).Clear()
 			s.boardCtx, s.boardCancel = context.WithCancel(ctx)
 			s.Unlock()
 		case <-s.screenOn:
-			s.Lock()
-			if !s.screenIsOn {
+			changed := s.screenIsOn.CAS(false, true)
+			if changed {
 				s.log.Warn("screen turning on")
 			} else {
 				s.log.Warn("screen is already on")
 			}
-			s.screenIsOn = true
-			s.Unlock()
 		}
 	}
 }
@@ -238,7 +236,7 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 
 		clearer = sync.Once{}
 
-		if !s.screenIsOn {
+		if !s.screenIsOn.Load() {
 			time.Sleep(1 * time.Second)
 			s.screenLogOnce.Do(func() {
 				s.log.Warn("screen is turned off")
