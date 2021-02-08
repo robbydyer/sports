@@ -53,14 +53,11 @@ func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logo
 	}
 	teamAbbrev := p[0]
 
-	fullLogoKey := fmt.Sprintf("%s_%dx%d", logoKey, bounds.Dx(), bounds.Dy())
-
 	if _, ok := logoSources[teamAbbrev]; !ok {
 		return nil, fmt.Errorf("did not find logo source for %s", teamAbbrev)
 	}
 
 	if logoConf != nil {
-		fmt.Printf("using provided config for logo %s\n", fullLogoKey)
 		l := logo.New(teamAbbrev, logoSources[teamAbbrev], logoCacheDir, bounds, logoConf)
 
 		return l, nil
@@ -80,12 +77,6 @@ func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logo
 	// Use defaults for this logo
 	for _, defConf := range *defaultConfigs {
 		if defConf.Abbrev == logoKey {
-			fmt.Printf("default logo config for %s:\n%d, %d zoom %f\n",
-				logoKey,
-				defConf.Pt.X,
-				defConf.Pt.Y,
-				defConf.Pt.Zoom,
-			)
 			l := logo.New(teamAbbrev, logoSources[teamAbbrev], logoCacheDir, bounds, defConf)
 			return l, nil
 		}
