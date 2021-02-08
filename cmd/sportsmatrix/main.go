@@ -8,6 +8,7 @@ import (
 	yaml "github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/atomic"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/robbydyer/sports/internal/config"
@@ -110,7 +111,7 @@ func (r *rootArgs) setConfigDefaults() {
 
 	if r.config.NHLConfig == nil {
 		r.config.NHLConfig = &sportboard.Config{
-			Enabled: false,
+			Enabled: atomic.NewBool(false),
 		}
 	}
 
@@ -132,7 +133,7 @@ func (r *rootArgs) setConfigDefaults() {
 
 	if r.config.MLBConfig == nil {
 		r.config.MLBConfig = &sportboard.Config{
-			Enabled: false,
+			Enabled: atomic.NewBool(false),
 		}
 	}
 	r.config.MLBConfig.SetDefaults()

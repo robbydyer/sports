@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
@@ -38,10 +39,10 @@ type ImageBoard struct {
 // Config ...
 type Config struct {
 	boardDelay   time.Duration
-	BoardDelay   string   `json:"boardDelay"`
-	Enabled      bool     `json:"enabled"`
-	Directories  []string `json:"directories"`
-	UseDiskCache bool     `json:"useDiskCache"`
+	BoardDelay   string       `json:"boardDelay"`
+	Enabled      *atomic.Bool `json:"enabled"`
+	Directories  []string     `json:"directories"`
+	UseDiskCache bool         `json:"useDiskCache"`
 }
 
 // SetDefaults sets some Config defaults
@@ -95,12 +96,12 @@ func (i *ImageBoard) Name() string {
 
 // Enabled ...
 func (i *ImageBoard) Enabled() bool {
-	return i.config.Enabled
+	return i.config.Enabled.Load()
 }
 
 // Render ...
 func (i *ImageBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
-	if !i.config.Enabled {
+	if !i.config.Enabled.Load() {
 		i.log.Warn("ImageBoard is disabled, not rendering")
 		return nil
 	}
@@ -120,7 +121,7 @@ func (i *ImageBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	}
 
 	for _, dir := range i.config.Directories {
-		if !i.config.Enabled {
+		if !i.config.Enabled.Load() {
 			i.log.Warn("ImageBoard is disabled, not rendering")
 			return nil
 		}
@@ -134,7 +135,7 @@ func (i *ImageBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 
 	canvas := rgb.NewCanvas(matrix)
 	for _, img := range i.imageCache {
-		if !i.config.Enabled {
+		if !i.config.Enabled.Load() {
 			i.log.Warn("ImageBoard is disabled, not rendering")
 			return nil
 		}
@@ -165,12 +166,14 @@ func (i *ImageBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	}
 
 	for _, g := range i.gifCache {
-		if !i.config.Enabled {
+		if !i.config.Enabled.Load() {
 			i.log.Warn("ImageBoard is disabled, not rendering")
 			return nil
 		}
 		i.log.Debug("playing GIF")
-		gifCtx, gifCancel := context.WithCancel(context.Background())
+		gifCtx, gifCancel := context.WithCancel(ctx)
+		defer gifCancel()
+
 		select {
 		case <-ctx.Done():
 			gifCancel()

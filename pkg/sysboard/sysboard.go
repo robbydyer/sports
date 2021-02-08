@@ -9,6 +9,7 @@ import (
 
 	"github.com/mackerelio/go-osstat/cpu"
 	"github.com/mackerelio/go-osstat/memory"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
@@ -26,8 +27,8 @@ type SysBoard struct {
 // Config ...
 type Config struct {
 	boardDelay time.Duration
-	Enabled    bool   `json:"enabled"`
-	BoardDelay string `json:"boardDelay"`
+	Enabled    *atomic.Bool `json:"enabled"`
+	BoardDelay string       `json:"boardDelay"`
 }
 
 // SetDefaults ...
@@ -64,7 +65,7 @@ func (s *SysBoard) Name() string {
 
 // Render ...
 func (s *SysBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
-	if !s.config.Enabled {
+	if !s.config.Enabled.Load() {
 		return nil
 	}
 
@@ -122,7 +123,7 @@ func (s *SysBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 
 // Enabled ...
 func (s *SysBoard) Enabled() bool {
-	return s.config.Enabled
+	return s.config.Enabled.Load()
 }
 
 // GetHTTPHandlers ...
@@ -131,14 +132,14 @@ func (s *SysBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 		Path: "/sys/disable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			s.log.Info("disabling sys board")
-			s.config.Enabled = false
+			s.config.Enabled.Store(false)
 		},
 	}
 	enable := &board.HTTPHandler{
 		Path: "/sys/enable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			s.log.Info("enabling sys board")
-			s.config.Enabled = true
+			s.config.Enabled.Store(true)
 		},
 	}
 

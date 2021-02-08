@@ -48,7 +48,7 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 		cancel()
 	}()
 
-	c.rArgs.config.MLBConfig.Enabled = true
+	c.rArgs.config.MLBConfig.Enabled.Store(true)
 
 	bounds := image.Rect(0, 0, c.rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, c.rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
 
