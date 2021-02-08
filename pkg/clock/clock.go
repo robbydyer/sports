@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang/freetype/truetype"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
@@ -25,8 +26,8 @@ type Clock struct {
 
 type Config struct {
 	boardDelay time.Duration
-	Enabled    bool   `json:"enabled"`
-	BoardDelay string `json:"boardDelay"`
+	Enabled    *atomic.Bool `json:"enabled"`
+	BoardDelay string       `json:"boardDelay"`
 }
 
 func (c *Config) SetDefaults() {
@@ -44,7 +45,7 @@ func (c *Config) SetDefaults() {
 func New(config *Config, logger *zap.Logger) (*Clock, error) {
 	if config == nil {
 		config = &Config{
-			Enabled: true,
+			Enabled: atomic.NewBool(true),
 		}
 	}
 	c := &Clock{
@@ -68,7 +69,7 @@ func (c *Clock) Name() string {
 }
 
 func (c *Clock) Enabled() bool {
-	return c.config.Enabled
+	return c.config.Enabled.Load()
 }
 
 func (c *Clock) Cleanup() {}
@@ -76,7 +77,7 @@ func (c *Clock) Cleanup() {}
 func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 	canvas := rgb.NewCanvas(matrix)
 
-	if !c.config.Enabled {
+	if !c.config.Enabled.Load() {
 		return nil
 	}
 
@@ -170,14 +171,14 @@ func (c *Clock) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 		Path: "/clock/disable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			c.log.Info("disabling clock board")
-			c.config.Enabled = false
+			c.config.Enabled.Store(false)
 		},
 	}
 	enable := &board.HTTPHandler{
 		Path: "/clock/enable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			c.log.Info("enabling clock board")
-			c.config.Enabled = true
+			c.config.Enabled.Store(true)
 		},
 	}
 

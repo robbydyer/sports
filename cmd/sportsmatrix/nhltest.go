@@ -52,7 +52,7 @@ func (c *nhlCmd) run(cmd *cobra.Command, args []string) error {
 		c.rArgs.config.NHLConfig = &sportboard.Config{}
 	}
 
-	c.rArgs.config.NHLConfig.Enabled = true
+	c.rArgs.config.NHLConfig.Enabled.Store(true)
 
 	if len(c.rArgs.config.NHLConfig.WatchTeams) < 1 {
 		c.rArgs.config.NHLConfig.WatchTeams = []string{"NYI", "NJD", "CBJ", "MIN"}

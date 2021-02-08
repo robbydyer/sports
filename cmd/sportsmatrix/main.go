@@ -8,6 +8,7 @@ import (
 	yaml "github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/atomic"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/robbydyer/sports/internal/config"
@@ -110,7 +111,7 @@ func (r *rootArgs) setConfigDefaults() {
 
 	if r.config.NHLConfig == nil {
 		r.config.NHLConfig = &sportboard.Config{
-			Enabled: false,
+			Enabled: atomic.NewBool(false),
 		}
 	}
 
@@ -118,28 +119,28 @@ func (r *rootArgs) setConfigDefaults() {
 
 	if r.config.ImageConfig == nil {
 		r.config.ImageConfig = &imageboard.Config{
-			Enabled: false,
+			Enabled: atomic.NewBool(false),
 		}
 	}
 	r.config.ImageConfig.SetDefaults()
 
 	if r.config.ClockConfig == nil {
 		r.config.ClockConfig = &clock.Config{
-			Enabled: false,
+			Enabled: atomic.NewBool(false),
 		}
 	}
 	r.config.ClockConfig.SetDefaults()
 
 	if r.config.MLBConfig == nil {
 		r.config.MLBConfig = &sportboard.Config{
-			Enabled: false,
+			Enabled: atomic.NewBool(false),
 		}
 	}
 	r.config.MLBConfig.SetDefaults()
 
 	if r.config.SysConfig == nil {
 		r.config.SysConfig = &sysboard.Config{
-			Enabled: false,
+			Enabled: atomic.NewBool(false),
 		}
 	}
 	r.config.SysConfig.SetDefaults()

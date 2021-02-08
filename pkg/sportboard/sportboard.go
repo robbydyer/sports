@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/robfig/cron/v3"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/logo"
@@ -40,15 +41,15 @@ type Config struct {
 	boardDelay        time.Duration
 	TimeColor         color.Color
 	ScoreColor        color.Color
-	Enabled           bool           `json:"enabled"`
+	Enabled           *atomic.Bool   `json:"enabled"`
 	BoardDelay        string         `json:"boardDelay"`
-	FavoriteSticky    bool           `json:"favoriteSticky"`
+	FavoriteSticky    *atomic.Bool   `json:"favoriteSticky"`
 	ScoreFont         *FontConfig    `json:"scoreFont"`
 	TimeFont          *FontConfig    `json:"timeFont"`
 	LogoConfigs       []*logo.Config `json:"logoConfigs"`
 	WatchTeams        []string       `json:"watchTeams"`
 	FavoriteTeams     []string       `json:"favoriteTeams"`
-	HideFavoriteScore bool           `json:"hideFavoriteScore"`
+	HideFavoriteScore *atomic.Bool   `json:"hideFavoriteScore"`
 }
 
 // FontConfig ...
@@ -181,12 +182,12 @@ func (s *SportBoard) Name() string {
 
 // Enabled ...
 func (s *SportBoard) Enabled() bool {
-	return s.config.Enabled
+	return s.config.Enabled.Load()
 }
 
 // Render ...
 func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
-	if !s.config.Enabled {
+	if !s.config.Enabled.Load() {
 		s.log.Warn("skipping disabled board", zap.String("board", s.api.League()))
 		return nil
 	}
@@ -260,7 +261,7 @@ OUTER:
 		default:
 		}
 
-		if !s.config.Enabled {
+		if !s.config.Enabled.Load() {
 			s.log.Warn("skipping disabled board", zap.String("board", s.api.League()))
 			return nil
 		}

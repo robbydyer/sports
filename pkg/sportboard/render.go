@@ -79,7 +79,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 			return fmt.Errorf("failed to write quarter and clock: %w", err)
 		}
 
-		if s.config.HideFavoriteScore && isFavorite {
+		if s.config.HideFavoriteScore.Load() && isFavorite {
 			s.log.Warn("hiding score for favorite team")
 		} else {
 			if err := scoreWriter.Write(
@@ -106,7 +106,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 			return err
 		}
 
-		if !(isFavorite && s.config.FavoriteSticky) {
+		if !(isFavorite && s.config.FavoriteSticky.Load()) {
 			return nil
 		}
 
