@@ -11,6 +11,7 @@ import (
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/mlb"
+	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 )
@@ -67,7 +68,18 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 
 	boards = append(boards, b)
 
-	mtrx, err := sportsmatrix.New(ctx, logger, c.rArgs.config.SportsMatrixConfig, boards...)
+	var matrix rgb.Matrix
+	if c.rArgs.test {
+		matrix = c.rArgs.getTestMatrix(logger)
+	} else {
+		var err error
+		matrix, err = c.rArgs.getRGBMatrix(logger)
+		if err != nil {
+			return err
+		}
+	}
+
+	mtrx, err := sportsmatrix.New(ctx, logger, c.rArgs.config.SportsMatrixConfig, matrix, boards...)
 	if err != nil {
 		return err
 	}

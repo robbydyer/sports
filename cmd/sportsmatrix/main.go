@@ -9,11 +9,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/atomic"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/robbydyer/sports/internal/config"
 	"github.com/robbydyer/sports/pkg/clock"
 	"github.com/robbydyer/sports/pkg/imageboard"
+	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 	"github.com/robbydyer/sports/pkg/sysboard"
@@ -24,6 +26,7 @@ type rootArgs struct {
 	logLevel   zapcore.Level
 	configFile string
 	config     *config.Config
+	test       bool
 }
 
 func main() {
@@ -77,6 +80,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 
 	f.StringVarP(&args.configFile, "config", "c", "", "Config filename")
 	f.StringVarP(&args.level, "log-level", "l", "info", "Log level. 'info', 'warn', 'debug'")
+	f.BoolVarP(&args.test, "test", "t", false, "uses a test console matrix")
 
 	_ = viper.BindPFlags(f)
 
@@ -144,4 +148,28 @@ func (r *rootArgs) setConfigDefaults() {
 		}
 	}
 	r.config.SysConfig.SetDefaults()
+}
+
+func (r *rootArgs) getRGBMatrix(logger *zap.Logger) (rgb.Matrix, error) {
+	var matrix rgb.Matrix
+	logger.Info("initializing matrix",
+		zap.Int("Cols", r.config.SportsMatrixConfig.HardwareConfig.Cols),
+		zap.Int("Rows", r.config.SportsMatrixConfig.HardwareConfig.Rows),
+		zap.Int("Brightness", r.config.SportsMatrixConfig.HardwareConfig.Brightness),
+		zap.String("Mapping", r.config.SportsMatrixConfig.HardwareConfig.HardwareMapping),
+	)
+
+	rt := &rgb.DefaultRuntimeOptions
+	var err error
+	matrix, err = rgb.NewRGBLedMatrix(r.config.SportsMatrixConfig.HardwareConfig, rt)
+
+	return matrix, err
+}
+
+func (r *rootArgs) getTestMatrix(logger *zap.Logger) rgb.Matrix {
+	logger.Info("initializing console matrix",
+		zap.Int("Cols", r.config.SportsMatrixConfig.HardwareConfig.Cols),
+		zap.Int("Rows", r.config.SportsMatrixConfig.HardwareConfig.Rows),
+	)
+	return rgb.NewConsoleMatrix(r.config.SportsMatrixConfig.HardwareConfig.Cols, r.config.SportsMatrixConfig.HardwareConfig.Rows, os.Stdout, logger)
 }
