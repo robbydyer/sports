@@ -9,7 +9,6 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/clock"
@@ -53,12 +52,7 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		cancel()
 	}()
 
-	logger, err := zap.NewProduction(
-		zap.IncreaseLevel(s.rArgs.logLevel),
-	)
-	if err != nil {
-		return err
-	}
+	logger := getLogger(s.rArgs.logLevel)
 
 	bounds := image.Rect(0, 0, s.rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, s.rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
 
