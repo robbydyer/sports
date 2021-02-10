@@ -24,7 +24,7 @@ func NewConsoleMatrix(width int, height int, out io.Writer, logger *zap.Logger) 
 	c := &ConsoleMatrix{
 		width:  width,
 		height: height,
-		matrix: make([]uint32, (width*height)+width),
+		matrix: make([]uint32, (width * height)),
 		out:    out,
 		log:    logger,
 	}
@@ -108,6 +108,7 @@ func (c *ConsoleMatrix) Render() error {
 			row += "0 "
 		}
 	}
+	rendered = append(rendered, row)
 
 	rendered = append(rendered, strings.Repeat("_ ", c.width+1)+"|")
 
