@@ -42,6 +42,10 @@ func (c *Config) SetDefaults() {
 	} else {
 		c.boardDelay = 10 * time.Second
 	}
+
+	if c.Enabled == nil {
+		c.Enabled = atomic.NewBool(false)
+	}
 }
 
 // New ...
