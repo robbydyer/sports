@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/robfig/cron/v3"
@@ -34,6 +35,7 @@ type SportBoard struct {
 	timeWriter      *rgbrender.TextWriter
 	timeAlign       image.Rectangle
 	counter         image.Image
+	sync.Mutex
 }
 
 // Config ...
@@ -100,6 +102,8 @@ func (c *Config) SetDefaults() {
 			c.boardDelay = 20 * time.Second
 		}
 		c.boardDelay = d
+	} else {
+		c.boardDelay = 20 * time.Second
 	}
 
 	if c.ScoreFont == nil {
@@ -120,6 +124,15 @@ func (c *Config) SetDefaults() {
 	if c.ScoreColor == nil {
 		c.ScoreColor = color.White
 	}
+	if c.HideFavoriteScore == nil {
+		c.HideFavoriteScore = atomic.NewBool(false)
+	}
+	if c.FavoriteSticky == nil {
+		c.FavoriteSticky = atomic.NewBool(false)
+	}
+	if c.Enabled == nil {
+		c.Enabled = atomic.NewBool(false)
+	}
 }
 
 // New ...
@@ -132,6 +145,11 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		logoDrawCache:   make(map[string]image.Image),
 		matrixBounds:    bounds,
 		cachedLiveGames: make(map[int]Game),
+	}
+
+	if s.config.boardDelay < 20*time.Second {
+		s.log.Warn("cannot set sportboard delay below 20 sec")
+		s.config.boardDelay = 20 * time.Second
 	}
 
 	if len(config.WatchTeams) == 0 {
@@ -358,6 +376,9 @@ func (s *SportBoard) HasPriority() bool {
 }
 
 func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload chan struct{}) error {
+	s.Lock()
+	defer s.Unlock()
+
 	defer func() {
 		select {
 		case preload <- struct{}{}:

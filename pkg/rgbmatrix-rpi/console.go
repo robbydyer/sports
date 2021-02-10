@@ -10,7 +10,7 @@ import (
 )
 
 type ConsoleMatrix struct {
-	matrix []color.Color
+	matrix []uint32
 	width  int
 	height int
 	out    io.Writer
@@ -21,7 +21,7 @@ func NewConsoleMatrix(width int, height int, out io.Writer, logger *zap.Logger) 
 	c := &ConsoleMatrix{
 		width:  width,
 		height: height,
-		matrix: make([]color.Color, width*height),
+		matrix: make([]uint32, width*height),
 		out:    out,
 		log:    logger,
 	}
@@ -33,7 +33,7 @@ func NewConsoleMatrix(width int, height int, out io.Writer, logger *zap.Logger) 
 
 func (c *ConsoleMatrix) Reset() {
 	for i := range c.matrix {
-		c.matrix[i] = color.Black
+		c.matrix[i] = colorToUint32(color.Black)
 	}
 }
 
@@ -45,17 +45,14 @@ func (c *ConsoleMatrix) At(position int) color.Color {
 		return color.Black
 	}
 
-	if c.matrix[position] == nil {
-		return color.Black
-	}
-
-	return c.matrix[position]
+	return uint32ToColorGo(c.matrix[position])
 }
 func (c *ConsoleMatrix) Set(position int, clr color.Color) {
 	if position > len(c.matrix)-1 || position < 0 {
 		return
 	}
-	c.matrix[position] = clr
+
+	c.matrix[position] = colorToUint32(clr)
 }
 func (c *ConsoleMatrix) Apply(leds []color.Color) error {
 	for position, clr := range leds {
@@ -66,10 +63,11 @@ func (c *ConsoleMatrix) Apply(leds []color.Color) error {
 }
 func (c *ConsoleMatrix) Render() error {
 	rendered := []string{
-		"|" + strings.Repeat("_ ", c.width+1),
+		strings.Repeat("_ ", c.width+1),
 	}
 	row := ""
-	for index, clr := range c.matrix {
+	for index, clrint := range c.matrix {
+		clr := uint32ToColorGo(clrint)
 		if (index)%c.width == 0 {
 			// This is a new row
 			row += "|"
@@ -81,15 +79,7 @@ func (c *ConsoleMatrix) Render() error {
 			continue
 		}
 
-		r, g, b, a := clr.RGBA()
-		if r != 0 || g != 0 || b != 0 {
-			c.log.Debug("colors",
-				zap.Uint32("red", r),
-				zap.Uint32("green", g),
-				zap.Uint32("blue", b),
-				zap.Uint32("alpha", a),
-			)
-		}
+		r, g, b, _ := clr.RGBA()
 
 		if r > g && r > b {
 			row += "R "
