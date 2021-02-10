@@ -79,7 +79,7 @@ func (c *Config) Defaults() {
 }
 
 // New ...
-func New(ctx context.Context, logger *zap.Logger, cfg *Config, boards ...board.Board) (*SportsMatrix, error) {
+func New(ctx context.Context, logger *zap.Logger, cfg *Config, matrix rgb.Matrix, boards ...board.Board) (*SportsMatrix, error) {
 	cfg.Defaults()
 
 	s := &SportsMatrix{
@@ -90,25 +90,11 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, boards ...board.B
 		screenOn:   make(chan struct{}),
 		close:      make(chan struct{}),
 		screenIsOn: atomic.NewBool(true),
+		matrix:     matrix,
 	}
-
-	var err error
-
-	s.log.Info("initializing matrix",
-		zap.Int("Cols", s.cfg.HardwareConfig.Cols),
-		zap.Int("Rows", s.cfg.HardwareConfig.Rows),
-		zap.Int("Brightness", s.cfg.HardwareConfig.Brightness),
-		zap.String("Mapping", s.cfg.HardwareConfig.HardwareMapping),
-	)
 
 	for _, b := range s.boards {
 		s.log.Info("Registering board", zap.String("board", b.Name()))
-	}
-
-	rt := &rgb.DefaultRuntimeOptions
-	s.matrix, err = rgb.NewRGBLedMatrix(s.cfg.HardwareConfig, rt)
-	if err != nil {
-		return nil, err
 	}
 
 	c := cron.New()

@@ -15,6 +15,7 @@ import (
 	"github.com/robbydyer/sports/pkg/imageboard"
 	"github.com/robbydyer/sports/pkg/mlb"
 	"github.com/robbydyer/sports/pkg/nhl"
+	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 	"github.com/robbydyer/sports/pkg/sysboard"
@@ -110,7 +111,18 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		boards = append(boards, b)
 	}
 
-	mtrx, err := sportsmatrix.New(ctx, logger, s.rArgs.config.SportsMatrixConfig, boards...)
+	var matrix rgb.Matrix
+	if s.rArgs.test {
+		matrix = s.rArgs.getTestMatrix(logger)
+	} else {
+		var err error
+		matrix, err = s.rArgs.getRGBMatrix(logger)
+		if err != nil {
+			return err
+		}
+	}
+
+	mtrx, err := sportsmatrix.New(ctx, logger, s.rArgs.config.SportsMatrixConfig, matrix, boards...)
 	if err != nil {
 		return err
 	}
