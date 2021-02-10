@@ -15,6 +15,7 @@ I am currently running this with a Pi-zero. It performs perfectly well so far. I
 - Image Board: Takes a list of directories containg images and displays them. Works with GIF's too!
 - Clock: It's...a clock
 - MLB: Currently still in progress
+- Sys: Displays basic system info. Currently Mem and CPU usage
 
 ## Roadmap
 
@@ -62,6 +63,11 @@ nhlConfig:
   
 # Clock Board
 clockConfig:
+  enabled: true
+  boardDelay: "10s"
+  
+# Sys Board
+sysConfig:
   enabled: true
   boardDelay: "10s"
   
@@ -128,6 +134,87 @@ curl http://127.0.0.1:8080/img/clearcache
 
 ## Contributing / Development
 I'm always open to pull requests for features/bug fixes! Feel free to open an issue if (when) you find a bug.
+
+For easy/faster testing without compiling on a Pi, you can use the `ConsoleMatrix` type for generating the board layout in the terminal.
+
+```shell
+$ script/shell.console
+...
+# Set the --test or -t flag to use the ConsoleMatrix
+root@1be09d37bbd9:/src# go run -mod=vendor ./cmd/sportsmatrix/ run -t -c matrix.conf
+...
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+|
+|                                                                                                  R       G G G G R G G G G     |
+|                                                W W W       W W W   W W W   W W W   W   W             G R R R R R R R R R R R   |
+|                                                    W   W   W   W   W   W   W   W   W W W   0     G R R R                   R   |
+|B B B       B B B B B B B B       B B B B B B B     W       W   W   W   W   W   W   W   W 0   G R R R     W R B R R R B R W     |
+|B B B B B B B B B B B B B B B B B B B B B B B B   W     W   W   W   W   W   W W W   W   W   R R R     R W W W B R R R B W W W   |
+|B B B B B B B B B B B B B B B B B B B B B B B   W           W W W   W W W   W       W R W R R R   W R W W W W B R R R B W W W   |
+|B B B B B B B B B B B B B B B B B B B B B B B   B                                       W R R B R R G W W W W B R R R B W W W   |
+|B B B B B B B B B B B B B B B B B B B B B B   W                                     R   G R   R R R W B B B B B R R R B B B W   |
+|B B B B B B B B B B B B B B B B B B B B B B   B                                   0   G R   R W R R R R R R R R R R R R R R B   |
+|B B B B B B B B B B B B B B B B B B B B B B   W                                   R   R R   R G B R R R R R R R R R R R R R R   |
+|B B B B B B B B B B B B B B B B B B B B B B   B                                 R   R R   R B W B B R R       B R R R R     R   |
+|B B B B B B B B B B B B B B B B B B B B B B   B                                 R   R R   W   W R W B R R   R R R R R R R 0     |
+|B B B B B B B B B B B B B B B B B B B B B B   B                                     R R   W W W W R B R R   R R B R R W R R 0   |
+|B B B B B B B B B R R R R R R R R R R R B B   B                                   R R   R   W W W W W R R B R R B W W B R R R   |
+|B B B B B B B B B B B R R R R R R R R R B B   B                               0   G R   B B B B B B B R R   R R R R R R R R     |
+|B B B B B B B B B B B B R R R R R R R R B B   B W W     W W     W W W W W     R   G R   R R R R R R R R R   R R R R R R R   R   |
+|B B B B B B B B B B B B B R R R R R R R B B   B W W     W W   W W W W W W     0   G R   R R R R R R R R R                 0 R   |
+|B B B B B B B B B B B B B B B R R R R R B B   B W W     W W   W W             R   G R   R R R R R R R R R   R R R R R R R   R   |
+|B W B B B B B B B B B B B B B B R R R R B B   B W W     W W   W W             0   G R   B B B B B B B R R   R R R R R R R R     |
+|B B B W B B B B B B B B B B B B B B R R B B   B W W     W W   W W W               R R   R   W W W W W R R B R R B W W B R R R   |
+|B W B B W B B B B B B B B B B B B B B R B B   B W W     W W     W W W W             R R   W W W W R B R R   R R B R R W R R 0   |
+|B W B W B W W B B B B B B B B B B B B B B B   B W W     W W         W W W       R   R R   W   W R W B R R   R R R R R R R 0     |
+|B W B W W B W W B B B B B B B B B B B B B B   B   W W W W             W W       R   R R   R B W B B R R       B R R R R     R   |
+|B   B W W W W B W B B B B B B B B B B B B B   B   W W W W             W W         R   R R   R G B R R R R R R R R R R R R R R   |
+|B B B B B B B B B W W B B B B B B B B B B B         W W       W W W W W W         0   G R   R W R R R R R R R R R R R R R R B   |
+|B               W B B W B B B B B B B B B B   W     W W       W W W W W W           R   R R   R R R W B B B B B R R R B B B W   |
+|B B B B B B B B B     B B B B B B B B B B B   B                                         W R R B R R G W W W W B R R R B W W W   |
+|B B B B B B B B B B B B B B B B B B B B B B W                                         R   R R R   W R W W W W B R R R B W W W   |
+|B B B B B B B B B B B B B B B B B B B B B B                                             0   R R R     R W W W B R R R B W W W   |
+|                  B B                   W                                                 0   G R R R     W R B R R R B R W     |
+|    B B B B B B B     B B B B B B B                                                         0     G R R R                   R   |
+|                                                              R   W                                                             |
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ |
+...
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+|
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|              W W W W                 W W W W W W W W     W W W W W W W W         W W W W         W W             W W           |
+|              W W W W                 W W W W W W W W     W W W W W W W W         W W W W         W W             W W           |
+|          W W         W W     W W     W W                             W W     W W         W W     W W W W     W W W W           |
+|          W W         W W     W W     W W                             W W     W W         W W     W W W W     W W W W           |
+|              W W W W                 W W W W W W                 W W         W W         W W     W W     W W     W W           |
+|              W W W W                 W W W W W W                 W W         W W         W W     W W     W W     W W           |
+|          W W         W W     W W                 W W         W W             W W W W W W W W     W W             W W           |
+|          W W         W W     W W                 W W         W W             W W W W W W W W     W W             W W           |
+|              W W W W                 W W W W W W             W W             W W         W W     W W             W W           |
+|              W W W W                 W W W W W W             W W             W W         W W     W W             W W           |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+|                                                                                                                                |
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ |
+```
 
 I have tried implementing cross-compile support with docker, because building on a Pi Zero is quite slow. It sort of works, but with some weird caveats: running the cross-compiled binary on the Pi is resulting in brighter/washed out images for me. If anyone can figure out how to make this work better, please let me know.
 
