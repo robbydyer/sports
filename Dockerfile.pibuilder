@@ -87,3 +87,5 @@ RUN RPI_DIR=/raspberrypi && \
 
 RUN git clone --progress --verbose https://github.com/raspberrypi/tools.git --depth=1 pitools
 
+ENV TZ=America/New_York
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone

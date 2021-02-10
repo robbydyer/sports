@@ -9,6 +9,8 @@ import (
 	"go.uber.org/zap"
 )
 
+// ConsoleMatrix prints a representation of a matrix to a terminal.
+// Useful for testing layouts without a Pi or an LED matrix.
 type ConsoleMatrix struct {
 	matrix []uint32
 	width  int
@@ -17,11 +19,12 @@ type ConsoleMatrix struct {
 	log    *zap.Logger
 }
 
+// NewConsoleMatrix ...
 func NewConsoleMatrix(width int, height int, out io.Writer, logger *zap.Logger) *ConsoleMatrix {
 	c := &ConsoleMatrix{
 		width:  width,
 		height: height,
-		matrix: make([]uint32, width*height),
+		matrix: make([]uint32, (width*height)+width),
 		out:    out,
 		log:    logger,
 	}
@@ -31,15 +34,19 @@ func NewConsoleMatrix(width int, height int, out io.Writer, logger *zap.Logger) 
 	return c
 }
 
+// Reset ...
 func (c *ConsoleMatrix) Reset() {
 	for i := range c.matrix {
 		c.matrix[i] = colorToUint32(color.Black)
 	}
 }
 
+// Geometry ...
 func (c *ConsoleMatrix) Geometry() (int, int) {
 	return c.width, c.height
 }
+
+// At ...
 func (c *ConsoleMatrix) At(position int) color.Color {
 	if position > len(c.matrix)-1 || position < 0 {
 		return color.Black
@@ -47,6 +54,8 @@ func (c *ConsoleMatrix) At(position int) color.Color {
 
 	return uint32ToColorGo(c.matrix[position])
 }
+
+// Set ...
 func (c *ConsoleMatrix) Set(position int, clr color.Color) {
 	if position > len(c.matrix)-1 || position < 0 {
 		return
@@ -54,6 +63,8 @@ func (c *ConsoleMatrix) Set(position int, clr color.Color) {
 
 	c.matrix[position] = colorToUint32(clr)
 }
+
+// Apply ...
 func (c *ConsoleMatrix) Apply(leds []color.Color) error {
 	for position, clr := range leds {
 		c.Set(position, clr)
@@ -61,6 +72,8 @@ func (c *ConsoleMatrix) Apply(leds []color.Color) error {
 
 	return c.Render()
 }
+
+// Render ...
 func (c *ConsoleMatrix) Render() error {
 	rendered := []string{
 		strings.Repeat("_ ", c.width+1),
@@ -88,7 +101,7 @@ func (c *ConsoleMatrix) Render() error {
 		} else if b > r && b > g {
 			row += "B "
 		} else if r < 40 && g < 40 && b < 40 {
-			row += "_ "
+			row += "  "
 		} else if r > 240 && g > 240 && b > 240 {
 			row += "W "
 		} else {
@@ -105,9 +118,12 @@ func (c *ConsoleMatrix) Render() error {
 	return nil
 }
 
+// Close ...
 func (c *ConsoleMatrix) Close() error {
 	return nil
 }
+
+// SetBrightness does nothing
 func (c *ConsoleMatrix) SetBrightness(brightness int) {
 	return
 }
