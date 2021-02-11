@@ -7,6 +7,7 @@ require (
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20201108214237-06ea97f0c265 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/gorilla/mux v1.8.0
+	github.com/hashicorp/go-multierror v1.0.0
 	github.com/mackerelio/go-osstat v0.1.0
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	yaml "github.com/ghodss/yaml"
+	"github.com/hashicorp/go-multierror"
 
 	"github.com/robbydyer/sports/pkg/logo"
 )
@@ -90,25 +91,30 @@ func (m *MLB) logoSources(ctx context.Context) (map[string]image.Image, error) {
 		return m.logoSourceCache, nil
 	}
 
+	errs := &multierror.Error{}
+
 	for _, t := range ALL {
 		select {
 		case <-ctx.Done():
 			return nil, context.Canceled
 		default:
 		}
+
 		f, err := assets.Open(fmt.Sprintf("assets/logos/%s.png", t))
 		if err != nil {
-			return nil, err
+			errs = multierror.Append(errs, fmt.Errorf("failed to get logo for %s", t))
+			continue
 		}
 		defer f.Close()
 
 		i, err := png.Decode(f)
 		if err != nil {
-			return nil, err
+			errs = multierror.Append(errs, fmt.Errorf("failed to decode logo for %s", t))
+			continue
 		}
 
 		m.logoSourceCache[t] = i
 	}
 
-	return m.logoSourceCache, nil
+	return m.logoSourceCache, errs.ErrorOrNil()
 }
