@@ -35,34 +35,30 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 		return err
 	}
 
-	quarter, err := liveGame.GetQuarter()
-	if err != nil {
-		return err
-	}
-
-	clock, err := liveGame.GetClock()
-	if err != nil {
-		return err
-	}
-
-	score, err := scoreStr(liveGame)
-	if err != nil {
-		return err
-	}
-
 	for {
 		select {
 		case <-ctx.Done():
 			return fmt.Errorf("context canceled")
 		default:
 		}
+
+		quarter, err := liveGame.GetQuarter()
+		if err != nil {
+			return err
+		}
+
+		clock, err := liveGame.GetClock()
+		if err != nil {
+			return err
+		}
+
+		score, err := scoreStr(liveGame)
+		if err != nil {
+			return err
+		}
+
 		if err := s.RenderHomeLogo(ctx, canvas, homeTeam.GetAbbreviation()); err != nil {
 			return fmt.Errorf("failed to render home logo: %w", err)
-		}
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("context canceled")
-		default:
 		}
 		if err := s.RenderAwayLogo(ctx, canvas, awayTeam.GetAbbreviation()); err != nil {
 			return fmt.Errorf("failed to render away logo: %w", err)
@@ -110,20 +106,15 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 			return nil
 		}
 
-		var updatedGame Game
-		go func() {
-			updatedGame, err = liveGame.GetUpdate(ctx)
-			if err != nil {
-				s.log.Error("failed to update game for board refresh", zap.Error(err))
-				return
-			}
-			liveGame = updatedGame
-		}()
-
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("context canceled")
+			return context.Canceled
 		case <-time.After(s.config.boardDelay):
+		}
+
+		liveGame, err = liveGame.GetUpdate(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to update stickey game: %w", err)
 		}
 
 		over, err := liveGame.IsComplete()
