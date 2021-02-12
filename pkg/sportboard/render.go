@@ -109,13 +109,14 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 		select {
 		case <-ctx.Done():
 			return context.Canceled
-		case <-time.After(s.config.boardDelay):
+		case <-time.After(s.config.boardDelay - 3*time.Second):
 		}
 
 		liveGame, err = liveGame.GetUpdate(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to update stickey game: %w", err)
 		}
+		s.log.Debug("updated live sticky game")
 
 		over, err := liveGame.IsComplete()
 		if err != nil {
