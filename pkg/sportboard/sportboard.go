@@ -99,11 +99,11 @@ func (c *Config) SetDefaults() {
 	if c.BoardDelay != "" {
 		d, err := time.ParseDuration(c.BoardDelay)
 		if err != nil {
-			c.boardDelay = 20 * time.Second
+			c.boardDelay = 10 * time.Second
 		}
 		c.boardDelay = d
 	} else {
-		c.boardDelay = 20 * time.Second
+		c.boardDelay = 10 * time.Second
 	}
 
 	if c.ScoreFont == nil {
@@ -147,9 +147,9 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		cachedLiveGames: make(map[int]Game),
 	}
 
-	if s.config.boardDelay < 20*time.Second {
-		s.log.Warn("cannot set sportboard delay below 20 sec")
-		s.config.boardDelay = 20 * time.Second
+	if s.config.boardDelay < 10*time.Second {
+		s.log.Warn("cannot set sportboard delay below 10 sec")
+		s.config.boardDelay = 10 * time.Second
 	}
 
 	if len(config.WatchTeams) == 0 {
