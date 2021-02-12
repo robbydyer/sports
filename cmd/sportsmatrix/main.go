@@ -21,6 +21,8 @@ import (
 	"github.com/robbydyer/sports/pkg/sysboard"
 )
 
+const defaultConfigFile = "/etc/sportsmatrix.conf"
+
 type rootArgs struct {
 	level      string
 	logLevel   zapcore.Level
@@ -50,7 +52,17 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 		PersistentPreRunE: func(cmd *cobra.Command, a []string) error {
 			configFile := viper.GetString("config")
 
-			if configFile != "" {
+			if configFile == defaultConfigFile {
+				if _, err := os.Stat(configFile); err != nil && os.IsNotExist(err) {
+					fmt.Println("Using default config")
+					args.config = &config.Config{}
+				} else {
+					fmt.Printf("Loading config from file %s\n", configFile)
+					if err := args.setConfig(configFile); err != nil {
+						return fmt.Errorf("failed to load config file: %w", err)
+					}
+				}
+			} else if configFile != "" {
 				fmt.Printf("Loading config from file %s\n", configFile)
 				if err := args.setConfig(configFile); err != nil {
 					return fmt.Errorf("failed to load config file: %w", err)
@@ -78,7 +90,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 
 	f := rootCmd.PersistentFlags()
 
-	f.StringVarP(&args.configFile, "config", "c", "", "Config filename")
+	f.StringVarP(&args.configFile, "config", "c", defaultConfigFile, "Config filename")
 	f.StringVarP(&args.level, "log-level", "l", "info", "Log level. 'info', 'warn', 'debug'")
 	f.BoolVarP(&args.test, "test", "t", false, "uses a test console matrix")
 
