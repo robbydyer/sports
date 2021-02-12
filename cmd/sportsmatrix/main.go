@@ -63,8 +63,6 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 					}
 				}
 			} else if configFile != "" {
-				if configFile == defaultConfigFile {
-				}
 				fmt.Printf("Loading config from file %s\n", configFile)
 				if err := args.setConfig(configFile); err != nil {
 					return fmt.Errorf("failed to load config file: %w", err)
