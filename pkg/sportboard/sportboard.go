@@ -38,8 +38,14 @@ type SportBoard struct {
 	sync.Mutex
 }
 
+// Todayer is a func that returns a string representing a date
+// that will be used for determining "Today's" games.
+// This is useful in testing what past days looked like
+type Todayer func() time.Time
+
 // Config ...
 type Config struct {
+	TodayFunc         Todayer
 	boardDelay        time.Duration
 	TimeColor         color.Color
 	ScoreColor        color.Color
@@ -86,6 +92,7 @@ type Game interface {
 	GetLink() (string, error)
 	IsLive() (bool, error)
 	IsComplete() (bool, error)
+	IsPostponed() (bool, error)
 	HomeTeam() (Team, error)
 	AwayTeam() (Team, error)
 	GetQuarter() (string, error) // Or a period, inning
@@ -152,6 +159,10 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		s.config.boardDelay = 10 * time.Second
 	}
 
+	if s.config.TodayFunc == nil {
+		s.config.TodayFunc = util.Today
+	}
+
 	if len(config.WatchTeams) == 0 {
 		if len(config.FavoriteTeams) > 0 {
 			config.WatchTeams = config.FavoriteTeams
@@ -169,7 +180,7 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 	if _, err := s.api.GetTeams(ctx); err != nil {
 		return nil, err
 	}
-	if _, err := s.api.GetScheduledGames(ctx, util.Today()); err != nil {
+	if _, err := s.api.GetScheduledGames(ctx, s.config.TodayFunc()); err != nil {
 		return nil, err
 	}
 
@@ -211,7 +222,7 @@ func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 	}
 	canvas := rgb.NewCanvas(matrix)
 
-	allGames, err := s.api.GetScheduledGames(ctx, util.Today())
+	allGames, err := s.api.GetScheduledGames(ctx, s.config.TodayFunc())
 	if err != nil {
 		return err
 	}
@@ -245,7 +256,7 @@ OUTER:
 	s.log.Debug("scheduled games today",
 		zap.Int("watched games", len(games)),
 		zap.Int("num games", len(allGames)),
-		zap.String("today", util.Today().String()),
+		zap.String("today", s.config.TodayFunc().String()),
 		zap.String("league", s.api.League()),
 	)
 

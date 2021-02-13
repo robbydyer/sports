@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -41,6 +42,10 @@ type Game struct {
 			DetailedState     string `json:"detailedState,omitempty"`
 			StatusCode        string `json:"statusCode,omitempty"`
 		} `json:"status,omitempty"`
+		Teams *struct {
+			Home *Team `json:"home"`
+			Away *Team `json:"away"`
+		} `json:"teams"`
 	} `json:"gameData,omitempty"`
 	LiveData *struct {
 		Linescore *struct {
@@ -62,51 +67,99 @@ type gameTeam struct {
 	IsWinner bool  `json:"isWinner"`
 }
 
+// GetID ...
 func (g *Game) GetID() int {
 	return g.ID
 }
 
+// GetLink ...
 func (g *Game) GetLink() (string, error) {
-	return "", nil
+	return g.Link, nil
 }
 
+// IsLive ...
 func (g *Game) IsLive() (bool, error) {
-	return true, nil
-}
-
-func (g *Game) IsComplete() (bool, error) {
+	complete, err := g.IsComplete()
+	if err != nil {
+		return false, err
+	}
+	if complete {
+		return false, nil
+	}
+	if g.LiveData != nil && g.LiveData.Linescore != nil && g.LiveData.Linescore.CurrentInning > 0 {
+		return true, nil
+	}
 	return false, nil
 }
 
+// IsComplete ...
+func (g *Game) IsComplete() (bool, error) {
+	if g.GameData != nil &&
+		g.GameData.Status != nil &&
+		(strings.Contains(strings.ToLower(g.GameData.Status.AbstractGameState), "final") ||
+			strings.ToLower(g.GameData.Status.StatusCode) == "f") {
+		return true, nil
+	}
+	return false, nil
+}
+
+// IsPostponed ...
+func (g *Game) IsPostponed() (bool, error) {
+	if g.GameData != nil &&
+		g.GameData.Status != nil &&
+		strings.Contains(strings.ToLower(g.GameData.Status.DetailedState), "postponed") {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// HomeTeam ...
 func (g *Game) HomeTeam() (sportboard.Team, error) {
 	if g.Teams != nil && g.Teams.Home != nil && g.Teams.Home.Team != nil {
 		return g.Teams.Home.Team, nil
 	}
 
-	if g.LiveData != nil &&
-		g.LiveData.Linescore != nil &&
-		g.LiveData.Linescore.Teams != nil &&
-		g.LiveData.Linescore.Teams.Home != nil {
-		g.LiveData.Linescore.Teams.Home.Team.Runs = g.LiveData.Linescore.Teams.Home.Runs
+	if g.GameData != nil &&
+		g.GameData.Teams != nil &&
+		g.GameData.Teams.Home != nil {
 
-		return g.LiveData.Linescore.Teams.Home.Team, nil
+		var runs int
+		if g.LiveData.Linescore != nil &&
+			g.LiveData.Linescore.Teams != nil &&
+			g.LiveData.Linescore.Teams.Home != nil {
+
+			runs = g.LiveData.Linescore.Teams.Home.Runs
+		}
+
+		g.GameData.Teams.Home.Runs = runs
+		return g.GameData.Teams.Home, nil
 	}
 
 	return nil, fmt.Errorf("could not locate home team in Game")
 }
 
+// AwayTeam ...
 func (g *Game) AwayTeam() (sportboard.Team, error) {
 	if g.Teams != nil && g.Teams.Away != nil && g.Teams.Away.Team != nil {
 		return g.Teams.Away.Team, nil
 	}
 
-	if g.LiveData != nil &&
-		g.LiveData.Linescore != nil &&
-		g.LiveData.Linescore.Teams != nil &&
-		g.LiveData.Linescore.Teams.Away != nil {
-		g.LiveData.Linescore.Teams.Away.Team.Runs = g.LiveData.Linescore.Teams.Away.Runs
+	if g.GameData != nil &&
+		g.GameData.Teams != nil &&
+		g.GameData.Teams.Away != nil {
 
-		return g.LiveData.Linescore.Teams.Away.Team, nil
+		var runs int
+		if g.LiveData.Linescore != nil &&
+			g.LiveData.Linescore.Teams != nil &&
+			g.LiveData.Linescore.Teams.Home != nil {
+
+			runs = g.LiveData.Linescore.Teams.Home.Runs
+		}
+
+		g.GameData.Teams.Away.Runs = runs
+
+		return g.GameData.Teams.Away, nil
 	}
 
 	return nil, fmt.Errorf("could not locate home team in Game")
@@ -197,9 +250,17 @@ func GetLiveGame(ctx context.Context, link string) (sportboard.Game, error) {
 }
 
 func getGames(ctx context.Context, dateStr string) ([]*Game, error) {
-	uri := fmt.Sprintf("%s/v1/schedule?date=%s", baseURL, dateStr)
+	uri, err := url.Parse(fmt.Sprintf("%s/v1/schedule", baseURL))
+	if err != nil {
+		return nil, err
+	}
+	v := uri.Query()
+	v.Set("sportId", "1")
+	v.Set("date", dateStr)
 
-	req, err := http.NewRequest("GET", uri, nil)
+	uri.RawQuery = v.Encode()
+
+	req, err := http.NewRequest("GET", uri.String(), nil)
 	if err != nil {
 		return nil, err
 	}

@@ -89,6 +89,13 @@ func (g *Game) GetLink() (string, error) {
 
 // IsLive ...
 func (g *Game) IsLive() (bool, error) {
+	complete, err := g.IsComplete()
+	if err != nil {
+		return false, err
+	}
+	if complete {
+		return false, nil
+	}
 	if g.LiveData != nil && g.LiveData.Linescore != nil && g.LiveData.Linescore.CurrentPeriod > 0 {
 		return true, nil
 	}
@@ -97,7 +104,9 @@ func (g *Game) IsLive() (bool, error) {
 
 // IsComplete ...
 func (g *Game) IsComplete() (bool, error) {
-	if g.GameData != nil && g.GameData.Status != nil && strings.Contains(strings.ToLower(g.GameData.Status.AbstractGameState), "final") {
+	if g.GameData != nil &&
+		g.GameData.Status != nil &&
+		strings.Contains(strings.ToLower(g.GameData.Status.AbstractGameState), "final") {
 		return true, nil
 	}
 	if g.LiveData != nil &&
@@ -105,6 +114,17 @@ func (g *Game) IsComplete() (bool, error) {
 		strings.Contains(strings.ToLower(g.LiveData.Linescore.CurrentPeriodTimeRemaining), "final") {
 		return true, nil
 	}
+	return false, nil
+}
+
+// IsPostponed ...
+func (g *Game) IsPostponed() (bool, error) {
+	if g.GameData != nil &&
+		g.GameData.Status != nil &&
+		strings.Contains(strings.ToLower(g.GameData.Status.DetailedState), "postponed") {
+		return true, nil
+	}
+
 	return false, nil
 }
 

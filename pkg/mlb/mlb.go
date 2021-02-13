@@ -2,6 +2,7 @@ package mlb
 
 import (
 	"context"
+	"fmt"
 	"image"
 	"time"
 
@@ -57,17 +58,49 @@ func (m *MLB) HTTPPathPrefix() string {
 
 // GetTeams ...
 func (m *MLB) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
-	return nil, nil
+	if m.teams == nil {
+		if err := m.UpdateTeams(ctx); err != nil {
+			return nil, err
+		}
+	}
+
+	var tList []sportboard.Team
+
+	for _, t := range m.teams {
+		tList = append(tList, t)
+	}
+
+	return tList, nil
 }
 
 // TeamFromAbbreviation ...
 func (m *MLB) TeamFromAbbreviation(ctx context.Context, abbreviation string) (sportboard.Team, error) {
-	return nil, nil
+	for _, t := range m.teams {
+		if t.Abbreviation == abbreviation {
+			return t, nil
+		}
+	}
+
+	return nil, fmt.Errorf("could not find team '%s'", abbreviation)
 }
 
 // GetScheduledGames ...
 func (m *MLB) GetScheduledGames(ctx context.Context, date time.Time) ([]sportboard.Game, error) {
-	return nil, nil
+	dateStr := m.DateStr(date)
+	games, ok := m.games[dateStr]
+	if !ok || len(games) == 0 {
+		if err := m.UpdateGames(ctx, dateStr); err != nil {
+			return nil, err
+		}
+	}
+
+	var gList []sportboard.Game
+
+	for _, g := range games {
+		gList = append(gList, g)
+	}
+
+	return gList, nil
 }
 
 // DateStr
@@ -99,5 +132,12 @@ func (m *MLB) UpdateTeams(ctx context.Context) error {
 
 // UpdateGames updates scheduled games
 func (m *MLB) UpdateGames(ctx context.Context, dateStr string) error {
+	games, err := getGames(ctx, dateStr)
+	if err != nil {
+		return err
+	}
+
+	m.games[dateStr] = games
+
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"image"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -23,6 +24,7 @@ import (
 
 type runCmd struct {
 	rArgs *rootArgs
+	today string
 }
 
 func newRunCmd(args *rootArgs) *cobra.Command {
@@ -36,6 +38,10 @@ func newRunCmd(args *rootArgs) *cobra.Command {
 		RunE:  c.run,
 	}
 
+	f := cmd.Flags()
+
+	f.StringVar(&c.today, "date-str", "", "Set the date of 'Today' for testing past days. Format 2020-01-30")
+
 	return cmd
 }
 
@@ -44,6 +50,18 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 	defer cancel()
 
 	s.rArgs.setConfigDefaults()
+
+	if s.today != "" {
+		t, err := time.Parse("2006-01-02", s.today)
+		if err != nil {
+			return err
+		}
+		f := func() time.Time {
+			return t
+		}
+		s.rArgs.config.NHLConfig.TodayFunc = f
+		s.rArgs.config.MLBConfig.TodayFunc = f
+	}
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt)
@@ -74,7 +92,7 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	if s.rArgs.config.MLBConfig != nil {
-		api, err := mlb.NewMock(logger)
+		api, err := mlb.New(ctx, logger)
 		if err != nil {
 			return err
 		}

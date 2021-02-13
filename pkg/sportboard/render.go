@@ -151,11 +151,18 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas *rgb.Canvas,
 		return err
 	}
 
-	gameTime, err := liveGame.GetStartTime(ctx)
-	if err != nil {
-		return err
+	var gameTimeStr string
+
+	if is, err := liveGame.IsPostponed(); err == nil && is {
+		s.log.Debug("game was postponed", zap.Int("game ID", liveGame.GetID()))
+		gameTimeStr = "PPD"
+	} else {
+		gameTime, err := liveGame.GetStartTime(ctx)
+		if err != nil {
+			return err
+		}
+		gameTimeStr = gameTime.Local().Format("3:04PM")
 	}
-	gameTimeStr := gameTime.Local().Format("3:04PM")
 
 	if err := s.RenderHomeLogo(renderCtx, canvas, homeTeam.GetAbbreviation()); err != nil {
 		return err

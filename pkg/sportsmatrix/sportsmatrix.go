@@ -261,12 +261,20 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 			}
 		}()
 
+		renderStart := time.Now()
+
 		if err := b.Render(ctx, s.matrix); err != nil {
 			s.log.Error(err.Error())
 		}
 		select {
 		case renderDone <- struct{}{}:
 		default:
+		}
+
+		// If for some reason the render returns really quickly, like
+		// the board not implementing a delay, let's sleep here for a bit
+		if time.Since(renderStart) < 2*time.Second {
+			time.Sleep(5 * time.Second)
 		}
 	}
 }
