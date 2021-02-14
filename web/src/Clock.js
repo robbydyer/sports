@@ -6,8 +6,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Image from 'react-bootstrap/Image';
 import clock from './clock.png';
-
-const MATRIX = "http://matrix.local:8080"
+import conf from './config.json';
 
 class Clock extends React.Component {
     constructor(props) {
@@ -15,7 +14,7 @@ class Clock extends React.Component {
     }
     callmatrix(path) {
         console.log(`Calling matrix Image Board /clock/${path}`)
-        fetch(`${MATRIX}/clock/${path}`, {
+        fetch(`${conf.BACKEND}/clock/${path}`, {
             method: "GET",
             mode: "cors",
         });

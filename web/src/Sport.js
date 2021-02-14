@@ -7,8 +7,7 @@ import Col from 'react-bootstrap/Col';
 import Image from 'react-bootstrap/Image';
 import nhllogo from './nhllogo.jpeg';
 import mlblogo from './mlb.png';
-
-const MATRIX = "http://matrix.local:8080"
+import conf from './config.json';
 
 class Sport extends React.Component {
     constructor(props) {
@@ -16,7 +15,7 @@ class Sport extends React.Component {
     }
     callmatrix(path) {
         console.log(`Calling matrix API nhl/${path}`)
-        fetch(`${MATRIX}/${this.props.sport}/${path}`, {
+        fetch(`${conf.BACKEND}/${this.props.sport}/${path}`, {
             method: "GET",
             mode: "cors",
         });

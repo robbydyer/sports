@@ -35,6 +35,7 @@ type SportsMatrix struct {
 
 // Config ...
 type Config struct {
+	ServeWebUI     bool                `json:"serveWebUI"`
 	HTTPListenPort int                 `json:"httpListenPort"`
 	HardwareConfig *rgb.HardwareConfig `json:"hardwareConfig"`
 	ScreenOffTimes []string            `json:"screenOffTimes"`
