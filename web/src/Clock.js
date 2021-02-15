@@ -14,7 +14,7 @@ class Clock extends React.Component {
     }
     callmatrix(path) {
         console.log(`Calling matrix Image Board /clock/${path}`)
-        fetch(`${conf.BACKEND}/clock/${path}`, {
+        fetch(`${conf.BACKEND}/api/clock/${path}`, {
             method: "GET",
             mode: "cors",
         });

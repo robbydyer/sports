@@ -14,7 +14,7 @@ class ImageBoard extends React.Component {
     }
     callmatrix(path) {
         console.log(`Calling matrix Image Board /img/${path}`)
-        fetch(`${conf.BACKEND}/img/${path}`, {
+        fetch(`${conf.BACKEND}/api/img/${path}`, {
             method: "GET",
             mode: "cors",
         });

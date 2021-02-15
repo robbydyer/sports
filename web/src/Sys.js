@@ -14,7 +14,7 @@ class Sys extends React.Component {
     }
     callmatrix(path) {
         console.log(`Calling matrix Sys Board /clock/${path}`)
-        fetch(`${conf.BACKEND}/sys/${path}`, {
+        fetch(`${conf.BACKEND}/api/sys/${path}`, {
             method: "GET",
             mode: "cors",
         });

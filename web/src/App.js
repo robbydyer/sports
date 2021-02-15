@@ -12,14 +12,14 @@ import conf from './config.json';
 class App extends React.Component {
   screenOn() {
     console.log("Turning screen on")
-    fetch(`${conf.BACKEND}/screenon`, {
+    fetch(`${conf.BACKEND}/api/screenon`, {
       method: "GET",
       mode: "cors",
     });
   }
   screenOff() {
     console.log("Turning screen off")
-    fetch(`${conf.BACKEND}/screenoff`, {
+    fetch(`${conf.BACKEND}/api/screenoff`, {
       method: "GET",
       mode: "cors",
     });

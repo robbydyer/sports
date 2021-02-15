@@ -15,7 +15,7 @@ class Sport extends React.Component {
     }
     callmatrix(path) {
         console.log(`Calling matrix API nhl/${path}`)
-        fetch(`${conf.BACKEND}/${this.props.sport}/${path}`, {
+        fetch(`${conf.BACKEND}/api/${this.props.sport}/${path}`, {
             method: "GET",
             mode: "cors",
         });

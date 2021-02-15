@@ -9,7 +9,7 @@ import conf from './config.json';
 class Home extends React.Component {
     callmatrix(path) {
         console.log(`Calling matrix API ${path}`)
-        fetch(`${conf.BACKEND}/${path}`, {
+        fetch(`${conf.BACKEND}/api/${path}`, {
             method: "GET",
             mode: "cors",
         });
