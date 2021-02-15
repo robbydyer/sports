@@ -1,0 +1,26 @@
+#!/bin/bash
+set -euo pipefail
+
+if [ ! -n "${1:-}" ]; then
+  echo "Please pass Pi http endpoint as arg 1, i.e. script/web-build http://matrix.local"
+  exit 1
+fi
+
+url="$1"
+
+echo "Configuring Web UI to point to ${url}"
+
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+
+cd "${ROOT}/web"
+cat <<EOF> src/config.json
+{
+  "BACKEND": "${url}"
+}
+EOF
+
+npm run build
+
+cd "${ROOT}"
+rm -rf pkg/sportsmatrix/assets/web
+mv web/build pkg/sportsmatrix/assets/web

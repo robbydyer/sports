@@ -7,20 +7,19 @@ import Clock from './Clock.js';
 import Sys from './Sys.js';
 import TopNav from './Nav.js';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
-
-const MATRIX = "http://matrix.local:8080"
+import conf from './config.json';
 
 class App extends React.Component {
   screenOn() {
     console.log("Turning screen on")
-    fetch(`${MATRIX}/screenon`, {
+    fetch(`${conf.BACKEND}/api/screenon`, {
       method: "GET",
       mode: "cors",
     });
   }
   screenOff() {
     console.log("Turning screen off")
-    fetch(`${MATRIX}/screenoff`, {
+    fetch(`${conf.BACKEND}/api/screenoff`, {
       method: "GET",
       mode: "cors",
     });

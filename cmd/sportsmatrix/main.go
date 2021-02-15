@@ -172,6 +172,12 @@ func (r *rootArgs) getRGBMatrix(logger *zap.Logger) (rgb.Matrix, error) {
 	)
 
 	rt := &rgb.DefaultRuntimeOptions
+
+	// If we have configured the http server to listen on a privileged port (like 80),
+	// we need to maintain root permissions
+	if r.config.SportsMatrixConfig.HTTPListenPort < 1024 {
+		rt.DropPrivileges = -1
+	}
 	var err error
 	matrix, err = rgb.NewRGBLedMatrix(r.config.SportsMatrixConfig.HardwareConfig, rt)
 

@@ -6,8 +6,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Image from 'react-bootstrap/Image';
 import server from './server.png';
-
-const MATRIX = "http://matrix.local:8080"
+import conf from './config.json';
 
 class Sys extends React.Component {
     constructor(props) {
@@ -15,7 +14,7 @@ class Sys extends React.Component {
     }
     callmatrix(path) {
         console.log(`Calling matrix Sys Board /clock/${path}`)
-        fetch(`${MATRIX}/sys/${path}`, {
+        fetch(`${conf.BACKEND}/api/sys/${path}`, {
             method: "GET",
             mode: "cors",
         });
