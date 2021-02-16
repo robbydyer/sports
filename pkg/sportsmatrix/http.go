@@ -74,10 +74,7 @@ func (s *SportsMatrix) startHTTP() chan error {
 		errChan <- s.server.ListenAndServe()
 	}()
 
-	// We could manually manage the listener and check for readiness that way,
-	// but laziness instead leads to this arbitrary wait time to let the server
-	// get ready or potentially return an error to the channel
-	time.Sleep(3 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	return errChan
 }
