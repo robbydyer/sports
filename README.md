@@ -99,6 +99,10 @@ sudo ./sportsmatrix.bin run -c myconfig.conf
 sudo ./sportsmatrix.bin nhltest
 ```
 
+## Web UI
+There is a (very) basic web UI frontend for managing the board. It is bundled with the binary and served as a single-page app. For now, running it with a pre-built binary means your Pi has to be accessible via the hostname `matrix.local` on your network. The UI gives buttons for all the backend [HTTP Endpoints](#http-endpoints). 
+
+
 ## HTTP endpoints
 The sportsmatrix creates some HTTP endpoints for on-the-fly changes. The matrix itself registers some endpoints, and each board is capable of registering it's own.
 
