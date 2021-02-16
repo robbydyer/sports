@@ -32,6 +32,10 @@ I'd like to add some other basic boards- ~clock~, weather, etc.
 ## Installation
 My goal is to soon provide an easy installer script...
 
+There are some precompiled binaries on the Releases page- simply download the one that works with your Pi (sportsmatrix.arm7 for most, sportsmatrix.armv6l for Pi Zero).
+
+OR
+
 The manual steps:
 - Clone this repository onto your Pi
 - Run `script/build.local`. This will result in a binary named "sportsmatrix.bin" inside the cloned repo directory.
