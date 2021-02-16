@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"image"
 	"io/ioutil"
 	"os"
+	"time"
 
 	yaml "github.com/ghodss/yaml"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/atomic"
@@ -13,8 +17,11 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/robbydyer/sports/internal/config"
+	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/clock"
 	"github.com/robbydyer/sports/pkg/imageboard"
+	"github.com/robbydyer/sports/pkg/mlb"
+	"github.com/robbydyer/sports/pkg/nhl"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
@@ -29,6 +36,7 @@ type rootArgs struct {
 	configFile string
 	config     *config.Config
 	test       bool
+	today      string
 }
 
 func main() {
@@ -84,6 +92,9 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 				args.logLevel = l
 			}
 
+			args.setConfigDefaults()
+			args.setTodayFuncs(viper.GetString("date-str"))
+
 			return nil
 		},
 	}
@@ -93,6 +104,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 	f.StringVarP(&args.configFile, "config", "c", defaultConfigFile, "Config filename")
 	f.StringVarP(&args.level, "log-level", "l", "info", "Log level. 'info', 'warn', 'debug'")
 	f.BoolVarP(&args.test, "test", "t", false, "uses a test console matrix")
+	f.StringVar(&args.today, "date-str", "", "Set the date of 'Today' for testing past days. Format 2020-01-30")
 
 	_ = viper.BindPFlags(f)
 
@@ -190,4 +202,83 @@ func (r *rootArgs) getTestMatrix(logger *zap.Logger) rgb.Matrix {
 		zap.Int("Rows", r.config.SportsMatrixConfig.HardwareConfig.Rows),
 	)
 	return rgb.NewConsoleMatrix(r.config.SportsMatrixConfig.HardwareConfig.Cols, r.config.SportsMatrixConfig.HardwareConfig.Rows, os.Stdout, logger)
+}
+
+func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.Board, error) {
+	bounds := image.Rect(0, 0, r.config.SportsMatrixConfig.HardwareConfig.Cols, r.config.SportsMatrixConfig.HardwareConfig.Rows)
+
+	var boards []board.Board
+
+	if r.config.NHLConfig != nil {
+		api, err := nhl.New(ctx, logger)
+		if err != nil {
+			return boards, err
+		}
+
+		b, err := sportboard.New(ctx, api, bounds, logger, r.config.NHLConfig)
+		if err != nil {
+			return boards, err
+		}
+
+		boards = append(boards, b)
+	}
+	if r.config.MLBConfig != nil {
+		api, err := mlb.New(ctx, logger)
+		if err != nil {
+			return boards, err
+		}
+
+		b, err := sportboard.New(ctx, api, bounds, logger, r.config.MLBConfig)
+		if err != nil {
+			return boards, err
+		}
+
+		boards = append(boards, b)
+	}
+
+	if r.config.ImageConfig != nil {
+		b, err := imageboard.New(afero.NewOsFs(), bounds, r.config.ImageConfig, logger)
+		if err != nil {
+			return boards, err
+		}
+		boards = append(boards, b)
+	}
+
+	if r.config.ClockConfig != nil {
+		b, err := clock.New(r.config.ClockConfig, logger)
+		if err != nil {
+			return boards, err
+		}
+		boards = append(boards, b)
+	}
+
+	if r.config.SysConfig != nil {
+		b, err := sysboard.New(logger, r.config.SysConfig)
+		if err != nil {
+			return boards, err
+		}
+		boards = append(boards, b)
+	}
+
+	return boards, nil
+}
+
+func (r *rootArgs) setTodayFuncs(today string) error {
+	if today == "" {
+		return nil
+	}
+
+	t, err := time.Parse("2006-01-02", today)
+	if err != nil {
+		return err
+	}
+
+	f := func() time.Time {
+		return t
+	}
+
+	r.config.NHLConfig.TodayFunc = f
+	r.config.MLBConfig.TodayFunc = f
+
+	return nil
 }

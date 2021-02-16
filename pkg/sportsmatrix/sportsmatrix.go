@@ -3,7 +3,6 @@ package sportsmatrix
 import (
 	"context"
 	"fmt"
-	"image"
 	"net/http"
 	"sync"
 	"time"
@@ -19,7 +18,7 @@ import (
 // SportsMatrix controls the RGB matrix. It rotates through a list of given board.Board
 type SportsMatrix struct {
 	cfg           *Config
-	matrix        rgb.Matrix
+	canvas        board.Canvas
 	boards        []board.Board
 	screenIsOn    *atomic.Bool
 	screenOff     chan struct{}
@@ -80,7 +79,7 @@ func (c *Config) Defaults() {
 }
 
 // New ...
-func New(ctx context.Context, logger *zap.Logger, cfg *Config, matrix rgb.Matrix, boards ...board.Board) (*SportsMatrix, error) {
+func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvas board.Canvas, boards ...board.Board) (*SportsMatrix, error) {
 	cfg.Defaults()
 
 	s := &SportsMatrix{
@@ -91,7 +90,7 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, matrix rgb.Matrix
 		screenOn:   make(chan struct{}),
 		close:      make(chan struct{}),
 		screenIsOn: atomic.NewBool(true),
-		matrix:     matrix,
+		canvas:     canvas,
 	}
 
 	for _, b := range s.boards {
@@ -155,10 +154,12 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, matrix rgb.Matrix
 }
 
 // MatrixBounds returns an image.Rectangle of the matrix bounds
+/*
 func (s *SportsMatrix) MatrixBounds() image.Rectangle {
 	w, h := s.matrix.Geometry()
 	return image.Rect(0, 0, w-1, h-1)
 }
+*/
 
 func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 	for {
@@ -176,7 +177,7 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 
 			s.Lock()
 			s.boardCancel()
-			_ = rgb.NewCanvas(s.matrix).Clear()
+			_ = s.canvas.Clear()
 			s.boardCtx, s.boardCancel = context.WithCancel(ctx)
 			s.Unlock()
 		case <-s.screenOn:
@@ -213,7 +214,7 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 
 		if s.allDisabled() {
 			clearer.Do(func() {
-				if err := rgb.NewCanvas(s.matrix).Clear(); err != nil {
+				if err := s.canvas.Clear(); err != nil {
 					s.log.Error("failed to clear matrix when all board were disabled", zap.Error(err))
 				}
 			})
@@ -264,7 +265,7 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 
 		renderStart := time.Now()
 
-		if err := b.Render(ctx, s.matrix); err != nil {
+		if err := b.Render(ctx, s.canvas); err != nil {
 			s.log.Error(err.Error())
 		}
 		select {
@@ -283,10 +284,6 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 // Close closes the matrix
 func (s *SportsMatrix) Close() {
 	s.close <- struct{}{}
-	if s.matrix != nil {
-		s.log.Warn("Sportsmatrix is shutting down- Closing matrix")
-		_ = s.matrix.Close()
-	}
 	s.server.Close()
 }
 

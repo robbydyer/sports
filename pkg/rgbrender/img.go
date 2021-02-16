@@ -14,6 +14,7 @@ import (
 	"github.com/nfnt/resize"
 	"github.com/spf13/afero"
 
+	"github.com/robbydyer/sports/pkg/board"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
@@ -115,13 +116,13 @@ func DrawImageAligned(canvas *rgb.Canvas, bounds image.Rectangle, img *image.RGB
 }
 
 // DrawImage draws an image
-func DrawImage(canvas *rgb.Canvas, bounds image.Rectangle, img image.Image) error {
+func DrawImage(canvas draw.Image, bounds image.Rectangle, img image.Image) error {
 	draw.Draw(canvas, bounds, img, img.Bounds().Min, draw.Over)
 	return nil
 }
 
 // PlayImages plays s series of images. If loop == 0, it will play forever until the context is canceled
-func PlayImages(ctx context.Context, canvas *rgb.Canvas, images []image.Image, delay []time.Duration, loop int) error {
+func PlayImages(ctx context.Context, canvas board.Canvas, images []image.Image, delay []time.Duration, loop int) error {
 	center, err := AlignPosition(CenterCenter, canvas.Bounds(), images[0].Bounds().Dx(), images[0].Bounds().Dy())
 	if err != nil {
 		return err
@@ -165,7 +166,7 @@ func PlayImages(ctx context.Context, canvas *rgb.Canvas, images []image.Image, d
 
 // PlayGIF reads and draw a gif file from r. It use the contained images and
 // delays and loops over it, until a true is sent to the returned chan
-func PlayGIF(ctx context.Context, canvas *rgb.Canvas, gif *gif.GIF) error {
+func PlayGIF(ctx context.Context, canvas board.Canvas, gif *gif.GIF) error {
 	delay := make([]time.Duration, len(gif.Image))
 	images := make([]image.Image, len(gif.Image))
 	for i, image := range gif.Image {

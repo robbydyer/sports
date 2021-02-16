@@ -12,7 +12,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
@@ -78,9 +77,7 @@ func (c *Clock) Enabled() bool {
 
 func (c *Clock) Cleanup() {}
 
-func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
-	canvas := rgb.NewCanvas(matrix)
-
+func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
 	if !c.config.Enabled.Load() {
 		return nil
 	}

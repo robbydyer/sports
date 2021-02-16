@@ -4,6 +4,7 @@ import (
 	"embed"
 	"image"
 	"image/color"
+	"image/draw"
 	"math"
 	"path/filepath"
 	"strings"
@@ -13,8 +14,6 @@ import (
 
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
-
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
 //go:embed assets/fonts
@@ -83,7 +82,7 @@ func GetFont(name string) (*truetype.Font, error) {
 }
 
 // Write ...
-func (t *TextWriter) Write(canvas *rgb.Canvas, bounds image.Rectangle, str []string, clr color.Color) error {
+func (t *TextWriter) Write(canvas draw.Image, bounds image.Rectangle, str []string, clr color.Color) error {
 	startX := bounds.Min.X + t.XStartCorrection
 	drawer := &font.Drawer{
 		Dst: canvas,
@@ -112,7 +111,7 @@ func (t *TextWriter) Write(canvas *rgb.Canvas, bounds image.Rectangle, str []str
 }
 
 // WriteCentered writes text in the center of the canvas, horizontally and vertically
-func (t *TextWriter) WriteCentered(canvas *rgb.Canvas, bounds image.Rectangle, str []string, clr color.Color) error {
+func (t *TextWriter) WriteCentered(canvas draw.Image, bounds image.Rectangle, str []string, clr color.Color) error {
 	drawer := &font.Drawer{
 		Dst: canvas,
 		Src: image.NewUniform(clr),

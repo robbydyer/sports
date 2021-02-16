@@ -6,12 +6,12 @@ import (
 
 	"go.uber.org/zap"
 
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
 // RenderGameCounter ...
-func (s *SportBoard) RenderGameCounter(canvas *rgb.Canvas, numGames int, activeIndex int, spacing int) (image.Image, error) {
+func (s *SportBoard) RenderGameCounter(canvas board.Canvas, numGames int, activeIndex int, spacing int) (image.Image, error) {
 	totalWidth := (numGames * spacing) + numGames - 1
 
 	aligned, err := rgbrender.AlignPosition(rgbrender.CenterBottom, canvas.Bounds(), totalWidth, 1)

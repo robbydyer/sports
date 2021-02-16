@@ -13,8 +13,8 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
+	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/logo"
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 	"github.com/robbydyer/sports/pkg/util"
 )
@@ -215,12 +215,11 @@ func (s *SportBoard) Enabled() bool {
 }
 
 // Render ...
-func (s *SportBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
+func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	if !s.config.Enabled.Load() {
 		s.log.Warn("skipping disabled board", zap.String("board", s.api.League()))
 		return nil
 	}
-	canvas := rgb.NewCanvas(matrix)
 
 	allGames, err := s.api.GetScheduledGames(ctx, s.config.TodayFunc())
 	if err != nil {
@@ -342,7 +341,7 @@ OUTER:
 	return nil
 }
 
-func (s *SportBoard) renderGame(ctx context.Context, canvas *rgb.Canvas, liveGame Game) error {
+func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGame Game) error {
 	select {
 	case <-ctx.Done():
 		return context.Canceled
