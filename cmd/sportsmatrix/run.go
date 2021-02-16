@@ -3,28 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"image"
 	"os"
 	"os/signal"
-	"time"
 
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
-	"github.com/robbydyer/sports/pkg/board"
-	"github.com/robbydyer/sports/pkg/clock"
-	"github.com/robbydyer/sports/pkg/imageboard"
-	"github.com/robbydyer/sports/pkg/mlb"
-	"github.com/robbydyer/sports/pkg/nhl"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
-	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
-	"github.com/robbydyer/sports/pkg/sysboard"
 )
 
 type runCmd struct {
 	rArgs *rootArgs
-	today string
 }
 
 func newRunCmd(args *rootArgs) *cobra.Command {
@@ -38,30 +27,12 @@ func newRunCmd(args *rootArgs) *cobra.Command {
 		RunE:  c.run,
 	}
 
-	f := cmd.Flags()
-
-	f.StringVar(&c.today, "date-str", "", "Set the date of 'Today' for testing past days. Format 2020-01-30")
-
 	return cmd
 }
 
 func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	s.rArgs.setConfigDefaults()
-
-	if s.today != "" {
-		t, err := time.Parse("2006-01-02", s.today)
-		if err != nil {
-			return err
-		}
-		f := func() time.Time {
-			return t
-		}
-		s.rArgs.config.NHLConfig.TodayFunc = f
-		s.rArgs.config.MLBConfig.TodayFunc = f
-	}
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt)
@@ -73,60 +44,9 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 
 	logger := getLogger(s.rArgs.logLevel)
 
-	bounds := image.Rect(0, 0, s.rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, s.rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
-
-	var boards []board.Board
-
-	if s.rArgs.config.NHLConfig != nil {
-		api, err := nhl.New(ctx, logger)
-		if err != nil {
-			return err
-		}
-
-		b, err := sportboard.New(ctx, api, bounds, logger, s.rArgs.config.NHLConfig)
-		if err != nil {
-			return err
-		}
-
-		boards = append(boards, b)
-	}
-
-	if s.rArgs.config.MLBConfig != nil {
-		api, err := mlb.New(ctx, logger)
-		if err != nil {
-			return err
-		}
-
-		b, err := sportboard.New(ctx, api, bounds, logger, s.rArgs.config.MLBConfig)
-		if err != nil {
-			return err
-		}
-
-		boards = append(boards, b)
-	}
-
-	if s.rArgs.config.ImageConfig != nil {
-		b, err := imageboard.New(afero.NewOsFs(), bounds, s.rArgs.config.ImageConfig, logger)
-		if err != nil {
-			return err
-		}
-		boards = append(boards, b)
-	}
-
-	if s.rArgs.config.ClockConfig != nil {
-		b, err := clock.New(s.rArgs.config.ClockConfig, logger)
-		if err != nil {
-			return err
-		}
-		boards = append(boards, b)
-	}
-
-	if s.rArgs.config.SysConfig != nil {
-		b, err := sysboard.New(logger, s.rArgs.config.SysConfig)
-		if err != nil {
-			return err
-		}
-		boards = append(boards, b)
+	boards, err := s.rArgs.getBoards(ctx, logger)
+	if err != nil {
+		return err
 	}
 
 	var matrix rgb.Matrix
@@ -140,7 +60,9 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	mtrx, err := sportsmatrix.New(ctx, logger, s.rArgs.config.SportsMatrixConfig, matrix, boards...)
+	canvas := rgb.NewCanvas(matrix)
+
+	mtrx, err := sportsmatrix.New(ctx, logger, s.rArgs.config.SportsMatrixConfig, canvas, boards...)
 	if err != nil {
 		return err
 	}

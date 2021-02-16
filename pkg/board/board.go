@@ -2,9 +2,9 @@ package board
 
 import (
 	"context"
+	"image"
+	"image/draw"
 	"net/http"
-
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
 // HTTPHandler is the type returned to the sportsmatrix for HTTP endpoints
@@ -16,7 +16,15 @@ type HTTPHandler struct {
 // Board is the interface to implement for displaying on the matrix
 type Board interface {
 	Name() string
-	Render(ctx context.Context, matrix rgb.Matrix) error
+	Render(ctx context.Context, canvas Canvas) error
 	Enabled() bool
 	GetHTTPHandlers() ([]*HTTPHandler, error)
+}
+
+// Canvas ...
+type Canvas interface {
+	image.Image
+	draw.Image
+	Clear() error
+	Render() error
 }

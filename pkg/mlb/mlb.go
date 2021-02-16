@@ -17,9 +17,12 @@ const (
 	baseURL      = "https://statsapi.mlb.com/api"
 	linkBase     = "https://statsapi.mlb.com"
 	logoCacheDir = "/tmp/sportsmatrix_logos/mlb"
-	DateFormat   = "2006-01-02"
+
+	// DateFormat is the game schedule format for querying a particular day from the API
+	DateFormat = "2006-01-02"
 )
 
+// DefaultLogoConfigs contains default logo alignedment configurations
 type DefaultLogoConfigs *[]*logo.Config
 
 // MLB implements a sportboard.API
@@ -52,6 +55,7 @@ func New(ctx context.Context, logger *zap.Logger) (*MLB, error) {
 	return m, nil
 }
 
+// HTTPPathPrefix returns the path prefix for the HTTP handlers for this board
 func (m *MLB) HTTPPathPrefix() string {
 	return "mlb"
 }
@@ -103,7 +107,7 @@ func (m *MLB) GetScheduledGames(ctx context.Context, date time.Time) ([]sportboa
 	return gList, nil
 }
 
-// DateStr
+// DateStr ...
 func (m *MLB) DateStr(d time.Time) string {
 	return d.Format(DateFormat)
 }

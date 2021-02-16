@@ -16,7 +16,7 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
@@ -104,7 +104,7 @@ func (i *ImageBoard) Enabled() bool {
 }
 
 // Render ...
-func (i *ImageBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
+func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	if !i.config.Enabled.Load() {
 		i.log.Warn("ImageBoard is disabled, not rendering")
 		return nil
@@ -137,7 +137,6 @@ func (i *ImageBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
 		}
 	}
 
-	canvas := rgb.NewCanvas(matrix)
 	for _, img := range i.imageCache {
 		if !i.config.Enabled.Load() {
 			i.log.Warn("ImageBoard is disabled, not rendering")

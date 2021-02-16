@@ -8,8 +8,8 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/logo"
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
 func (s *SportBoard) logoConfig(logoKey string) (*logo.Config, error) {
@@ -24,7 +24,7 @@ func (s *SportBoard) logoConfig(logoKey string) (*logo.Config, error) {
 }
 
 // RenderHomeLogo ...
-func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas *rgb.Canvas, abbreviation string) error {
+func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas board.Canvas, abbreviation string) error {
 	select {
 	case <-ctx.Done():
 		return context.Canceled
@@ -61,7 +61,7 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas *rgb.Canvas, abb
 
 	textWdith := s.textAreaWidth()
 	logoWidth := (s.matrixBounds.Dx() - textWdith) / 2
-	renderedLogo, err := l.RenderLeftAligned(canvas, logoWidth)
+	renderedLogo, err := l.RenderLeftAligned(canvas.Bounds(), logoWidth)
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas *rgb.Canvas, abb
 }
 
 // RenderAwayLogo ...
-func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvas *rgb.Canvas, abbreviation string) error {
+func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvas board.Canvas, abbreviation string) error {
 	select {
 	case <-ctx.Done():
 		return context.Canceled
@@ -110,7 +110,7 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvas *rgb.Canvas, abb
 	textWdith := s.textAreaWidth()
 	logoWidth := (s.matrixBounds.Dx() - textWdith) / 2
 
-	renderedLogo, err := l.RenderRightAligned(canvas, logoWidth+textWdith)
+	renderedLogo, err := l.RenderRightAligned(canvas.Bounds(), logoWidth+textWdith)
 	if err != nil {
 		return err
 	}

@@ -9,10 +9,10 @@ import (
 
 	"go.uber.org/zap"
 
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/pkg/board"
 )
 
-func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liveGame Game) error {
+func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, liveGame Game) error {
 	awayTeam, err := liveGame.AwayTeam()
 	if err != nil {
 		return err
@@ -129,7 +129,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas *rgb.Canvas, liv
 	}
 }
 
-func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas *rgb.Canvas, liveGame Game) error {
+func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas, liveGame Game) error {
 	renderCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	awayTeam, err := liveGame.AwayTeam()
@@ -193,7 +193,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas *rgb.Canvas,
 	return canvas.Render()
 }
 
-func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas *rgb.Canvas, liveGame Game) error {
+func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas, liveGame Game) error {
 	renderCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	awayTeam, err := liveGame.AwayTeam()

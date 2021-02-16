@@ -12,11 +12,10 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
-// Board implements board.Board
+// Clock implements board.Board
 type Clock struct {
 	config     *Config
 	font       *truetype.Font
@@ -24,12 +23,14 @@ type Clock struct {
 	log        *zap.Logger
 }
 
+// Config is a Clock configuration
 type Config struct {
 	boardDelay time.Duration
 	Enabled    *atomic.Bool `json:"enabled"`
 	BoardDelay string       `json:"boardDelay"`
 }
 
+// SetDefaults ...
 func (c *Config) SetDefaults() {
 	if c.BoardDelay != "" {
 		var err error
@@ -46,6 +47,7 @@ func (c *Config) SetDefaults() {
 	}
 }
 
+// New returns a new Clock board
 func New(config *Config, logger *zap.Logger) (*Clock, error) {
 	if config == nil {
 		config = &Config{
@@ -68,19 +70,21 @@ func New(config *Config, logger *zap.Logger) (*Clock, error) {
 	return c, nil
 }
 
+// Name ...
 func (c *Clock) Name() string {
 	return "Clock"
 }
 
+// Enabled ...
 func (c *Clock) Enabled() bool {
 	return c.config.Enabled.Load()
 }
 
+// Cleanup ...
 func (c *Clock) Cleanup() {}
 
-func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
-	canvas := rgb.NewCanvas(matrix)
-
+// Render ...
+func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
 	if !c.config.Enabled.Load() {
 		return nil
 	}
@@ -142,14 +146,17 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 				z = "0"
 			}
 
-			c.textWriter.WriteCentered(
+			if err := c.textWriter.WriteCentered(
 				canvas,
 				canvas.Bounds(),
 				[]string{
 					fmt.Sprintf("%d:%s%d%s", h, z, m, ampm),
 				},
 				color.White,
-			)
+			); err != nil {
+				c.log.Error("failed to write clock", zap.Error(err))
+				return
+			}
 
 			if err := canvas.Render(); err != nil {
 				return
@@ -166,10 +173,12 @@ func (c *Clock) Render(ctx context.Context, matrix rgb.Matrix) error {
 	return nil
 }
 
+// HasPriority ...
 func (c *Clock) HasPriority() bool {
 	return false
 }
 
+// GetHTTPHandlers ...
 func (c *Clock) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 	disable := &board.HTTPHandler{
 		Path: "/clock/disable",

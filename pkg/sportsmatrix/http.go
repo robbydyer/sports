@@ -16,6 +16,7 @@ import (
 //go:embed assets
 var assets embed.FS
 
+// EmbedDir is a wrapper to return index.html by default
 type EmbedDir struct {
 	http.FileSystem
 }
@@ -24,9 +25,9 @@ type EmbedDir struct {
 func (d EmbedDir) Open(name string) (http.File, error) {
 	if f, err := d.FileSystem.Open(name); err == nil {
 		return f, nil
-	} else {
-		return d.FileSystem.Open("/index.html")
 	}
+
+	return d.FileSystem.Open("/index.html")
 }
 
 func (s *SportsMatrix) startHTTP() chan error {

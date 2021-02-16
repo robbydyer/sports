@@ -13,7 +13,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
@@ -68,12 +67,10 @@ func (s *SysBoard) Name() string {
 }
 
 // Render ...
-func (s *SysBoard) Render(ctx context.Context, matrix rgb.Matrix) error {
+func (s *SysBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	if !s.config.Enabled.Load() {
 		return nil
 	}
-
-	canvas := rgb.NewCanvas(matrix)
 
 	mem, err := memory.Get()
 	if err != nil {

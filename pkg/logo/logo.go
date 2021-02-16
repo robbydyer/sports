@@ -9,7 +9,6 @@ import (
 
 	"go.uber.org/zap"
 
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
@@ -113,7 +112,7 @@ func (l *Logo) GetThumbnail(size image.Rectangle) (image.Image, error) {
 }
 
 // RenderLeftAligned renders the logo on the left side of the matrix
-func (l *Logo) RenderLeftAligned(canvas *rgb.Canvas, width int) (image.Image, error) {
+func (l *Logo) RenderLeftAligned(bounds image.Rectangle, width int) (image.Image, error) {
 	thumb, err := l.GetThumbnail(l.bounds)
 	if err != nil {
 		return nil, err
@@ -122,16 +121,16 @@ func (l *Logo) RenderLeftAligned(canvas *rgb.Canvas, width int) (image.Image, er
 	startX := width - thumb.Bounds().Dx() + l.config.Pt.X
 	startY := 0 + l.config.Pt.Y
 
-	bounds := image.Rect(startX, startY, canvas.Bounds().Dx()-1, canvas.Bounds().Dy()-1)
+	newBounds := image.Rect(startX, startY, bounds.Dx()-1, bounds.Dy()-1)
 
 	i := image.NewRGBA(bounds)
-	draw.Draw(i, bounds, thumb, image.Point{}, draw.Over)
+	draw.Draw(i, newBounds, thumb, image.Point{}, draw.Over)
 
 	return i, nil
 }
 
 // RenderRightAligned renders the logo on the right side of the matrix
-func (l *Logo) RenderRightAligned(canvas *rgb.Canvas, width int) (image.Image, error) {
+func (l *Logo) RenderRightAligned(bounds image.Rectangle, width int) (image.Image, error) {
 	thumb, err := l.GetThumbnail(l.bounds)
 	if err != nil {
 		return nil, err
@@ -140,10 +139,10 @@ func (l *Logo) RenderRightAligned(canvas *rgb.Canvas, width int) (image.Image, e
 	startX := width + l.config.Pt.X
 	startY := 0 + l.config.Pt.Y
 
-	bounds := image.Rect(startX, startY, canvas.Bounds().Dx()-1, canvas.Bounds().Dy()-1)
+	newBounds := image.Rect(startX, startY, bounds.Dx()-1, bounds.Dy()-1)
 
 	i := image.NewRGBA(bounds)
-	draw.Draw(i, bounds, thumb, image.Point{}, draw.Over)
+	draw.Draw(i, newBounds, thumb, image.Point{}, draw.Over)
 
 	return i, nil
 }

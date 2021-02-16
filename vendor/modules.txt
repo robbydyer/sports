@@ -47,6 +47,8 @@ github.com/jezek/xgb
 github.com/jezek/xgb/render
 github.com/jezek/xgb/shm
 github.com/jezek/xgb/xproto
+# github.com/jphsd/glui v0.0.0-20210213195601-206b7774bf97
+## explicit
 # github.com/kr/text v0.1.0
 github.com/kr/text
 # github.com/mackerelio/go-osstat v0.1.0
