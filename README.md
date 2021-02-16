@@ -100,7 +100,11 @@ sudo ./sportsmatrix.bin nhltest
 ```
 
 ## Web UI
-There is a (very) basic web UI frontend for managing the board. It is bundled with the binary and served as a single-page app. For now, running it with a pre-built binary means your Pi has to be accessible via the hostname `matrix.local` on your network. The UI gives buttons for all the backend [HTTP Endpoints](#http-endpoints). 
+There is a (very) basic web UI frontend for managing the board. It is bundled with the binary and served as a single-page app. For now, running it with a pre-built binary means your Pi has to be accessible via the hostname `matrix.local` on your network. The UI gives buttons for all the backend [HTTP Endpoints](#http-endpoints). Front-end dev is not my strongsuit, so it's not particularly pretty.
+
+The Web UI is accessible at `http://matrix.local:[PORT]`, where port is whatever you configure the `httpListenPort` in your config file to be.
+
+![example1](assets/images/ui2.png) ![example2](assets/images/ui3.png) ![example3](assets/images/ui4.png) ![example4](assets/images/ui1.png)
 
 
 ## HTTP endpoints
