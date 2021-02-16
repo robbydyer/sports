@@ -119,8 +119,8 @@ The matrix defines the following:
 - `/api/screenoff` => Turns the board off
 Examples:
 ```shell
-curl http://127.0.0.1:8080/screenon
-curl http://127.0.0.1:8080/screenoff
+curl http://127.0.0.1:8080/api/screenon
+curl http://127.0.0.1:8080/api/screenoff
 ```
 
 The sportboard.SportBoard type (which all the team sport types use) implements the following:
