@@ -123,12 +123,10 @@ func (g *Game) HomeTeam() (sportboard.Team, error) {
 	if g.GameData != nil &&
 		g.GameData.Teams != nil &&
 		g.GameData.Teams.Home != nil {
-
 		var runs int
 		if g.LiveData.Linescore != nil &&
 			g.LiveData.Linescore.Teams != nil &&
 			g.LiveData.Linescore.Teams.Home != nil {
-
 			runs = g.LiveData.Linescore.Teams.Home.Runs
 		}
 
@@ -148,12 +146,10 @@ func (g *Game) AwayTeam() (sportboard.Team, error) {
 	if g.GameData != nil &&
 		g.GameData.Teams != nil &&
 		g.GameData.Teams.Away != nil {
-
 		var runs int
 		if g.LiveData.Linescore != nil &&
 			g.LiveData.Linescore.Teams != nil &&
 			g.LiveData.Linescore.Teams.Home != nil {
-
 			runs = g.LiveData.Linescore.Teams.Home.Runs
 		}
 
