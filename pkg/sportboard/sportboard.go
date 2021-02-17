@@ -33,7 +33,6 @@ type SportBoard struct {
 	scoreAlign      image.Rectangle
 	timeWriter      *rgbrender.TextWriter
 	timeAlign       image.Rectangle
-	counter         image.Image
 	sync.Mutex
 }
 
@@ -348,11 +347,11 @@ func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGa
 			return fmt.Errorf("failed to render live game: %w", err)
 		}
 	} else if isOver {
-		if err := s.renderCompleteGame(ctx, canvas, liveGame); err != nil {
+		if err := s.renderCompleteGame(ctx, canvas, liveGame, counter); err != nil {
 			return fmt.Errorf("failed to render complete game: %w", err)
 		}
 	} else {
-		if err := s.renderUpcomingGame(ctx, canvas, liveGame); err != nil {
+		if err := s.renderUpcomingGame(ctx, canvas, liveGame, counter); err != nil {
 			return fmt.Errorf("failed to render upcoming game: %w", err)
 		}
 	}

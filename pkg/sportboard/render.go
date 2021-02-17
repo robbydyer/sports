@@ -129,7 +129,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 	}
 }
 
-func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas, liveGame Game) error {
+func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
 	renderCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	awayTeam, err := liveGame.AwayTeam()
@@ -188,12 +188,12 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 		s.config.ScoreColor,
 	)
 
-	draw.Draw(canvas, canvas.Bounds(), s.counter, image.Point{}, draw.Over)
+	draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
 
 	return canvas.Render()
 }
 
-func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas, liveGame Game) error {
+func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
 	renderCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	awayTeam, err := liveGame.AwayTeam()
@@ -250,7 +250,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 		)
 	}
 
-	draw.Draw(canvas, canvas.Bounds(), s.counter, image.Point{}, draw.Over)
+	draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
 
 	return canvas.Render()
 }

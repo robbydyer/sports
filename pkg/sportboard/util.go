@@ -3,9 +3,11 @@ package sportboard
 import (
 	"fmt"
 	"image"
+	"math"
+
+	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/rgbrender"
-	"go.uber.org/zap"
 )
 
 func (s *SportBoard) getTimeWriter(bounds image.Rectangle) (*rgbrender.TextWriter, image.Rectangle, error) {
@@ -16,9 +18,11 @@ func (s *SportBoard) getTimeWriter(bounds image.Rectangle) (*rgbrender.TextWrite
 	}
 
 	timeWriter.FontSize = 0.125 * float64(bounds.Dx())
+	timeWriter.YStartCorrection = -1 * ((bounds.Dy() / 32) - 1)
 
 	s.log.Debug("time writer font",
 		zap.Float64("size", timeWriter.FontSize),
+		zap.Int("Y correction", timeWriter.YStartCorrection),
 	)
 
 	timeAlign, err = rgbrender.AlignPosition(rgbrender.CenterTop, bounds, s.textAreaWidth(bounds), bounds.Dy()/2)
@@ -42,7 +46,14 @@ func (s *SportBoard) getScoreWriter(bounds image.Rectangle) (*rgbrender.TextWrit
 
 	scoreWriter := rgbrender.NewTextWriter(fnt, size)
 
-	scoreWriter.YStartCorrection = -7
+	yCorrect := math.Ceil(float64(7.0/32.0) * float64(bounds.Dy()))
+	scoreWriter.YStartCorrection = int(yCorrect * -1)
+
+	s.log.Debug("score writer font",
+		zap.Float64("size", scoreWriter.FontSize),
+		zap.Int("Y correction", scoreWriter.YStartCorrection),
+		zap.Float64("Y correction float", yCorrect),
+	)
 
 	scoreAlign, err = rgbrender.AlignPosition(rgbrender.CenterBottom, bounds, s.textAreaWidth(bounds), bounds.Dy()/2)
 	if err != nil {

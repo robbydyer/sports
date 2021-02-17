@@ -51,7 +51,6 @@ func (c *Config) SetDefaults() {
 
 // New ...
 func New(logger *zap.Logger, config *Config) (*SysBoard, error) {
-
 	return &SysBoard{
 		config:      config,
 		log:         logger,

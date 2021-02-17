@@ -14,14 +14,14 @@ import (
 func (s *SportBoard) RenderGameCounter(canvas board.Canvas, numGames int, activeIndex int) (image.Image, error) {
 	spacing := canvas.Bounds().Dx() / 64
 	pixSize := canvas.Bounds().Dx() / 64
-	totalWidth := (numGames * spacing) + numGames - 1
+	totalWidth := (numGames * spacing) + (pixSize * (numGames - 1))
 
 	aligned, err := rgbrender.AlignPosition(rgbrender.CenterBottom, canvas.Bounds(), totalWidth, 1)
 	if err != nil {
 		return nil, err
 	}
 
-	realActive := activeIndex + (activeIndex * spacing) + (activeIndex * pixSize)
+	realActive := activeIndex + (activeIndex * (spacing + pixSize - 1))
 
 	s.log.Debug("Rendering counter",
 		zap.Int("active index", activeIndex),
@@ -50,6 +50,7 @@ func (s *SportBoard) RenderGameCounter(canvas board.Canvas, numGames int, active
 				xPix++
 				i++
 			}
+			i--
 			continue
 		}
 		for x := 0; x < pixSize; x++ {
@@ -62,8 +63,8 @@ func (s *SportBoard) RenderGameCounter(canvas board.Canvas, numGames int, active
 			xPix++
 			i++
 		}
+		i--
 	}
 
-	s.counter = img
 	return img, nil
 }

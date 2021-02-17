@@ -9,26 +9,33 @@ import (
 	"sync"
 )
 
+// ImgCanvas is a board.Canvas type that just stores the state
+// as an image.Image
 type ImgCanvas struct {
-	width      int
-	height     int
-	pixels     []uint32
-	lastPng    *bytes.Buffer
-	lastRender image.Image
+	width   int
+	height  int
+	pixels  []uint32
+	lastPng *bytes.Buffer
 	sync.Mutex
 }
 
+// New ...
 func New(width int, height int) *ImgCanvas {
 	i := &ImgCanvas{
-		width:  width,
-		height: height,
-		pixels: make([]uint32, (width * height)),
+		width:   width,
+		height:  height,
+		pixels:  make([]uint32, (width * height)),
+		lastPng: &bytes.Buffer{},
 	}
-	i.Clear()
+
+	_ = i.Clear()
+
+	_ = i.Render()
 
 	return i
 }
 
+// Clear sets the canvas to all black
 func (i *ImgCanvas) Clear() error {
 	for x := range i.pixels {
 		i.pixels[x] = colorToUint32(color.Black)
@@ -36,18 +43,14 @@ func (i *ImgCanvas) Clear() error {
 	return nil
 }
 
-func (i *ImgCanvas) LastRender() image.Image {
-	i.Lock()
-	defer i.Unlock()
-	return i.lastRender
-}
-
+// LastPng returns the last state of the image encoded as a PNG
 func (i *ImgCanvas) LastPng() io.Reader {
 	i.Lock()
 	defer i.Unlock()
 	return i.lastPng
 }
 
+// Render stores the state of the image as a PNG
 func (i *ImgCanvas) Render() error {
 	buf := &bytes.Buffer{}
 
@@ -59,9 +62,7 @@ func (i *ImgCanvas) Render() error {
 	defer i.Unlock()
 	i.lastPng = buf
 
-	i.Clear()
-
-	return nil
+	return i.Clear()
 }
 
 // ColorModel returns the canvas' color model, always color.RGBAModel

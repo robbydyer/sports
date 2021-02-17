@@ -168,6 +168,7 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 	return s, nil
 }
 
+// GetImgCanvas checks the matrix for board.Canvas of type imgcanvas.ImgCanvas
 func (s *SportsMatrix) GetImgCanvas() (*imgcanvas.ImgCanvas, error) {
 	for _, canvas := range s.canvases {
 		switch c := canvas.(type) {
