@@ -12,7 +12,7 @@ import (
 	"github.com/robbydyer/sports/pkg/board"
 )
 
-func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, liveGame Game) error {
+func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
 	awayTeam, err := liveGame.AwayTeam()
 	if err != nil {
 		return err
@@ -90,7 +90,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 			}
 		}
 
-		draw.Draw(canvas, canvas.Bounds(), s.counter, image.Point{}, draw.Over)
+		draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
 
 		select {
 		case <-ctx.Done():

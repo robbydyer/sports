@@ -41,6 +41,7 @@ type Config struct {
 	HardwareConfig *rgb.HardwareConfig `json:"hardwareConfig"`
 	ScreenOffTimes []string            `json:"screenOffTimes"`
 	ScreenOnTimes  []string            `json:"screenOnTimes"`
+	WebBoardWidth  int                 `json:"webBoardWidth"`
 }
 
 // Defaults sets some sane config defaults
@@ -97,7 +98,15 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 	}
 
 	// Add an ImgCanvas
-	s.canvases = append(s.canvases, imgcanvas.New(800, 400))
+	if s.cfg.WebBoardWidth == 0 {
+		s.cfg.WebBoardWidth = 800
+	}
+	height := s.cfg.WebBoardWidth / 2
+	s.log.Info("init web baord",
+		zap.Int("X", s.cfg.WebBoardWidth),
+		zap.Int("Y", height),
+	)
+	s.canvases = append(s.canvases, imgcanvas.New(s.cfg.WebBoardWidth, height))
 
 	for _, b := range s.boards {
 		s.log.Info("Registering board", zap.String("board", b.Name()))

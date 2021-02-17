@@ -96,7 +96,7 @@ func (s *SportsMatrix) turnScreenOn(respWriter http.ResponseWriter, req *http.Re
 
 func (s *SportsMatrix) webCanvas(w http.ResponseWriter, req *http.Request) {
 	i, err := s.GetImgCanvas()
-	if err != nil {
+	if err != nil || i == nil {
 		s.log.Error("could not get ImgCanvas", zap.Error(err))
 		return
 	}
@@ -105,6 +105,10 @@ func (s *SportsMatrix) webCanvas(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-Type", "image/png")
 	board := i.LastPng()
+
+	if board == nil {
+		s.log.Error("no board has been rendered")
+	}
 
 	s.log.Debug("reading web board")
 	boardBytes, err := io.ReadAll(board)

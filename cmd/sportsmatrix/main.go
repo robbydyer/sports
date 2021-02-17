@@ -240,7 +240,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 	}
 
 	if r.config.ImageConfig != nil {
-		b, err := imageboard.New(afero.NewOsFs(), bounds, r.config.ImageConfig, logger)
+		b, err := imageboard.New(afero.NewOsFs(), r.config.ImageConfig, logger)
 		if err != nil {
 			return boards, err
 		}

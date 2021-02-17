@@ -314,12 +314,12 @@ OUTER:
 			continue
 		}
 
-		_, err = s.RenderGameCounter(canvas, len(games), gameIndex, 1)
+		counter, err := s.RenderGameCounter(canvas, len(games), gameIndex)
 		if err != nil {
 			return err
 		}
 
-		if err := s.renderGame(ctx, canvas, cachedGame); err != nil {
+		if err := s.renderGame(ctx, canvas, cachedGame, counter); err != nil {
 			return err
 		}
 	}
@@ -327,7 +327,7 @@ OUTER:
 	return nil
 }
 
-func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGame Game) error {
+func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
 	select {
 	case <-ctx.Done():
 		return context.Canceled
@@ -344,7 +344,7 @@ func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGa
 	}
 
 	if isLive {
-		if err := s.renderLiveGame(ctx, canvas, liveGame); err != nil {
+		if err := s.renderLiveGame(ctx, canvas, liveGame, counter); err != nil {
 			return fmt.Errorf("failed to render live game: %w", err)
 		}
 	} else if isOver {
