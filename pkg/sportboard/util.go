@@ -5,30 +5,23 @@ import (
 	"image"
 
 	"github.com/robbydyer/sports/pkg/rgbrender"
+	"go.uber.org/zap"
 )
 
-func (s *SportBoard) getTimeWriter() (*rgbrender.TextWriter, image.Rectangle, error) {
-	if s.timeWriter != nil {
-		return s.timeWriter, s.timeAlign, nil
-	}
-
+func (s *SportBoard) getTimeWriter(bounds image.Rectangle) (*rgbrender.TextWriter, image.Rectangle, error) {
 	var timeAlign image.Rectangle
 	timeWriter, err := rgbrender.DefaultTextWriter()
 	if err != nil {
 		return nil, timeAlign, err
 	}
 
-	if s.config.TimeFont == nil {
-		s.config.TimeFont = &FontConfig{
-			Size:      8,
-			LineSpace: 0,
-		}
-	}
-	if timeWriter.FontSize == 0 {
-		timeWriter.FontSize = 8
-	}
+	timeWriter.FontSize = 0.125 * float64(bounds.Dx())
 
-	timeAlign, err = rgbrender.AlignPosition(rgbrender.CenterTop, s.matrixBounds, s.textAreaWidth(), s.matrixBounds.Dy()/2)
+	s.log.Debug("time writer font",
+		zap.Float64("size", timeWriter.FontSize),
+	)
+
+	timeAlign, err = rgbrender.AlignPosition(rgbrender.CenterTop, bounds, s.textAreaWidth(bounds), bounds.Dy()/2)
 	if err != nil {
 		return nil, timeAlign, err
 	}
@@ -38,33 +31,20 @@ func (s *SportBoard) getTimeWriter() (*rgbrender.TextWriter, image.Rectangle, er
 	return timeWriter, timeAlign, nil
 }
 
-func (s *SportBoard) getScoreWriter() (*rgbrender.TextWriter, image.Rectangle, error) {
-	if s.scoreWriter != nil {
-		return s.scoreWriter, s.scoreAlign, nil
-	}
-
+func (s *SportBoard) getScoreWriter(bounds image.Rectangle) (*rgbrender.TextWriter, image.Rectangle, error) {
 	var scoreAlign image.Rectangle
 	fnt, err := rgbrender.GetFont("score.ttf")
 	if err != nil {
 		return nil, scoreAlign, fmt.Errorf("failed to load font for score: %w", err)
 	}
 
-	if s.config.ScoreFont == nil {
-		s.config.ScoreFont = &FontConfig{
-			Size:      16,
-			LineSpace: 0,
-		}
-	}
+	size := 0.25 * float64(bounds.Dx())
 
-	if s.config.ScoreFont.Size == 0 {
-		s.config.ScoreFont.Size = 16
-	}
-
-	scoreWriter := rgbrender.NewTextWriter(fnt, s.config.ScoreFont.Size)
+	scoreWriter := rgbrender.NewTextWriter(fnt, size)
 
 	scoreWriter.YStartCorrection = -7
 
-	scoreAlign, err = rgbrender.AlignPosition(rgbrender.CenterBottom, s.matrixBounds, s.textAreaWidth(), s.matrixBounds.Dy()/2)
+	scoreAlign, err = rgbrender.AlignPosition(rgbrender.CenterBottom, bounds, s.textAreaWidth(bounds), bounds.Dy()/2)
 	if err != nil {
 		return nil, scoreAlign, err
 	}
@@ -84,8 +64,8 @@ func (s *SportBoard) isFavorite(abbrev string) bool {
 	return false
 }
 
-func (s *SportBoard) textAreaWidth() int {
-	return s.matrixBounds.Dx() / 4
+func (s *SportBoard) textAreaWidth(bounds image.Rectangle) int {
+	return bounds.Dx() / 4
 }
 
 func scoreStr(g Game) (string, error) {

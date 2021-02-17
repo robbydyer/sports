@@ -18,14 +18,14 @@ RUN cd /tmp/rpi-rgb-led-matrix && \
 
 RUN git clone https://github.com/golangci/golangci-lint.git /tmp/golangci
 
-FROM golang:1.16rc1-buster AS gobuilder
+FROM golang:1.16-buster AS gobuilder
 
 COPY --from=builder /tmp/golangci /tmp/golangci
 
 RUN cd /tmp/golangci && \
     CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=1.36" -o golangci-lint ./cmd/golangci-lint/main.go
 
-FROM golang:1.16rc1-buster
+FROM golang:1.16-buster
 
 COPY --from=builder /tmp/rpi-rgb-led-matrix /sportslibs/rpi-rgb-led-matrix
 

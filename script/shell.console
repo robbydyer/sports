@@ -17,6 +17,7 @@ if [ "${IN_DOCKER}" = "no" ]; then
   exec docker run -it --rm \
     -e IN_DOCKER=yes \
     -v "${ROOT}":/src \
+    -v /tmp:/tmp \
     -w /src \
     -p 8080:8080 \
     ${pibuilder} \

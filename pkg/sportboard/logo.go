@@ -30,7 +30,7 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas board.Canvas, ab
 		return context.Canceled
 	default:
 	}
-	logoKey := fmt.Sprintf("%s_HOME", abbreviation)
+	logoKey := fmt.Sprintf("%s_HOME_%dx%d", abbreviation, canvas.Bounds().Dx(), canvas.Bounds().Dy())
 
 	i, ok := s.logoDrawCache[logoKey]
 	if ok {
@@ -45,11 +45,11 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas board.Canvas, ab
 		logoConf, _ := s.logoConfig(logoKey)
 
 		s.log.Debug("fetching logo",
-			zap.String("abbreviation", abbreviation),
-			zap.Int("X", s.matrixBounds.Dx()),
-			zap.Int("Y", s.matrixBounds.Dy()),
+			zap.String("logoKey", logoKey),
+			zap.Int("X", canvas.Bounds().Dx()),
+			zap.Int("Y", canvas.Bounds().Dy()),
 		)
-		l, err = s.api.GetLogo(ctx, logoKey, logoConf, s.matrixBounds)
+		l, err = s.api.GetLogo(ctx, logoKey, logoConf, canvas.Bounds())
 		if err != nil {
 			return err
 		}
@@ -59,8 +59,8 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas board.Canvas, ab
 		s.log.Debug("using logo cache", zap.String("logo key", logoKey))
 	}
 
-	textWdith := s.textAreaWidth()
-	logoWidth := (s.matrixBounds.Dx() - textWdith) / 2
+	textWdith := s.textAreaWidth(canvas.Bounds())
+	logoWidth := (canvas.Bounds().Dx() - textWdith) / 2
 	renderedLogo, err := l.RenderLeftAligned(canvas.Bounds(), logoWidth)
 	if err != nil {
 		return err
@@ -80,7 +80,7 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvas board.Canvas, ab
 		return context.Canceled
 	default:
 	}
-	logoKey := fmt.Sprintf("%s_AWAY", abbreviation)
+	logoKey := fmt.Sprintf("%s_AWAY_%dx%d", abbreviation, canvas.Bounds().Dx(), canvas.Bounds().Dy())
 
 	i, ok := s.logoDrawCache[logoKey]
 	if ok {
@@ -96,10 +96,10 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvas board.Canvas, ab
 
 		s.log.Debug("fetching logo",
 			zap.String("abbreviation", abbreviation),
-			zap.Int("X", s.matrixBounds.Dx()),
-			zap.Int("Y", s.matrixBounds.Dy()),
+			zap.Int("X", canvas.Bounds().Dx()),
+			zap.Int("Y", canvas.Bounds().Dy()),
 		)
-		l, err = s.api.GetLogo(ctx, logoKey, logoConf, s.matrixBounds)
+		l, err = s.api.GetLogo(ctx, logoKey, logoConf, canvas.Bounds())
 		if err != nil {
 			return err
 		}
@@ -107,8 +107,8 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvas board.Canvas, ab
 		s.logos[logoKey] = l
 	}
 
-	textWdith := s.textAreaWidth()
-	logoWidth := (s.matrixBounds.Dx() - textWdith) / 2
+	textWdith := s.textAreaWidth(canvas.Bounds())
+	logoWidth := (canvas.Bounds().Dx() - textWdith) / 2
 
 	renderedLogo, err := l.RenderRightAligned(canvas.Bounds(), logoWidth+textWdith)
 	if err != nil {

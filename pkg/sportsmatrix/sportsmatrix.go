@@ -12,13 +12,14 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/imgcanvas"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
 // SportsMatrix controls the RGB matrix. It rotates through a list of given board.Board
 type SportsMatrix struct {
 	cfg           *Config
-	canvas        board.Canvas
+	canvases      []board.Canvas
 	boards        []board.Board
 	screenIsOn    *atomic.Bool
 	screenOff     chan struct{}
@@ -29,6 +30,7 @@ type SportsMatrix struct {
 	server        http.Server
 	screenLogOnce *sync.Once
 	close         chan struct{}
+	webBoardCache []byte
 	sync.Mutex
 }
 
@@ -48,13 +50,14 @@ func (c *Config) Defaults() {
 	}
 	if c.HardwareConfig == nil {
 		c.HardwareConfig = &rgb.DefaultConfig
+		c.HardwareConfig.Cols = 64
+		c.HardwareConfig.Rows = 32
 	}
 
 	if c.HardwareConfig.Rows == 0 {
 		c.HardwareConfig.Rows = 32
 	}
-	if c.HardwareConfig.Cols == 32 || c.HardwareConfig.Cols == 0 {
-		// We don't support 32x32 matrix
+	if c.HardwareConfig.Cols == 0 {
 		c.HardwareConfig.Cols = 64
 	}
 	// The defaults do 100, but that's too much
@@ -79,7 +82,7 @@ func (c *Config) Defaults() {
 }
 
 // New ...
-func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvas board.Canvas, boards ...board.Board) (*SportsMatrix, error) {
+func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.Canvas, boards ...board.Board) (*SportsMatrix, error) {
 	cfg.Defaults()
 
 	s := &SportsMatrix{
@@ -90,8 +93,11 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvas board.Canv
 		screenOn:   make(chan struct{}),
 		close:      make(chan struct{}),
 		screenIsOn: atomic.NewBool(true),
-		canvas:     canvas,
+		canvases:   canvases,
 	}
+
+	// Add an ImgCanvas
+	s.canvases = append(s.canvases, imgcanvas.New(800, 400))
 
 	for _, b := range s.boards {
 		s.log.Info("Registering board", zap.String("board", b.Name()))
@@ -153,13 +159,17 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvas board.Canv
 	return s, nil
 }
 
-// MatrixBounds returns an image.Rectangle of the matrix bounds
-/*
-func (s *SportsMatrix) MatrixBounds() image.Rectangle {
-	w, h := s.matrix.Geometry()
-	return image.Rect(0, 0, w-1, h-1)
+func (s *SportsMatrix) GetImgCanvas() (*imgcanvas.ImgCanvas, error) {
+	for _, canvas := range s.canvases {
+		switch c := canvas.(type) {
+		case *imgcanvas.ImgCanvas:
+			return c, nil
+		default:
+		}
+	}
+
+	return nil, fmt.Errorf("ImgCanvas is not set")
 }
-*/
 
 func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 	for {
@@ -177,7 +187,9 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 
 			s.Lock()
 			s.boardCancel()
-			_ = s.canvas.Clear()
+			for _, canvas := range s.canvases {
+				_ = canvas.Clear()
+			}
 			s.boardCtx, s.boardCancel = context.WithCancel(ctx)
 			s.Unlock()
 		case <-s.screenOn:
@@ -214,8 +226,10 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 
 		if s.allDisabled() {
 			clearer.Do(func() {
-				if err := s.canvas.Clear(); err != nil {
-					s.log.Error("failed to clear matrix when all board were disabled", zap.Error(err))
+				for _, canvas := range s.canvases {
+					if err := canvas.Clear(); err != nil {
+						s.log.Error("failed to clear matrix when all board were disabled", zap.Error(err))
+					}
 				}
 			})
 
@@ -265,9 +279,19 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 
 		renderStart := time.Now()
 
-		if err := b.Render(ctx, s.canvas); err != nil {
-			s.log.Error(err.Error())
+		var wg sync.WaitGroup
+
+		for _, canvas := range s.canvases {
+			wg.Add(1)
+			go func(canvas board.Canvas) {
+				defer wg.Done()
+				if err := b.Render(ctx, canvas); err != nil {
+					s.log.Error(err.Error())
+				}
+			}(canvas)
 		}
+		wg.Wait()
+
 		select {
 		case renderDone <- struct{}{}:
 		default:

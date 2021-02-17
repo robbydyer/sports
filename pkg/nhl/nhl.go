@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"sync"
 	"time"
 
 	"github.com/robfig/cron/v3"
@@ -33,6 +34,7 @@ type NHL struct {
 	logoSourceCache map[string]image.Image
 	log             *zap.Logger
 	defaultLogoConf *[]*logo.Config
+	sync.Mutex
 }
 
 // New ...

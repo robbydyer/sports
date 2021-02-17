@@ -16,7 +16,7 @@ type HTTPHandler struct {
 // Board is the interface to implement for displaying on the matrix
 type Board interface {
 	Name() string
-	Render(ctx context.Context, canvas Canvas) error
+	Render(ctx context.Context, canvases Canvas) error
 	Enabled() bool
 	GetHTTPHandlers() ([]*HTTPHandler, error)
 }

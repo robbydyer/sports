@@ -28,7 +28,6 @@ type SportBoard struct {
 	cachedLiveGames map[int]Game
 	logos           map[string]*logo.Logo
 	log             *zap.Logger
-	matrixBounds    image.Rectangle
 	logoDrawCache   map[string]image.Image
 	scoreWriter     *rgbrender.TextWriter
 	scoreAlign      image.Rectangle
@@ -113,18 +112,6 @@ func (c *Config) SetDefaults() {
 		c.boardDelay = 10 * time.Second
 	}
 
-	if c.ScoreFont == nil {
-		c.ScoreFont = &FontConfig{
-			Size:      16,
-			LineSpace: 0,
-		}
-	}
-	if c.TimeFont == nil {
-		c.TimeFont = &FontConfig{
-			Size:      8,
-			LineSpace: 0,
-		}
-	}
 	if c.TimeColor == nil {
 		c.TimeColor = color.White
 	}
@@ -150,7 +137,6 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		logos:           make(map[string]*logo.Logo),
 		log:             logger,
 		logoDrawCache:   make(map[string]image.Image),
-		matrixBounds:    bounds,
 		cachedLiveGames: make(map[int]Game),
 	}
 

@@ -3,6 +3,7 @@ package sportsmatrix
 import (
 	"embed"
 	"fmt"
+	"io"
 	"io/fs"
 	"net/http"
 	"path/filepath"
@@ -37,6 +38,7 @@ func (s *SportsMatrix) startHTTP() chan error {
 
 	router.HandleFunc("/api/screenoff", s.turnScreenOff)
 	router.HandleFunc("/api/screenon", s.turnScreenOn)
+	router.HandleFunc("/api/board", s.webCanvas)
 
 	for _, b := range s.boards {
 		handlers, err := b.GetHTTPHandlers()
@@ -90,4 +92,36 @@ func (s *SportsMatrix) turnScreenOn(respWriter http.ResponseWriter, req *http.Re
 	s.Lock()
 	defer s.Unlock()
 	s.screenOn <- struct{}{}
+}
+
+func (s *SportsMatrix) webCanvas(w http.ResponseWriter, req *http.Request) {
+	i, err := s.GetImgCanvas()
+	if err != nil {
+		s.log.Error("could not get ImgCanvas", zap.Error(err))
+		return
+	}
+
+	s.log.Debug("getting image for web board")
+
+	w.Header().Set("Content-Type", "image/png")
+	board := i.LastPng()
+
+	s.log.Debug("reading web board")
+	boardBytes, err := io.ReadAll(board)
+	if err != nil {
+		s.log.Error("failed to read board", zap.Error(err))
+		return
+	}
+
+	if len(boardBytes) == 0 {
+		s.log.Debug("web board has already been read, using cache")
+		boardBytes = s.webBoardCache
+	} else {
+		s.log.Debug("first time reading web board, caching")
+		s.webBoardCache = boardBytes
+	}
+
+	if _, err := w.Write(boardBytes); err != nil {
+		s.log.Error("failed to copy png for /api/board", zap.Error(err))
+	}
 }

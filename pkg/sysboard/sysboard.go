@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image/color"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/mackerelio/go-osstat/cpu"
@@ -18,9 +19,10 @@ import (
 
 // SysBoard implements board.Board. Provides System info
 type SysBoard struct {
-	config     *Config
-	log        *zap.Logger
-	textWriter *rgbrender.TextWriter
+	config      *Config
+	log         *zap.Logger
+	textWriters map[int]*rgbrender.TextWriter
+	sync.Mutex
 }
 
 // Config ...
@@ -49,16 +51,30 @@ func (c *Config) SetDefaults() {
 
 // New ...
 func New(logger *zap.Logger, config *Config) (*SysBoard, error) {
-	writer, err := rgbrender.DefaultTextWriter()
+
+	return &SysBoard{
+		config:      config,
+		log:         logger,
+		textWriters: make(map[int]*rgbrender.TextWriter),
+	}, nil
+}
+
+func (s *SysBoard) textWriter(canvasWidth int) (*rgbrender.TextWriter, error) {
+	if w, ok := s.textWriters[canvasWidth]; ok {
+		return w, nil
+	}
+
+	s.Lock()
+	defer s.Unlock()
+	var err error
+	s.textWriters[canvasWidth], err = rgbrender.DefaultTextWriter()
 	if err != nil {
 		return nil, err
 	}
 
-	return &SysBoard{
-		config:     config,
-		log:        logger,
-		textWriter: writer,
-	}, nil
+	s.textWriters[canvasWidth].FontSize = 0.125 * float64(canvasWidth)
+
+	return s.textWriters[canvasWidth], nil
 }
 
 // Name ...
@@ -70,6 +86,11 @@ func (s *SysBoard) Name() string {
 func (s *SysBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	if !s.config.Enabled.Load() {
 		return nil
+	}
+
+	writer, err := s.textWriter(canvas.Bounds().Dx())
+	if err != nil {
+		return err
 	}
 
 	mem, err := memory.Get()
@@ -98,7 +119,7 @@ func (s *SysBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		zap.Int64("cpu pct", cpuPct),
 	)
 
-	if err := s.textWriter.WriteCentered(
+	if err := writer.WriteCentered(
 		canvas,
 		canvas.Bounds(),
 		[]string{

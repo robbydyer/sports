@@ -48,8 +48,8 @@ RUN export CMAKE_DIR=cmake-$CMAKE_VERSION && \
   rm -rf ../$CMAKE_ARCH \
     ../$CMAKE_DIR
 
-ADD https://golang.org/dl/go1.16rc1.linux-arm64.tar.gz /tmp/
-RUN tar -C /usr/local -xzf /tmp/go1.16rc1.linux-arm64.tar.gz
+ADD https://golang.org/dl/go1.16.linux-arm64.tar.gz /tmp/
+RUN tar -C /usr/local -xzf /tmp/go1.16.linux-arm64.tar.gz
 
 ENV PATH="/usr/local/go/bin:${PATH}"
 
