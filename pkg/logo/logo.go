@@ -69,7 +69,6 @@ func (l *Logo) ensureLogger() {
 // ThumbnailFilename returns the filname for the resized thumbnail to use
 func (l *Logo) ThumbnailFilename(size image.Rectangle) string {
 	return filepath.Join(l.targetDirectory, fmt.Sprintf("%s.png", l.key))
-	// return fmt.Sprintf("%s/%s_%dx%d_%f.png", l.targetDirectory, l.key, size.Dx(), size.Dy(), l.config.Pt.Zoom)
 }
 
 // GetThumbnail returns the resized image
