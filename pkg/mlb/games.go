@@ -149,8 +149,8 @@ func (g *Game) AwayTeam() (sportboard.Team, error) {
 		var runs int
 		if g.LiveData.Linescore != nil &&
 			g.LiveData.Linescore.Teams != nil &&
-			g.LiveData.Linescore.Teams.Home != nil {
-			runs = g.LiveData.Linescore.Teams.Home.Runs
+			g.LiveData.Linescore.Teams.Away != nil {
+			runs = g.LiveData.Linescore.Teams.Away.Runs
 		}
 
 		g.GameData.Teams.Away.Runs = runs

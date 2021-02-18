@@ -12,7 +12,7 @@ import (
 	"github.com/robbydyer/sports/pkg/board"
 )
 
-func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, liveGame Game) error {
+func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
 	awayTeam, err := liveGame.AwayTeam()
 	if err != nil {
 		return err
@@ -25,12 +25,12 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 	// If this is a favorite team, we'll watch the scoreboard until the game is over
 	isFavorite := (s.isFavorite(awayTeam.GetAbbreviation()) || s.isFavorite(homeTeam.GetAbbreviation()))
 
-	timeWriter, timeAlign, err := s.getTimeWriter()
+	timeWriter, timeAlign, err := s.getTimeWriter(canvas.Bounds())
 	if err != nil {
 		return err
 	}
 
-	scoreWriter, scoreAlign, err := s.getScoreWriter()
+	scoreWriter, scoreAlign, err := s.getScoreWriter(canvas.Bounds())
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 			}
 		}
 
-		draw.Draw(canvas, canvas.Bounds(), s.counter, image.Point{}, draw.Over)
+		draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
 
 		select {
 		case <-ctx.Done():
@@ -129,7 +129,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 	}
 }
 
-func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas, liveGame Game) error {
+func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
 	renderCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	awayTeam, err := liveGame.AwayTeam()
@@ -141,12 +141,12 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 		return err
 	}
 
-	timeWriter, timeAlign, err := s.getTimeWriter()
+	timeWriter, timeAlign, err := s.getTimeWriter(canvas.Bounds())
 	if err != nil {
 		return err
 	}
 
-	scoreWriter, scoreAlign, err := s.getScoreWriter()
+	scoreWriter, scoreAlign, err := s.getScoreWriter(canvas.Bounds())
 	if err != nil {
 		return err
 	}
@@ -188,12 +188,12 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 		s.config.ScoreColor,
 	)
 
-	draw.Draw(canvas, canvas.Bounds(), s.counter, image.Point{}, draw.Over)
+	draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
 
 	return canvas.Render()
 }
 
-func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas, liveGame Game) error {
+func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
 	renderCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	awayTeam, err := liveGame.AwayTeam()
@@ -205,12 +205,12 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 		return err
 	}
 
-	timeWriter, timeAlign, err := s.getTimeWriter()
+	timeWriter, timeAlign, err := s.getTimeWriter(canvas.Bounds())
 	if err != nil {
 		return err
 	}
 
-	scoreWriter, scoreAlign, err := s.getScoreWriter()
+	scoreWriter, scoreAlign, err := s.getScoreWriter(canvas.Bounds())
 	if err != nil {
 		return err
 	}
@@ -250,7 +250,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 		)
 	}
 
-	draw.Draw(canvas, canvas.Bounds(), s.counter, image.Point{}, draw.Over)
+	draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
 
 	return canvas.Render()
 }

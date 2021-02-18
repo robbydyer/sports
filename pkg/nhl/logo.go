@@ -19,11 +19,13 @@ var assets embed.FS
 
 // GetLogo ...
 func (n *NHL) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
-	fullLogoKey := fmt.Sprintf("%s_%dx%d", logoKey, bounds.Dx(), bounds.Dy())
-	l, ok := n.logos[fullLogoKey]
+	l, ok := n.logos[logoKey]
 	if ok {
 		return l, nil
 	}
+
+	n.Lock()
+	defer n.Unlock()
 
 	sources, err := n.logoSources(ctx)
 	if err != nil {
@@ -41,9 +43,9 @@ func (n *NHL) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config
 
 	l.SetLogger(n.log)
 
-	n.logos[fullLogoKey] = l
+	n.logos[logoKey] = l
 
-	return n.logos[fullLogoKey], nil
+	return n.logos[logoKey], nil
 }
 
 // GetLogo is a generic logo getter. Useful for testing
@@ -59,31 +61,46 @@ func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logo
 	}
 
 	if logoConf != nil {
-		l := logo.New(teamAbbrev, logoSources[teamAbbrev], logoCacheDir, bounds, logoConf)
+		l := logo.New(logoKey, logoSources[teamAbbrev], logoCacheDir, bounds, logoConf)
 
 		return l, nil
 	}
 
-	if defaultConfigs == nil || len(*defaultConfigs) < 1 {
-		dat, err := assets.ReadFile(fmt.Sprintf("assets/logopos_%dx%d.yaml", bounds.Dx(), bounds.Dy()))
-		if err != nil {
-			return nil, err
+	for _, d := range *defaultConfigs {
+		if d.Abbrev == logoKey {
+			l := logo.New(logoKey, logoSources[teamAbbrev], logoCacheDir, bounds, d)
+			return l, nil
 		}
+	}
 
+	dat, err := assets.ReadFile(fmt.Sprintf("assets/logopos_%dx%d.yaml", bounds.Dx(), bounds.Dy()))
+	if err != nil {
+		*defaultConfigs = append(*defaultConfigs,
+			&logo.Config{
+				Abbrev: logoKey,
+				XSize:  bounds.Dx(),
+				YSize:  bounds.Dy(),
+				Pt: &logo.Pt{
+					X:    0,
+					Y:    0,
+					Zoom: 1,
+				},
+			},
+		)
+	} else {
 		if err := yaml.Unmarshal(dat, &defaultConfigs); err != nil {
 			return nil, err
 		}
 	}
 
-	// Use defaults for this logo
-	for _, defConf := range *defaultConfigs {
-		if defConf.Abbrev == logoKey {
-			l := logo.New(teamAbbrev, logoSources[teamAbbrev], logoCacheDir, bounds, defConf)
+	for _, d := range *defaultConfigs {
+		if d.Abbrev == logoKey {
+			l := logo.New(logoKey, logoSources[teamAbbrev], logoCacheDir, bounds, d)
 			return l, nil
 		}
 	}
 
-	return nil, fmt.Errorf("could not find logo config for %s", logoKey)
+	return nil, fmt.Errorf("failed to prepare logo")
 }
 
 func (n *NHL) logoSources(ctx context.Context) (map[string]image.Image, error) {

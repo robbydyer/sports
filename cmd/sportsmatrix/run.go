@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/robbydyer/sports/pkg/board"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 )
@@ -60,9 +61,10 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	canvas := rgb.NewCanvas(matrix)
+	var canvases []board.Canvas
+	canvases = append(canvases, rgb.NewCanvas(matrix))
 
-	mtrx, err := sportsmatrix.New(ctx, logger, s.rArgs.config.SportsMatrixConfig, canvas, boards...)
+	mtrx, err := sportsmatrix.New(ctx, logger, s.rArgs.config.SportsMatrixConfig, canvases, boards...)
 	if err != nil {
 		return err
 	}

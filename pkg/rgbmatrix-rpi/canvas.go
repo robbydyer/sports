@@ -4,14 +4,18 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+
+	"github.com/robbydyer/sports/pkg/board"
+	"go.uber.org/atomic"
 )
 
 // Canvas is a image.Image representation of a WS281x matrix, it implements
 // image.Image interface and can be used with draw.Draw for example
 type Canvas struct {
-	w, h   int
-	m      Matrix
-	closed bool
+	w, h    int
+	m       Matrix
+	closed  bool
+	enabled *atomic.Bool
 }
 
 // NewCanvas returns a new Canvas using the given width and height and creates
@@ -19,10 +23,15 @@ type Canvas struct {
 func NewCanvas(m Matrix) *Canvas {
 	w, h := m.Geometry()
 	return &Canvas{
-		w: w,
-		h: h,
-		m: m,
+		w:       w,
+		h:       h,
+		m:       m,
+		enabled: atomic.NewBool(true),
 	}
+}
+
+func (c *Canvas) Name() string {
+	return "RGB Canvas"
 }
 
 // Render update the display with the data from the LED buffer
@@ -64,6 +73,26 @@ func (c *Canvas) Clear() error {
 func (c *Canvas) Close() error {
 	c.Clear()
 	return c.m.Close()
+}
+
+// Enabled ...
+func (c *Canvas) Enabled() bool {
+	return c.enabled.Load()
+}
+
+// Enable ...
+func (c *Canvas) Enable() {
+	c.enabled.Store(true)
+}
+
+// Disable ...
+func (c *Canvas) Disable() {
+	c.enabled.Store(false)
+}
+
+// GetHTTPHandlers ...
+func (c *Canvas) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
+	return nil, nil
 }
 
 // Matrix is an interface that represent any RGB matrix, very useful for testing

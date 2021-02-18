@@ -1,310 +1,310 @@
 ---
-- abbrev: "ANA_HOME"
+- abbrev: "ANA_HOME_64x32"
   pt:
     xShift: -1
     yShift: 3
     zoom: 1
-- abbrev: "ANA_AWAY"
+- abbrev: "ANA_AWAY_64x32"
   pt:
     xShift: -1
     yShift: 3
     zoom: 1
-- abbrev: "ARI_HOME"
+- abbrev: "ARI_HOME_64x32"
   pt:
     xShift: 4
     yShift: 0
     zoom: 1
-- abbrev: "ARI_AWAY"
+- abbrev: "ARI_AWAY_64x32"
   pt:
     xShift: -7
     yShift: 0
     zoom: 1
-- abbrev: BOS_HOME
+- abbrev: BOS_HOME_64x32
   pt:
     xShift: 4
     yShift: 0
     zoom: 1
-- abbrev: BOS_AWAY
+- abbrev: BOS_AWAY_64x32
   pt:
     xShift: -7
     yShift: 0
     zoom: 1
-- abbrev: BUF_HOME
+- abbrev: BUF_HOME_64x32
   pt:
     xShift: 2
     yShift: 2
     zoom: 0.85
-- abbrev: BUF_AWAY
+- abbrev: BUF_AWAY_64x32
   pt:
     xShift: -6
     yShift: 2
     zoom: 0.85
-- abbrev: CAR_HOME
+- abbrev: CAR_HOME_64x32
   pt:
     xShift: 0
     yShift: 0
     zoom: 1
-- abbrev: CAR_AWAY
+- abbrev: CAR_AWAY_64x32
   pt:
     xShift: -2
     yShift: 0
     zoom: 1
-- abbrev: "CBJ_AWAY"
+- abbrev: "CBJ_AWAY_64x32"
   pt:
     xShift: -5
     yShift: 0
     zoom: 1
-- abbrev: "CBJ_HOME"
+- abbrev: "CBJ_HOME_64x32"
   pt:
     xShift: 5
     yShift: 0
     zoom: 1
-- abbrev: CGY_HOME
+- abbrev: CGY_HOME_64x32
   pt:
     xShift: 4
     yShift: 3
     zoom: 0.85
-- abbrev: CGY_AWAY
+- abbrev: CGY_AWAY_64x32
   pt:
     xShift: -3
     yShift: 3
     zoom: 0.85
-- abbrev: CHI_HOME
+- abbrev: CHI_HOME_64x32
   pt:
     xShift: 5
     yShift: 0
     zoom: 1
-- abbrev: CHI_AWAY
+- abbrev: CHI_AWAY_64x32
   pt:
     xShift: -5
     yShift: 0
     zoom: 1
-- abbrev: COL_HOME
+- abbrev: COL_HOME_64x32
   pt:
     xShift: 3
     yShift: 0
     zoom: 0.9
-- abbrev: COL_AWAY
+- abbrev: COL_AWAY_64x32
   pt:
     xShift: -3
     yShift: 0
     zoom: 0.9
-- abbrev: DAL_HOME
+- abbrev: DAL_HOME_64x32
   pt:
     xShift: 2
     yShift: 0
     zoom: 0.85
-- abbrev: DAL_AWAY
+- abbrev: DAL_AWAY_64x32
   pt:
     xShift: -2
     yShift: 0
     zoom: 0.85
-- abbrev: DET_HOME
+- abbrev: DET_HOME_64x32
   pt:
     xShift: 0
     yShift: 0
     zoom: 0.8
-- abbrev: DET_AWAY
+- abbrev: DET_AWAY_64x32
   pt:
     xShift: 0
     yShift: 0
     zoom: 0.8
-- abbrev: EDM_HOME
+- abbrev: EDM_HOME_64x32
   pt:
     xShift: 3
     yShift: 3
     zoom: 0.8
-- abbrev: EDM_AWAY
+- abbrev: EDM_AWAY_64x32
   pt:
     xShift: -3
     yShift: 3
     zoom: 0.8
-- abbrev: FLA_HOME
+- abbrev: FLA_HOME_64x32
   pt:
     xShift: 6
     yShift: 3
     zoom: 0.8
-- abbrev: FLA_AWAY
+- abbrev: FLA_AWAY_64x32
   pt:
     xShift: -6
     yShift: 3
     zoom: 0.8
-- abbrev: LAK_HOME
+- abbrev: LAK_HOME_64x32
   pt:
     xShift: 7
     yShift: 2
     zoom: 0.85
-- abbrev: LAK_AWAY
+- abbrev: LAK_AWAY_64x32
   pt:
     xShift: -7
     yShift: 2
     zoom: 0.85
-- abbrev: "MIN_AWAY"
+- abbrev: "MIN_AWAY_64x32"
   pt:
     xShift: -1
     yShift: 0
     zoom: 1
-- abbrev: "MIN_HOME"
+- abbrev: "MIN_HOME_64x32"
   pt:
     xShift: 0
     yShift: 0
     zoom: 1
-- abbrev: MTL_HOME
+- abbrev: MTL_HOME_64x32
   pt:
     xShift: 3
     yShift: 0
     zoom: 1
-- abbrev: MTL_AWAY
+- abbrev: MTL_AWAY_64x32
   pt:
     xShift: -2
     yShift: 0
     zoom: 1
-- abbrev: NJD_HOME
+- abbrev: NJD_HOME_64x32
   pt:
     xShift: 5
     yShift: 2
     zoom: 0.9
-- abbrev: NJD_AWAY
+- abbrev: NJD_AWAY_64x32
   pt:
     xShift: -5
     yShift: 2
     zoom: 0.9
-- abbrev: NSH_HOME
+- abbrev: NSH_HOME_64x32
   pt:
     xShift: 0
     yShift: 4
     zoom: 0.8
-- abbrev: NSH_AWAY
+- abbrev: NSH_AWAY_64x32
   pt:
     xShift: 0
     yShift: 4
     zoom: 0.8
-- abbrev: NYI_HOME
+- abbrev: NYI_HOME_64x32
   pt:
     xShift: 4
     yShift: 1
     zoom: 0.9
-- abbrev: NYI_AWAY
+- abbrev: NYI_AWAY_64x32
   pt:
     xShift: -4
     yShift: 1
     zoom: 0.9
-- abbrev: NYR_HOME
+- abbrev: NYR_HOME_64x32
   pt:
     xShift: 7
     yShift: 3
     zoom: 0.85
-- abbrev: NYR_AWAY
+- abbrev: NYR_AWAY_64x32
   pt:
     xShift: -7
     yShift: 3
     zoom: 0.85
-- abbrev: OTT_HOME
+- abbrev: OTT_HOME_64x32
   pt:
     xShift: 0
     yShift: 3
     zoom: 0.8
-- abbrev: OTT_AWAY
+- abbrev: OTT_AWAY_64x32
   pt:
     xShift: 0
     yShift: 6
     zoom: 0.6
-- abbrev: PHI_HOME
+- abbrev: PHI_HOME_64x32
   pt:
     xShift: 4
     yShift: 0
     zoom: 1
-- abbrev: PHI_AWAY
+- abbrev: PHI_AWAY_64x32
   pt:
     xShift: -3
     yShift: 4
     zoom: 0.8
-- abbrev: PIT_HOME
+- abbrev: PIT_HOME_64x32
   pt:
     xShift: 4
     yShift: 3
     zoom: 0.8
-- abbrev: PIT_AWAY
+- abbrev: PIT_AWAY_64x32
   pt:
     xShift: -4
     yShift: 3
     zoom: 0.8
-- abbrev: SJS_HOME
+- abbrev: SJS_HOME_64x32
   pt:
     xShift: 2
     yShift: 2
     zoom: 0.8
-- abbrev: SJS_AWAY
+- abbrev: SJS_AWAY_64x32
   pt:
     xShift: -1
     yShift: 2
     zoom: 0.8
-- abbrev: STL_HOME
+- abbrev: STL_HOME_64x32
   pt:
     xShift: 4
     yShift: 5
     zoom: 0.7
-- abbrev: STL_AWAY
+- abbrev: STL_AWAY_64x32
   pt:
     xShift: -6
     yShift: 0
     zoom: 1
-- abbrev: TBL_HOME
+- abbrev: TBL_HOME_64x32
   pt:
     xShift: 3
     yShift: 1
     zoom: 0.9
-- abbrev: TBL_AWAY
+- abbrev: TBL_AWAY_64x32
   pt:
     xShift: -2
     yShift: 0
     zoom: 0.9
-- abbrev: TOR_HOME
+- abbrev: TOR_HOME_64x32
   pt:
     xShift: 5
     yShift: 3
     zoom: 0.8
-- abbrev: TOR_AWAY
+- abbrev: TOR_AWAY_64x32
   pt:
     xShift: -5
     yShift: 3
     zoom: 0.8
-- abbrev: VAN_HOME
+- abbrev: VAN_HOME_64x32
   pt:
     xShift: 3
     yShift: 3
     zoom: 0.8
-- abbrev: VAN_AWAY
+- abbrev: VAN_AWAY_64x32
   pt:
     xShift: -2
     yShift: 3
     zoom: 0.8
-- abbrev: VGK_HOME
+- abbrev: VGK_HOME_64x32
   pt:
     xShift: 6
     yShift: 2
     zoom: 0.85
-- abbrev: VGK_AWAY
+- abbrev: VGK_AWAY_64x32
   pt:
     xShift: -6
     yShift: 2
     zoom: 0.85
-- abbrev: WPG_HOME
+- abbrev: WPG_HOME_64x32
   pt:
     xShift: 4
     yShift: 2
     zoom: 0.8
-- abbrev: WPG_AWAY
+- abbrev: WPG_AWAY_64x32
   pt:
     xShift: -4
     yShift: 2
     zoom: 0.8
-- abbrev: WSH_HOME
+- abbrev: WSH_HOME_64x32
   pt:
     xShift: 0
     yShift: 0
     zoom: 1
-- abbrev: WSH_AWAY
+- abbrev: WSH_AWAY_64x32
   pt:
     xShift: 0
     yShift: 0

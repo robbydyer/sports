@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -33,6 +34,7 @@ type MLB struct {
 	logoSourceCache map[string]image.Image
 	log             *zap.Logger
 	defaultLogoConf *[]*logo.Config
+	sync.Mutex
 }
 
 // New ...

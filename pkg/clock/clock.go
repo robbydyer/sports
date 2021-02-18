@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image/color"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/golang/freetype/truetype"
@@ -17,10 +18,11 @@ import (
 
 // Clock implements board.Board
 type Clock struct {
-	config     *Config
-	font       *truetype.Font
-	textWriter *rgbrender.TextWriter
-	log        *zap.Logger
+	config      *Config
+	font        *truetype.Font
+	textWriters map[int]*rgbrender.TextWriter
+	log         *zap.Logger
+	sync.Mutex
 }
 
 // Config is a Clock configuration
@@ -55,17 +57,10 @@ func New(config *Config, logger *zap.Logger) (*Clock, error) {
 		}
 	}
 	c := &Clock{
-		config: config,
-		log:    logger,
+		config:      config,
+		log:         logger,
+		textWriters: make(map[int]*rgbrender.TextWriter),
 	}
-
-	var err error
-	c.font, err = rgbrender.GetFont("04B_03__.ttf")
-	if err != nil {
-		return nil, err
-	}
-
-	c.textWriter = rgbrender.NewTextWriter(c.font, 16)
 
 	return c, nil
 }
@@ -80,6 +75,16 @@ func (c *Clock) Enabled() bool {
 	return c.config.Enabled.Load()
 }
 
+// Enable ...
+func (c *Clock) Enable() {
+	c.config.Enabled.Store(true)
+}
+
+// Disable ...
+func (c *Clock) Disable() {
+	c.config.Enabled.Store(false)
+}
+
 // Cleanup ...
 func (c *Clock) Cleanup() {}
 
@@ -87,6 +92,11 @@ func (c *Clock) Cleanup() {}
 func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
 	if !c.config.Enabled.Load() {
 		return nil
+	}
+
+	writer, err := c.getWriter(canvas.Bounds().Dx())
+	if err != nil {
+		return err
 	}
 
 	update := make(chan struct{})
@@ -146,7 +156,7 @@ func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
 				z = "0"
 			}
 
-			if err := c.textWriter.WriteCentered(
+			if err := writer.WriteCentered(
 				canvas,
 				canvas.Bounds(),
 				[]string{
@@ -184,14 +194,14 @@ func (c *Clock) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 		Path: "/clock/disable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			c.log.Info("disabling clock board")
-			c.config.Enabled.Store(false)
+			c.Disable()
 		},
 	}
 	enable := &board.HTTPHandler{
 		Path: "/clock/enable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			c.log.Info("enabling clock board")
-			c.config.Enabled.Store(true)
+			c.Enable()
 		},
 	}
 
@@ -199,4 +209,26 @@ func (c *Clock) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 		disable,
 		enable,
 	}, nil
+}
+
+func (c *Clock) getWriter(canvasWidth int) (*rgbrender.TextWriter, error) {
+	if w, ok := c.textWriters[canvasWidth]; ok {
+		return w, nil
+	}
+
+	if c.font == nil {
+		var err error
+		c.font, err = rgbrender.GetFont("04B_03__.ttf")
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	size := 0.25 * float64(canvasWidth)
+
+	c.Lock()
+	defer c.Unlock()
+	c.textWriters[canvasWidth] = rgbrender.NewTextWriter(c.font, size)
+
+	return c.textWriters[canvasWidth], nil
 }

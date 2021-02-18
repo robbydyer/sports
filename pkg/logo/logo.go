@@ -6,6 +6,7 @@ import (
 	"image/draw"
 	"image/png"
 	"os"
+	"path/filepath"
 
 	"go.uber.org/zap"
 
@@ -27,6 +28,8 @@ type Logo struct {
 type Config struct {
 	Abbrev string `json:"abbrev"`
 	Pt     *Pt    `json:"pt"`
+	XSize  int    `json:"xSize"`
+	YSize  int    `json:"ySize"`
 }
 
 // Pt defines the x, y shift and zoom values for a logo
@@ -47,6 +50,11 @@ func New(key string, sourceLogo image.Image, targetDirectory string, matrixBound
 	}
 }
 
+// Key returns the key name of the logo
+func (l *Logo) Key() string {
+	return l.key
+}
+
 // SetLogger ...
 func (l *Logo) SetLogger(logger *zap.Logger) {
 	l.log = logger
@@ -60,7 +68,7 @@ func (l *Logo) ensureLogger() {
 
 // ThumbnailFilename returns the filname for the resized thumbnail to use
 func (l *Logo) ThumbnailFilename(size image.Rectangle) string {
-	return fmt.Sprintf("%s/%s_%dx%d_%f.png", l.targetDirectory, l.key, size.Dx(), size.Dy(), l.config.Pt.Zoom)
+	return filepath.Join(l.targetDirectory, fmt.Sprintf("%s.png", l.key))
 }
 
 // GetThumbnail returns the resized image

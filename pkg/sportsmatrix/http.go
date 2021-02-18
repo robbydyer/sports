@@ -11,6 +11,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
+
+	"github.com/robbydyer/sports/pkg/board"
 )
 
 //go:embed assets
@@ -35,8 +37,22 @@ func (s *SportsMatrix) startHTTP() chan error {
 
 	router := mux.NewRouter()
 
+	s.httpEndpoints = append(s.httpEndpoints,
+		"/api/screenoff",
+		"/api/screenon",
+	)
+
 	router.HandleFunc("/api/screenoff", s.turnScreenOff)
 	router.HandleFunc("/api/screenon", s.turnScreenOn)
+
+	register := func(name string, h *board.HTTPHandler) {
+		if !strings.HasPrefix(h.Path, "/api") {
+			h.Path = filepath.Join("/api", h.Path)
+		}
+		s.log.Info("registering http handler", zap.String("name", name), zap.String("path", h.Path))
+		router.HandleFunc(h.Path, h.Handler)
+		s.httpEndpoints = append(s.httpEndpoints, h.Path)
+	}
 
 	for _, b := range s.boards {
 		handlers, err := b.GetHTTPHandlers()
@@ -45,12 +61,29 @@ func (s *SportsMatrix) startHTTP() chan error {
 			return errChan
 		}
 		for _, h := range handlers {
-			if !strings.HasPrefix(h.Path, "/api") {
-				h.Path = filepath.Join("/api", h.Path)
-			}
-			s.log.Info("registering http handler", zap.String("board", b.Name()), zap.String("path", h.Path))
-			router.HandleFunc(h.Path, h.Handler)
+			register(b.Name(), h)
 		}
+	}
+
+	for _, c := range s.canvases {
+		handlers, err := c.GetHTTPHandlers()
+		if err != nil {
+			errChan <- err
+			return errChan
+		}
+		for _, h := range handlers {
+			register(c.Name(), h)
+		}
+	}
+
+	// Ensure we didn't dupe any endpoints
+	dupe := make(map[string]struct{}, len(s.httpEndpoints))
+	for _, e := range s.httpEndpoints {
+		if _, exists := dupe[e]; exists {
+			errChan <- fmt.Errorf("duplicate HTTP endpoint '%s'", e)
+			return errChan
+		}
+		dupe[e] = struct{}{}
 	}
 
 	if s.cfg.ServeWebUI {

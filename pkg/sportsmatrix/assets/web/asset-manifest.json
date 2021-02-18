@@ -1,17 +1,17 @@
 {
   "files": {
-    "main.js": "/static/js/main.c1d68414.chunk.js",
-    "main.js.map": "/static/js/main.c1d68414.chunk.js.map",
+    "main.js": "/static/js/main.b77243bb.chunk.js",
+    "main.js.map": "/static/js/main.b77243bb.chunk.js.map",
     "runtime-main.js": "/static/js/runtime-main.80865733.js",
     "runtime-main.js.map": "/static/js/runtime-main.80865733.js.map",
     "static/css/2.150d169a.chunk.css": "/static/css/2.150d169a.chunk.css",
-    "static/js/2.b6d3fc56.chunk.js": "/static/js/2.b6d3fc56.chunk.js",
-    "static/js/2.b6d3fc56.chunk.js.map": "/static/js/2.b6d3fc56.chunk.js.map",
+    "static/js/2.3759be80.chunk.js": "/static/js/2.3759be80.chunk.js",
+    "static/js/2.3759be80.chunk.js.map": "/static/js/2.3759be80.chunk.js.map",
     "static/js/3.2d907cdb.chunk.js": "/static/js/3.2d907cdb.chunk.js",
     "static/js/3.2d907cdb.chunk.js.map": "/static/js/3.2d907cdb.chunk.js.map",
     "index.html": "/index.html",
     "static/css/2.150d169a.chunk.css.map": "/static/css/2.150d169a.chunk.css.map",
-    "static/js/2.b6d3fc56.chunk.js.LICENSE.txt": "/static/js/2.b6d3fc56.chunk.js.LICENSE.txt",
+    "static/js/2.3759be80.chunk.js.LICENSE.txt": "/static/js/2.3759be80.chunk.js.LICENSE.txt",
     "static/media/mlb.c8036288.png": "/static/media/mlb.c8036288.png",
     "static/media/nhllogo.ba9e188b.jpeg": "/static/media/nhllogo.ba9e188b.jpeg",
     "static/media/server.53a70363.png": "/static/media/server.53a70363.png"
@@ -19,7 +19,7 @@
   "entrypoints": [
     "static/js/runtime-main.80865733.js",
     "static/css/2.150d169a.chunk.css",
-    "static/js/2.b6d3fc56.chunk.js",
-    "static/js/main.c1d68414.chunk.js"
+    "static/js/2.3759be80.chunk.js",
+    "static/js/main.b77243bb.chunk.js"
   ]
 }

@@ -28,13 +28,11 @@ type SportBoard struct {
 	cachedLiveGames map[int]Game
 	logos           map[string]*logo.Logo
 	log             *zap.Logger
-	matrixBounds    image.Rectangle
 	logoDrawCache   map[string]image.Image
-	scoreWriter     *rgbrender.TextWriter
-	scoreAlign      image.Rectangle
-	timeWriter      *rgbrender.TextWriter
-	timeAlign       image.Rectangle
-	counter         image.Image
+	scoreWriters    map[string]*rgbrender.TextWriter
+	scoreAligns     map[string]image.Rectangle
+	timeWriters     map[string]*rgbrender.TextWriter
+	timeAligns      map[string]image.Rectangle
 	sync.Mutex
 }
 
@@ -113,18 +111,6 @@ func (c *Config) SetDefaults() {
 		c.boardDelay = 10 * time.Second
 	}
 
-	if c.ScoreFont == nil {
-		c.ScoreFont = &FontConfig{
-			Size:      16,
-			LineSpace: 0,
-		}
-	}
-	if c.TimeFont == nil {
-		c.TimeFont = &FontConfig{
-			Size:      8,
-			LineSpace: 0,
-		}
-	}
 	if c.TimeColor == nil {
 		c.TimeColor = color.White
 	}
@@ -150,8 +136,11 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		logos:           make(map[string]*logo.Logo),
 		log:             logger,
 		logoDrawCache:   make(map[string]image.Image),
-		matrixBounds:    bounds,
 		cachedLiveGames: make(map[int]Game),
+		timeWriters:     make(map[string]*rgbrender.TextWriter),
+		timeAligns:      make(map[string]image.Rectangle),
+		scoreWriters:    make(map[string]*rgbrender.TextWriter),
+		scoreAligns:     make(map[string]image.Rectangle),
 	}
 
 	if s.config.boardDelay < 10*time.Second {
@@ -212,6 +201,16 @@ func (s *SportBoard) Name() string {
 // Enabled ...
 func (s *SportBoard) Enabled() bool {
 	return s.config.Enabled.Load()
+}
+
+// Enable ...
+func (s *SportBoard) Enable() {
+	s.config.Enabled.Store(true)
+}
+
+// Disable ...
+func (s *SportBoard) Disable() {
+	s.config.Enabled.Store(false)
 }
 
 // Render ...
@@ -328,12 +327,12 @@ OUTER:
 			continue
 		}
 
-		_, err = s.RenderGameCounter(canvas, len(games), gameIndex, 1)
+		counter, err := s.RenderGameCounter(canvas, len(games), gameIndex)
 		if err != nil {
 			return err
 		}
 
-		if err := s.renderGame(ctx, canvas, cachedGame); err != nil {
+		if err := s.renderGame(ctx, canvas, cachedGame, counter); err != nil {
 			return err
 		}
 	}
@@ -341,7 +340,7 @@ OUTER:
 	return nil
 }
 
-func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGame Game) error {
+func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
 	select {
 	case <-ctx.Done():
 		return context.Canceled
@@ -358,15 +357,15 @@ func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGa
 	}
 
 	if isLive {
-		if err := s.renderLiveGame(ctx, canvas, liveGame); err != nil {
+		if err := s.renderLiveGame(ctx, canvas, liveGame, counter); err != nil {
 			return fmt.Errorf("failed to render live game: %w", err)
 		}
 	} else if isOver {
-		if err := s.renderCompleteGame(ctx, canvas, liveGame); err != nil {
+		if err := s.renderCompleteGame(ctx, canvas, liveGame, counter); err != nil {
 			return fmt.Errorf("failed to render complete game: %w", err)
 		}
 	} else {
-		if err := s.renderUpcomingGame(ctx, canvas, liveGame); err != nil {
+		if err := s.renderUpcomingGame(ctx, canvas, liveGame, counter); err != nil {
 			return fmt.Errorf("failed to render upcoming game: %w", err)
 		}
 	}

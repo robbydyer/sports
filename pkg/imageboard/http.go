@@ -12,14 +12,14 @@ func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 		Path: "/img/disable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			i.log.Info("disabling image board")
-			i.config.Enabled.Store(false)
+			i.Disable()
 		},
 	}
 	enable := &board.HTTPHandler{
 		Path: "/img/enable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			i.log.Info("enabling image board")
-			i.config.Enabled.Store(true)
+			i.Enable()
 		},
 	}
 	cache := &board.HTTPHandler{
