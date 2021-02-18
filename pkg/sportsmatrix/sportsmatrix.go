@@ -301,6 +301,10 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 			wg.Add(1)
 			go func(canvas board.Canvas) {
 				defer wg.Done()
+				if !canvas.Enabled() {
+					s.log.Warn("canvas is disabled, skipping", zap.String("canvas", canvas.Name()))
+					return
+				}
 				if err := b.Render(ctx, canvas); err != nil {
 					s.log.Error(err.Error())
 				}
