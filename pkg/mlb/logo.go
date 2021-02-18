@@ -24,6 +24,9 @@ func (m *MLB) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config
 		return l, nil
 	}
 
+	m.Lock()
+	defer m.Unlock()
+
 	sources, err := m.logoSources(ctx)
 	if err != nil {
 		return nil, err

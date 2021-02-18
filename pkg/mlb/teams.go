@@ -41,7 +41,7 @@ func (t *Team) GetAbbreviation() string {
 
 // Score ...
 func (t *Team) Score() int {
-	return 0
+	return t.Runs
 }
 
 // GetTeams ...
