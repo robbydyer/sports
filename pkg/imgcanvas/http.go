@@ -1,6 +1,7 @@
 package imgcanvas
 
 import (
+	// embed
 	_ "embed"
 	"net/http"
 
