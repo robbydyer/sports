@@ -105,6 +105,16 @@ func (i *ImageBoard) Enabled() bool {
 	return i.config.Enabled.Load()
 }
 
+// Enable ...
+func (i *ImageBoard) Enable() {
+	i.config.Enabled.Store(true)
+}
+
+// Disable ...
+func (i *ImageBoard) Disable() {
+	i.config.Enabled.Store(false)
+}
+
 // Render ...
 func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	if !i.config.Enabled.Load() {

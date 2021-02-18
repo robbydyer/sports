@@ -30,7 +30,7 @@ type SportsMatrix struct {
 	server        http.Server
 	screenLogOnce *sync.Once
 	close         chan struct{}
-	webBoardCache []byte
+	httpEndpoints []string
 	sync.Mutex
 }
 
@@ -106,7 +106,7 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 		zap.Int("X", s.cfg.WebBoardWidth),
 		zap.Int("Y", height),
 	)
-	s.canvases = append(s.canvases, imgcanvas.New(s.cfg.WebBoardWidth, height))
+	s.canvases = append(s.canvases, imgcanvas.New(s.cfg.WebBoardWidth, height, s.log))
 
 	for _, b := range s.boards {
 		s.log.Info("Registering board", zap.String("board", b.Name()))
@@ -215,6 +215,12 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 
 // Serve blocks until the context is canceled
 func (s *SportsMatrix) Serve(ctx context.Context) error {
+	defer func() {
+		for _, canvas := range s.canvases {
+			_ = canvas.Close()
+		}
+	}()
+
 	s.boardCtx, s.boardCancel = context.WithCancel(ctx)
 	defer s.boardCancel()
 

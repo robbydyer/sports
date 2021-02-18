@@ -38,6 +38,8 @@ func (s *SportBoard) getTimeWriter(bounds image.Rectangle) (*rgbrender.TextWrite
 		return nil, timeAlign, err
 	}
 
+	s.Lock()
+	defer s.Unlock()
 	s.timeWriters[k] = timeWriter
 	s.timeAligns[k] = timeAlign
 
@@ -76,6 +78,8 @@ func (s *SportBoard) getScoreWriter(bounds image.Rectangle) (*rgbrender.TextWrit
 		return nil, scoreAlign, err
 	}
 
+	s.Lock()
+	defer s.Unlock()
 	s.scoreWriters[k] = scoreWriter
 	s.scoreAligns[k] = scoreAlign
 	return scoreWriter, scoreAlign, nil

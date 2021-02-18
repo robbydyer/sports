@@ -5,8 +5,11 @@ import (
 	"image"
 	"image/color"
 	"image/png"
-	"io"
 	"sync"
+	"time"
+
+	"go.uber.org/atomic"
+	"go.uber.org/zap"
 )
 
 // ImgCanvas is a board.Canvas type that just stores the state
@@ -15,24 +18,69 @@ type ImgCanvas struct {
 	width   int
 	height  int
 	pixels  []uint32
-	lastPng *bytes.Buffer
+	lastPng []byte
+	enabled *atomic.Bool
+	log     *zap.Logger
+	done    chan struct{}
 	sync.Mutex
 }
 
 // New ...
-func New(width int, height int) *ImgCanvas {
+func New(width int, height int, logger *zap.Logger) *ImgCanvas {
 	i := &ImgCanvas{
 		width:   width,
 		height:  height,
 		pixels:  make([]uint32, (width * height)),
-		lastPng: &bytes.Buffer{},
+		enabled: atomic.NewBool(false),
+		log:     logger,
+		done:    make(chan struct{}),
 	}
 
 	_ = i.Clear()
 
 	_ = i.Render()
 
+	go i.disableWatcher()
+
 	return i
+}
+
+// Name ...
+func (i *ImgCanvas) Name() string {
+	return "ImgCanvas"
+}
+
+// Close ...
+func (i *ImgCanvas) Close() error {
+	i.done <- struct{}{}
+
+	return nil
+}
+
+// disableWatcher checks if the canvas is disabled for 20 sec consecutively in 500ms increments.
+// If so, it clears the lastPng cache to save memory.
+func (i *ImgCanvas) disableWatcher() {
+	ticker := time.NewTicker(500 * time.Millisecond)
+	ticks := 0
+	for {
+		select {
+		case <-i.done:
+			return
+		case <-ticker.C:
+			ticks++
+			if !i.Enabled() {
+				if ticks >= 20 {
+					ticks = 0
+					if len(i.lastPng) > 0 {
+						i.log.Warn("imgcanvas has been disabled for 20sec, clearing cache")
+						i.lastPng = []byte{}
+					}
+				}
+			} else {
+				ticks = 0
+			}
+		}
+	}
 }
 
 // Clear sets the canvas to all black
@@ -43,15 +91,14 @@ func (i *ImgCanvas) Clear() error {
 	return nil
 }
 
-// LastPng returns the last state of the image encoded as a PNG
-func (i *ImgCanvas) LastPng() io.Reader {
-	i.Lock()
-	defer i.Unlock()
-	return i.lastPng
-}
-
 // Render stores the state of the image as a PNG
 func (i *ImgCanvas) Render() error {
+	defer func() { _ = i.Clear() }()
+
+	if !i.Enabled() {
+		return nil
+	}
+
 	buf := &bytes.Buffer{}
 
 	if err := png.Encode(buf, i); err != nil {
@@ -60,9 +107,9 @@ func (i *ImgCanvas) Render() error {
 
 	i.Lock()
 	defer i.Unlock()
-	i.lastPng = buf
+	i.lastPng = buf.Bytes()
 
-	return i.Clear()
+	return nil
 }
 
 // ColorModel returns the canvas' color model, always color.RGBAModel
@@ -91,6 +138,21 @@ func (i *ImgCanvas) Set(x, y int, clr color.Color) {
 		return
 	}
 	i.pixels[pos] = colorToUint32(clr)
+}
+
+// Enabled ...
+func (i *ImgCanvas) Enabled() bool {
+	return i.enabled.Load()
+}
+
+// Enable ...
+func (i *ImgCanvas) Enable() {
+	i.enabled.Store(true)
+}
+
+// Disable ...
+func (i *ImgCanvas) Disable() {
+	i.enabled.Store(false)
 }
 
 func (i *ImgCanvas) position(x, y int) int {

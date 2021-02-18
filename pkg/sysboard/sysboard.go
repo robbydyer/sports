@@ -147,20 +147,30 @@ func (s *SysBoard) Enabled() bool {
 	return s.config.Enabled.Load()
 }
 
+// Enable ...
+func (s *SysBoard) Enable() {
+	s.config.Enabled.Store(true)
+}
+
+// Disable ...
+func (s *SysBoard) Disable() {
+	s.config.Enabled.Store(false)
+}
+
 // GetHTTPHandlers ...
 func (s *SysBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 	disable := &board.HTTPHandler{
 		Path: "/sys/disable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			s.log.Info("disabling sys board")
-			s.config.Enabled.Store(false)
+			s.Disable()
 		},
 	}
 	enable := &board.HTTPHandler{
 		Path: "/sys/enable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			s.log.Info("enabling sys board")
-			s.config.Enabled.Store(true)
+			s.Enable()
 		},
 	}
 

@@ -75,6 +75,16 @@ func (c *Clock) Enabled() bool {
 	return c.config.Enabled.Load()
 }
 
+// Enable ...
+func (c *Clock) Enable() {
+	c.config.Enabled.Store(true)
+}
+
+// Disable ...
+func (c *Clock) Disable() {
+	c.config.Enabled.Store(false)
+}
+
 // Cleanup ...
 func (c *Clock) Cleanup() {}
 
@@ -184,14 +194,14 @@ func (c *Clock) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 		Path: "/clock/disable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			c.log.Info("disabling clock board")
-			c.config.Enabled.Store(false)
+			c.Disable()
 		},
 	}
 	enable := &board.HTTPHandler{
 		Path: "/clock/enable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			c.log.Info("enabling clock board")
-			c.config.Enabled.Store(true)
+			c.Enable()
 		},
 	}
 

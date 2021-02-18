@@ -3,7 +3,6 @@ package sportsmatrix
 import (
 	"embed"
 	"fmt"
-	"io"
 	"io/fs"
 	"net/http"
 	"path/filepath"
@@ -12,6 +11,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
+
+	"github.com/robbydyer/sports/pkg/board"
 )
 
 //go:embed assets
@@ -36,9 +37,22 @@ func (s *SportsMatrix) startHTTP() chan error {
 
 	router := mux.NewRouter()
 
+	s.httpEndpoints = append(s.httpEndpoints,
+		"/api/screenoff",
+		"/api/screenon",
+	)
+
 	router.HandleFunc("/api/screenoff", s.turnScreenOff)
 	router.HandleFunc("/api/screenon", s.turnScreenOn)
-	router.HandleFunc("/api/board", s.webCanvas)
+
+	register := func(name string, h *board.HTTPHandler) {
+		if !strings.HasPrefix(h.Path, "/api") {
+			h.Path = filepath.Join("/api", h.Path)
+		}
+		s.log.Info("registering http handler", zap.String("name", name), zap.String("path", h.Path))
+		router.HandleFunc(h.Path, h.Handler)
+		s.httpEndpoints = append(s.httpEndpoints, h.Path)
+	}
 
 	for _, b := range s.boards {
 		handlers, err := b.GetHTTPHandlers()
@@ -47,12 +61,29 @@ func (s *SportsMatrix) startHTTP() chan error {
 			return errChan
 		}
 		for _, h := range handlers {
-			if !strings.HasPrefix(h.Path, "/api") {
-				h.Path = filepath.Join("/api", h.Path)
-			}
-			s.log.Info("registering http handler", zap.String("board", b.Name()), zap.String("path", h.Path))
-			router.HandleFunc(h.Path, h.Handler)
+			register(b.Name(), h)
 		}
+	}
+
+	for _, c := range s.canvases {
+		handlers, err := c.GetHTTPHandlers()
+		if err != nil {
+			errChan <- err
+			return errChan
+		}
+		for _, h := range handlers {
+			register(c.Name(), h)
+		}
+	}
+
+	// Ensure we didn't dupe any endpoints
+	dupe := make(map[string]struct{}, len(s.httpEndpoints))
+	for _, e := range s.httpEndpoints {
+		if _, exists := dupe[e]; exists {
+			errChan <- fmt.Errorf("duplicate HTTP endpoint '%s'", e)
+			return errChan
+		}
+		dupe[e] = struct{}{}
 	}
 
 	if s.cfg.ServeWebUI {
@@ -92,40 +123,4 @@ func (s *SportsMatrix) turnScreenOn(respWriter http.ResponseWriter, req *http.Re
 	s.Lock()
 	defer s.Unlock()
 	s.screenOn <- struct{}{}
-}
-
-func (s *SportsMatrix) webCanvas(w http.ResponseWriter, req *http.Request) {
-	i, err := s.GetImgCanvas()
-	if err != nil || i == nil {
-		s.log.Error("could not get ImgCanvas", zap.Error(err))
-		return
-	}
-
-	s.log.Debug("getting image for web board")
-
-	w.Header().Set("Content-Type", "image/png")
-	board := i.LastPng()
-
-	if board == nil {
-		s.log.Error("no board has been rendered")
-	}
-
-	s.log.Debug("reading web board")
-	boardBytes, err := io.ReadAll(board)
-	if err != nil {
-		s.log.Error("failed to read board", zap.Error(err))
-		return
-	}
-
-	if len(boardBytes) == 0 {
-		s.log.Debug("web board has already been read, using cache")
-		boardBytes = s.webBoardCache
-	} else {
-		s.log.Debug("first time reading web board, caching")
-		s.webBoardCache = boardBytes
-	}
-
-	if _, err := w.Write(boardBytes); err != nil {
-		s.log.Error("failed to copy png for /api/board", zap.Error(err))
-	}
 }

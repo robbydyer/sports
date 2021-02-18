@@ -20,11 +20,15 @@ class Board extends React.Component {
     }
     componentWillUnmount() {
         clearInterval(this.interval)
+        fetch(`${conf.BACKEND}/api/imgcanvas/disable`, {
+            method: "GET",
+            mode: "cors",
+        });
     }
     render() {
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Image src={`${conf.BACKEND}/api/board?${this.state.t}`} style={{ height: 'auto', width: 'auto' }} name={this.state.t} fluid /></Col></Row>
+                <Row className="text-center"><Col><Image src={`${conf.BACKEND}/api/imgcanvas/board?${this.state.t}`} style={{ height: 'auto', width: 'auto' }} name={this.state.t} fluid /></Col></Row>
             </Container>
         )
     }

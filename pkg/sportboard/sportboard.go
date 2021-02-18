@@ -203,6 +203,16 @@ func (s *SportBoard) Enabled() bool {
 	return s.config.Enabled.Load()
 }
 
+// Enable ...
+func (s *SportBoard) Enable() {
+	s.config.Enabled.Store(true)
+}
+
+// Disable ...
+func (s *SportBoard) Disable() {
+	s.config.Enabled.Store(false)
+}
+
 // Render ...
 func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	if !s.config.Enabled.Load() {
