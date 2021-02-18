@@ -11,6 +11,14 @@ import (
 )
 
 func (s *SportBoard) getTimeWriter(bounds image.Rectangle) (*rgbrender.TextWriter, image.Rectangle, error) {
+	k := fmt.Sprintf("%dx%d", bounds.Dx(), bounds.Dy())
+	w, wok := s.timeWriters[k]
+	a, aok := s.timeAligns[k]
+	if wok && aok {
+		s.log.Debug("using cached time writer")
+		return w, a, nil
+	}
+
 	var timeAlign image.Rectangle
 	timeWriter, err := rgbrender.DefaultTextWriter()
 	if err != nil {
@@ -30,12 +38,21 @@ func (s *SportBoard) getTimeWriter(bounds image.Rectangle) (*rgbrender.TextWrite
 		return nil, timeAlign, err
 	}
 
-	s.timeWriter = timeWriter
-	s.timeAlign = timeAlign
+	s.timeWriters[k] = timeWriter
+	s.timeAligns[k] = timeAlign
+
 	return timeWriter, timeAlign, nil
 }
 
 func (s *SportBoard) getScoreWriter(bounds image.Rectangle) (*rgbrender.TextWriter, image.Rectangle, error) {
+	k := fmt.Sprintf("%dx%d", bounds.Dx(), bounds.Dy())
+	w, wok := s.scoreWriters[k]
+	a, aok := s.scoreAligns[k]
+	if wok && aok {
+		s.log.Debug("using cached score writer")
+		return w, a, nil
+	}
+
 	var scoreAlign image.Rectangle
 	fnt, err := rgbrender.GetFont("score.ttf")
 	if err != nil {
@@ -60,8 +77,8 @@ func (s *SportBoard) getScoreWriter(bounds image.Rectangle) (*rgbrender.TextWrit
 		return nil, scoreAlign, err
 	}
 
-	s.scoreWriter = scoreWriter
-	s.scoreAlign = scoreAlign
+	s.scoreWriters[k] = scoreWriter
+	s.scoreAligns[k] = scoreAlign
 	return scoreWriter, scoreAlign, nil
 }
 

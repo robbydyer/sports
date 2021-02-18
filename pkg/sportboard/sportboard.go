@@ -29,10 +29,10 @@ type SportBoard struct {
 	logos           map[string]*logo.Logo
 	log             *zap.Logger
 	logoDrawCache   map[string]image.Image
-	scoreWriter     *rgbrender.TextWriter
-	scoreAlign      image.Rectangle
-	timeWriter      *rgbrender.TextWriter
-	timeAlign       image.Rectangle
+	scoreWriters    map[string]*rgbrender.TextWriter
+	scoreAligns     map[string]image.Rectangle
+	timeWriters     map[string]*rgbrender.TextWriter
+	timeAligns      map[string]image.Rectangle
 	sync.Mutex
 }
 
@@ -137,6 +137,10 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		log:             logger,
 		logoDrawCache:   make(map[string]image.Image),
 		cachedLiveGames: make(map[int]Game),
+		timeWriters:     make(map[string]*rgbrender.TextWriter),
+		timeAligns:      make(map[string]image.Rectangle),
+		scoreWriters:    make(map[string]*rgbrender.TextWriter),
+		scoreAligns:     make(map[string]image.Rectangle),
 	}
 
 	if s.config.boardDelay < 10*time.Second {
