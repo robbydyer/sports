@@ -40,7 +40,7 @@ sportsMatrixConfig:
     brightness: 60
 
     # Name of the GPIO mapping used. See https://github.com/hzeller/rpi-rgb-led-matrix#changing-parameters-via-command-line-flags
-    hardwareMapping: adafruit-hat-pwm
+    hardwareMapping: adafruit-hat
 
     # progressive or interlaced
     #scanMode: progressive

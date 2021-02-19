@@ -62,6 +62,9 @@ EOF
 cp "${ROOT}/sportsmatrix.bin" usr/local/bin/sportsmatrix
 cp "${ROOT}/sportsmatrix.conf.example" etc/sportsmatrix.conf
 
+chmod 755 usr/local/bin/sportsmatrix
+chmod 666 etc/sportsmatrix.conf
+
 cd "${tmp}"
 dpkg-deb --build "${d}"
 
