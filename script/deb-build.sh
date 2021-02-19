@@ -47,6 +47,10 @@ ExecStart=/usr/local/bin/sportsmatrix run -f /var/log/sportsmatrix.log
 WantedBy=multi-user.target
 EOF
 
+cat <<EOF > DEBIAN/conffiles
+/etc/sportsmatrix.conf
+EOF
+
 cat <<EOF > etc/logrotate.d/sportsmatrix
 /var/log/sportsmatrix.log
 {
