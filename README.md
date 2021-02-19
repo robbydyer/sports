@@ -9,6 +9,17 @@ I am currently running this with a Pi-zero. It performs perfectly well so far. I
 
 *WARNING* This project is still very early in development. There will be lots of churn and breakage for a while.
 
+#### Table of Contents
+[Board Types](#current-board-types)
+[Roadmap](#roadmap)
+[Installation](#installation)
+[Configuration](#configuration)
+[Running the Board](#running-the-board)
+[Web UI Controller](#web-ui)
+[API Endpoint](#api-endpoints)
+[Contributing/Development](#contributing)
+[Examples](#examples)
+
 ## Current Board Types
 
 - NHL: Displays the day's games. Either live scores (favorite teams' scores are hideable for those who watch games recorded), Upcoming games, or final scores.
@@ -24,14 +35,14 @@ My goal is to add new boards for all the major sports that I'm personally intere
 
 #### Web API for on-the-fly config changes
 ~I ultimately would like to integrate a web API that allows certain things to be modified on the fly- this would ideally mean a simple web UI for tweaking things without having to access the Pi and restart the service.~
-The Web API is a thing now! Check out [HTTP Endpoints](#http-endpoints)
+The Web API is a thing now! Check out [API Endpoints](#api-endpoints)
 
 #### More Misc. Boards
 I'd like to add some other basic boards- ~clock~, weather, etc.
 
 ## Installation
 There's a helper install script that pulls the latest release's .deb package and installs it and starts the service. Obviously, piping a
-remote script to `sudo bash` is risky, so please take a look at `script/install.sh` to verify nothing nefarious is going on.
+remote script to `sudo bash` is risky, so please take a look at `script/install.sh` to verify nothing nefarious is going on. You can always manually download the .deb package in the [Releases Section](https://github.com/robbydyer/sports/releases/latest). Just make sure to pick the correct one for your architecture (armv7l for all but Pi Zero).
 
 Run the following command in a Terminal on your Pi
 ```shell
@@ -39,7 +50,7 @@ curl https://raw.githubusercontent.com/robbydyer/sports/master/script/install.sh
 ```
 
 ## Configuration
-You can run the app without passing any configuration, it will just use some sane defaults. Currently it only defaults to showing the NHL board. Each board that is enabled will be rotated through.
+You can run the app without passing any configuration, it will just use some sane defaults. Currently it only defaults to showing the NHL board. Each board that is enabled will be rotated through. The default location for the config file is `/etc/sportsmatrix.conf`
 
 Example:
 ```shell
@@ -87,29 +98,40 @@ sportsMatrixConfig:
  ```
 
 ## Running the Board
-The app currently only runs in the foreground, there's no builtin daemonizing mechanism. Maybe one day I'll provide systemd (or whatever Raspbian uses) configs. For now, I suggest either running the app in a screen session or manually backgrounding the process. 
+If you installed the app with the installer script or a .deb package directly, then the service will run automatically. You can start/stop/restart the service with systemctl commands:
+```shell
+# stops the service
+sudo systemctl stop sportsmatrix
 
+# Restarts the service, like after changes to the config file
+sudo systemctl restart sportsmatrix
+```
+
+You can also run the app manually in the foreground. The .deb package installs the binary to `/usr/local/bin/sportsmatrix`
 NOTE: You *MUST* run the app via sudo. The underlying C library requires it. It does switch to a less-privileged user after the matrix is initialized.
 ```shell
+# Show all CLI options
+sportsmatrix --help
+
 # Run with defaults
-sudo ./sportsmatrix.bin run
+sudo sportsmatrix.bin run
 
 # With config file
-sudo ./sportsmatrix.bin run -c myconfig.conf
+sudo sportsmatrix.bin run -c myconfig.conf
 
 # NHL demo mode
-sudo ./sportsmatrix.bin nhltest
+sudo sportsmatrix.bin nhltest
 ```
 
 ## Web UI
-There is a (very) basic web UI frontend for managing the board. It is bundled with the binary and served as a single-page app. For now, running it with a pre-built binary means your Pi has to be accessible via the hostname `matrix.local` on your network. The UI gives buttons for all the backend [HTTP Endpoints](#http-endpoints). Front-end dev is not my strongsuit, so it's not particularly pretty.
+There is a (very) basic web UI frontend for managing the board. It is bundled with the binary and served as a single-page app. The UI gives buttons for all the backend [API Endpoints](#api-endpoints). You can also view a rendered version of the board in the "Board" section (make sure your configuration enables this). Front-end dev is not my strongsuit, so it's not particularly pretty.
 
-The Web UI is accessible at `http://matrix.local:[PORT]`, where port is whatever you configure the `httpListenPort` in your config file to be.
+The Web UI is accessible at `http://[HOSTNAME OR IP]:[PORT]`, where port is whatever you configure the `httpListenPort` in your config file to be. For example, if your Pi's hostname is `mypi` and your configured listen port is `8080`, `http://mypi:8080`
 
 ![example1](assets/images/ui2.png) ![example2](assets/images/ui3.png) ![example3](assets/images/ui4.png) ![example4](assets/images/ui1.png)
 
 
-## HTTP endpoints
+## API endpoints
 The sportsmatrix creates some HTTP endpoints for on-the-fly changes. The matrix itself registers some endpoints, and each board is capable of registering it's own.
 
 The matrix defines the following:
@@ -142,7 +164,7 @@ curl http://127.0.0.1:8080/api/img/disable
 curl http://127.0.0.1:8080/api/img/clearcache
 ```
 
-## Contributing / Development
+## Contributing
 I'm always open to pull requests for features/bug fixes! Feel free to open an issue if (when) you find a bug.
 
 For easy/faster testing without compiling on a Pi, you can use the `ConsoleMatrix` type for generating the board layout in the terminal.
