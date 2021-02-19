@@ -30,15 +30,13 @@ The Web API is a thing now! Check out [HTTP Endpoints](#http-endpoints)
 I'd like to add some other basic boards- ~clock~, weather, etc.
 
 ## Installation
-My goal is to soon provide an easy installer script...
+There's a helper install script that pulls the latest release's .deb package and installs it and starts the service. Obviously, piping a
+remote script to `sudo bash` is risky, so please take a look at `script/install.sh` to verify nothing nefarious is going on.
 
-There are some precompiled binaries on the Releases page- simply download the one that works with your Pi (sportsmatrix.arm7 for most, sportsmatrix.armv6l for Pi Zero).
-
-OR
-
-The manual steps:
-- Clone this repository onto your Pi
-- Run `script/build.local`. This will result in a binary named "sportsmatrix.bin" inside the cloned repo directory.
+Run the following command in a Terminal on your Pi
+```shell
+curl https://raw.githubusercontent.com/robbydyer/sports/master/script/install.sh | sudo bash
+```
 
 ## Configuration
 You can run the app without passing any configuration, it will just use some sane defaults. Currently it only defaults to showing the NHL board. Each board that is enabled will be rotated through.

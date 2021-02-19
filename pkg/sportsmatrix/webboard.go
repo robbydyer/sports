@@ -52,8 +52,9 @@ func (s *SportsMatrix) launchWebBoard(ctx context.Context) error {
 
 	s.log.Info("launching web board to chromium browser",
 		zap.String("command", strings.Join(cmd.Args, " ")),
-		zap.Int("nobody UID", uid),
-		zap.Int("nobody GID", gid),
+		zap.String("user", s.cfg.WebBoardUser),
+		zap.Int("UID", uid),
+		zap.Int("GID", gid),
 	)
 
 	out, err := cmd.CombinedOutput()
