@@ -130,7 +130,7 @@ The Web UI is accessible at `http://[HOSTNAME OR IP]:[PORT]`, where port is what
 
 ![example1](assets/images/ui2.png) ![example2](assets/images/ui3.png) ![example3](assets/images/ui4.png) ![example4](assets/images/ui1.png)
 
-Example of the Web Board:
+Example of the Web Board:<br>
 ![webboard](assets/images/webboard.png)
 
 ## API endpoints
