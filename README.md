@@ -10,15 +10,15 @@ I am currently running this with a Pi-zero. It performs perfectly well so far. I
 *WARNING* This project is still very early in development. There will be lots of churn and breakage for a while.
 
 #### Table of Contents
-[Board Types](#current-board-types)
-[Roadmap](#roadmap)
-[Installation](#installation)
-[Configuration](#configuration)
-[Running the Board](#running-the-board)
-[Web UI Controller](#web-ui)
-[API Endpoint](#api-endpoints)
-[Contributing/Development](#contributing)
-[Examples](#examples)
+- [Board Types](#current-board-types)<br>
+- [Roadmap](#roadmap)<br>
+- [Installation](#installation)<br>
+- [Configuration](#configuration)<br>
+- [Running the Board](#running-the-board)<br>
+- [Web UI Controller](#web-ui)<br>
+- [API Endpoint](#api-endpoints)<br>
+- [Contributing/Development](#contributing)<br>
+- [Examples](#examples)<br>
 
 ## Current Board Types
 
