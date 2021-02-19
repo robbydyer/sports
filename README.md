@@ -52,50 +52,7 @@ curl https://raw.githubusercontent.com/robbydyer/sports/master/script/install.sh
 ## Configuration
 You can run the app without passing any configuration, it will just use some sane defaults. Currently it only defaults to showing the NHL board. Each board that is enabled will be rotated through. The default location for the config file is `/etc/sportsmatrix.conf`
 
-Example:
-```shell
----
-# Image Board. It rotates between all the images in the given directories
-imageConfig:
-  enabled: true # Enable the board
-  useDiskCache: true # Will cache resized images to disk (somewhere in /tmp)
-  boardDelay: 5s # Delay time between each image
-  directories:
-  - /tmp/images
-  
-# NHL Board
-nhlConfig:
-  enabled: true # Enable the board
-  hideFavoriteScore: true # Hides the score of a live game that your favorite teams are playing in
-  boardDelay: "20s" # Delay time between each game board
-  favoriteSticky: true # If this is true, the board will stick to games that your favorite team is playing in. Prioritizes based on ordering
-  favoriteTeams: # The list of your favorite teams
-  - NYI
-  watchTeams: # The list of teams to show games for. Leaving this out or setting to ALL will show all teams in the league
-  - ALL
-  
-# Clock Board
-clockConfig:
-  enabled: true
-  boardDelay: "10s"
-  
-# Sys Board
-sysConfig:
-  enabled: true
-  boardDelay: "10s"
-  
-# Primary configuration for the matrix  
-sportsMatrixConfig:
-  httpListenPort: 8080 # Listen port for the HTTP server. Defaults to 8080
-  screenOffTimes: # Cron values for when the screen should be turned off
-  - "38 0 * * *"
-  screenOnTimes: # Cron values for when the screen should be turned on
-  - "39 0 * * *"
-  hardwareConfig: # Hardware config passed straight through to the https://github.com/hzeller/rpi-rgb-led-matrix library
-    brightness: 60
-    hardwareMapping: adafruit-hat-pwm
-    showRefreshRate: false
- ```
+See the [Full Example Configuration](sportsmatrix.conf.example)<br>
 
 ## Running the Board
 If you installed the app with the installer script or a .deb package directly, then the service will run automatically. You can start/stop/restart the service with systemctl commands:
