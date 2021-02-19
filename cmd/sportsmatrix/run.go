@@ -49,7 +49,6 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 	}
 	defer func() {
 		if s.rArgs.writer != nil {
-
 			s.rArgs.writer.Close()
 		}
 	}()
