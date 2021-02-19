@@ -71,6 +71,12 @@ func (n *NHL) cacheClear() {
 	if err := n.UpdateGames(context.Background(), util.Today().Format(DateFormat)); err != nil {
 		n.log.Error("failed to get today's games", zap.Error(err))
 	}
+	for k := range n.logos {
+		delete(n.logos, k)
+	}
+	for k := range n.logoSourceCache {
+		delete(n.logoSourceCache, k)
+	}
 }
 
 // HTTPPathPrefix returns the prefix of HTTP calls to this board. i.e. /nhl/foo

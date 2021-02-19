@@ -8,19 +8,20 @@ import Board from './Board.js';
 import Sys from './Sys.js';
 import TopNav from './Nav.js';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
-import conf from './config.json';
+
+var BACKEND = "http://" + window.location.host
 
 class App extends React.Component {
   screenOn() {
     console.log("Turning screen on")
-    fetch(`${conf.BACKEND}/api/screenon`, {
+    fetch(`${BACKEND}/api/screenon`, {
       method: "GET",
       mode: "cors",
     });
   }
   screenOff() {
     console.log("Turning screen off")
-    fetch(`${conf.BACKEND}/api/screenoff`, {
+    fetch(`${BACKEND}/api/screenoff`, {
       method: "GET",
       mode: "cors",
     });

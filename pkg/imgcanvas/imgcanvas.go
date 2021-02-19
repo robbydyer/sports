@@ -85,15 +85,19 @@ func (i *ImgCanvas) disableWatcher() {
 
 // Clear sets the canvas to all black
 func (i *ImgCanvas) Clear() error {
+	i.blackOut()
+	return i.Render()
+}
+
+func (i *ImgCanvas) blackOut() {
 	for x := range i.pixels {
 		i.pixels[x] = colorToUint32(color.Black)
 	}
-	return nil
 }
 
 // Render stores the state of the image as a PNG
 func (i *ImgCanvas) Render() error {
-	defer func() { _ = i.Clear() }()
+	defer i.blackOut()
 
 	if !i.Enabled() {
 		return nil

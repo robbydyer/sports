@@ -5,7 +5,8 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Image from 'react-bootstrap/Image';
-import conf from './config.json';
+
+var BACKEND = "http://" + window.location.host
 
 class Board extends React.Component {
     constructor(props) {
@@ -20,7 +21,7 @@ class Board extends React.Component {
     }
     componentWillUnmount() {
         clearInterval(this.interval)
-        fetch(`${conf.BACKEND}/api/imgcanvas/disable`, {
+        fetch(`${BACKEND}/api/imgcanvas/disable`, {
             method: "GET",
             mode: "cors",
         });
@@ -28,7 +29,7 @@ class Board extends React.Component {
     render() {
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Image src={`${conf.BACKEND}/api/imgcanvas/board?${this.state.t}`} style={{ height: 'auto', width: 'auto' }} name={this.state.t} fluid /></Col></Row>
+                <Row className="text-center"><Col><Image src={`${BACKEND}/api/imgcanvas/board?${this.state.t}`} style={{ height: 'auto', width: 'auto' }} name={this.state.t} fluid /></Col></Row>
             </Container>
         )
     }

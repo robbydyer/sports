@@ -4,12 +4,13 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import conf from './config.json';
+
+var BACKEND = "http://" + window.location.host
 
 class Home extends React.Component {
     callmatrix(path) {
         console.log(`Calling matrix API ${path}`)
-        fetch(`${conf.BACKEND}/api/${path}`, {
+        fetch(`${BACKEND}/api/${path}`, {
             method: "GET",
             mode: "cors",
         });

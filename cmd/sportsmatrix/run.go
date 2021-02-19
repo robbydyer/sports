@@ -43,7 +43,16 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		cancel()
 	}()
 
-	logger := getLogger(s.rArgs.logLevel)
+	logger, err := s.rArgs.getLogger(s.rArgs.logLevel)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if s.rArgs.writer != nil {
+
+			s.rArgs.writer.Close()
+		}
+	}()
 
 	boards, err := s.rArgs.getBoards(ctx, logger)
 	if err != nil {

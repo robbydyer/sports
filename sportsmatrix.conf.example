@@ -1,0 +1,109 @@
+---
+# This config file is in YAML format, which means indention matters.
+
+# Main matrix config
+sportsMatrixConfig:
+  # Serves the single page web UI for controlling the matrix
+  serveWebUI: true
+
+  # Sets the width of the web viewable board. It will be in the same aspect
+  # ratio as the configured LED matrix
+  webBoardWidth: 800
+
+  # Port for the HTTP server to listen on. Defaults to 8080 if unset
+  httpListenPort: 80
+
+  # Cron schedule for times to turn off the screen
+  screenOffTimes:
+  - "0 0 * * *"
+
+  # Cron schedule for times to turn on the screen
+  screenOnTimes:
+  - "0 19 * * *"
+
+  # Hardware config. See https://github.com/hzeller/rpi-rgb-led-matrix
+  hardwareConfig:
+    cols: 64
+    rows: 32
+
+    # 1 to 100. Make sure your power supply is sufficient
+    brightness: 60
+
+    # Name of the GPIO mapping used. See https://github.com/hzeller/rpi-rgb-led-matrix#changing-parameters-via-command-line-flags
+    hardwareMapping: adafruit-hat-pwm
+
+    # progressive or interlaced
+    #scanMode: progressive
+
+    # Limit the LED panel refresh rate. 0 for no limit
+    #limitRefreshRateHz: 0
+
+    # Number of Matrices chained
+    #chainLength: 1
+
+    # Number of parallel chains connected
+    #parallel: 1
+
+    # Lower number uses less CPU and increases refresh rate, but limits colors
+    #pwmBits: 11
+
+    # High number gives more accurate color, but can reduce frame rate
+    #pwmlsbNanoseconds: 130
+
+# Clock Board
+clockConfig:
+  enabled: true
+  boardDelay: "10s"
+
+## Sys board shows system's Mem and CPU usage
+sysConfig:
+  enabled: false
+  boardDelay: "10s"
+
+## NHL config
+nhlConfig:
+  enabled: true
+  boardDelay: "10s"
+
+  # watchTeams are teams we show games for. ALL shows all teams in the league
+  watchTeams:
+  - ALL
+
+  # favoriteTeams are teams that we can hide scores for, and set to "Sticky" on live games
+  #favoriteTeams:
+  #- NYI
+
+  # Hides scores for your favoriteTeams games. DVR is a father's life saver
+  hideFavoriteScore: true
+
+  # Tells the matrix to lock onto a live game that a favorite team is playing in
+  favoriteSticky: false
+
+## MLB Config
+mlbConfig:
+  enabled: true
+  boardDelay: "10s"
+
+  # watchTeams are teams we show games for. ALL shows all teams in the league
+  watchTeams:
+  - ALL
+
+  # favoriteTeams are teams that we can hide scores for, and set to "Sticky" on live games
+  #favoriteTeams:
+  #- ATL
+
+  # Hides scores for your favoriteTeams games. DVR is a father's life saver
+  hideFavoriteScore: true
+
+  # Tells the matrix to lock onto a live game that a favorite team is playing in
+  favoriteSticky: false
+
+# Image Board. Rotates showing all the images in a list of directories
+# All images in the directory will be automatically scaled to fit the matrix
+imageConfig:
+  enabled: false
+  useDiskCache: true
+  boardDelay: 5s
+  #directories:
+  #- /home/pi/matrix_images
+
