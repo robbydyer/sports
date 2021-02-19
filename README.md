@@ -130,6 +130,8 @@ The Web UI is accessible at `http://[HOSTNAME OR IP]:[PORT]`, where port is what
 
 ![example1](assets/images/ui2.png) ![example2](assets/images/ui3.png) ![example3](assets/images/ui4.png) ![example4](assets/images/ui1.png)
 
+Example of the Web Board:
+![webboard](assets/images/webboard.png)
 
 ## API endpoints
 The sportsmatrix creates some HTTP endpoints for on-the-fly changes. The matrix itself registers some endpoints, and each board is capable of registering it's own.
