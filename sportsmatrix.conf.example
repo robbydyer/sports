@@ -4,11 +4,21 @@
 # Main matrix config
 sportsMatrixConfig:
   # Serves the single page web UI for controlling the matrix
+  # accessible at http://[IP or hostname of Pi]
   serveWebUI: true
 
   # Sets the width of the web viewable board. It will be in the same aspect
   # ratio as the configured LED matrix
   webBoardWidth: 800
+
+  # If set to true, it will open the browser and display the web-based
+  # board. This can resource intensive depending on the webBoardWidth,
+  # so watch memory usage on weaker Pi's. Your Pi must have a desktop
+  # OS installed with chromium-browser installed.
+  launchWebBoard: false
+
+  # Change this to your user. Default for Raspberry Pi OS is "pi"
+  webBoardUser: pi
 
   # Port for the HTTP server to listen on. Defaults to 8080 if unset
   httpListenPort: 80

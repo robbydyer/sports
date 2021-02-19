@@ -9,10 +9,11 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/robfig/cron/v3"
+
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/util"
-	"github.com/robfig/cron/v3"
 )
 
 const (
