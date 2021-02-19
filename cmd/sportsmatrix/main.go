@@ -37,6 +37,8 @@ type rootArgs struct {
 	config     *config.Config
 	test       bool
 	today      string
+	logFile    string
+	writer     *os.File
 }
 
 func main() {
@@ -108,6 +110,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 	f.StringVarP(&args.level, "log-level", "l", "info", "Log level. 'info', 'warn', 'debug'")
 	f.BoolVarP(&args.test, "test", "t", false, "uses a test console matrix")
 	f.StringVar(&args.today, "date-str", "", "Set the date of 'Today' for testing past days. Format 2020-01-30")
+	f.StringVarP(&args.logFile, "log-file", "f", "", "Write logs to given file instead of STDOUT")
 
 	_ = viper.BindPFlags(f)
 

@@ -52,6 +52,7 @@ func (i *ImgCanvas) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			if _, err := w.Write(i.lastPng); err != nil {
 				i.log.Error("failed to copy png for /api/imgcanvas/board", zap.Error(err))
 			}
+			i.log.Debug("web board image sent")
 		},
 	}
 

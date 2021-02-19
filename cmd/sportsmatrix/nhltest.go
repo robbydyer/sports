@@ -62,7 +62,15 @@ func (c *nhlCmd) run(cmd *cobra.Command, args []string) error {
 
 	bounds := image.Rect(0, 0, c.rArgs.config.SportsMatrixConfig.HardwareConfig.Cols, c.rArgs.config.SportsMatrixConfig.HardwareConfig.Rows)
 
-	logger := getLogger(c.rArgs.logLevel)
+	logger, err := c.rArgs.getLogger(c.rArgs.logLevel)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if c.rArgs.writer != nil {
+			c.rArgs.writer.Close()
+		}
+	}()
 
 	api, err := nhl.NewMock(logger)
 	if err != nil {

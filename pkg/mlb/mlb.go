@@ -12,6 +12,7 @@ import (
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/util"
+	"github.com/robfig/cron/v3"
 )
 
 const (
@@ -54,7 +55,29 @@ func New(ctx context.Context, logger *zap.Logger) (*MLB, error) {
 		return nil, err
 	}
 
+	c := cron.New()
+	if _, err := c.AddFunc("0 5 * * *", m.cacheClear); err != nil {
+		return nil, fmt.Errorf("failed to set cron job for cacheClear: %w", err)
+	}
+	c.Start()
+
 	return m, nil
+}
+
+// CacheClear ...
+func (m *MLB) cacheClear() {
+	for k := range m.games {
+		delete(m.games, k)
+	}
+	if err := m.UpdateGames(context.Background(), util.Today().Format(DateFormat)); err != nil {
+		m.log.Error("failed to get today's games", zap.Error(err))
+	}
+	for k := range m.logos {
+		delete(m.logos, k)
+	}
+	for k := range m.logoSourceCache {
+		delete(m.logoSourceCache, k)
+	}
 }
 
 // HTTPPathPrefix returns the path prefix for the HTTP handlers for this board

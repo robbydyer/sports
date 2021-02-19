@@ -6,7 +6,8 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Image from 'react-bootstrap/Image';
 import imgimg from './image.png';
-import conf from './config.json';
+
+var BACKEND = "http://" + window.location.host
 
 class ImageBoard extends React.Component {
     constructor(props) {
@@ -14,7 +15,7 @@ class ImageBoard extends React.Component {
     }
     callmatrix(path) {
         console.log(`Calling matrix Image Board /img/${path}`)
-        fetch(`${conf.BACKEND}/api/img/${path}`, {
+        fetch(`${BACKEND}/api/img/${path}`, {
             method: "GET",
             mode: "cors",
         });
