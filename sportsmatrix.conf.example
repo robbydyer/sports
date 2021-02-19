@@ -17,6 +17,9 @@ sportsMatrixConfig:
   # OS installed with chromium-browser installed.
   launchWebBoard: false
 
+  # Change this to your user. Default for Raspberry Pi OS is "pi"
+  webBoardUser: pi
+
   # Port for the HTTP server to listen on. Defaults to 8080 if unset
   httpListenPort: 80
 

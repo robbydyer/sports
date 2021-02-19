@@ -22,8 +22,8 @@ func (s *SportsMatrix) launchWebBoard(ctx context.Context) error {
 
 	cmd.Env = os.Environ()
 
-	// Chromium doesn't like to run as root, so we'll run it as `pi` user
-	u, err := user.Lookup("pi")
+	// Chromium doesn't like to run as root, so we'll run it as someone else
+	u, err := user.Lookup(s.cfg.WebBoardUser)
 	if err != nil {
 		return err
 	}

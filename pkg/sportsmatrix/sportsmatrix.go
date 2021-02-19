@@ -43,6 +43,7 @@ type Config struct {
 	ScreenOnTimes  []string            `json:"screenOnTimes"`
 	WebBoardWidth  int                 `json:"webBoardWidth"`
 	LaunchWebBoard bool                `json:"launchWebBoard"`
+	WebBoardUser   string              `json:"webBoardUser"`
 }
 
 // Defaults sets some sane config defaults
@@ -50,6 +51,10 @@ func (c *Config) Defaults() {
 	if c.HTTPListenPort == 0 {
 		c.HTTPListenPort = 8080
 	}
+	if c.WebBoardUser == "" {
+		c.WebBoardUser = "pi"
+	}
+
 	if c.HardwareConfig == nil {
 		c.HardwareConfig = &rgb.DefaultConfig
 		c.HardwareConfig.Cols = 64
