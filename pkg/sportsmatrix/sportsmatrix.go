@@ -42,6 +42,7 @@ type Config struct {
 	ScreenOffTimes []string            `json:"screenOffTimes"`
 	ScreenOnTimes  []string            `json:"screenOnTimes"`
 	WebBoardWidth  int                 `json:"webBoardWidth"`
+	LaunchWebBoard bool                `json:"launchWebBoard"`
 }
 
 // Defaults sets some sane config defaults
@@ -223,6 +224,14 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 
 	s.boardCtx, s.boardCancel = context.WithCancel(ctx)
 	defer s.boardCancel()
+
+	if s.cfg.LaunchWebBoard {
+		go func() {
+			if err := s.launchWebBoard(ctx); err != nil {
+				s.log.Error("failed to launch web board", zap.Error(err))
+			}
+		}()
+	}
 
 	go s.screenWatcher(ctx)
 
