@@ -212,6 +212,12 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 			changed := s.screenIsOn.CAS(false, true)
 			if changed {
 				s.log.Warn("screen turning on")
+
+				go func() {
+					if err := s.launchWebBoard(s.boardCtx); err != nil {
+						s.log.Error("failed to launch web board", zap.Error(err))
+					}
+				}()
 			} else {
 				s.log.Warn("screen is already on")
 			}
@@ -232,7 +238,7 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 
 	if s.cfg.LaunchWebBoard {
 		go func() {
-			if err := s.launchWebBoard(ctx); err != nil {
+			if err := s.launchWebBoard(s.boardCtx); err != nil {
 				s.log.Error("failed to launch web board", zap.Error(err))
 			}
 		}()
