@@ -26,7 +26,7 @@ Section: custom
 Priority: optional
 Architecture: all
 Essential: no
-Maintainer: https://github.com/robbydyer/sportsmatrix
+Maintainer: https://github.com/robbydyer/sports
 Description: Live sports driver for RGB LED matrix
 EOF
 
@@ -47,7 +47,7 @@ ExecStart=/usr/local/bin/sportsmatrix run -f /var/log/sportsmatrix.log
 WantedBy=multi-user.target
 EOF
 
-cat <<EOF > /etc/logrotate.d/sportsmatrix
+cat <<EOF > etc/logrotate.d/sportsmatrix
 /var/log/sportsmatrix.log
 {
         rotate 3
