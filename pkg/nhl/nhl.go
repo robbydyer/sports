@@ -89,6 +89,18 @@ func (n *NHL) AllTeamAbbreviations() []string {
 	return ALL
 }
 
+// GetWatchTeams ...
+func (n *NHL) GetWatchTeams(teams []string) []string {
+	for _, t := range teams {
+		if t == "ALL" {
+			n.log.Info("setting NCAAM watch teams to ALL teams")
+			return n.AllTeamAbbreviations()
+		}
+	}
+
+	return teams
+}
+
 // GetTeams ...
 func (n *NHL) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 	if n.teams == nil {

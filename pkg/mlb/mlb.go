@@ -124,6 +124,11 @@ func (m *MLB) GetScheduledGames(ctx context.Context, date time.Time) ([]sportboa
 		}
 	}
 
+	games, ok = m.games[dateStr]
+	if !ok {
+		return nil, fmt.Errorf("failed to update games")
+	}
+
 	var gList []sportboard.Game
 
 	for _, g := range games {
@@ -146,6 +151,18 @@ func (m *MLB) League() string {
 // AllTeamAbbreviations returns a list of all teams in the league
 func (m *MLB) AllTeamAbbreviations() []string {
 	return ALL
+}
+
+// GetWatchTeams ...
+func (m *MLB) GetWatchTeams(teams []string) []string {
+	for _, t := range teams {
+		if t == "ALL" {
+			m.log.Info("setting NCAAM watch teams to ALL teams")
+			return m.AllTeamAbbreviations()
+		}
+	}
+
+	return teams
 }
 
 // UpdateTeams ...
