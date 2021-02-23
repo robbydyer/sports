@@ -7,6 +7,7 @@ import Col from 'react-bootstrap/Col';
 import Image from 'react-bootstrap/Image';
 import nhllogo from './nhllogo.jpeg';
 import mlblogo from './mlb.png';
+import ncaamlogo from './ncaam.png'
 
 var BACKEND = "http://" + window.location.host
 
@@ -24,6 +25,8 @@ class Sport extends React.Component {
     logosrc() {
         if (this.props.sport == "nhl") {
             return nhllogo
+        } else if (this.props.sport == "ncaam") {
+            return ncaamlogo
         } else {
             return mlblogo
         }

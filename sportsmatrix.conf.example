@@ -120,6 +120,7 @@ ncaamConfig:
   - BIG10
 
   # favoriteTeams are teams that we can hide scores for, and set to "Sticky" on live games
+  # Roll Tide.
   #favoriteTeams:
   #- ALA
 
