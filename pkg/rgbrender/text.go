@@ -2,6 +2,7 @@ package rgbrender
 
 import (
 	"embed"
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -83,6 +84,9 @@ func GetFont(name string) (*truetype.Font, error) {
 
 // Write ...
 func (t *TextWriter) Write(canvas draw.Image, bounds image.Rectangle, str []string, clr color.Color) error {
+	if t.font == nil {
+		return fmt.Errorf("font is not set")
+	}
 	startX := bounds.Min.X + t.XStartCorrection
 	drawer := &font.Drawer{
 		Dst: canvas,
@@ -112,6 +116,9 @@ func (t *TextWriter) Write(canvas draw.Image, bounds image.Rectangle, str []stri
 
 // WriteCentered writes text in the center of the canvas, horizontally and vertically
 func (t *TextWriter) WriteCentered(canvas draw.Image, bounds image.Rectangle, str []string, clr color.Color) error {
+	if t.font == nil {
+		return fmt.Errorf("font is not set")
+	}
 	drawer := &font.Drawer{
 		Dst: canvas,
 		Src: image.NewUniform(clr),
@@ -133,6 +140,52 @@ func (t *TextWriter) WriteCentered(canvas draw.Image, bounds image.Rectangle, st
 	yHeight := len(str) * int(math.Floor(t.FontSize+t.LineSpace))
 
 	writeBox, err := AlignPosition(CenterCenter, bounds, maxXWidth.Floor(), yHeight)
+	if err != nil {
+		return err
+	}
+
+	// lineY represents how much space to add for the newline
+	lineY := int(math.Floor(t.FontSize + t.LineSpace))
+
+	startX := writeBox.Min.X + t.XStartCorrection
+	y := int(math.Floor(t.FontSize)) + writeBox.Min.Y + t.YStartCorrection
+	drawer.Dot = fixed.P(startX, y)
+
+	for _, s := range str {
+		drawer.DrawString(s)
+		y += lineY + t.YStartCorrection
+		drawer.Dot = fixed.P(startX, y)
+	}
+
+	return nil
+}
+
+// WriteRight writes text aligned to the right of the bounds
+func (t *TextWriter) WriteRight(canvas draw.Image, bounds image.Rectangle, str []string, clr color.Color) error {
+	if t.font == nil {
+		return fmt.Errorf("font is not set")
+	}
+	drawer := &font.Drawer{
+		Dst: canvas,
+		Src: image.NewUniform(clr),
+		Face: truetype.NewFace(t.font,
+			&truetype.Options{
+				Size:    t.FontSize,
+				Hinting: font.HintingFull,
+			},
+		),
+	}
+
+	var maxXWidth fixed.Int26_6
+	for _, s := range str {
+		if width := drawer.MeasureString(s); width > fixed.Int26_6(maxXWidth) {
+			maxXWidth = width
+		}
+	}
+
+	yHeight := len(str) * int(math.Floor(t.FontSize+t.LineSpace))
+
+	writeBox, err := AlignPosition(RightCenter, bounds, maxXWidth.Floor(), yHeight)
 	if err != nil {
 		return err
 	}

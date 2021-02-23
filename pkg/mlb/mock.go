@@ -125,6 +125,18 @@ func (m *MockMLBAPI) AllTeamAbbreviations() []string {
 	return ALL
 }
 
+// GetWatchTeams ...
+func (m *MockMLBAPI) GetWatchTeams(teams []string) []string {
+	for _, t := range teams {
+		if t == "ALL" {
+			m.log.Info("setting NCAAM watch teams to ALL teams")
+			return m.AllTeamAbbreviations()
+		}
+	}
+
+	return teams
+}
+
 // UpdateTeams ...
 func (m *MockMLBAPI) UpdateTeams(ctx context.Context) error {
 	return nil

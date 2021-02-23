@@ -36,7 +36,7 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 	defer cancel()
 
 	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, os.Interrupt)
+	signal.Notify(ch, os.Interrupt, os.Kill)
 	go func() {
 		<-ch
 		fmt.Println("Got OS interrupt signal, Shutting down")

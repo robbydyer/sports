@@ -13,7 +13,7 @@ trap "rm -rf ${tmp}" EXIT
 cd "${tmp}"
 curl -s "${latesturl}" | grep browser_download_url | grep deb | cut -d: -f2,3 | tr -d \" | wget -qi -
 
-sudo dpkg -i sportsmatrix*_${ARCH}.deb
+sudo dpkg -i --force-confdef --force-confold sportsmatrix*_${ARCH}.deb
 
 sudo systemctl enable sportsmatrix
 sudo systemctl restart sportsmatrix

@@ -74,6 +74,7 @@ type API interface {
 	HTTPPathPrefix() string
 	GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error)
 	AllTeamAbbreviations() []string
+	GetWatchTeams(teams []string) []string
 }
 
 // Team ...
@@ -238,7 +239,7 @@ OUTER:
 		if err != nil {
 			return err
 		}
-		for _, watchTeam := range s.config.WatchTeams {
+		for _, watchTeam := range s.api.GetWatchTeams(s.config.WatchTeams) {
 			team, err := s.api.TeamFromAbbreviation(ctx, watchTeam)
 			if err != nil {
 				return err

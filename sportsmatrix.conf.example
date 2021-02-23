@@ -108,6 +108,28 @@ mlbConfig:
   # Tells the matrix to lock onto a live game that a favorite team is playing in
   favoriteSticky: false
 
+## NCAA Mens Basketball Config
+ncaamConfig:
+  enabled: true
+  boardDelay: "10s"
+
+  # watchTeams are teams we show games for. ALL shows all teams in the league
+  watchTeams:
+  - SEC
+  - ACC
+  - BIG10
+
+  # favoriteTeams are teams that we can hide scores for, and set to "Sticky" on live games
+  # Roll Tide.
+  #favoriteTeams:
+  #- ALA
+
+  # Hides scores for your favoriteTeams games. DVR is a father's life saver
+  hideFavoriteScore: true
+
+  # Tells the matrix to lock onto a live game that a favorite team is playing in
+  favoriteSticky: false
+
 # Image Board. Rotates showing all the images in a list of directories
 # All images in the directory will be automatically scaled to fit the matrix
 imageConfig:

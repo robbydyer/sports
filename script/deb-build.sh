@@ -63,6 +63,12 @@ cat <<EOF > etc/logrotate.d/sportsmatrix
 }
 EOF
 
+cat <<EOF > DEBIAN/postinst
+sudo systemctl daemon-reload
+EOF
+
+chmod 755 DEBIAN/postinst
+
 cp "${ROOT}/sportsmatrix.bin" usr/local/bin/sportsmatrix
 cp "${ROOT}/sportsmatrix.conf.example" etc/sportsmatrix.conf
 

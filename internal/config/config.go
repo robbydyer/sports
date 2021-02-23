@@ -13,6 +13,7 @@ type Config struct {
 	EnableNHL          bool                 `json:"enableNHL,omitempty"`
 	NHLConfig          *sportboard.Config   `json:"nhlConfig,omitempty"`
 	MLBConfig          *sportboard.Config   `json:"mlbConfig,omitempty"`
+	NCAAMConfig        *sportboard.Config   `json:"ncaamConfig,omitempty"`
 	ImageConfig        *imageboard.Config   `json:"imageConfig"`
 	ClockConfig        *clock.Config        `json:"clockConfig"`
 	SysConfig          *sysboard.Config     `json:"sysConfig"`

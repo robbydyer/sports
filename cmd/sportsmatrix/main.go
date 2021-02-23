@@ -21,6 +21,7 @@ import (
 	"github.com/robbydyer/sports/pkg/clock"
 	"github.com/robbydyer/sports/pkg/imageboard"
 	"github.com/robbydyer/sports/pkg/mlb"
+	"github.com/robbydyer/sports/pkg/ncaam"
 	"github.com/robbydyer/sports/pkg/nhl"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/sportboard"
@@ -117,6 +118,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 	rootCmd.AddCommand(newMlbCmd(args))
 	rootCmd.AddCommand(newNhlCmd(args))
 	rootCmd.AddCommand(newRunCmd(args))
+	rootCmd.AddCommand(newNcaaMCmd(args))
 
 	return rootCmd
 }
@@ -171,6 +173,13 @@ func (r *rootArgs) setConfigDefaults() {
 		}
 	}
 	r.config.MLBConfig.SetDefaults()
+
+	if r.config.NCAAMConfig == nil {
+		r.config.NCAAMConfig = &sportboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
+	r.config.NCAAMConfig.SetDefaults()
 
 	if r.config.SysConfig == nil {
 		r.config.SysConfig = &sysboard.Config{
@@ -241,6 +250,19 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 
 		boards = append(boards, b)
 	}
+	if r.config.NCAAMConfig != nil {
+		api, err := ncaam.New(ctx, logger)
+		if err != nil {
+			return boards, err
+		}
+
+		b, err := sportboard.New(ctx, api, bounds, logger, r.config.NCAAMConfig)
+		if err != nil {
+			return boards, err
+		}
+
+		boards = append(boards, b)
+	}
 
 	if r.config.ImageConfig != nil {
 		b, err := imageboard.New(afero.NewOsFs(), r.config.ImageConfig, logger)
@@ -285,6 +307,18 @@ func (r *rootArgs) setTodayFuncs(today string) error {
 
 	r.config.NHLConfig.TodayFunc = f
 	r.config.MLBConfig.TodayFunc = f
+
+	// NCAAM is a different format
+	t, err = time.Parse(ncaam.DateFormat, today)
+	if err != nil {
+		return err
+	}
+
+	f = func() time.Time {
+		return t
+	}
+
+	r.config.NCAAMConfig.TodayFunc = f
 
 	return nil
 }

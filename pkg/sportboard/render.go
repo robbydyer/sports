@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"image/color"
 	"image/draw"
 	"time"
 
@@ -57,11 +58,20 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 			return err
 		}
 
+		s.log.Debug("Live game",
+			zap.String("score", score),
+			zap.String("clock", clock),
+		)
+
 		if err := s.RenderHomeLogo(ctx, canvas, homeTeam.GetAbbreviation()); err != nil {
 			return fmt.Errorf("failed to render home logo: %w", err)
 		}
 		if err := s.RenderAwayLogo(ctx, canvas, awayTeam.GetAbbreviation()); err != nil {
 			return fmt.Errorf("failed to render away logo: %w", err)
+		}
+
+		if s.config.TimeColor == nil {
+			s.config.TimeColor = color.White
 		}
 		if err := timeWriter.Write(
 			canvas,
@@ -73,6 +83,10 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 			s.config.TimeColor,
 		); err != nil {
 			return fmt.Errorf("failed to write quarter and clock: %w", err)
+		}
+
+		if s.config.ScoreColor == nil {
+			s.config.ScoreColor = color.White
 		}
 
 		if s.config.HideFavoriteScore.Load() && isFavorite {
@@ -151,7 +165,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 		return err
 	}
 
-	var gameTimeStr string
+	gameTimeStr := ""
 
 	if is, err := liveGame.IsPostponed(); err == nil && is {
 		s.log.Debug("game was postponed", zap.Int("game ID", liveGame.GetID()))

@@ -1,3 +1,4 @@
+tmp/
 web/.eslintcache
 .idea
 pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/
