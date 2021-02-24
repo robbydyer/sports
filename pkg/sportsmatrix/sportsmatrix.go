@@ -39,6 +39,7 @@ type Config struct {
 	ServeWebUI     bool                `json:"serveWebUI"`
 	HTTPListenPort int                 `json:"httpListenPort"`
 	HardwareConfig *rgb.HardwareConfig `json:"hardwareConfig"`
+	RuntimeOptions *rgb.RuntimeOptions `json:"runtimeOptions"`
 	ScreenOffTimes []string            `json:"screenOffTimes"`
 	ScreenOnTimes  []string            `json:"screenOnTimes"`
 	WebBoardWidth  int                 `json:"webBoardWidth"`
@@ -48,6 +49,12 @@ type Config struct {
 
 // Defaults sets some sane config defaults
 func (c *Config) Defaults() {
+	if c.RuntimeOptions == nil {
+		c.RuntimeOptions = &rgb.DefaultRuntimeOptions
+	}
+	c.RuntimeOptions.Daemon = 0
+	c.RuntimeOptions.DoGPIOInit = true
+
 	if c.HTTPListenPort == 0 {
 		c.HTTPListenPort = 8080
 	}
