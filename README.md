@@ -22,16 +22,15 @@ I am currently running this with a Pi-zero. It performs perfectly well so far. I
 
 ## Current Board Types
 
-- NHL: Displays the day's games. Either live scores (favorite teams' scores are hideable for those who watch games recorded), Upcoming games, or final scores.
+- NHL, MLB, NCAA Men's Basketball : Shows upcoming, live, and completed games for the day
 - Image Board: Takes a list of directories containg images and displays them. Works with GIF's too!
 - Clock: It's...a clock
-- MLB: Currently still in progress
 - Sys: Displays basic system info. Currently Mem and CPU usage
 
 ## Roadmap
 
 #### More Sports
-My goal is to add new boards for all the major sports that I'm personally interested in. For now, that list includes (order of priority) MLB, College Football, NFL, and possibly something for PGA Tour (maybe in time for the Masters?).
+My goal is to add new boards for all the major sports that I'm personally interested in. For now, that list includes College Football, NFL, and possibly something for PGA Tour (maybe in time for the Masters?).
 
 #### Web API for on-the-fly config changes
 ~I ultimately would like to integrate a web API that allows certain things to be modified on the fly- this would ideally mean a simple web UI for tweaking things without having to access the Pi and restart the service.~
