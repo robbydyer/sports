@@ -1,26 +1,26 @@
 {
   "files": {
-    "main.js": "/static/js/main.f376c7db.chunk.js",
-    "main.js.map": "/static/js/main.f376c7db.chunk.js.map",
-    "runtime-main.js": "/static/js/runtime-main.464a801a.js",
-    "runtime-main.js.map": "/static/js/runtime-main.464a801a.js.map",
+    "main.js": "/static/js/main.553eeb8c.chunk.js",
+    "main.js.map": "/static/js/main.553eeb8c.chunk.js.map",
+    "runtime-main.js": "/static/js/runtime-main.bc77880a.js",
+    "runtime-main.js.map": "/static/js/runtime-main.bc77880a.js.map",
     "static/css/2.150d169a.chunk.css": "/static/css/2.150d169a.chunk.css",
-    "static/js/2.440fd405.chunk.js": "/static/js/2.440fd405.chunk.js",
-    "static/js/2.440fd405.chunk.js.map": "/static/js/2.440fd405.chunk.js.map",
-    "static/js/3.0cb13959.chunk.js": "/static/js/3.0cb13959.chunk.js",
-    "static/js/3.0cb13959.chunk.js.map": "/static/js/3.0cb13959.chunk.js.map",
+    "static/js/2.ee2b057f.chunk.js": "/static/js/2.ee2b057f.chunk.js",
+    "static/js/2.ee2b057f.chunk.js.map": "/static/js/2.ee2b057f.chunk.js.map",
+    "static/js/3.6d0f1d46.chunk.js": "/static/js/3.6d0f1d46.chunk.js",
+    "static/js/3.6d0f1d46.chunk.js.map": "/static/js/3.6d0f1d46.chunk.js.map",
     "index.html": "/index.html",
     "static/css/2.150d169a.chunk.css.map": "/static/css/2.150d169a.chunk.css.map",
-    "static/js/2.440fd405.chunk.js.LICENSE.txt": "/static/js/2.440fd405.chunk.js.LICENSE.txt",
+    "static/js/2.ee2b057f.chunk.js.LICENSE.txt": "/static/js/2.ee2b057f.chunk.js.LICENSE.txt",
     "static/media/mlb.c8036288.png": "/static/media/mlb.c8036288.png",
     "static/media/ncaam.2b001451.png": "/static/media/ncaam.2b001451.png",
     "static/media/nhllogo.ba9e188b.jpeg": "/static/media/nhllogo.ba9e188b.jpeg",
     "static/media/server.53a70363.png": "/static/media/server.53a70363.png"
   },
   "entrypoints": [
-    "static/js/runtime-main.464a801a.js",
+    "static/js/runtime-main.bc77880a.js",
     "static/css/2.150d169a.chunk.css",
-    "static/js/2.440fd405.chunk.js",
-    "static/js/main.f376c7db.chunk.js"
+    "static/js/2.ee2b057f.chunk.js",
+    "static/js/main.553eeb8c.chunk.js"
   ]
 }

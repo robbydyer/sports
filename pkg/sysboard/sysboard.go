@@ -174,9 +174,22 @@ func (s *SysBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			s.Enable()
 		},
 	}
+	status := &board.HTTPHandler{
+		Path: "/sys/status",
+		Handler: func(w http.ResponseWriter, req *http.Request) {
+			s.log.Debug("get board status", zap.String("board", s.Name()))
+			w.Header().Set("Content-Type", "text/plain")
+			if s.Enabled() {
+				_, _ = w.Write([]byte("true"))
+				return
+			}
+			_, _ = w.Write([]byte("false"))
+		},
+	}
 
 	return []*board.HTTPHandler{
 		disable,
 		enable,
+		status,
 	}, nil
 }

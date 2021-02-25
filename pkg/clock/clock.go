@@ -205,10 +205,22 @@ func (c *Clock) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			c.Enable()
 		},
 	}
+	status := &board.HTTPHandler{
+		Path: "/clock/status",
+		Handler: func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "text/plain")
+			if c.Enabled() {
+				_, _ = w.Write([]byte("true"))
+				return
+			}
+			_, _ = w.Write([]byte("false"))
+		},
+	}
 
 	return []*board.HTTPHandler{
 		disable,
 		enable,
+		status,
 	}, nil
 }
 
