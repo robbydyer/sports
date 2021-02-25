@@ -3,6 +3,7 @@ package ncaam
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -221,4 +222,52 @@ func (n *NcaaM) UpdateGames(ctx context.Context, dateStr string) error {
 	n.games[dateStr] = games
 
 	return nil
+}
+
+// TeamRank ...
+func (n *NcaaM) TeamRank(ctx context.Context, team sportboard.Team) string {
+	var realTeam *Team
+	for _, t := range n.teams {
+		if t.Abbreviation == team.GetAbbreviation() {
+			realTeam = t
+			break
+		}
+	}
+
+	if realTeam == nil {
+		return ""
+	}
+
+	if err := realTeam.setDetails(ctx, n.log); err != nil {
+		n.log.Error("failed to set team data", zap.Error(err), zap.String("team", team.GetAbbreviation()))
+		return ""
+	}
+
+	if realTeam.rank < 1 {
+		return ""
+	}
+
+	return strconv.Itoa(realTeam.rank)
+}
+
+// TeamRecord ...
+func (n *NcaaM) TeamRecord(ctx context.Context, team sportboard.Team) string {
+	var realTeam *Team
+	for _, t := range n.teams {
+		if t.Abbreviation == team.GetAbbreviation() {
+			realTeam = t
+			break
+		}
+	}
+
+	if realTeam == nil {
+		return ""
+	}
+
+	if err := realTeam.setDetails(ctx, n.log); err != nil {
+		n.log.Error("failed to set team data", zap.Error(err), zap.String("team", team.GetAbbreviation()))
+		return ""
+	}
+
+	return realTeam.record
 }

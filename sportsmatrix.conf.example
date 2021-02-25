@@ -89,6 +89,9 @@ nhlConfig:
   # Tells the matrix to lock onto a live game that a favorite team is playing in
   favoriteSticky: false
 
+  # Set to true to show a team's record on the scoreboard
+  showRecord: false
+
 ## MLB Config
 mlbConfig:
   enabled: true
@@ -107,6 +110,9 @@ mlbConfig:
 
   # Tells the matrix to lock onto a live game that a favorite team is playing in
   favoriteSticky: false
+
+  # Set to true to show a team's record on the scoreboard
+  showRecord: false
 
 ## NCAA Mens Basketball Config
 ncaamConfig:
@@ -129,6 +135,9 @@ ncaamConfig:
 
   # Tells the matrix to lock onto a live game that a favorite team is playing in
   favoriteSticky: false
+
+  # Set to true to show a team's record on the scoreboard
+  showRecord: false
 
 # Image Board. Rotates showing all the images in a list of directories
 # All images in the directory will be automatically scaled to fit the matrix

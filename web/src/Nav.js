@@ -3,13 +3,17 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Container from 'react-bootstrap/Container';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
-import { Link, NavLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { withRouter } from "react-router";
 
 class TopNav extends React.Component {
+    constructor(props) {
+        super(props);
+    }
     render() {
         return (
             <Container fluid>
-                <Navbar expand="sm" bg="dark" variant="dark">
+                <Navbar expand="sm" bg="dark" variant="dark" hidden={this.props.location.pathname === "/board" ? true : false}>
                     <Navbar.Toggle aria-controls="basic-navbar-nav"></Navbar.Toggle>
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="mr-auto">
@@ -24,9 +28,9 @@ class TopNav extends React.Component {
                         </Nav>
                     </Navbar.Collapse>
                 </Navbar>
-            </Container>
+            </Container >
         );
     }
 }
 
-export default TopNav;
+export default withRouter(TopNav);

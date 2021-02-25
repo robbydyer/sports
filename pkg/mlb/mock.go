@@ -158,6 +158,16 @@ func (m *MockMLBAPI) TeamFromAbbreviation(ctx context.Context, abbrev string) (s
 	return nil, fmt.Errorf("could not find team with abbreviation '%s'", abbrev)
 }
 
+// TeamRecord ...
+func (m *MockMLBAPI) TeamRecord(ctx context.Context, team sportboard.Team) string {
+	return ""
+}
+
+// TeamRank ...
+func (m *MockMLBAPI) TeamRank(ctx context.Context, team sportboard.Team) string {
+	return ""
+}
+
 // MockLiveGameGetter implements an mlb.LiveGameGetter
 func MockLiveGameGetter(ctx context.Context, link string) (sportboard.Game, error) {
 	dat, err := assets.ReadFile("assets/mock_livegames.yaml")

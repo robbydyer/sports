@@ -189,3 +189,13 @@ func (m *MLB) UpdateGames(ctx context.Context, dateStr string) error {
 
 	return nil
 }
+
+// TeamRecord ...
+func (m *MLB) TeamRecord(ctx context.Context, team sportboard.Team) string {
+	return ""
+}
+
+// TeamRank ...
+func (m *MLB) TeamRank(ctx context.Context, team sportboard.Team) string {
+	return ""
+}
