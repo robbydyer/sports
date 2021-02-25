@@ -188,7 +188,8 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvas board.Canvas, ab
 	if err != nil {
 		return err
 	}
-	return writer.WriteRight(
+	return writer.WriteAligned(
+		rgbrender.RightCenter,
 		canvas,
 		writeBounds,
 		[]string{

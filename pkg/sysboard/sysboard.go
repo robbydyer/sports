@@ -118,7 +118,8 @@ func (s *SysBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		zap.Int64("cpu pct", cpuPct),
 	)
 
-	if err := writer.WriteCentered(
+	if err := writer.WriteAligned(
+		rgbrender.CenterCenter,
 		canvas,
 		canvas.Bounds(),
 		[]string{
