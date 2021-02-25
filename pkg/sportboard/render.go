@@ -68,6 +68,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 		var wg sync.WaitGroup
 		errs := make(chan error, 1)
 
+		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			if err := s.RenderHomeLogo(ctx, canvas, homeTeam.GetAbbreviation()); err != nil {
