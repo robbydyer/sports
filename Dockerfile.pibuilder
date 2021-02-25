@@ -17,6 +17,7 @@ RUN echo "set(CMAKE_SYSTEM_NAME Linux)" >> $CROSS_TOOLCHAIN && \
 
 RUN apt-get update && \
   apt-get --no-install-recommends install -y autoconf \
+    procps \
     automake \
     build-essential \
     ca-certificates \

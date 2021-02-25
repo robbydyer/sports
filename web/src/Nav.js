@@ -9,7 +9,7 @@ class TopNav extends React.Component {
     render() {
         return (
             <Container fluid>
-                <Navbar expand="sm" bg="light" variant="light">
+                <Navbar expand="sm" bg="dark" variant="dark">
                     <Navbar.Toggle aria-controls="basic-navbar-nav"></Navbar.Toggle>
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="mr-auto">

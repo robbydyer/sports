@@ -24,8 +24,6 @@ const (
 	diskCacheDir = "/tmp/sportsmatrix/imageboard"
 )
 
-// var supportedImageTypes = []string{"png", "gif"}
-
 // ImageBoard is a board for displaying image files
 type ImageBoard struct {
 	config     *Config
@@ -359,13 +357,14 @@ func (i *ImageBoard) getSizedImage(path string, bounds image.Rectangle, preloade
 		}
 	}()
 
+	key := cacheKey(path, bounds)
+
 	// Make sure we don't process the same image simultaneously
-	lockerKey := fmt.Sprintf("%s_%d_%d", path, bounds.Dx(), bounds.Dy())
-	locker, ok := i.lockers[lockerKey]
+	locker, ok := i.lockers[key]
 	if !ok {
 		i.Lock()
 		locker = &sync.Mutex{}
-		i.lockers[lockerKey] = locker
+		i.lockers[key] = locker
 		i.Unlock()
 	}
 
@@ -373,7 +372,6 @@ func (i *ImageBoard) getSizedImage(path string, bounds image.Rectangle, preloade
 	defer locker.Unlock()
 
 	var err error
-	key := cacheKey(path, bounds)
 
 	if i.config.UseMemCache.Load() {
 		if p, ok := i.imageCache[key]; ok {
@@ -443,13 +441,14 @@ func (i *ImageBoard) getSizedGIF(path string, bounds image.Rectangle, preloader 
 		}
 	}()
 
+	key := cacheKey(path, bounds)
+
 	// Make sure we don't process the same image simultaneously
-	lockerKey := fmt.Sprintf("%s_%d_%d", path, bounds.Dx(), bounds.Dy())
-	locker, ok := i.lockers[lockerKey]
+	locker, ok := i.lockers[key]
 	if !ok {
 		i.Lock()
 		locker = &sync.Mutex{}
-		i.lockers[lockerKey] = locker
+		i.lockers[key] = locker
 		i.Unlock()
 	}
 
@@ -457,7 +456,6 @@ func (i *ImageBoard) getSizedGIF(path string, bounds image.Rectangle, preloader 
 	defer locker.Unlock()
 
 	var err error
-	key := cacheKey(path, bounds)
 
 	if i.config.UseMemCache.Load() {
 		if p, ok := i.gifCache[key]; ok {
