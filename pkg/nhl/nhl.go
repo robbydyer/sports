@@ -182,3 +182,13 @@ func (n *NHL) UpdateGames(ctx context.Context, dateStr string) error {
 
 	return nil
 }
+
+// TeamRecord ...
+func (n *NHL) TeamRecord(ctx context.Context, team sportboard.Team) string {
+	return ""
+}
+
+// TeamRank ...
+func (n *NHL) TeamRank(ctx context.Context, team sportboard.Team) string {
+	return ""
+}

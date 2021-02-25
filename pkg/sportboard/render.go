@@ -121,6 +121,11 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 			s.config.TimeColor = color.White
 		}
 
+		if s.config.ShowRecord.Load() {
+			s.renderInfoHome(ctx, canvas, s.api, homeTeam)
+			s.renderInfoAway(ctx, canvas, s.api, awayTeam)
+		}
+
 		_ = timeWriter.WriteAligned(
 			rgbrender.CenterTop,
 			canvas,
@@ -278,6 +283,11 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 	default:
 	}
 
+	if s.config.ShowRecord.Load() {
+		s.renderInfoHome(ctx, canvas, s.api, homeTeam)
+		s.renderInfoAway(ctx, canvas, s.api, awayTeam)
+	}
+
 	_ = timeWriter.WriteAligned(
 		rgbrender.CenterTop,
 		canvas,
@@ -388,6 +398,11 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 	default:
 	}
 
+	if s.config.ShowRecord.Load() {
+		s.renderInfoHome(ctx, canvas, s.api, homeTeam)
+		s.renderInfoAway(ctx, canvas, s.api, awayTeam)
+	}
+
 	_ = timeWriter.WriteAligned(
 		rgbrender.CenterTop,
 		canvas,
@@ -423,4 +438,48 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 	}
 
 	return canvas.Render()
+}
+
+func (s *SportBoard) renderInfoHome(ctx context.Context, canvas board.Canvas, api API, team Team) {
+	rank := s.api.TeamRank(ctx, team)
+	record := s.api.TeamRecord(ctx, team)
+
+	if rank == "" && record == "" {
+		return
+	}
+
+	writer, err := s.getTimeWriter(canvas.Bounds())
+	if err != nil {
+		s.log.Error("failed to get writer for team info", zap.Error(err))
+		return
+	}
+
+	if rank != "" {
+		writer.WriteAligned(rgbrender.LeftTop, canvas, canvas.Bounds(), []string{rank}, color.White)
+	}
+	if record != "" {
+		writer.WriteAligned(rgbrender.LeftBottom, canvas, canvas.Bounds(), []string{record}, color.White)
+	}
+}
+
+func (s *SportBoard) renderInfoAway(ctx context.Context, canvas board.Canvas, api API, team Team) {
+	rank := s.api.TeamRank(ctx, team)
+	record := s.api.TeamRecord(ctx, team)
+
+	if rank == "" && record == "" {
+		return
+	}
+
+	writer, err := s.getTimeWriter(canvas.Bounds())
+	if err != nil {
+		s.log.Error("failed to get writer for team info", zap.Error(err))
+		return
+	}
+
+	if rank != "" {
+		writer.WriteAligned(rgbrender.RightTop, canvas, canvas.Bounds(), []string{rank}, color.White)
+	}
+	if record != "" {
+		writer.WriteAligned(rgbrender.RightBottom, canvas, canvas.Bounds(), []string{record}, color.White)
+	}
 }

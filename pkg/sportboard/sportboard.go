@@ -56,6 +56,7 @@ type Config struct {
 	WatchTeams        []string       `json:"watchTeams"`
 	FavoriteTeams     []string       `json:"favoriteTeams"`
 	HideFavoriteScore *atomic.Bool   `json:"hideFavoriteScore"`
+	ShowRecord        *atomic.Bool   `json:"showRecord"`
 }
 
 // FontConfig ...
@@ -75,6 +76,8 @@ type API interface {
 	GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error)
 	AllTeamAbbreviations() []string
 	GetWatchTeams(teams []string) []string
+	TeamRecord(ctx context.Context, team Team) string
+	TeamRank(ctx context.Context, team Team) string
 }
 
 // Team ...
@@ -126,6 +129,9 @@ func (c *Config) SetDefaults() {
 	}
 	if c.Enabled == nil {
 		c.Enabled = atomic.NewBool(false)
+	}
+	if c.ShowRecord == nil {
+		c.ShowRecord = atomic.NewBool(false)
 	}
 }
 
@@ -245,6 +251,10 @@ OUTER:
 
 			if home.GetID() == team.GetID() || away.GetID() == team.GetID() {
 				games = append(games, game)
+
+				// Ensures the daily data for this team has been fetched
+				_ = s.api.TeamRecord(ctx, home)
+				_ = s.api.TeamRecord(ctx, away)
 				continue OUTER
 			}
 		}
