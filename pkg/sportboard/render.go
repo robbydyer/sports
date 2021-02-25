@@ -6,11 +6,13 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
 func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
@@ -26,12 +28,12 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 	// If this is a favorite team, we'll watch the scoreboard until the game is over
 	isFavorite := (s.isFavorite(awayTeam.GetAbbreviation()) || s.isFavorite(homeTeam.GetAbbreviation()))
 
-	timeWriter, timeAlign, err := s.getTimeWriter(canvas.Bounds())
+	timeWriter, err := s.getTimeWriter(canvas.Bounds())
 	if err != nil {
 		return err
 	}
 
-	scoreWriter, scoreAlign, err := s.getScoreWriter(canvas.Bounds())
+	scoreWriter, err := s.getScoreWriter(canvas.Bounds())
 	if err != nil {
 		return err
 	}
@@ -63,27 +65,71 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 			zap.String("clock", clock),
 		)
 
-		if err := s.RenderHomeLogo(ctx, canvas, homeTeam.GetAbbreviation()); err != nil {
-			return fmt.Errorf("failed to render home logo: %w", err)
+		var wg sync.WaitGroup
+		errs := make(chan error, 1)
+
+		go func() {
+			defer wg.Done()
+			if err := s.RenderHomeLogo(ctx, canvas, homeTeam.GetAbbreviation()); err != nil {
+				select {
+				case errs <- fmt.Errorf("failed to render home logo: %w", err):
+				default:
+				}
+			}
+		}()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := s.RenderAwayLogo(ctx, canvas, awayTeam.GetAbbreviation()); err != nil {
+				select {
+				case errs <- fmt.Errorf("failed to render away logo: %w", err):
+				default:
+				}
+			}
+		}()
+
+		// Wait, but with a timeout
+		doneWait := make(chan struct{})
+		go func() {
+			defer close(doneWait)
+			wg.Wait()
+		}()
+
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("context canceled")
+		case <-doneWait:
+			s.log.Debug("logo renderers completed",
+				zap.String("home", homeTeam.GetAbbreviation()),
+				zap.String("away", awayTeam.GetAbbreviation()),
+			)
+		case <-time.After(60 * time.Second):
+			return fmt.Errorf("timed out waiting for board to draw logos")
 		}
-		if err := s.RenderAwayLogo(ctx, canvas, awayTeam.GetAbbreviation()); err != nil {
-			return fmt.Errorf("failed to render away logo: %w", err)
+
+		select {
+		case err := <-errs:
+			if err != nil {
+				return err
+			}
+		default:
 		}
 
 		if s.config.TimeColor == nil {
 			s.config.TimeColor = color.White
 		}
-		if err := timeWriter.Write(
+
+		_ = timeWriter.WriteAligned(
+			rgbrender.CenterTop,
 			canvas,
-			timeAlign,
+			canvas.Bounds(),
 			[]string{
 				quarter,
 				clock,
 			},
 			s.config.TimeColor,
-		); err != nil {
-			return fmt.Errorf("failed to write quarter and clock: %w", err)
-		}
+		)
 
 		if s.config.ScoreColor == nil {
 			s.config.ScoreColor = color.White
@@ -92,16 +138,15 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 		if s.config.HideFavoriteScore.Load() && isFavorite {
 			s.log.Warn("hiding score for favorite team")
 		} else {
-			if err := scoreWriter.Write(
+			_ = scoreWriter.WriteAligned(
+				rgbrender.CenterBottom,
 				canvas,
-				scoreAlign,
+				canvas.Bounds(),
 				[]string{
 					score,
 				},
 				s.config.ScoreColor,
-			); err != nil {
-				return fmt.Errorf("failed to write score: %w", err)
-			}
+			)
 		}
 
 		draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
@@ -112,6 +157,10 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 		default:
 		}
 
+		s.log.Debug("rendering sportboard",
+			zap.String("home", homeTeam.GetAbbreviation()),
+			zap.String("away", awayTeam.GetAbbreviation()),
+		)
 		if err := canvas.Render(); err != nil {
 			return err
 		}
@@ -144,8 +193,6 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 }
 
 func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
-	renderCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
 	awayTeam, err := liveGame.AwayTeam()
 	if err != nil {
 		return err
@@ -155,12 +202,12 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 		return err
 	}
 
-	timeWriter, timeAlign, err := s.getTimeWriter(canvas.Bounds())
+	timeWriter, err := s.getTimeWriter(canvas.Bounds())
 	if err != nil {
 		return err
 	}
 
-	scoreWriter, scoreAlign, err := s.getScoreWriter(canvas.Bounds())
+	scoreWriter, err := s.getScoreWriter(canvas.Bounds())
 	if err != nil {
 		return err
 	}
@@ -178,24 +225,72 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 		gameTimeStr = gameTime.Local().Format("3:04PM")
 	}
 
-	if err := s.RenderHomeLogo(renderCtx, canvas, homeTeam.GetAbbreviation()); err != nil {
-		return err
+	var wg sync.WaitGroup
+	errs := make(chan error, 2)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := s.RenderHomeLogo(ctx, canvas, homeTeam.GetAbbreviation()); err != nil {
+			select {
+			case errs <- fmt.Errorf("failed to render home logo: %w", err):
+			default:
+			}
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := s.RenderAwayLogo(ctx, canvas, awayTeam.GetAbbreviation()); err != nil {
+			select {
+			case errs <- fmt.Errorf("failed to render away logo: %w", err):
+			default:
+			}
+		}
+	}()
+
+	// Wait, but with a timeout
+	doneWait := make(chan struct{})
+	go func() {
+		defer close(doneWait)
+		wg.Wait()
+	}()
+
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("context canceled")
+	case <-doneWait:
+		s.log.Debug("logo renderers completed",
+			zap.String("home", homeTeam.GetAbbreviation()),
+			zap.String("away", awayTeam.GetAbbreviation()),
+		)
+	case <-time.After(60 * time.Second):
+		return fmt.Errorf("timed out waiting for board to draw logos")
 	}
-	if err := s.RenderAwayLogo(renderCtx, canvas, awayTeam.GetAbbreviation()); err != nil {
-		return err
+
+	select {
+	case err := <-errs:
+		if err != nil {
+			return err
+		}
+	default:
 	}
-	_ = timeWriter.Write(
+
+	_ = timeWriter.WriteAligned(
+		rgbrender.CenterTop,
 		canvas,
-		timeAlign,
+		canvas.Bounds(),
 		[]string{
 			gameTimeStr,
 		},
 		s.config.TimeColor,
 	)
 
-	_ = scoreWriter.Write(
+	_ = scoreWriter.WriteAligned(
+		rgbrender.CenterCenter,
 		canvas,
-		scoreAlign,
+		canvas.Bounds(),
 		[]string{
 			"VS",
 		},
@@ -204,12 +299,16 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 
 	draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
 
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("context canceled")
+	default:
+	}
+
 	return canvas.Render()
 }
 
 func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
-	renderCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
 	awayTeam, err := liveGame.AwayTeam()
 	if err != nil {
 		return err
@@ -219,12 +318,12 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 		return err
 	}
 
-	timeWriter, timeAlign, err := s.getTimeWriter(canvas.Bounds())
+	timeWriter, err := s.getTimeWriter(canvas.Bounds())
 	if err != nil {
 		return err
 	}
 
-	scoreWriter, scoreAlign, err := s.getScoreWriter(canvas.Bounds())
+	scoreWriter, err := s.getScoreWriter(canvas.Bounds())
 	if err != nil {
 		return err
 	}
@@ -234,15 +333,64 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 		return err
 	}
 
-	if err := s.RenderHomeLogo(renderCtx, canvas, homeTeam.GetAbbreviation()); err != nil {
-		return err
+	var wg sync.WaitGroup
+	errs := make(chan error, 2)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := s.RenderHomeLogo(ctx, canvas, homeTeam.GetAbbreviation()); err != nil {
+			select {
+			case errs <- fmt.Errorf("failed to render home logo: %w", err):
+			default:
+			}
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err := s.RenderAwayLogo(ctx, canvas, awayTeam.GetAbbreviation()); err != nil {
+			select {
+			case errs <- fmt.Errorf("failed to render away logo: %w", err):
+			default:
+			}
+		}
+	}()
+
+	// Wait, but with a timeout
+	doneWait := make(chan struct{})
+	go func() {
+		defer close(doneWait)
+		wg.Wait()
+	}()
+
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("context canceled")
+	case <-doneWait:
+		s.log.Debug("logo renderers completed",
+			zap.String("home", homeTeam.GetAbbreviation()),
+			zap.String("away", awayTeam.GetAbbreviation()),
+		)
+	case <-time.After(60 * time.Second):
+		_ = canvas.Clear()
+		return fmt.Errorf("timed out waiting for board to draw logos")
 	}
-	if err := s.RenderAwayLogo(renderCtx, canvas, awayTeam.GetAbbreviation()); err != nil {
-		return err
+
+	select {
+	case err := <-errs:
+		if err != nil {
+			_ = canvas.Clear()
+			return err
+		}
+	default:
 	}
-	_ = timeWriter.Write(
+
+	_ = timeWriter.WriteAligned(
+		rgbrender.CenterTop,
 		canvas,
-		timeAlign,
+		canvas.Bounds(),
 		[]string{
 			"FINAL",
 		},
@@ -254,9 +402,10 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 	if s.config.HideFavoriteScore.Load() && isFavorite {
 		s.log.Warn("hiding score for favorite team")
 	} else {
-		_ = scoreWriter.Write(
+		_ = scoreWriter.WriteAligned(
+			rgbrender.CenterBottom,
 			canvas,
-			scoreAlign,
+			canvas.Bounds(),
 			[]string{
 				score,
 			},
@@ -265,6 +414,12 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 	}
 
 	draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
+
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("context canceled")
+	default:
+	}
 
 	return canvas.Render()
 }

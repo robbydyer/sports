@@ -55,6 +55,7 @@ type NcaaM struct {
 	teams           []*Team
 	games           map[string][]*Game
 	logos           map[string]*logo.Logo
+	logoLock        sync.RWMutex
 	defaultLogoConf *[]*logo.Config
 	logoConfOnce    map[string]struct{}
 	allTeams        []string

@@ -128,11 +128,14 @@ func (l *Logo) RenderLeftAligned(bounds image.Rectangle, width int) (image.Image
 
 	startX := width - thumb.Bounds().Dx() + l.config.Pt.X
 	startY := 0 + l.config.Pt.Y
-
 	newBounds := image.Rect(startX, startY, bounds.Dx()-1, bounds.Dy()-1)
+	align, err := rgbrender.AlignPosition(rgbrender.LeftCenter, newBounds, thumb.Bounds().Dx(), thumb.Bounds().Dy())
+	if err != nil {
+		return nil, err
+	}
 
 	i := image.NewRGBA(bounds)
-	draw.Draw(i, newBounds, thumb, image.Point{}, draw.Over)
+	draw.Draw(i, align, thumb, image.Point{}, draw.Over)
 
 	return i, nil
 }
@@ -149,8 +152,13 @@ func (l *Logo) RenderRightAligned(bounds image.Rectangle, width int) (image.Imag
 
 	newBounds := image.Rect(startX, startY, bounds.Dx()-1, bounds.Dy()-1)
 
+	align, err := rgbrender.AlignPosition(rgbrender.RightCenter, newBounds, thumb.Bounds().Dx(), thumb.Bounds().Dy())
+	if err != nil {
+		return nil, err
+	}
+
 	i := image.NewRGBA(bounds)
-	draw.Draw(i, newBounds, thumb, image.Point{}, draw.Over)
+	draw.Draw(i, align, thumb, image.Point{}, draw.Over)
 
 	return i, nil
 }

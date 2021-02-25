@@ -18,14 +18,30 @@ import (
 //go:embed assets
 var assets embed.FS
 
-// GetLogo ...
-func (n *NcaaM) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
-	n.Lock()
-	if l, ok := n.logos[logoKey]; ok {
-		n.Unlock()
+func (n *NcaaM) getLogoCache(logoKey string) (*logo.Logo, error) {
+	n.logoLock.RLock()
+	defer n.logoLock.RUnlock()
+
+	l, ok := n.logos[logoKey]
+	if ok {
 		return l, nil
 	}
-	n.Unlock()
+
+	return l, fmt.Errorf("no cache for logo %s", logoKey)
+}
+
+func (n *NcaaM) setLogoCache(logoKey string, l *logo.Logo) {
+	n.logoLock.Lock()
+	defer n.logoLock.Unlock()
+
+	n.logos[logoKey] = l
+}
+
+// GetLogo ...
+func (n *NcaaM) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
+	if l, err := n.getLogoCache(logoKey); err == nil {
+		return l, nil
+	}
 
 	// A logoKey should be TEAM_HOME|AWAY_XxY, ie. ALA_HOME_64x32
 	p := strings.Split(logoKey, "_")
@@ -65,11 +81,7 @@ func (n *NcaaM) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Conf
 	}
 
 	var l *logo.Logo
-	defer func() {
-		n.Lock()
-		n.logos[logoKey] = l
-		n.Unlock()
-	}()
+	defer n.setLogoCache(logoKey, l)
 
 	if logoConf != nil {
 		l = logo.New(logoKey, src, logoCacheDir, bounds, logoConf)
@@ -119,14 +131,24 @@ func (n *NcaaM) loadDefaultLogoConfigs(bounds image.Rectangle) error {
 }
 
 func (n *NcaaM) logoSource(ctx context.Context, team *Team) (image.Image, error) {
-	if team.LogoURL != "" {
-		return pullPng(ctx, team.LogoURL)
-	}
-
+	something := team.LogoURL
 	for _, logo := range team.Logos {
 		if logo.Href != "" {
-			return pullPng(ctx, logo.Href)
+			something = logo.Href
+
+			// Prefer the "dark" style logos
+			if strings.Contains(logo.Href, "dark") {
+				break
+			}
 		}
+	}
+
+	if something != "" {
+		n.log.Info("pulling team logo",
+			zap.String("team", team.Abbreviation),
+			zap.String("url", something),
+		)
+		return pullPng(ctx, something)
 	}
 
 	return nil, fmt.Errorf("no logo URL defined for team %s", team.Abbreviation)

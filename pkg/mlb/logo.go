@@ -17,15 +17,30 @@ import (
 //go:embed assets
 var assets embed.FS
 
-// GetLogo ...
-func (m *MLB) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
+func (m *MLB) getLogoCache(logoKey string) (*logo.Logo, error) {
+	m.logoLock.RLock()
+	defer m.logoLock.RUnlock()
+
 	l, ok := m.logos[logoKey]
 	if ok {
 		return l, nil
 	}
 
-	m.Lock()
-	defer m.Unlock()
+	return l, fmt.Errorf("no cache for logo %s", logoKey)
+}
+
+func (m *MLB) setLogoCache(logoKey string, l *logo.Logo) {
+	m.logoLock.Lock()
+	defer m.logoLock.Unlock()
+
+	m.logos[logoKey] = l
+}
+
+// GetLogo ...
+func (m *MLB) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
+	if l, err := m.getLogoCache(logoKey); err == nil {
+		return l, nil
+	}
 
 	sources, err := m.logoSources(ctx)
 	if err != nil {
@@ -36,16 +51,16 @@ func (m *MLB) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config
 		m.defaultLogoConf = &[]*logo.Config{}
 	}
 
-	l, err = GetLogo(logoKey, logoConf, bounds, sources, m.defaultLogoConf)
+	l, err := GetLogo(logoKey, logoConf, bounds, sources, m.defaultLogoConf)
 	if err != nil {
 		return nil, err
 	}
 
 	l.SetLogger(m.log)
 
-	m.logos[logoKey] = l
+	m.setLogoCache(logoKey, l)
 
-	return m.logos[logoKey], nil
+	return m.getLogoCache(logoKey)
 }
 
 // GetLogo is a generic function that can be used outside the scope of an MLB type. Useful for testing

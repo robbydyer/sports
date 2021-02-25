@@ -10,19 +10,17 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
-func (s *SportBoard) getTimeWriter(bounds image.Rectangle) (*rgbrender.TextWriter, image.Rectangle, error) {
+func (s *SportBoard) getTimeWriter(bounds image.Rectangle) (*rgbrender.TextWriter, error) {
 	k := fmt.Sprintf("%dx%d", bounds.Dx(), bounds.Dy())
-	w, wok := s.timeWriters[k]
-	a, aok := s.timeAligns[k]
-	if wok && aok {
+	w, ok := s.timeWriters[k]
+	if ok {
 		s.log.Debug("using cached time writer")
-		return w, a, nil
+		return w, nil
 	}
 
-	var timeAlign image.Rectangle
 	timeWriter, err := rgbrender.DefaultTextWriter()
 	if err != nil {
-		return nil, timeAlign, err
+		return nil, err
 	}
 
 	timeWriter.FontSize = 0.125 * float64(bounds.Dx())
@@ -33,32 +31,24 @@ func (s *SportBoard) getTimeWriter(bounds image.Rectangle) (*rgbrender.TextWrite
 		zap.Int("Y correction", timeWriter.YStartCorrection),
 	)
 
-	timeAlign, err = rgbrender.AlignPosition(rgbrender.CenterTop, bounds, s.textAreaWidth(bounds), bounds.Dy()/2)
-	if err != nil {
-		return nil, timeAlign, err
-	}
-
 	s.Lock()
 	defer s.Unlock()
 	s.timeWriters[k] = timeWriter
-	s.timeAligns[k] = timeAlign
 
-	return timeWriter, timeAlign, nil
+	return timeWriter, nil
 }
 
-func (s *SportBoard) getScoreWriter(bounds image.Rectangle) (*rgbrender.TextWriter, image.Rectangle, error) {
+func (s *SportBoard) getScoreWriter(bounds image.Rectangle) (*rgbrender.TextWriter, error) {
 	k := fmt.Sprintf("%dx%d", bounds.Dx(), bounds.Dy())
-	w, wok := s.scoreWriters[k]
-	a, aok := s.scoreAligns[k]
-	if wok && aok {
+	w, ok := s.scoreWriters[k]
+	if ok {
 		s.log.Debug("using cached score writer")
-		return w, a, nil
+		return w, nil
 	}
 
-	var scoreAlign image.Rectangle
 	fnt, err := rgbrender.GetFont("score.ttf")
 	if err != nil {
-		return nil, scoreAlign, fmt.Errorf("failed to load font for score: %w", err)
+		return nil, fmt.Errorf("failed to load font for score: %w", err)
 	}
 
 	size := 0.25 * float64(bounds.Dx())
@@ -73,16 +63,10 @@ func (s *SportBoard) getScoreWriter(bounds image.Rectangle) (*rgbrender.TextWrit
 		zap.Int("Y correction", scoreWriter.YStartCorrection),
 	)
 
-	scoreAlign, err = rgbrender.AlignPosition(rgbrender.CenterBottom, bounds, s.textAreaWidth(bounds), bounds.Dy()/2)
-	if err != nil {
-		return nil, scoreAlign, err
-	}
-
 	s.Lock()
 	defer s.Unlock()
 	s.scoreWriters[k] = scoreWriter
-	s.scoreAligns[k] = scoreAlign
-	return scoreWriter, scoreAlign, nil
+	return scoreWriter, nil
 }
 
 func (s *SportBoard) isFavorite(abbrev string) bool {

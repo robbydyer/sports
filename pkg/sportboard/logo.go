@@ -25,6 +25,43 @@ func (s *SportBoard) logoConfig(logoKey string) (*logo.Config, error) {
 	return nil, fmt.Errorf("no logo config for %s", logoKey)
 }
 
+func (s *SportBoard) getLogoDrawCache(logoKey string) (image.Image, error) {
+	s.drawLock.RLock()
+	defer s.drawLock.RUnlock()
+	l, ok := s.logoDrawCache[logoKey]
+	if ok {
+		return l, nil
+	}
+
+	return nil, fmt.Errorf("no cache for %s", logoKey)
+}
+
+func (s *SportBoard) setLogoDrawCache(logoKey string, img image.Image) {
+	s.drawLock.Lock()
+	defer s.drawLock.Unlock()
+
+	s.logoDrawCache[logoKey] = img
+}
+
+func (s *SportBoard) setLogoCache(logoKey string, l *logo.Logo) {
+	s.logoLock.Lock()
+	defer s.logoLock.Unlock()
+
+	s.logos[logoKey] = l
+}
+
+func (s *SportBoard) getLogoCache(logoKey string) (*logo.Logo, error) {
+	s.logoLock.RLock()
+	defer s.logoLock.RUnlock()
+
+	l, ok := s.logos[logoKey]
+	if ok {
+		return l, nil
+	}
+
+	return nil, fmt.Errorf("no cache for %s", logoKey)
+}
+
 // RenderHomeLogo ...
 func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas board.Canvas, abbreviation string) error {
 	select {
@@ -34,15 +71,15 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas board.Canvas, ab
 	}
 	logoKey := fmt.Sprintf("%s_HOME_%dx%d", abbreviation, canvas.Bounds().Dx(), canvas.Bounds().Dy())
 
-	i, ok := s.logoDrawCache[logoKey]
-	if ok {
+	i, err := s.getLogoDrawCache(logoKey)
+	if err == nil && i != nil {
 		s.log.Debug("drawing logo with drawCache", zap.String("logo key", logoKey))
 		draw.Draw(canvas, canvas.Bounds(), i, image.Point{}, draw.Over)
 		return nil
 	}
 
-	l, ok := s.logos[logoKey]
-	if !ok {
+	l, err := s.getLogoCache(logoKey)
+	if err != nil {
 		var err error
 		logoConf, _ := s.logoConfig(logoKey)
 
@@ -55,7 +92,7 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas board.Canvas, ab
 		if err != nil {
 			s.log.Error("failed to get logo", zap.Error(err))
 		} else {
-			s.logos[logoKey] = l
+			s.setLogoCache(logoKey, l)
 		}
 	} else {
 		s.log.Debug("using logo cache", zap.String("logo key", logoKey))
@@ -71,7 +108,7 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvas board.Canvas, ab
 		if renderErr != nil {
 			s.log.Error("failed to render home logo", zap.Error(renderErr))
 		} else {
-			s.logoDrawCache[logoKey] = renderedLogo
+			s.setLogoDrawCache(logoKey, renderedLogo)
 			draw.Draw(canvas, canvas.Bounds(), renderedLogo, image.Point{}, draw.Over)
 
 			return nil
@@ -103,17 +140,15 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvas board.Canvas, ab
 	}
 	logoKey := fmt.Sprintf("%s_AWAY_%dx%d", abbreviation, canvas.Bounds().Dx(), canvas.Bounds().Dy())
 
-	i, ok := s.logoDrawCache[logoKey]
-	if ok {
+	i, err := s.getLogoDrawCache(logoKey)
+	if err == nil && i != nil {
 		s.log.Debug("drawing logo with drawCache", zap.String("logo key", logoKey))
 		draw.Draw(canvas, canvas.Bounds(), i, image.Point{}, draw.Over)
 		return nil
 	}
 
-	var l *logo.Logo
-
-	l, ok = s.logos[logoKey]
-	if !ok {
+	l, err := s.getLogoCache(logoKey)
+	if err != nil {
 		var err error
 		logoConf, _ := s.logoConfig(logoKey)
 
@@ -126,7 +161,7 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvas board.Canvas, ab
 		if err != nil {
 			s.log.Error("failed to get away logo", zap.Error(err))
 		} else {
-			s.logos[logoKey] = l
+			s.setLogoCache(logoKey, l)
 		}
 	}
 
@@ -140,7 +175,7 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvas board.Canvas, ab
 		if renderErr != nil {
 			s.log.Error("failed to render away logo", zap.Error(renderErr))
 		} else {
-			s.logoDrawCache[logoKey] = renderedLogo
+			s.setLogoDrawCache(logoKey, renderedLogo)
 			draw.Draw(canvas, canvas.Bounds(), renderedLogo, image.Point{}, draw.Over)
 
 			return nil

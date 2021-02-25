@@ -17,15 +17,38 @@ import (
 //go:embed assets
 var assets embed.FS
 
-// GetLogo ...
-func (n *NHL) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
+func (n *NHL) getLogoCache(logoKey string) (*logo.Logo, error) {
+	n.logoLock.RLock()
+	defer n.logoLock.RUnlock()
+
 	l, ok := n.logos[logoKey]
 	if ok {
 		return l, nil
 	}
 
-	n.Lock()
-	defer n.Unlock()
+	return nil, fmt.Errorf("no cache for logo %s", logoKey)
+}
+
+func (n *NHL) setLogoCache(logoKey string, l *logo.Logo) {
+	n.logoLock.Lock()
+	defer n.logoLock.Unlock()
+
+	n.logos[logoKey] = l
+}
+
+func (n *NHL) setLogoSourceCache(logoKey string, img image.Image) {
+	n.logoLock.Lock()
+	defer n.logoLock.Unlock()
+
+	n.logoSourceCache[logoKey] = img
+}
+
+// GetLogo ...
+func (n *NHL) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
+	l, err := n.getLogoCache(logoKey)
+	if err == nil {
+		return l, nil
+	}
 
 	sources, err := n.logoSources(ctx)
 	if err != nil {
@@ -43,9 +66,9 @@ func (n *NHL) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config
 
 	l.SetLogger(n.log)
 
-	n.logos[logoKey] = l
+	n.setLogoCache(logoKey, l)
 
-	return n.logos[logoKey], nil
+	return n.getLogoCache(logoKey)
 }
 
 // GetLogo is a generic logo getter. Useful for testing
@@ -129,7 +152,7 @@ func (n *NHL) logoSources(ctx context.Context) (map[string]image.Image, error) {
 			continue
 		}
 
-		n.logoSourceCache[t] = i
+		n.setLogoSourceCache(t, i)
 	}
 
 	return n.logoSourceCache, errs.ErrorOrNil()
