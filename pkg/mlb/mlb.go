@@ -33,6 +33,7 @@ type MLB struct {
 	teams           []*Team
 	games           map[string][]*Game
 	logos           map[string]*logo.Logo
+	logoLock        sync.RWMutex
 	logoSourceCache map[string]image.Image
 	log             *zap.Logger
 	defaultLogoConf *[]*logo.Config

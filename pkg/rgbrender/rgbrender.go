@@ -60,10 +60,24 @@ func AlignPosition(align Align, bounds image.Rectangle, sizeX int, sizeY int) (i
 	} else if align == RightTop || align == RightCenter || align == RightBottom {
 		startX = bounds.Max.X - sizeX + 1
 		endX = bounds.Max.X
+
+		if startX < bounds.Min.X {
+			newStartX := bounds.Min.X
+			diff := newStartX - startX
+			endX += diff
+			startX = newStartX
+		}
 	} else {
 		// Default to Left
 		startX = bounds.Min.X
 		endX = bounds.Min.X + sizeX - 1
+
+		if endX > bounds.Max.X {
+			newEndX := bounds.Max.X
+			diff := newEndX - endX
+			startX += diff
+			endX = newEndX
+		}
 	}
 
 	if align == CenterCenter || align == RightCenter || align == LeftCenter {
@@ -72,10 +86,24 @@ func AlignPosition(align Align, bounds image.Rectangle, sizeX int, sizeY int) (i
 	} else if align == CenterBottom || align == RightBottom || align == LeftBottom {
 		startY = bounds.Max.Y - sizeY + 1
 		endY = bounds.Max.Y
+
+		if startY < bounds.Min.Y {
+			newStartY := bounds.Min.Y
+			diff := newStartY - startY
+			endY += diff
+			startY = newStartY
+		}
 	} else {
 		// defaults to Top
 		startY = bounds.Min.Y
 		endY = sizeY - 1
+
+		if endY > bounds.Max.Y {
+			newEndY := bounds.Max.Y
+			diff := newEndY - endY
+			startY += diff
+			endY = newEndY
+		}
 	}
 
 	return image.Rectangle{

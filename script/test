@@ -6,9 +6,9 @@ cd "${ROOT}"
 IN_DOCKER="${IN_DOCKER:-no}"
 
 if [ "${IN_DOCKER}" = "no" ]; then
-  if ! docker images | grep pibuilder &> /dev/null; then
-    docker buildx build -f Dockerfile.builder -t pibuilder .
-  fi
+  source "${ROOT}/script/build.pibuilder"
+  pibuilder=$(latestpibuilder)
+  buildpibuilder
 
   exec docker run -t --rm \
     -e IN_DOCKER=yes \
@@ -20,22 +20,22 @@ fi
 
 # Inside docker
 
-export CGO_ENABLED=0
-export GO111MODULE=on
+export CGO_ENABLED=1
 export GOCACHE=/src/.cache
-export GOOS=linux
-export GOARCH=arm
-export GOARM=6
-export CC=arm-linux-gnueabihf-gcc
-export CXX=arm-linux-gnueabihf-g++
 
 set -x
-cp -r ~/go/src/github.com/robbydyer/rgbmatrix-rpi/lib /src/vendor/github.com/robbydyer/rgbmatrix-rpi/
-cd /src/vendor/github.com/robbydyer/rgbmatrix-rpi/lib/rpi-rgb-led-matrix
-make
-cd /src/vendor/github.com/robbydyer/rgbmatrix-rpi
-rm -rf examples || true
-go install -v ./...
+if [ ! -d "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" ]; then
+  if [ -d "${ROOT}/pkg/rgmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" ]; then
+    mv "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
+  else
+    cp -r "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
+  fi
+fi
+
+if [ ! -f "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/lib/librgbmatrix.so.1" ]; then
+  cd "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
+  make
+fi
 
 cd /src
 go test -v -mod=vendor ./...

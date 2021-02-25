@@ -156,7 +156,8 @@ func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
 				z = "0"
 			}
 
-			if err := writer.WriteCentered(
+			if err := writer.WriteAligned(
+				rgbrender.CenterCenter,
 				canvas,
 				canvas.Bounds(),
 				[]string{
