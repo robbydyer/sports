@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"github.com/spf13/cobra"
 
@@ -36,7 +37,7 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 	defer cancel()
 
 	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, os.Interrupt, os.Kill)
+	signal.Notify(ch, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	go func() {
 		<-ch
 		fmt.Println("Got OS interrupt signal, Shutting down")

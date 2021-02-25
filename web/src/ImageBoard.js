@@ -26,6 +26,8 @@ class ImageBoard extends React.Component {
                 <Row className="text-center"><Col><Image src={imgimg} style={{ height: '100px', width: 'auto' }} fluid /></Col></Row>
                 <Row className="text-center"><Col><Button onClick={() => this.callmatrix("enable")}>Enable</Button></Col></Row>
                 <Row className="text-center"><Col><Button onClick={() => this.callmatrix("disable")}>Disable</Button></Col></Row>
+                <Row className="text-center"><Col><Button onClick={() => this.callmatrix("enablememcache")}>Enable Memory Cache</Button></Col></Row>
+                <Row className="text-center"><Col><Button onClick={() => this.callmatrix("disablememcache")}>Disable Memory Cache</Button></Col></Row>
             </Container>
         )
     }

@@ -32,12 +32,6 @@ func ResizeGIF(g *gif.GIF, bounds image.Rectangle, zoom float64) error {
 	for _, i := range g.Image {
 		resizedI := ResizeImage(i, bounds, 1)
 
-		/*
-			resizedPal := image.NewPaletted(resizedI.Bounds(), nil)
-			quantizer := gogif.MedianCutQuantizer{NumColor: 64}
-			quantizer.Quantize(resizedPal, resizedI.Bounds(), resizedI, image.Point{})
-		*/
-
 		resizedPal := image.NewPaletted(resizedI.Bounds(), palette.Plan9)
 		draw.Draw(resizedPal, resizedPal.Bounds(), resizedI, resizedPal.Bounds().Min, draw.Over)
 		newPals = append(newPals, resizedPal)
@@ -174,5 +168,5 @@ func PlayGIF(ctx context.Context, canvas board.Canvas, gif *gif.GIF) error {
 		delay[i] = time.Millisecond * time.Duration(gif.Delay[i]) * 10
 	}
 
-	return PlayImages(ctx, canvas, images, delay, gif.LoopCount)
+	return PlayImages(ctx, canvas, images, delay, 0)
 }

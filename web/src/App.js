@@ -26,6 +26,7 @@ class App extends React.Component {
       mode: "cors",
     });
   }
+
   render() {
     return (
       <>
