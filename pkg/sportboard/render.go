@@ -122,8 +122,8 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 		}
 
 		if s.config.ShowRecord.Load() {
-			s.renderInfoHome(ctx, canvas, s.api, homeTeam)
-			s.renderInfoAway(ctx, canvas, s.api, awayTeam)
+			s.renderInfoHome(ctx, canvas, homeTeam)
+			s.renderInfoAway(ctx, canvas, awayTeam)
 		}
 
 		_ = timeWriter.WriteAligned(
@@ -284,8 +284,8 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 	}
 
 	if s.config.ShowRecord.Load() {
-		s.renderInfoHome(ctx, canvas, s.api, homeTeam)
-		s.renderInfoAway(ctx, canvas, s.api, awayTeam)
+		s.renderInfoHome(ctx, canvas, homeTeam)
+		s.renderInfoAway(ctx, canvas, awayTeam)
 	}
 
 	_ = timeWriter.WriteAligned(
@@ -399,8 +399,8 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 	}
 
 	if s.config.ShowRecord.Load() {
-		s.renderInfoHome(ctx, canvas, s.api, homeTeam)
-		s.renderInfoAway(ctx, canvas, s.api, awayTeam)
+		s.renderInfoHome(ctx, canvas, homeTeam)
+		s.renderInfoAway(ctx, canvas, awayTeam)
 	}
 
 	_ = timeWriter.WriteAligned(
@@ -440,7 +440,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 	return canvas.Render()
 }
 
-func (s *SportBoard) renderInfoHome(ctx context.Context, canvas board.Canvas, api API, team Team) {
+func (s *SportBoard) renderInfoHome(ctx context.Context, canvas board.Canvas, team Team) {
 	rank := s.api.TeamRank(ctx, team)
 	record := s.api.TeamRecord(ctx, team)
 
@@ -455,14 +455,14 @@ func (s *SportBoard) renderInfoHome(ctx context.Context, canvas board.Canvas, ap
 	}
 
 	if rank != "" {
-		writer.WriteAligned(rgbrender.LeftTop, canvas, canvas.Bounds(), []string{rank}, color.White)
+		_ = writer.WriteAligned(rgbrender.LeftTop, canvas, canvas.Bounds(), []string{rank}, color.White)
 	}
 	if record != "" {
-		writer.WriteAligned(rgbrender.LeftBottom, canvas, canvas.Bounds(), []string{record}, color.White)
+		_ = writer.WriteAligned(rgbrender.LeftBottom, canvas, canvas.Bounds(), []string{record}, color.White)
 	}
 }
 
-func (s *SportBoard) renderInfoAway(ctx context.Context, canvas board.Canvas, api API, team Team) {
+func (s *SportBoard) renderInfoAway(ctx context.Context, canvas board.Canvas, team Team) {
 	rank := s.api.TeamRank(ctx, team)
 	record := s.api.TeamRecord(ctx, team)
 
@@ -477,9 +477,9 @@ func (s *SportBoard) renderInfoAway(ctx context.Context, canvas board.Canvas, ap
 	}
 
 	if rank != "" {
-		writer.WriteAligned(rgbrender.RightTop, canvas, canvas.Bounds(), []string{rank}, color.White)
+		_ = writer.WriteAligned(rgbrender.RightTop, canvas, canvas.Bounds(), []string{rank}, color.White)
 	}
 	if record != "" {
-		writer.WriteAligned(rgbrender.RightBottom, canvas, canvas.Bounds(), []string{record}, color.White)
+		_ = writer.WriteAligned(rgbrender.RightBottom, canvas, canvas.Bounds(), []string{record}, color.White)
 	}
 }

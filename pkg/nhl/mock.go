@@ -159,12 +159,12 @@ func (m *MockNHLAPI) TeamFromAbbreviation(ctx context.Context, abbrev string) (s
 }
 
 // TeamRecord ...
-func (n *MockNHLAPI) TeamRecord(ctx context.Context, team sportboard.Team) string {
+func (m *MockNHLAPI) TeamRecord(ctx context.Context, team sportboard.Team) string {
 	return ""
 }
 
 // TeamRank ...
-func (n *MockNHLAPI) TeamRank(ctx context.Context, team sportboard.Team) string {
+func (m *MockNHLAPI) TeamRank(ctx context.Context, team sportboard.Team) string {
 	return ""
 }
 

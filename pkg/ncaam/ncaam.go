@@ -224,6 +224,7 @@ func (n *NcaaM) UpdateGames(ctx context.Context, dateStr string) error {
 	return nil
 }
 
+// TeamRank ...
 func (n *NcaaM) TeamRank(ctx context.Context, team sportboard.Team) string {
 	var realTeam *Team
 	for _, t := range n.teams {
@@ -249,6 +250,7 @@ func (n *NcaaM) TeamRank(ctx context.Context, team sportboard.Team) string {
 	return strconv.Itoa(realTeam.rank)
 }
 
+// TeamRecord ...
 func (n *NcaaM) TeamRecord(ctx context.Context, team sportboard.Team) string {
 	var realTeam *Team
 	for _, t := range n.teams {
