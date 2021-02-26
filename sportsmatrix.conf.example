@@ -60,6 +60,12 @@ sportsMatrixConfig:
     # High number gives more accurate color, but can reduce frame rate
     #pwmlsbNanoseconds: 130
 
+  # Hardware runtime options. Pi 4's and possibly 3's might need to set gpioSlowdown to something
+  # higher than the default of 0.
+  #runtimeOptions:
+    # GPIO slowdown for faster pi's. Range 0..4. Defaults to 0
+    #gpioSlowdown: 3
+
 # Clock Board
 clockConfig:
   enabled: true
