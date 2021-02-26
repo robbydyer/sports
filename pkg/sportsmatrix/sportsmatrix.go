@@ -24,11 +24,11 @@ type SportsMatrix struct {
 	screenIsOn    *atomic.Bool
 	screenOff     chan struct{}
 	screenOn      chan struct{}
+	serveBlock    chan struct{}
 	log           *zap.Logger
 	boardCtx      context.Context
 	boardCancel   context.CancelFunc
 	server        http.Server
-	screenLogOnce *sync.Once
 	close         chan struct{}
 	httpEndpoints []string
 	sync.Mutex
@@ -105,6 +105,7 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 		log:        logger,
 		screenOff:  make(chan struct{}),
 		screenOn:   make(chan struct{}),
+		serveBlock: make(chan struct{}),
 		close:      make(chan struct{}),
 		screenIsOn: atomic.NewBool(true),
 		canvases:   canvases,
@@ -206,7 +207,6 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 				continue
 			}
 			s.log.Warn("screen turning off")
-			s.screenLogOnce = &sync.Once{}
 
 			s.Lock()
 			s.boardCancel()
@@ -219,6 +219,7 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 			changed := s.screenIsOn.CAS(false, true)
 			if changed {
 				s.log.Warn("screen turning on")
+				s.serveBlock <- struct{}{}
 
 				go func() {
 					if err := s.launchWebBoard(s.boardCtx); err != nil {
@@ -271,22 +272,27 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 			clearer.Do(func() {
 				for _, canvas := range s.canvases {
 					if err := canvas.Clear(); err != nil {
-						s.log.Error("failed to clear matrix when all board were disabled", zap.Error(err))
+						s.log.Error("failed to clear matrix when all boards were disabled", zap.Error(err))
 					}
 				}
 			})
 
+			time.Sleep(2 * time.Second)
 			continue
 		}
 
 		clearer = sync.Once{}
 
 		if !s.screenIsOn.Load() {
-			time.Sleep(1 * time.Second)
-			s.screenLogOnce.Do(func() {
-				s.log.Warn("screen is turned off")
-			})
-			continue
+			s.log.Warn("screen is turned off")
+
+			// Block until the screen is turned back on
+			select {
+			case <-ctx.Done():
+				return context.Canceled
+			case <-s.serveBlock:
+				continue
+			}
 		}
 
 		s.serveLoop(s.boardCtx)
