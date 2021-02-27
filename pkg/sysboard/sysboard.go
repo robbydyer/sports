@@ -4,7 +4,12 @@ import (
 	"context"
 	"fmt"
 	"image/color"
+	"io/fs"
 	"net/http"
+	"os"
+	"path"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,6 +21,8 @@ import (
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
+
+const cpuTempFile = "/sys/class/thermal/thermal_zone0/temp"
 
 // SysBoard implements board.Board. Provides System info
 type SysBoard struct {
@@ -111,21 +118,33 @@ func (s *SysBoard) Render(ctx context.Context, canvas board.Canvas) error {
 
 	cpuPct := int64(float64(after.User-before.User) / float64(after.Total-before.Total) * 100)
 
+	cpuTemp, err := getCPUTemp()
+	if err != nil {
+		s.log.Error("failed to get CPU temp", zap.Error(err))
+	}
+
 	s.log.Debug("sys info",
 		zap.Int("mem used", int(mem.Used)),
 		zap.Int("mem total", int(mem.Total)),
 		zap.Int64("mem Pct", memPct),
 		zap.Int64("cpu pct", cpuPct),
+		zap.Int("cpu temp", cpuTemp),
 	)
+
+	things := []string{
+		fmt.Sprintf("Mem: %d%%", memPct),
+		fmt.Sprintf("CPU: %d%%", cpuPct),
+	}
+
+	if cpuTemp != 0 {
+		things = append(things, fmt.Sprintf("CPU Temp: %d", cpuTemp))
+	}
 
 	if err := writer.WriteAligned(
 		rgbrender.CenterCenter,
 		canvas,
 		canvas.Bounds(),
-		[]string{
-			fmt.Sprintf("Mem: %d%%", memPct),
-			fmt.Sprintf("CPU: %d%%", cpuPct),
-		},
+		things,
 		color.White,
 	); err != nil {
 		return err
@@ -192,4 +211,20 @@ func (s *SysBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 		enable,
 		status,
 	}, nil
+}
+
+func getCPUTemp() (int, error) {
+	d := path.Dir(cpuTempFile)
+	n := path.Base(cpuTempFile)
+	dat, err := fs.ReadFile(os.DirFS(d), n)
+	if err != nil {
+		return 0, err
+	}
+
+	t, err := strconv.Atoi(strings.TrimSpace(string(dat)))
+	if err != nil {
+		return 0, err
+	}
+
+	return t / 1000, nil
 }
