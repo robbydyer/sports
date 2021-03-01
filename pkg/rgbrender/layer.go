@@ -80,6 +80,7 @@ func (l *LayerRenderer) AddTextLayer(priority int, layer *TextLayer) {
 
 func (l *LayerRenderer) ClearLayers() {
 	l.layers = []*Layer{}
+	l.textLayers = []*TextLayer{}
 	l.layerPriorities = make(map[int]struct{})
 	l.prepared = false
 }
