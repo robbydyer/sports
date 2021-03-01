@@ -27,6 +27,7 @@ type LayerRenderer struct {
 	textLayers      []*TextLayer
 	maxLayer        int
 	log             *zap.Logger
+	prepared        bool
 }
 
 type Layer struct {
@@ -80,6 +81,7 @@ func (l *LayerRenderer) AddTextLayer(priority int, layer *TextLayer) {
 func (l *LayerRenderer) ClearLayers() {
 	l.layers = []*Layer{}
 	l.layerPriorities = make(map[int]struct{})
+	l.prepared = false
 }
 
 func (l *LayerRenderer) setForegroundPriority() {
@@ -89,7 +91,7 @@ func (l *LayerRenderer) setForegroundPriority() {
 		if i > max {
 			max = i
 		}
-		if i == -1 {
+		if i == ForegroundPriority {
 			hasForeground = true
 			delete(l.layerPriorities, i)
 		}
@@ -117,6 +119,8 @@ func (l *LayerRenderer) setForegroundPriority() {
 	}
 }
 
+// priorities returns a sorted list of priorities, with the foreground
+// priority calculated
 func (l *LayerRenderer) priorities() []int {
 	l.setForegroundPriority()
 	p := []int{}
@@ -129,7 +133,7 @@ func (l *LayerRenderer) priorities() []int {
 	return p
 }
 
-func (l *LayerRenderer) Render(ctx context.Context, canvas board.Canvas) error {
+func (l *LayerRenderer) Prepare(ctx context.Context) error {
 	prepareWg := sync.WaitGroup{}
 	prepErrs := make(chan error, (len(l.layers)*2)+(len(l.textLayers)*2))
 
@@ -162,19 +166,6 @@ func (l *LayerRenderer) Render(ctx context.Context, canvas board.Canvas) error {
 		}(layer)
 	}
 
-ERR:
-	for {
-		select {
-		case err := <-prepErrs:
-			if err != nil {
-				return err
-			}
-			continue ERR
-		default:
-			break ERR
-		}
-	}
-
 	prepDone := make(chan struct{})
 
 	go func() {
@@ -189,6 +180,33 @@ ERR:
 	case <-time.After(l.renderTimeout):
 		return fmt.Errorf("timed out LayerRenderer")
 	}
+
+ERR:
+	for {
+		select {
+		case err := <-prepErrs:
+			if err != nil {
+				return err
+			}
+			continue ERR
+		default:
+			break ERR
+		}
+	}
+
+	l.prepared = true
+
+	return nil
+}
+
+func (l *LayerRenderer) Render(ctx context.Context, canvas board.Canvas) error {
+	if !l.prepared {
+		if err := l.Prepare(ctx); err != nil {
+			return fmt.Errorf("failed to prepare layers before rendering: %w", err)
+		}
+	}
+
+	errs := make(chan error, len(l.layers)+len(l.textLayers))
 
 	for priority := range l.priorities() {
 		wg := &sync.WaitGroup{}
@@ -208,7 +226,7 @@ ERR:
 			go func(layer *Layer) {
 				defer wg.Done()
 				if err := layer.render(canvas, layer.prepared); err != nil {
-					prepErrs <- err
+					errs <- err
 				}
 			}(layer)
 		}
@@ -225,7 +243,7 @@ ERR:
 			go func(layer *TextLayer) {
 				defer wg.Done()
 				if err := layer.render(canvas, layer.prepared, layer.preparedText); err != nil {
-					prepErrs <- err
+					errs <- err
 				}
 			}(layer)
 		}
@@ -244,11 +262,20 @@ ERR:
 		case <-time.After(l.renderTimeout):
 			return fmt.Errorf("timed out LayerRenderer")
 		}
+
+	ERR:
+		for {
+			select {
+			case err := <-errs:
+				if err != nil {
+					return err
+				}
+				continue ERR
+			default:
+				break ERR
+			}
+		}
 	}
 
-	return nil
-}
-
-func (l *LayerRenderer) sortPriorities() {
-	// TODO: sort
+	return canvas.Render()
 }
