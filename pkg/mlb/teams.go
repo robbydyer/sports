@@ -2,6 +2,8 @@ package mlb
 
 import (
 	"context"
+	// embed
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -10,6 +12,9 @@ import (
 	"strconv"
 	"time"
 )
+
+//go:embed assets/divisions.json
+var divisionAPIData []byte
 
 type teams struct {
 	Teams []*Team `json:"teams"`
@@ -21,7 +26,24 @@ type Team struct {
 	Name         string `json:"name"`
 	Abbreviation string `json:"abbreviation"`
 	Link         string `json:"link,omitempty"`
-	Runs         int
+	DivisionData struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+		Link string `json:"link"`
+	} `json:"division"`
+	Division *division
+	Runs     int
+}
+
+type divisionData struct {
+	Divisions []*division `json:"divisions"`
+}
+
+type division struct {
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	NameShort    string `json:"nameShort"`
+	Abbreviation string `json:"abbreviation"`
 }
 
 // GetID ...
@@ -81,6 +103,20 @@ func GetTeams(ctx context.Context) ([]*Team, error) {
 
 	if err := json.Unmarshal(body, &teams); err != nil {
 		return nil, err
+	}
+
+	var d *divisionData
+
+	if err := json.Unmarshal(divisionAPIData, &d); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal MLB divisions: %w", err)
+	}
+
+	for _, team := range teams.Teams {
+		for _, div := range d.Divisions {
+			if div.ID == team.DivisionData.ID {
+				team.Division = div
+			}
+		}
 	}
 
 	return teams.Teams, nil
