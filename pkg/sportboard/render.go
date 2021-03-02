@@ -6,7 +6,6 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -16,26 +15,23 @@ import (
 )
 
 func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
-	awayTeam, err := liveGame.AwayTeam()
-	if err != nil {
-		return err
-	}
-	homeTeam, err := liveGame.HomeTeam()
+	layers, err := rgbrender.NewLayerRenderer(60*time.Second, s.log)
 	if err != nil {
 		return err
 	}
 
-	// If this is a favorite team, we'll watch the scoreboard until the game is over
-	isFavorite := (s.isFavorite(awayTeam.GetAbbreviation()) || s.isFavorite(homeTeam.GetAbbreviation()))
-
-	timeWriter, err := s.getTimeWriter(canvas.Bounds())
+	logos, err := s.logoLayers(liveGame, canvas.Bounds())
 	if err != nil {
 		return err
 	}
 
-	scoreWriter, err := s.getScoreWriter(canvas.Bounds())
-	if err != nil {
-		return err
+	var infos []*rgbrender.TextLayer
+	if s.config.ShowRecord.Load() {
+		var err error
+		infos, err = s.teamInfoLayers(liveGame, canvas.Bounds())
+		if err != nil {
+			return err
+		}
 	}
 
 	for {
@@ -45,117 +41,85 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 		default:
 		}
 
-		quarter, err := liveGame.GetQuarter()
-		if err != nil {
-			return err
+		for _, l := range logos {
+			layers.AddLayer(rgbrender.BackgroundPriority, l)
 		}
 
-		clock, err := liveGame.GetClock()
-		if err != nil {
-			return err
-		}
+		layers.AddTextLayer(rgbrender.ForegroundPriority,
+			rgbrender.NewTextLayer(
+				func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
+					quarter, err := liveGame.GetQuarter()
+					if err != nil {
+						return nil, nil, err
+					}
 
-		score, err := scoreStr(liveGame)
-		if err != nil {
-			return err
-		}
-
-		s.log.Debug("Live game",
-			zap.String("score", score),
-			zap.String("clock", clock),
-		)
-
-		var wg sync.WaitGroup
-		errs := make(chan error, 1)
-
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			if err := s.RenderHomeLogo(ctx, canvas, homeTeam.GetAbbreviation()); err != nil {
-				select {
-				case errs <- fmt.Errorf("failed to render home logo: %w", err):
-				default:
-				}
-			}
-		}()
-
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			if err := s.RenderAwayLogo(ctx, canvas, awayTeam.GetAbbreviation()); err != nil {
-				select {
-				case errs <- fmt.Errorf("failed to render away logo: %w", err):
-				default:
-				}
-			}
-		}()
-
-		// Wait, but with a timeout
-		doneWait := make(chan struct{})
-		go func() {
-			defer close(doneWait)
-			wg.Wait()
-		}()
-
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("context canceled")
-		case <-doneWait:
-			s.log.Debug("logo renderers completed",
-				zap.String("home", homeTeam.GetAbbreviation()),
-				zap.String("away", awayTeam.GetAbbreviation()),
-			)
-		case <-time.After(60 * time.Second):
-			return fmt.Errorf("timed out waiting for board to draw logos")
-		}
-
-		select {
-		case err := <-errs:
-			if err != nil {
-				return err
-			}
-		default:
-		}
-
-		if s.config.TimeColor == nil {
-			s.config.TimeColor = color.White
-		}
-
-		if s.config.ShowRecord.Load() {
-			s.renderInfoHome(ctx, canvas, homeTeam)
-			s.renderInfoAway(ctx, canvas, awayTeam)
-		}
-
-		_ = timeWriter.WriteAligned(
-			rgbrender.CenterTop,
-			canvas,
-			canvas.Bounds(),
-			[]string{
-				quarter,
-				clock,
-			},
-			s.config.TimeColor,
-		)
-
-		if s.config.ScoreColor == nil {
-			s.config.ScoreColor = color.White
-		}
-
-		if s.config.HideFavoriteScore.Load() && isFavorite {
-			s.log.Warn("hiding score for favorite team")
-		} else {
-			_ = scoreWriter.WriteAligned(
-				rgbrender.CenterBottom,
-				canvas,
-				canvas.Bounds(),
-				[]string{
-					score,
+					clock, err := liveGame.GetClock()
+					if err != nil {
+						return nil, nil, err
+					}
+					writer, err := s.getTimeWriter(canvas.Bounds())
+					if err != nil {
+						return nil, nil, err
+					}
+					return writer, []string{quarter, clock}, nil
 				},
-				s.config.ScoreColor,
-			)
+				func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
+					return writer.WriteAligned(
+						rgbrender.CenterTop,
+						canvas,
+						canvas.Bounds(),
+						text,
+						s.config.TimeColor,
+					)
+				},
+			),
+		)
+
+		layers.AddTextLayer(rgbrender.ForegroundPriority,
+			rgbrender.NewTextLayer(
+				func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
+					isFavorite, err := s.isFavoriteGame(liveGame)
+					if err != nil {
+						return nil, nil, err
+					}
+					score := []string{}
+					if s.config.HideFavoriteScore.Load() && isFavorite {
+						s.log.Warn("hiding score for favorite team")
+						score = []string{}
+					} else {
+						str, err := scoreStr(liveGame)
+						if err != nil {
+							return nil, nil, err
+						}
+						score = append(score, str)
+					}
+					writer, err := s.getScoreWriter(canvas.Bounds())
+					if err != nil {
+						return nil, nil, err
+					}
+					return writer, score, nil
+				},
+				func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
+					return writer.WriteAligned(
+						rgbrender.CenterBottom,
+						canvas,
+						canvas.Bounds(),
+						text,
+						s.config.ScoreColor,
+					)
+				},
+			),
+		)
+
+		layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
+
+		for _, i := range infos {
+			layers.AddTextLayer(rgbrender.ForegroundPriority, i)
 		}
 
-		draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
+		if err := layers.Render(ctx, canvas); err != nil {
+			return err
+		}
 
 		select {
 		case <-ctx.Done():
@@ -163,14 +127,10 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 		default:
 		}
 
-		s.log.Debug("rendering sportboard",
-			zap.String("home", homeTeam.GetAbbreviation()),
-			zap.String("away", awayTeam.GetAbbreviation()),
-		)
-		if err := canvas.Render(); err != nil {
+		isFavorite, err := s.isFavoriteGame(liveGame)
+		if err != nil {
 			return err
 		}
-
 		if !(isFavorite && s.config.FavoriteSticky.Load()) {
 			return nil
 		}
@@ -195,120 +155,79 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 			s.log.Info("live game is over", zap.Int("game ID", liveGame.GetID()))
 			return nil
 		}
+
+		layers.ClearLayers()
 	}
 }
 
 func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
-	awayTeam, err := liveGame.AwayTeam()
-	if err != nil {
-		return err
-	}
-	homeTeam, err := liveGame.HomeTeam()
+	layers, err := rgbrender.NewLayerRenderer(60*time.Second, s.log)
 	if err != nil {
 		return err
 	}
 
-	timeWriter, err := s.getTimeWriter(canvas.Bounds())
+	logos, err := s.logoLayers(liveGame, canvas.Bounds())
 	if err != nil {
 		return err
 	}
 
-	scoreWriter, err := s.getScoreWriter(canvas.Bounds())
-	if err != nil {
-		return err
+	for _, l := range logos {
+		layers.AddLayer(rgbrender.BackgroundPriority, l)
 	}
 
-	gameTimeStr := ""
-
-	if is, err := liveGame.IsPostponed(); err == nil && is {
-		s.log.Debug("game was postponed", zap.Int("game ID", liveGame.GetID()))
-		gameTimeStr = "PPD"
-	} else {
-		gameTime, err := liveGame.GetStartTime(ctx)
-		if err != nil {
-			return err
-		}
-		gameTimeStr = gameTime.Local().Format("3:04PM")
-	}
-
-	var wg sync.WaitGroup
-	errs := make(chan error, 2)
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := s.RenderHomeLogo(ctx, canvas, homeTeam.GetAbbreviation()); err != nil {
-			select {
-			case errs <- fmt.Errorf("failed to render home logo: %w", err):
-			default:
-			}
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := s.RenderAwayLogo(ctx, canvas, awayTeam.GetAbbreviation()); err != nil {
-			select {
-			case errs <- fmt.Errorf("failed to render away logo: %w", err):
-			default:
-			}
-		}
-	}()
-
-	// Wait, but with a timeout
-	doneWait := make(chan struct{})
-	go func() {
-		defer close(doneWait)
-		wg.Wait()
-	}()
-
-	select {
-	case <-ctx.Done():
-		return fmt.Errorf("context canceled")
-	case <-doneWait:
-		s.log.Debug("logo renderers completed",
-			zap.String("home", homeTeam.GetAbbreviation()),
-			zap.String("away", awayTeam.GetAbbreviation()),
-		)
-	case <-time.After(60 * time.Second):
-		return fmt.Errorf("timed out waiting for board to draw logos")
-	}
-
-	select {
-	case err := <-errs:
-		if err != nil {
-			return err
-		}
-	default:
-	}
-
-	if s.config.ShowRecord.Load() {
-		s.renderInfoHome(ctx, canvas, homeTeam)
-		s.renderInfoAway(ctx, canvas, awayTeam)
-	}
-
-	_ = timeWriter.WriteAligned(
-		rgbrender.CenterTop,
-		canvas,
-		canvas.Bounds(),
-		[]string{
-			gameTimeStr,
-		},
-		s.config.TimeColor,
+	layers.AddTextLayer(rgbrender.ForegroundPriority,
+		rgbrender.NewTextLayer(
+			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
+				timeWriter, err := s.getTimeWriter(canvas.Bounds())
+				if err != nil {
+					return nil, nil, err
+				}
+				gameTimeStr := ""
+				if is, err := liveGame.IsPostponed(); err == nil && is {
+					s.log.Debug("game was postponed", zap.Int("game ID", liveGame.GetID()))
+					gameTimeStr = "PPD"
+				} else {
+					gameTime, err := liveGame.GetStartTime(ctx)
+					if err != nil {
+						return nil, nil, err
+					}
+					gameTimeStr = gameTime.Local().Format("3:04PM")
+				}
+				return timeWriter, []string{gameTimeStr}, nil
+			},
+			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
+				return writer.WriteAligned(
+					rgbrender.CenterTop,
+					canvas,
+					canvas.Bounds(),
+					text,
+					s.config.TimeColor,
+				)
+			},
+		),
+	)
+	layers.AddTextLayer(rgbrender.ForegroundPriority,
+		rgbrender.NewTextLayer(
+			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
+				scoreWriter, err := s.getScoreWriter(canvas.Bounds())
+				if err != nil {
+					return nil, nil, err
+				}
+				return scoreWriter, []string{"VS"}, nil
+			},
+			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
+				return writer.WriteAligned(
+					rgbrender.CenterCenter,
+					canvas,
+					canvas.Bounds(),
+					text,
+					s.config.ScoreColor,
+				)
+			},
+		),
 	)
 
-	_ = scoreWriter.WriteAligned(
-		rgbrender.CenterCenter,
-		canvas,
-		canvas.Bounds(),
-		[]string{
-			"VS",
-		},
-		s.config.ScoreColor,
-	)
-
-	draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
+	layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
 
 	select {
 	case <-ctx.Done():
@@ -316,170 +235,213 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 	default:
 	}
 
-	return canvas.Render()
+	return layers.Render(ctx, canvas)
 }
 
 func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
-	awayTeam, err := liveGame.AwayTeam()
-	if err != nil {
-		return err
-	}
-	homeTeam, err := liveGame.HomeTeam()
+	layers, err := rgbrender.NewLayerRenderer(60*time.Second, s.log)
 	if err != nil {
 		return err
 	}
 
-	timeWriter, err := s.getTimeWriter(canvas.Bounds())
+	logos, err := s.logoLayers(liveGame, canvas.Bounds())
 	if err != nil {
 		return err
 	}
 
-	scoreWriter, err := s.getScoreWriter(canvas.Bounds())
-	if err != nil {
-		return err
+	for _, l := range logos {
+		layers.AddLayer(rgbrender.BackgroundPriority, l)
 	}
 
-	score, err := scoreStr(liveGame)
-	if err != nil {
-		return err
-	}
-
-	var wg sync.WaitGroup
-	errs := make(chan error, 2)
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := s.RenderHomeLogo(ctx, canvas, homeTeam.GetAbbreviation()); err != nil {
-			select {
-			case errs <- fmt.Errorf("failed to render home logo: %w", err):
-			default:
-			}
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := s.RenderAwayLogo(ctx, canvas, awayTeam.GetAbbreviation()); err != nil {
-			select {
-			case errs <- fmt.Errorf("failed to render away logo: %w", err):
-			default:
-			}
-		}
-	}()
-
-	// Wait, but with a timeout
-	doneWait := make(chan struct{})
-	go func() {
-		defer close(doneWait)
-		wg.Wait()
-	}()
-
-	select {
-	case <-ctx.Done():
-		return fmt.Errorf("context canceled")
-	case <-doneWait:
-		s.log.Debug("logo renderers completed",
-			zap.String("home", homeTeam.GetAbbreviation()),
-			zap.String("away", awayTeam.GetAbbreviation()),
-		)
-	case <-time.After(60 * time.Second):
-		_ = canvas.Clear()
-		return fmt.Errorf("timed out waiting for board to draw logos")
-	}
-
-	select {
-	case err := <-errs:
-		if err != nil {
-			_ = canvas.Clear()
-			return err
-		}
-	default:
-	}
-
-	if s.config.ShowRecord.Load() {
-		s.renderInfoHome(ctx, canvas, homeTeam)
-		s.renderInfoAway(ctx, canvas, awayTeam)
-	}
-
-	_ = timeWriter.WriteAligned(
-		rgbrender.CenterTop,
-		canvas,
-		canvas.Bounds(),
-		[]string{
-			"FINAL",
-		},
-		s.config.TimeColor,
+	layers.AddTextLayer(rgbrender.ForegroundPriority,
+		rgbrender.NewTextLayer(
+			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
+				writer, err := s.getTimeWriter(canvas.Bounds())
+				if err != nil {
+					return nil, nil, err
+				}
+				return writer, []string{"FINAL"}, nil
+			},
+			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
+				return writer.WriteAligned(
+					rgbrender.CenterTop,
+					canvas,
+					canvas.Bounds(),
+					text,
+					s.config.TimeColor,
+				)
+			},
+		),
 	)
 
-	isFavorite := (s.isFavorite(awayTeam.GetAbbreviation()) || s.isFavorite(homeTeam.GetAbbreviation()))
-
-	if s.config.HideFavoriteScore.Load() && isFavorite {
-		s.log.Warn("hiding score for favorite team")
-	} else {
-		_ = scoreWriter.WriteAligned(
-			rgbrender.CenterBottom,
-			canvas,
-			canvas.Bounds(),
-			[]string{
-				score,
+	layers.AddTextLayer(rgbrender.ForegroundPriority,
+		rgbrender.NewTextLayer(
+			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
+				isFavorite, err := s.isFavoriteGame(liveGame)
+				if err != nil {
+					return nil, nil, err
+				}
+				score := []string{}
+				if s.config.HideFavoriteScore.Load() && isFavorite {
+					s.log.Warn("hiding score for favorite team")
+					score = []string{}
+				} else {
+					str, err := scoreStr(liveGame)
+					if err != nil {
+						return nil, nil, err
+					}
+					score = append(score, str)
+				}
+				writer, err := s.getScoreWriter(canvas.Bounds())
+				if err != nil {
+					return nil, nil, err
+				}
+				return writer, score, nil
 			},
-			s.config.ScoreColor,
-		)
+			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
+				return writer.WriteAligned(
+					rgbrender.CenterBottom,
+					canvas,
+					canvas.Bounds(),
+					text,
+					s.config.ScoreColor,
+				)
+			},
+		),
+	)
+
+	if s.config.ShowRecord.Load() {
+		infos, err := s.teamInfoLayers(liveGame, canvas.Bounds())
+		if err != nil {
+			return err
+		}
+		for _, i := range infos {
+			layers.AddTextLayer(rgbrender.ForegroundPriority, i)
+		}
 	}
 
-	draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
+	layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
 
-	select {
-	case <-ctx.Done():
-		return fmt.Errorf("context canceled")
-	default:
-	}
+	layers.AddLayer(rgbrender.ForegroundPriority,
+		rgbrender.NewLayer(
+			nil,
+			func(canvas board.Canvas, img image.Image) error {
+				draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
+				return nil
+			},
+		),
+	)
 
-	return canvas.Render()
+	return layers.Render(ctx, canvas)
 }
 
-func (s *SportBoard) renderInfoHome(ctx context.Context, canvas board.Canvas, team Team) {
-	rank := s.api.TeamRank(ctx, team)
-	record := s.api.TeamRecord(ctx, team)
-
-	if rank == "" && record == "" {
-		return
-	}
-
-	writer, err := s.getTimeWriter(canvas.Bounds())
-	if err != nil {
-		s.log.Error("failed to get writer for team info", zap.Error(err))
-		return
-	}
-
-	if rank != "" {
-		_ = writer.WriteAligned(rgbrender.LeftTop, canvas, canvas.Bounds(), []string{rank}, color.White)
-	}
-	if record != "" {
-		_ = writer.WriteAligned(rgbrender.LeftBottom, canvas, canvas.Bounds(), []string{record}, color.White)
-	}
+func counterLayer(counter image.Image) *rgbrender.Layer {
+	return rgbrender.NewLayer(
+		nil,
+		func(canvas board.Canvas, img image.Image) error {
+			draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
+			return nil
+		},
+	)
 }
 
-func (s *SportBoard) renderInfoAway(ctx context.Context, canvas board.Canvas, team Team) {
-	rank := s.api.TeamRank(ctx, team)
-	record := s.api.TeamRecord(ctx, team)
-
-	if rank == "" && record == "" {
-		return
-	}
-
-	writer, err := s.getTimeWriter(canvas.Bounds())
+func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbrender.Layer, error) {
+	homeTeam, err := liveGame.HomeTeam()
 	if err != nil {
-		s.log.Error("failed to get writer for team info", zap.Error(err))
-		return
+		return nil, err
+	}
+	awayTeam, err := liveGame.AwayTeam()
+	if err != nil {
+		return nil, err
 	}
 
-	if rank != "" {
-		_ = writer.WriteAligned(rgbrender.RightTop, canvas, canvas.Bounds(), []string{rank}, color.White)
+	return []*rgbrender.Layer{
+		rgbrender.NewLayer(
+			func(ctx context.Context) (image.Image, error) {
+				return s.RenderHomeLogo(ctx, bounds, homeTeam.GetAbbreviation())
+			},
+			func(canvas board.Canvas, img image.Image) error {
+				draw.Draw(canvas, canvas.Bounds(), img, image.Point{}, draw.Over)
+				return nil
+			},
+		),
+
+		rgbrender.NewLayer(
+			func(ctx context.Context) (image.Image, error) {
+				return s.RenderAwayLogo(ctx, bounds, awayTeam.GetAbbreviation())
+			},
+			func(canvas board.Canvas, img image.Image) error {
+				draw.Draw(canvas, canvas.Bounds(), img, image.Point{}, draw.Over)
+				return nil
+			},
+		),
+	}, nil
+}
+
+func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbrender.TextLayer, error) {
+	homeTeam, err := liveGame.HomeTeam()
+	if err != nil {
+		return nil, err
 	}
-	if record != "" {
-		_ = writer.WriteAligned(rgbrender.RightBottom, canvas, canvas.Bounds(), []string{record}, color.White)
+	awayTeam, err := liveGame.AwayTeam()
+	if err != nil {
+		return nil, err
 	}
+
+	return []*rgbrender.TextLayer{
+		rgbrender.NewTextLayer(
+			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
+				rank := s.api.TeamRank(ctx, homeTeam)
+				record := s.api.TeamRecord(ctx, homeTeam)
+
+				writer, err := s.getTimeWriter(bounds)
+				if err != nil {
+					return nil, nil, err
+				}
+
+				return writer, []string{rank, record}, nil
+			},
+			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
+				if len(text) != 2 {
+					return fmt.Errorf("invalid rank/record input")
+				}
+				rank := text[0]
+				record := text[1]
+				if rank != "" {
+					_ = writer.WriteAligned(rgbrender.LeftTop, canvas, canvas.Bounds(), []string{rank}, color.White)
+				}
+				if record != "" {
+					_ = writer.WriteAligned(rgbrender.LeftBottom, canvas, canvas.Bounds(), []string{record}, color.White)
+				}
+				return nil
+			},
+		),
+		rgbrender.NewTextLayer(
+			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
+				rank := s.api.TeamRank(ctx, awayTeam)
+				record := s.api.TeamRecord(ctx, awayTeam)
+
+				writer, err := s.getTimeWriter(bounds)
+				if err != nil {
+					return nil, nil, err
+				}
+
+				return writer, []string{rank, record}, nil
+			},
+			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
+				if len(text) != 2 {
+					return fmt.Errorf("invalid rank/record input")
+				}
+				rank := text[0]
+				record := text[1]
+				if rank != "" {
+					_ = writer.WriteAligned(rgbrender.RightTop, canvas, canvas.Bounds(), []string{rank}, color.White)
+				}
+				if record != "" {
+					_ = writer.WriteAligned(rgbrender.RightBottom, canvas, canvas.Bounds(), []string{record}, color.White)
+				}
+				return nil
+			},
+		),
+	}, nil
 }

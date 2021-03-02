@@ -29,5 +29,8 @@ func (r *rootArgs) getLogger(level zapcore.Level) (*zap.Logger, error) {
 
 	core := zapcore.NewCore(zapcore.NewConsoleEncoder(e), writer, level)
 
-	return zap.New(core).WithOptions(zap.ErrorOutput(writer)), nil
+	return zap.New(core).WithOptions(
+		zap.ErrorOutput(writer),
+		zap.OnFatal(zapcore.WriteThenFatal),
+	), nil
 }

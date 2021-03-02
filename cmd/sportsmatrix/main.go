@@ -306,17 +306,6 @@ func (r *rootArgs) setTodayFuncs(today string) error {
 
 	r.config.NHLConfig.TodayFunc = f
 	r.config.MLBConfig.TodayFunc = f
-
-	// NCAAM is a different format
-	t, err = time.Parse(ncaam.DateFormat, today)
-	if err != nil {
-		return err
-	}
-
-	f = func() time.Time {
-		return t
-	}
-
 	r.config.NCAAMConfig.TodayFunc = f
 
 	return nil

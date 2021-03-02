@@ -69,6 +69,19 @@ func (s *SportBoard) getScoreWriter(bounds image.Rectangle) (*rgbrender.TextWrit
 	return scoreWriter, nil
 }
 
+func (s *SportBoard) isFavoriteGame(game Game) (bool, error) {
+	homeTeam, err := game.HomeTeam()
+	if err != nil {
+		return false, err
+	}
+	awayTeam, err := game.AwayTeam()
+	if err != nil {
+		return false, err
+	}
+
+	return (s.isFavorite(awayTeam.GetAbbreviation()) || s.isFavorite(homeTeam.GetAbbreviation())), nil
+}
+
 func (s *SportBoard) isFavorite(abbrev string) bool {
 	for _, a := range s.config.FavoriteTeams {
 		if abbrev == a {
