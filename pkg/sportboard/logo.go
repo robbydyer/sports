@@ -110,22 +110,6 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, bounds image.Rectangle,
 	}
 
 	return nil, fmt.Errorf("no logo")
-	/*
-		endX := ((canvas.Bounds().Dx() - textWidth) / 2)
-		writeBounds := image.Rect(0, 0, endX, canvas.Bounds().Dy())
-		writer, err := missingLogoWriter(writeBounds)
-		if err != nil {
-			return nil, err
-		}
-		return writer.Write(
-			canvas,
-			writeBounds,
-			[]string{
-				abbreviation,
-			},
-			color.White,
-		)
-	*/
 }
 
 // RenderAwayLogo ...
