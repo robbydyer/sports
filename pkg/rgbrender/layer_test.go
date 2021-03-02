@@ -8,9 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/imgcanvas"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSetForegroundPriority(t *testing.T) {

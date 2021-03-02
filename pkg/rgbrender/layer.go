@@ -170,7 +170,7 @@ func (l *LayerRenderer) priorities() []int {
 // Prepare runs the prepare func of each layer concurrently
 func (l *LayerRenderer) Prepare(ctx context.Context) error {
 	prepareWg := sync.WaitGroup{}
-	prepErrs := make(chan error, (len(l.layers)*2)+(len(l.textLayers)*2))
+	prepErrs := make(chan error, len(l.layers)+len(l.textLayers))
 
 	for _, layer := range l.layers {
 		if layer.prepare == nil {
