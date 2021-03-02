@@ -8,6 +8,7 @@ import (
 	"image/gif"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -183,6 +184,9 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	for i := range gifs {
 		gifList = append(gifList, i)
 	}
+
+	sort.Strings(imageList)
+	sort.Strings(gifList)
 
 	if err := i.renderImages(ctx, canvas, imageList); err != nil {
 		i.log.Error("error rendering images", zap.Error(err))
