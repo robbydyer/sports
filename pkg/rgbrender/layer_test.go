@@ -1,9 +1,15 @@
 package rgbrender
 
 import (
+	"context"
+	"fmt"
+	"image"
+	"image/color"
 	"testing"
 	"time"
 
+	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/imgcanvas"
 	"github.com/stretchr/testify/require"
 )
 
@@ -130,4 +136,50 @@ func TestPriorities(t *testing.T) {
 			require.Equal(t, test.expected, l.priorities())
 		})
 	}
+}
+
+func TestRender(t *testing.T) {
+	layers, err := NewLayerRenderer(60*time.Second, nil)
+	require.NoError(t, err)
+
+	renderedLayers := []string{}
+
+	i := image.NewUniform(color.White)
+	layer1 := false
+	layers.AddLayer(BackgroundPriority, NewLayer(
+		func(ctx context.Context) (image.Image, error) {
+			return i, nil
+		},
+		func(canvas board.Canvas, img image.Image) error {
+			defer func() { renderedLayers = append(renderedLayers, "layer") }()
+			if img == i {
+				layer1 = true
+				return nil
+			}
+			return fmt.Errorf("wrong image")
+		},
+	))
+
+	writer, err := DefaultTextWriter()
+	require.NoError(t, err)
+
+	layer2 := false
+	layers.AddTextLayer(ForegroundPriority, NewTextLayer(
+		func(ctx context.Context) (*TextWriter, []string, error) {
+			return writer, []string{"hello"}, nil
+		},
+		func(canvas board.Canvas, writer *TextWriter, text []string) error {
+			defer func() { renderedLayers = append(renderedLayers, "text") }()
+			require.NotNil(t, writer)
+			require.Equal(t, []string{"hello"}, text)
+			layer2 = true
+			return nil
+		},
+	))
+
+	require.NoError(t, layers.Render(context.Background(), imgcanvas.New(1, 1, nil)))
+	require.True(t, layer1)
+	require.True(t, layer2)
+	require.Equal(t, []string{"layer", "text"}, renderedLayers)
+	require.NotEqual(t, []string{"text", "layer"}, renderedLayers)
 }
