@@ -44,12 +44,19 @@ type TextLayer struct {
 	preparedText []string
 }
 
-func NewLayerRenderer(timeout time.Duration, log *zap.Logger) *LayerRenderer {
+func NewLayerRenderer(timeout time.Duration, log *zap.Logger) (*LayerRenderer, error) {
+	if log == nil {
+		var err error
+		log, err = zap.NewProduction()
+		if err != nil {
+			return nil, err
+		}
+	}
 	return &LayerRenderer{
 		renderTimeout:   timeout,
 		layerPriorities: make(map[int]struct{}),
 		log:             log,
-	}
+	}, nil
 }
 
 func NewLayer(prepare Prepare, render Render) *Layer {
@@ -87,7 +94,7 @@ func (l *LayerRenderer) ClearLayers() {
 
 func (l *LayerRenderer) setForegroundPriority() {
 	hasForeground := false
-	max := 0
+	max := BackgroundPriority
 	for i := range l.layerPriorities {
 		if i > max {
 			max = i
@@ -106,15 +113,15 @@ func (l *LayerRenderer) setForegroundPriority() {
 
 	l.maxLayer = max + 1
 
-	l.layerPriorities[max+1] = struct{}{}
+	l.layerPriorities[l.maxLayer] = struct{}{}
 
 	for _, layer := range l.layers {
-		if layer.priority == -1 {
+		if layer.priority == ForegroundPriority {
 			layer.priority = l.maxLayer
 		}
 	}
 	for _, layer := range l.textLayers {
-		if layer.priority == -1 {
+		if layer.priority == ForegroundPriority {
 			layer.priority = l.maxLayer
 		}
 	}

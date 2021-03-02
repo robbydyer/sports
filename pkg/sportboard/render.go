@@ -15,7 +15,10 @@ import (
 )
 
 func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
-	layers := rgbrender.NewLayerRenderer(60*time.Second, s.log)
+	layers, err := rgbrender.NewLayerRenderer(60*time.Second, s.log)
+	if err != nil {
+		return err
+	}
 
 	logos, err := s.logoLayers(liveGame, canvas.Bounds())
 	if err != nil {
@@ -158,7 +161,10 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 }
 
 func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
-	layers := rgbrender.NewLayerRenderer(60*time.Second, s.log)
+	layers, err := rgbrender.NewLayerRenderer(60*time.Second, s.log)
+	if err != nil {
+		return err
+	}
 
 	logos, err := s.logoLayers(liveGame, canvas.Bounds())
 	if err != nil {
@@ -233,7 +239,10 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 }
 
 func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
-	layers := rgbrender.NewLayerRenderer(60*time.Second, s.log)
+	layers, err := rgbrender.NewLayerRenderer(60*time.Second, s.log)
+	if err != nil {
+		return err
+	}
 
 	logos, err := s.logoLayers(liveGame, canvas.Bounds())
 	if err != nil {
