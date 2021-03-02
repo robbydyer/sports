@@ -8,18 +8,35 @@ import (
 	"sync"
 	"time"
 
-	"github.com/robbydyer/sports/pkg/board"
 	"go.uber.org/zap"
+
+	"github.com/robbydyer/sports/pkg/board"
 )
 
-const BackgroundPriority = 0
-const ForegroundPriority = -1
+const (
+	// BackgroundPriority sets a layer's priority to the rearmost layer
+	BackgroundPriority = 0
 
-type Prepare func(ctx context.Context) (image.Image, error)
-type TextPrepare func(ctx context.Context) (*TextWriter, []string, error)
-type Render func(canvas board.Canvas, img image.Image) error
-type TextRender func(canvas board.Canvas, writer *TextWriter, text []string) error
+	// ForegroundPriority sets a layer's priority to the frontmost layer
+	ForegroundPriority = -1
+)
 
+type (
+	// Prepare is a func type for preparing a Layer for rendering
+	Prepare func(ctx context.Context) (image.Image, error)
+
+	// TextPrepare is a func type for preparing a TextLayer for rendering
+	TextPrepare func(ctx context.Context) (*TextWriter, []string, error)
+
+	// Render is a func type that renders a Layer
+	Render func(canvas board.Canvas, img image.Image) error
+
+	// TextRender is a func type that renders a TextLayer
+	TextRender func(canvas board.Canvas, writer *TextWriter, text []string) error
+)
+
+// LayerRenderer renders layers on a board.Canvas. It prepares layers simultaneously, then
+// renders each priority simultaneously.
 type LayerRenderer struct {
 	renderTimeout   time.Duration
 	layerPriorities map[int]struct{}
@@ -30,12 +47,15 @@ type LayerRenderer struct {
 	prepared        bool
 }
 
+// Layer is a layer that draws an image.Image onto a board.Canvas
 type Layer struct {
 	priority int
 	prepare  Prepare
 	render   Render
 	prepared image.Image
 }
+
+// TextLayer writes text onto a board.Canvas
 type TextLayer struct {
 	priority     int
 	prepare      TextPrepare
@@ -44,6 +64,7 @@ type TextLayer struct {
 	preparedText []string
 }
 
+// NewLayerRenderer ...
 func NewLayerRenderer(timeout time.Duration, log *zap.Logger) (*LayerRenderer, error) {
 	if log == nil {
 		var err error
@@ -59,6 +80,7 @@ func NewLayerRenderer(timeout time.Duration, log *zap.Logger) (*LayerRenderer, e
 	}, nil
 }
 
+// NewLayer ...
 func NewLayer(prepare Prepare, render Render) *Layer {
 	return &Layer{
 		render:  render,
@@ -66,6 +88,7 @@ func NewLayer(prepare Prepare, render Render) *Layer {
 	}
 }
 
+// NewTextLayer ...
 func NewTextLayer(prepare TextPrepare, render TextRender) *TextLayer {
 	return &TextLayer{
 		render:  render,
@@ -73,18 +96,21 @@ func NewTextLayer(prepare TextPrepare, render TextRender) *TextLayer {
 	}
 }
 
+// AddLayer ...
 func (l *LayerRenderer) AddLayer(priority int, layer *Layer) {
 	layer.priority = priority
 	l.layerPriorities[layer.priority] = struct{}{}
 	l.layers = append(l.layers, layer)
 }
 
+// AddTextLayer ...
 func (l *LayerRenderer) AddTextLayer(priority int, layer *TextLayer) {
 	layer.priority = priority
 	l.layerPriorities[layer.priority] = struct{}{}
 	l.textLayers = append(l.textLayers, layer)
 }
 
+// ClearLayers ...
 func (l *LayerRenderer) ClearLayers() {
 	l.layers = []*Layer{}
 	l.textLayers = []*TextLayer{}
@@ -141,6 +167,7 @@ func (l *LayerRenderer) priorities() []int {
 	return p
 }
 
+// Prepare runs the prepare func of each layer concurrently
 func (l *LayerRenderer) Prepare(ctx context.Context) error {
 	prepareWg := sync.WaitGroup{}
 	prepErrs := make(chan error, (len(l.layers)*2)+(len(l.textLayers)*2))
@@ -207,6 +234,7 @@ ERR:
 	return nil
 }
 
+// Render renders each layer. It does each priority level concurrently
 func (l *LayerRenderer) Render(ctx context.Context, canvas board.Canvas) error {
 	if !l.prepared {
 		if err := l.Prepare(ctx); err != nil {

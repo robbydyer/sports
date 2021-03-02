@@ -8,7 +8,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/logo"
-	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
 func (s *SportBoard) logoConfig(logoKey string) (*logo.Config, error) {
@@ -161,20 +160,4 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, bounds image.Rectangle,
 	}
 
 	return nil, fmt.Errorf("no logo")
-}
-
-func missingLogoWriter(bounds image.Rectangle) (*rgbrender.TextWriter, error) {
-	fnt, err := rgbrender.GetFont("score.ttf")
-	if err != nil {
-		return nil, err
-	}
-
-	size := 0.25 * float64(bounds.Dx())
-
-	writer, err := rgbrender.NewTextWriter(fnt, size), nil
-	if err != nil {
-		return nil, err
-	}
-
-	return writer, nil
 }
