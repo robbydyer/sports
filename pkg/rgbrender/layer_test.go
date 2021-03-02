@@ -184,3 +184,37 @@ func TestRender(t *testing.T) {
 	require.Equal(t, []string{"layer", "text"}, renderedLayers)
 	require.NotEqual(t, []string{"text", "layer"}, renderedLayers)
 }
+
+func TestBadPrepare(t *testing.T) {
+	layers, err := NewLayerRenderer(60*time.Second, nil)
+	require.NoError(t, err)
+
+	layers.AddLayer(BackgroundPriority, NewLayer(
+		func(ctx context.Context) (image.Image, error) {
+			return nil, fmt.Errorf("prep failed")
+		},
+		nil,
+	))
+
+	err = layers.Prepare(context.Background())
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "prep failed")
+}
+
+func TestBadRender(t *testing.T) {
+	layers, err := NewLayerRenderer(60*time.Second, nil)
+	require.NoError(t, err)
+
+	layers.AddLayer(BackgroundPriority, NewLayer(
+		func(ctx context.Context) (image.Image, error) {
+			return image.NewUniform(color.White), nil
+		},
+		func(canvas board.Canvas, i image.Image) error {
+			return fmt.Errorf("render failed")
+		},
+	))
+
+	err = layers.Render(context.Background(), imgcanvas.New(1, 2, nil))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "render failed")
+}
