@@ -104,6 +104,9 @@ mlbConfig:
   boardDelay: "10s"
 
   # watchTeams are teams we show games for. ALL shows all teams in the league
+  # Special values support:
+  # - ALL # Adds all teams in MLB to watch list
+  # - Divisions: NLE, NLC, NLW, ALE, ALC, ALW
   watchTeams:
   - ALL
 
