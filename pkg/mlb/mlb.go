@@ -163,7 +163,11 @@ func (m *MLB) GetWatchTeams(teams []string) []string {
 			return m.AllTeamAbbreviations()
 		}
 		isDiv := false
+	INNER:
 		for _, team := range m.teams {
+			if team.Division == nil {
+				continue INNER
+			}
 			if team.Division.Abbreviation == t {
 				watch = append(watch, team.Abbreviation)
 				isDiv = true
