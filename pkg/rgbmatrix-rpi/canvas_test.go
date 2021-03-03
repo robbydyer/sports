@@ -2,7 +2,6 @@ package rgbmatrix
 
 import (
 	"image/color"
-	"io"
 	"testing"
 
 	. "gopkg.in/check.v1"
@@ -100,10 +99,6 @@ func NewMatrixMock() *MatrixMock {
 		called: make(map[string]interface{}, 0),
 		colors: make([]color.Color, 200),
 	}
-}
-
-func (m *MatrixMock) Writer() io.Writer {
-	return nil
 }
 
 func (m *MatrixMock) Geometry() (width, height int) {
