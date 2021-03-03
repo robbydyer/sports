@@ -59,6 +59,7 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	var canvases []board.Canvas
 	var matrix rgb.Matrix
 	if s.rArgs.test {
 		matrix = s.rArgs.getTestMatrix(logger)
@@ -70,7 +71,6 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	var canvases []board.Canvas
 	canvases = append(canvases, rgb.NewCanvas(matrix))
 
 	mtrx, err := sportsmatrix.New(ctx, logger, s.rArgs.config.SportsMatrixConfig, canvases, boards...)

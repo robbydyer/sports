@@ -66,7 +66,7 @@ func TestSetForegroundPriority(t *testing.T) {
 
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			l, err := NewLayerRenderer(1*time.Second, nil)
+			l, err := NewLayerDrawer(1*time.Second, nil)
 			require.NoError(t, err)
 			for _, layer := range test.layers {
 				l.AddLayer(layer.priority, layer)
@@ -129,7 +129,7 @@ func TestPriorities(t *testing.T) {
 
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			l, err := NewLayerRenderer(1*time.Second, nil)
+			l, err := NewLayerDrawer(1*time.Second, nil)
 			require.NoError(t, err)
 			for _, layer := range test.layers {
 				l.AddLayer(layer.priority, layer)
@@ -140,7 +140,7 @@ func TestPriorities(t *testing.T) {
 }
 
 func TestRender(t *testing.T) {
-	layers, err := NewLayerRenderer(60*time.Second, nil)
+	layers, err := NewLayerDrawer(60*time.Second, nil)
 	require.NoError(t, err)
 
 	renderedLayers := []string{}
@@ -178,7 +178,7 @@ func TestRender(t *testing.T) {
 		},
 	))
 
-	require.NoError(t, layers.Render(context.Background(), imgcanvas.New(1, 1, nil)))
+	require.NoError(t, layers.Draw(context.Background(), imgcanvas.New(1, 1, nil)))
 	require.True(t, layer1)
 	require.True(t, layer2)
 	require.Equal(t, []string{"layer", "text"}, renderedLayers)
@@ -186,7 +186,7 @@ func TestRender(t *testing.T) {
 }
 
 func TestBadPrepare(t *testing.T) {
-	layers, err := NewLayerRenderer(60*time.Second, nil)
+	layers, err := NewLayerDrawer(60*time.Second, nil)
 	require.NoError(t, err)
 
 	layers.AddLayer(BackgroundPriority, NewLayer(
@@ -202,7 +202,7 @@ func TestBadPrepare(t *testing.T) {
 }
 
 func TestBadRender(t *testing.T) {
-	layers, err := NewLayerRenderer(60*time.Second, nil)
+	layers, err := NewLayerDrawer(60*time.Second, nil)
 	require.NoError(t, err)
 
 	layers.AddLayer(BackgroundPriority, NewLayer(
@@ -214,7 +214,7 @@ func TestBadRender(t *testing.T) {
 		},
 	))
 
-	err = layers.Render(context.Background(), imgcanvas.New(1, 2, nil))
+	err = layers.Draw(context.Background(), imgcanvas.New(1, 2, nil))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "render failed")
 }

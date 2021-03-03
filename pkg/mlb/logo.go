@@ -36,6 +36,13 @@ func (m *MLB) setLogoCache(logoKey string, l *logo.Logo) {
 	m.logos[logoKey] = l
 }
 
+func (m *MLB) setLogoSourceCache(logoKey string, img image.Image) {
+	m.logoLock.Lock()
+	defer m.logoLock.Unlock()
+
+	m.logoSourceCache[logoKey] = img
+}
+
 // GetLogo ...
 func (m *MLB) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
 	if l, err := m.getLogoCache(logoKey); err == nil {
@@ -145,7 +152,7 @@ func (m *MLB) logoSources(ctx context.Context) (map[string]image.Image, error) {
 			continue
 		}
 
-		m.logoSourceCache[t] = i
+		m.setLogoSourceCache(t, i)
 	}
 
 	return m.logoSourceCache, errs.ErrorOrNil()

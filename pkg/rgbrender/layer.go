@@ -22,23 +22,23 @@ const (
 )
 
 type (
-	// Prepare is a func type for preparing a Layer for rendering
+	// Prepare is a func type for preparing a Layer for drawing
 	Prepare func(ctx context.Context) (image.Image, error)
 
-	// TextPrepare is a func type for preparing a TextLayer for rendering
+	// TextPrepare is a func type for preparing a TextLayer for drawing
 	TextPrepare func(ctx context.Context) (*TextWriter, []string, error)
 
-	// Render is a func type that renders a Layer
-	Render func(canvas board.Canvas, img image.Image) error
+	// Draw is a func type that draws a Layer
+	Draw func(canvas board.Canvas, img image.Image) error
 
-	// TextRender is a func type that renders a TextLayer
-	TextRender func(canvas board.Canvas, writer *TextWriter, text []string) error
+	// Write is a func type that draws a TextLayer
+	Write func(canvas board.Canvas, writer *TextWriter, text []string) error
 )
 
-// LayerRenderer renders layers on a board.Canvas. It prepares layers simultaneously, then
-// renders each priority simultaneously.
-type LayerRenderer struct {
-	renderTimeout   time.Duration
+// LayerDrawer draws layers on a board.Canvas. It prepares layers simultaneously, then
+// draws each priority simultaneously.
+type LayerDrawer struct {
+	drawTimeout     time.Duration
 	layerPriorities map[int]struct{}
 	layers          []*Layer
 	textLayers      []*TextLayer
@@ -51,7 +51,7 @@ type LayerRenderer struct {
 type Layer struct {
 	priority int
 	prepare  Prepare
-	render   Render
+	draw     Draw
 	prepared image.Image
 }
 
@@ -59,13 +59,13 @@ type Layer struct {
 type TextLayer struct {
 	priority     int
 	prepare      TextPrepare
-	render       TextRender
+	write        Write
 	prepared     *TextWriter
 	preparedText []string
 }
 
-// NewLayerRenderer ...
-func NewLayerRenderer(timeout time.Duration, log *zap.Logger) (*LayerRenderer, error) {
+// NewLayerDrawer ...
+func NewLayerDrawer(timeout time.Duration, log *zap.Logger) (*LayerDrawer, error) {
 	if log == nil {
 		var err error
 		log, err = zap.NewProduction()
@@ -73,52 +73,52 @@ func NewLayerRenderer(timeout time.Duration, log *zap.Logger) (*LayerRenderer, e
 			return nil, err
 		}
 	}
-	return &LayerRenderer{
-		renderTimeout:   timeout,
+	return &LayerDrawer{
+		drawTimeout:     timeout,
 		layerPriorities: make(map[int]struct{}),
 		log:             log,
 	}, nil
 }
 
 // NewLayer ...
-func NewLayer(prepare Prepare, render Render) *Layer {
+func NewLayer(prepare Prepare, draw Draw) *Layer {
 	return &Layer{
-		render:  render,
+		draw:    draw,
 		prepare: prepare,
 	}
 }
 
 // NewTextLayer ...
-func NewTextLayer(prepare TextPrepare, render TextRender) *TextLayer {
+func NewTextLayer(prepare TextPrepare, write Write) *TextLayer {
 	return &TextLayer{
-		render:  render,
+		write:   write,
 		prepare: prepare,
 	}
 }
 
 // AddLayer ...
-func (l *LayerRenderer) AddLayer(priority int, layer *Layer) {
+func (l *LayerDrawer) AddLayer(priority int, layer *Layer) {
 	layer.priority = priority
 	l.layerPriorities[layer.priority] = struct{}{}
 	l.layers = append(l.layers, layer)
 }
 
 // AddTextLayer ...
-func (l *LayerRenderer) AddTextLayer(priority int, layer *TextLayer) {
+func (l *LayerDrawer) AddTextLayer(priority int, layer *TextLayer) {
 	layer.priority = priority
 	l.layerPriorities[layer.priority] = struct{}{}
 	l.textLayers = append(l.textLayers, layer)
 }
 
 // ClearLayers ...
-func (l *LayerRenderer) ClearLayers() {
+func (l *LayerDrawer) ClearLayers() {
 	l.layers = []*Layer{}
 	l.textLayers = []*TextLayer{}
 	l.layerPriorities = make(map[int]struct{})
 	l.prepared = false
 }
 
-func (l *LayerRenderer) setForegroundPriority() {
+func (l *LayerDrawer) setForegroundPriority() {
 	hasForeground := false
 	max := BackgroundPriority
 	for i := range l.layerPriorities {
@@ -155,7 +155,7 @@ func (l *LayerRenderer) setForegroundPriority() {
 
 // priorities returns a sorted list of priorities, with the foreground
 // priority calculated
-func (l *LayerRenderer) priorities() []int {
+func (l *LayerDrawer) priorities() []int {
 	l.setForegroundPriority()
 	p := []int{}
 	for i := range l.layerPriorities {
@@ -168,7 +168,7 @@ func (l *LayerRenderer) priorities() []int {
 }
 
 // Prepare runs the prepare func of each layer concurrently
-func (l *LayerRenderer) Prepare(ctx context.Context) error {
+func (l *LayerDrawer) Prepare(ctx context.Context) error {
 	prepareWg := sync.WaitGroup{}
 	prepErrs := make(chan error, len(l.layers)+len(l.textLayers))
 
@@ -212,8 +212,8 @@ func (l *LayerRenderer) Prepare(ctx context.Context) error {
 	case <-ctx.Done():
 		return context.Canceled
 	case <-prepDone:
-	case <-time.After(l.renderTimeout):
-		return fmt.Errorf("timed out LayerRenderer")
+	case <-time.After(l.drawTimeout):
+		return fmt.Errorf("timed out LayerDrawer")
 	}
 
 ERR:
@@ -234,11 +234,11 @@ ERR:
 	return nil
 }
 
-// Render renders each layer. It does each priority level concurrently
-func (l *LayerRenderer) Render(ctx context.Context, canvas board.Canvas) error {
+// Draw draws each layer. It does each priority level concurrently
+func (l *LayerDrawer) Draw(ctx context.Context, canvas board.Canvas) error {
 	if !l.prepared {
 		if err := l.Prepare(ctx); err != nil {
-			return fmt.Errorf("failed to prepare layers before rendering: %w", err)
+			return fmt.Errorf("failed to prepare layers before drawing: %w", err)
 		}
 	}
 
@@ -246,22 +246,22 @@ func (l *LayerRenderer) Render(ctx context.Context, canvas board.Canvas) error {
 
 	for priority := range l.priorities() {
 		wg := &sync.WaitGroup{}
-		l.log.Debug("rendering priority", zap.Int("priority", priority))
+		l.log.Debug("drawing priority", zap.Int("priority", priority))
 	LAYER:
 		for _, layer := range l.layers {
 			if layer.priority != priority {
 				continue LAYER
 			}
-			if layer.render == nil {
-				return fmt.Errorf("render func not defined for layer")
+			if layer.draw == nil {
+				return fmt.Errorf("draw func not defined for layer")
 			}
-			l.log.Debug("rendering layer",
+			l.log.Debug("drawing layer",
 				zap.Int("priority", priority),
 			)
 			wg.Add(1)
 			go func(layer *Layer) {
 				defer wg.Done()
-				if err := layer.render(canvas, layer.prepared); err != nil {
+				if err := layer.draw(canvas, layer.prepared); err != nil {
 					errs <- err
 				}
 			}(layer)
@@ -271,32 +271,32 @@ func (l *LayerRenderer) Render(ctx context.Context, canvas board.Canvas) error {
 			if layer.priority != priority {
 				continue TEXT
 			}
-			if layer.render == nil {
-				return fmt.Errorf("render func not defined for layer")
+			if layer.write == nil {
+				return fmt.Errorf("draw func not defined for layer")
 			}
-			l.log.Debug("rendering text layer", zap.Int("priority", priority))
+			l.log.Debug("drawing text layer", zap.Int("priority", priority))
 			wg.Add(1)
 			go func(layer *TextLayer) {
 				defer wg.Done()
-				if err := layer.render(canvas, layer.prepared, layer.preparedText); err != nil {
+				if err := layer.write(canvas, layer.prepared, layer.preparedText); err != nil {
 					errs <- err
 				}
 			}(layer)
 		}
 
-		renderDone := make(chan struct{})
+		drawDone := make(chan struct{})
 
 		go func() {
-			defer close(renderDone)
+			defer close(drawDone)
 			wg.Wait()
 		}()
 
 		select {
 		case <-ctx.Done():
 			return context.Canceled
-		case <-renderDone:
-		case <-time.After(l.renderTimeout):
-			return fmt.Errorf("timed out LayerRenderer")
+		case <-drawDone:
+		case <-time.After(l.drawTimeout):
+			return fmt.Errorf("timed out LayerDrawer")
 		}
 
 	ERR:
@@ -313,5 +313,5 @@ func (l *LayerRenderer) Render(ctx context.Context, canvas board.Canvas) error {
 		}
 	}
 
-	return canvas.Render()
+	return nil
 }
