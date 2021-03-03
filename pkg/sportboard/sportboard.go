@@ -59,9 +59,11 @@ type Config struct {
 	FavoriteTeams     []string       `json:"favoriteTeams"`
 	HideFavoriteScore *atomic.Bool   `json:"hideFavoriteScore"`
 	ShowRecord        *atomic.Bool   `json:"showRecord"`
+	GridCols          int            `json:"gridCols"`
+	GridRows          int            `json:"gridRows"`
+	GridPadRatio      float64        `json:"gridPadRatio"`
 	MinimumGridWidth  int            `json:"minimumGridWidth"`
 	MinimumGridHeight int            `json:"minimumGridHeight"`
-	GridPadRatio      float64        `json:"gridPadRatio"`
 }
 
 // FontConfig ...
@@ -137,6 +139,12 @@ func (c *Config) SetDefaults() {
 	}
 	if c.ShowRecord == nil {
 		c.ShowRecord = atomic.NewBool(false)
+	}
+	if c.MinimumGridWidth == 0 {
+		c.MinimumGridWidth = 64
+	}
+	if c.MinimumGridHeight == 0 {
+		c.MinimumGridHeight = 64
 	}
 }
 
@@ -228,11 +236,28 @@ func (s *SportBoard) Disable() {
 func (s *SportBoard) GridSize(canvas board.Canvas) (int, int) {
 	width := 0
 	height := 0
-	if s.config.MinimumGridWidth > 0 && canvas.Bounds().Dx() > s.config.MinimumGridWidth {
-		width = canvas.Bounds().Dx() / s.config.MinimumGridWidth
+	if s.config.GridCols > 0 {
+		pixW := canvas.Bounds().Dx() / s.config.GridCols
+		if pixW > s.config.MinimumGridWidth {
+			width = s.config.GridCols
+		} else {
+			width = canvas.Bounds().Dx() / s.config.MinimumGridWidth
+		}
 	}
-	if s.config.MinimumGridHeight > 0 && canvas.Bounds().Dy() > s.config.MinimumGridHeight {
-		height = canvas.Bounds().Dy() / s.config.MinimumGridHeight
+	if s.config.GridRows > 0 {
+		pixH := canvas.Bounds().Dy() / s.config.GridRows
+		if pixH > s.config.MinimumGridHeight {
+			height = s.config.GridRows
+		} else {
+			height = canvas.Bounds().Dy() / s.config.MinimumGridHeight
+		}
+	}
+
+	if width > 0 && height < 1 {
+		height = 1
+	}
+	if height > 0 && width < 1 {
+		width = 1
 	}
 
 	return width, height
@@ -318,12 +343,16 @@ OUTER:
 	}
 
 	w, h := s.GridSize(canvas)
-	if w > 0 && h > 0 {
+	if w > 1 && h > 1 {
+		width := canvas.Bounds().Dx() / w
+		height := canvas.Bounds().Dy() / h
 		s.log.Debug("rendering board as grid",
-			zap.Int("cell width", s.config.MinimumGridWidth),
-			zap.Int("cell height", s.config.MinimumGridHeight),
+			zap.Int("cols", w),
+			zap.Int("rows", h),
+			zap.Int("cell width", width),
+			zap.Int("cell height", height),
 		)
-		return s.renderGrid(boardCtx, canvas, games, s.config.MinimumGridWidth, s.config.MinimumGridHeight)
+		return s.renderGrid(boardCtx, canvas, games, width, height)
 	}
 
 	preloader := make(map[int]chan struct{})
