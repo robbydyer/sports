@@ -1,0 +1,40 @@
+{
+  "copyright" : "NHL and the NHL Shield are registered trademarks of the National Hockey League. NHL and NHL team marks are the property of the NHL and its teams. © NHL 2021. All Rights Reserved.",
+  "divisions" : [ {
+    "id" : 26,
+    "name" : "Discover Central",
+    "link" : "/api/v1/divisions/26",
+    "abbreviation" : "CEN",
+    "conference" : {
+      "link" : "/api/v1/conferences/null"
+    },
+    "active" : true
+  }, {
+    "id" : 27,
+    "name" : "Honda West",
+    "link" : "/api/v1/divisions/27",
+    "abbreviation" : "WST",
+    "conference" : {
+      "link" : "/api/v1/conferences/null"
+    },
+    "active" : true
+  }, {
+    "id" : 25,
+    "name" : "MassMutual East",
+    "link" : "/api/v1/divisions/25",
+    "abbreviation" : "EST",
+    "conference" : {
+      "link" : "/api/v1/conferences/null"
+    },
+    "active" : true
+  }, {
+    "id" : 28,
+    "name" : "Scotia North",
+    "link" : "/api/v1/divisions/28",
+    "abbreviation" : "NTH",
+    "conference" : {
+      "link" : "/api/v1/conferences/null"
+    },
+    "active" : true
+  } ]
+}

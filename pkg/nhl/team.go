@@ -2,12 +2,17 @@ package nhl
 
 import (
 	"context"
+	// embed
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
 )
+
+//go:embed assets/divisions.json
+var divisionAPIData []byte
 
 // Team implements sportboard.Team
 type Team struct {
@@ -19,7 +24,20 @@ type Team struct {
 			Games []*Game `json:"games"`
 		} `json:"dates"`
 	} `json:"nextGameSchedule,omitempty"`
-	score int
+	DivisionData struct {
+		ID int `json:"id"`
+	} `json:"division"`
+	Division *division
+	score    int
+}
+
+type divisionData struct {
+	Divisions []*division `json:"divisions"`
+}
+
+type division struct {
+	ID           int    `json:"id"`
+	Abbreviation string `json:"abbreviation"`
 }
 
 type teams struct {
@@ -96,6 +114,22 @@ func GetTeams(ctx context.Context) ([]*Team, error) {
 		// Set game time to a time.Time
 		if err := t.setGameTimes(); err != nil {
 			return nil, fmt.Errorf("failed to set GameTime: %w", err)
+		}
+	}
+
+	var d *divisionData
+
+	if err := json.Unmarshal(divisionAPIData, &d); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal NHL divisions: %w", err)
+	}
+
+OUTER:
+	for _, team := range teams.Teams {
+		for _, div := range d.Divisions {
+			if div.ID == team.DivisionData.ID {
+				team.Division = div
+				continue OUTER
+			}
 		}
 	}
 

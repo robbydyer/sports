@@ -156,10 +156,10 @@ func (m *MLB) AllTeamAbbreviations() []string {
 
 // GetWatchTeams parses 'ALL' or divisions and adds teams accordingly
 func (m *MLB) GetWatchTeams(teams []string) []string {
-	watch := []string{}
+	watch := make(map[string]struct{})
 	for _, t := range teams {
 		if t == "ALL" {
-			m.log.Info("setting NCAAM watch teams to ALL teams")
+			m.log.Info("setting MLB watch teams to ALL teams")
 			return m.AllTeamAbbreviations()
 		}
 		isDiv := false
@@ -169,16 +169,22 @@ func (m *MLB) GetWatchTeams(teams []string) []string {
 				continue INNER
 			}
 			if team.Division.Abbreviation == t {
-				watch = append(watch, team.Abbreviation)
+				watch[team.Abbreviation] = struct{}{}
 				isDiv = true
 			}
 		}
 		if !isDiv {
-			watch = append(watch, t)
+			watch[t] = struct{}{}
 		}
 	}
 
-	return watch
+	var w []string
+
+	for t := range watch {
+		w = append(w, t)
+	}
+
+	return w
 }
 
 // UpdateTeams ...
