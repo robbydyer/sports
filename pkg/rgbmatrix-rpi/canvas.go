@@ -34,10 +34,6 @@ func (c *Canvas) Name() string {
 	return "RGB Canvas"
 }
 
-func (c *Canvas) Matrix() Matrix {
-	return c.m
-}
-
 // Render update the display with the data from the LED buffer
 func (c *Canvas) Render() error {
 	return c.m.Render()
