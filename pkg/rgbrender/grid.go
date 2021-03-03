@@ -6,38 +6,39 @@ import (
 	"image/color"
 	"image/draw"
 
-	"github.com/robbydyer/sports/pkg/board"
-	"github.com/robbydyer/sports/pkg/imgcanvas"
-	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"go.uber.org/zap"
+
+	"github.com/robbydyer/sports/pkg/board"
 )
 
-const maxAllowedCols = 10
-const maxAllowedRows = 10
+const (
+	maxAllowedCols = 10
+	maxAllowedRows = 10
+)
 
+// GridOption is an option for a Grid
 type GridOption func(grid *Grid) error
 
-type Canvaser func(bounds image.Rectangle) (board.Canvas, error)
-
+// Grid manages sub-canvas "cells" of a larger canvas
 type Grid struct {
-	log        *zap.Logger
-	cells      []*Cell
-	baseCanvas board.Canvas
-	canvaser   Canvaser
-	cols       int
-	rows       int
-	cellX      int
-	cellY      int
-	padding    int
-	paddedPix  map[string]image.Point
+	log       *zap.Logger
+	cells     []*Cell
+	cols      int
+	rows      int
+	cellX     int
+	cellY     int
+	padding   int
+	paddedPix map[string]image.Point
 }
 
+// Cell contains a canvas and it's bounds related to it's parent canvas
 type Cell struct {
 	Canvas board.Canvas
 	Bounds image.Rectangle
 }
 
-func NewGrid(canvas board.Canvas, canvaser Canvaser, colWidth int, rowHeight int, log *zap.Logger, opts ...GridOption) (*Grid, error) {
+// NewGrid ...
+func NewGrid(canvas board.Canvas, colWidth int, rowHeight int, log *zap.Logger, opts ...GridOption) (*Grid, error) {
 	if log == nil {
 		var err error
 		log, err = zap.NewDevelopment()
@@ -57,14 +58,12 @@ func NewGrid(canvas board.Canvas, canvaser Canvaser, colWidth int, rowHeight int
 	}
 
 	grid := &Grid{
-		log:        log,
-		baseCanvas: canvas,
-		canvaser:   canvaser,
-		cols:       numCols,
-		rows:       numRows,
-		cellX:      canvas.Bounds().Dx() / numCols,
-		cellY:      canvas.Bounds().Dy() / numRows,
-		paddedPix:  make(map[string]image.Point),
+		log:       log,
+		cols:      numCols,
+		rows:      numRows,
+		cellX:     canvas.Bounds().Dx() / numCols,
+		cellY:     canvas.Bounds().Dy() / numRows,
+		paddedPix: make(map[string]image.Point),
 	}
 
 	for _, f := range opts {
@@ -116,10 +115,7 @@ func (g *Grid) generateCells() error {
 				}
 			}
 
-			newC, err := g.canvaser(image.Rect(startX, startY, endX, endY))
-			if err != nil {
-				return err
-			}
+			newC := board.NewBlankCanvas(g.cellX, g.cellY, g.log)
 			if newC == nil {
 				return fmt.Errorf("cell canvas was nil")
 			}
@@ -141,24 +137,18 @@ func (g *Grid) generateCells() error {
 	return nil
 }
 
+// Clear removes cells and regenerates them
 func (g *Grid) Clear() error {
 	g.cells = make([]*Cell, g.cols*g.rows)
 	return g.generateCells()
 }
 
-func (g *Grid) Canvases() []board.Canvas {
-	canvases := []board.Canvas{}
-	for _, c := range g.cells {
-		canvases = append(canvases, c.Canvas)
-	}
-
-	return canvases
-}
-
+// Cells returns all the cells
 func (g *Grid) Cells() []*Cell {
 	return g.cells
 }
 
+// Cell returns a cell at a given index
 func (g *Grid) Cell(index int) (*Cell, error) {
 	if index > len(g.cells)-1 {
 		return nil, fmt.Errorf("no cell at index %d, max of %d", index, len(g.cells)-1)
@@ -166,12 +156,14 @@ func (g *Grid) Cell(index int) (*Cell, error) {
 	return g.cells[index], nil
 }
 
+// FillPadded fills the cell padding with a color
 func (g *Grid) FillPadded(canvas board.Canvas, clr color.Color) {
 	for _, pt := range g.paddedPix {
 		canvas.Set(pt.X, pt.Y, clr)
 	}
 }
 
+// DrawToBase draws the cells onto a base parent canvas
 func (g *Grid) DrawToBase(base board.Canvas) error {
 	for _, cell := range g.cells {
 		draw.Draw(base, cell.Bounds, cell.Canvas, image.Point{}, draw.Over)
@@ -179,32 +171,10 @@ func (g *Grid) DrawToBase(base board.Canvas) error {
 	return nil
 }
 
+// WithPadding is an option to specify padding width between cells
 func WithPadding(pad int) GridOption {
 	return func(g *Grid) error {
 		g.padding = pad
 		return nil
 	}
-}
-
-func GetCanvaser(canvas board.Canvas, logger *zap.Logger) (Canvaser, error) {
-	switch canvas.(type) {
-	case *imgcanvas.ImgCanvas:
-		return func(bounds image.Rectangle) (board.Canvas, error) {
-			return imgcanvas.New(bounds.Dx(), bounds.Dy(), logger), nil
-		}, nil
-	case *rgbmatrix.Canvas:
-		c := canvas.(*rgbmatrix.Canvas)
-		mtrx := c.Matrix()
-		w, h := mtrx.Geometry()
-		var newM rgbmatrix.Matrix
-		switch mtrx.(type) {
-		case *rgbmatrix.ConsoleMatrix:
-			newM = rgbmatrix.NewConsoleMatrix(w, h, mtrx.Writer(), logger)
-		}
-		return func(bounds image.Rectangle) (board.Canvas, error) {
-			return rgbmatrix.NewCanvas(newM), nil
-		}, nil
-	}
-
-	return nil, fmt.Errorf("unsupported board.Canvas for grid layout")
 }

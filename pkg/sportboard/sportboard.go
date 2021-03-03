@@ -343,7 +343,13 @@ OUTER:
 	}
 
 	w, h := s.GridSize(canvas)
-	if w > 1 && h > 1 {
+	s.log.Debug("calculated grid size",
+		zap.Int("cols", w),
+		zap.Int("rows", h),
+		zap.Int("canvas width", canvas.Bounds().Dx()),
+		zap.Int("canvas height", canvas.Bounds().Dy()),
+	)
+	if w > 1 || h > 1 {
 		width := canvas.Bounds().Dx() / w
 		height := canvas.Bounds().Dy() / h
 		s.log.Debug("rendering board as grid",
@@ -423,7 +429,7 @@ OUTER:
 			return err
 		}
 
-		if canvas.Render(); err != nil {
+		if err := canvas.Render(); err != nil {
 			return err
 		}
 
@@ -432,18 +438,12 @@ OUTER:
 			return context.Canceled
 		case <-time.After(s.config.boardDelay):
 		}
-
 	}
 
 	return nil
 }
 
 func (s *SportBoard) renderGrid(ctx context.Context, canvas board.Canvas, games []Game, cellWidth int, cellHeight int) error {
-	canvaser, err := rgbrender.GetCanvaser(canvas, s.log)
-	if err != nil {
-		return err
-	}
-
 	var opts []rgbrender.GridOption
 	if s.config.GridPadRatio > 0 {
 		padding := math.Floor(float64(cellWidth) * 0.015)
@@ -451,7 +451,6 @@ func (s *SportBoard) renderGrid(ctx context.Context, canvas board.Canvas, games 
 	}
 	grid, err := rgbrender.NewGrid(
 		canvas,
-		canvaser,
 		cellWidth,
 		cellHeight,
 		s.log,
@@ -488,7 +487,7 @@ func (s *SportBoard) renderGrid(ctx context.Context, canvas board.Canvas, games 
 		if err != nil {
 			return err
 		}
-		if err := s.doGrid(ctx, grid, canvas, games[i:endIndex], cellWidth, cellHeight, counter); err != nil {
+		if err := s.doGrid(ctx, grid, canvas, games[i:endIndex], counter); err != nil {
 			return err
 		}
 		i += numCells - 1
@@ -507,7 +506,7 @@ func (s *SportBoard) renderGrid(ctx context.Context, canvas board.Canvas, games 
 	return nil
 }
 
-func (s *SportBoard) doGrid(ctx context.Context, grid *rgbrender.Grid, canvas board.Canvas, games []Game, cellWidth int, cellHeight int, counter image.Image) error {
+func (s *SportBoard) doGrid(ctx context.Context, grid *rgbrender.Grid, canvas board.Canvas, games []Game, counter image.Image) error {
 	// Fetch all the scores
 	wg := sync.WaitGroup{}
 
@@ -548,7 +547,7 @@ func (s *SportBoard) doGrid(ctx context.Context, grid *rgbrender.Grid, canvas bo
 		gameWg.Add(1)
 		go func(game Game, index int) {
 			defer gameWg.Done()
-			liveGame, err := s.GetCachedGame(game.GetID())
+			liveGame, err := s.getCachedGame(game.GetID())
 			if err != nil {
 				s.log.Error("failed to get cached game", zap.Error(err))
 				return
@@ -632,13 +631,13 @@ func (s *SportBoard) HasPriority() bool {
 	return false
 }
 
-func (s *SportBoard) SetCachedGame(key int, game Game) {
+func (s *SportBoard) setCachedGame(key int, game Game) {
 	s.Lock()
 	defer s.Unlock()
 	s.cachedLiveGames[key] = game
 }
 
-func (s *SportBoard) GetCachedGame(key int) (Game, error) {
+func (s *SportBoard) getCachedGame(key int) (Game, error) {
 	s.Lock()
 	defer s.Unlock()
 	g, ok := s.cachedLiveGames[key]
@@ -658,7 +657,7 @@ func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload cha
 	}()
 
 	gameOver := false
-	cached, err := s.GetCachedGame(game.GetID())
+	cached, err := s.getCachedGame(game.GetID())
 
 	// If a game is over or is more than 30min away from scheduled start,
 	// let's not load live game data.
@@ -716,7 +715,7 @@ func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload cha
 			continue
 		}
 
-		s.SetCachedGame(game.GetID(), g)
+		s.setCachedGame(game.GetID(), g)
 
 		s.log.Debug("successfully set preloader data", zap.Int("game ID", game.GetID()))
 		return nil

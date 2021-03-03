@@ -31,7 +31,7 @@ type (
 	// Draw is a func type that draws a Layer
 	Draw func(canvas board.Canvas, img image.Image) error
 
-	// TextDraw is a func type that draws a TextLayer
+	// Write is a func type that draws a TextLayer
 	Write func(canvas board.Canvas, writer *TextWriter, text []string) error
 )
 
