@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"io"
 
 	"github.com/robbydyer/sports/pkg/board"
 	"go.uber.org/atomic"
@@ -32,6 +33,10 @@ func NewCanvas(m Matrix) *Canvas {
 
 func (c *Canvas) Name() string {
 	return "RGB Canvas"
+}
+
+func (c *Canvas) Matrix() Matrix {
+	return c.m
 }
 
 // Render update the display with the data from the LED buffer
@@ -104,4 +109,5 @@ type Matrix interface {
 	Render() error
 	Close() error
 	SetBrightness(brightness int)
+	Writer() io.Writer
 }

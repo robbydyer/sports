@@ -111,7 +111,9 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 			),
 		)
 
-		layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
+		if counter != nil {
+			layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
+		}
 
 		for _, i := range infos {
 			layers.AddTextLayer(rgbrender.ForegroundPriority, i)
@@ -231,7 +233,9 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 		),
 	)
 
-	layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
+	if counter != nil {
+		layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
+	}
 
 	select {
 	case <-ctx.Done():
@@ -324,17 +328,9 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 		}
 	}
 
-	layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
-
-	layers.AddLayer(rgbrender.ForegroundPriority,
-		rgbrender.NewLayer(
-			nil,
-			func(canvas board.Canvas, img image.Image) error {
-				draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
-				return nil
-			},
-		),
-	)
+	if counter != nil {
+		layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
+	}
 
 	return layers.Draw(ctx, canvas)
 }

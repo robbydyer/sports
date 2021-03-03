@@ -41,6 +41,7 @@ import "C"
 import (
 	"fmt"
 	"image/color"
+	"io"
 	"os"
 	"unsafe"
 
@@ -265,6 +266,10 @@ func buildMatrixEmulator(config *HardwareConfig) Matrix {
 // Initialize initialize library, must be called once before other functions are
 // called.
 func (c *RGBLedMatrix) Initialize() error {
+	return nil
+}
+
+func (c *RGBLedMatrix) Writer() io.Writer {
 	return nil
 }
 

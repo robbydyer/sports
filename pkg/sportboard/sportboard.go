@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/draw"
 	"strings"
 	"sync"
 	"time"
@@ -295,6 +296,15 @@ OUTER:
 	default:
 	}
 
+	w, h := s.GridSize(canvas)
+	if w > 0 && h > 0 {
+		s.log.Debug("rendering board as grid",
+			zap.Int("cell width", s.config.MinimumGridWidth),
+			zap.Int("cell height", s.config.MinimumGridHeight),
+		)
+		return s.renderGrid(ctx, canvas, games, s.config.MinimumGridWidth, s.config.MinimumGridHeight)
+	}
+
 	preloader := make(map[int]chan struct{})
 	preloader[games[0].GetID()] = make(chan struct{}, 1)
 
@@ -378,6 +388,77 @@ OUTER:
 	return nil
 }
 
+func (s *SportBoard) renderGrid(ctx context.Context, canvas board.Canvas, games []Game, cellWidth int, cellHeight int) error {
+	canvaser, err := rgbrender.GetCanvaser(canvas, s.log)
+	if err != nil {
+		return err
+	}
+	grid, err := rgbrender.NewGrid(canvas, canvaser, cellWidth, cellHeight, s.log)
+	if err != nil {
+		return err
+	}
+
+	// Fetch all the scores
+	wg := sync.WaitGroup{}
+
+	for _, game := range games {
+		wg.Add(1)
+		go func(game Game) {
+			defer wg.Done()
+			p := make(chan struct{}, 1)
+			if err := s.preloadLiveGame(ctx, game, p); err != nil {
+				s.log.Error("error while loading live game", zap.Error(err), zap.Int("id", game.GetID()))
+			}
+		}(game)
+	}
+
+	wg.Wait()
+
+	index := -1
+	for _, game := range games {
+		index++
+		liveGame, err := s.GetCachedGame(game.GetID())
+		if err != nil {
+			continue
+		}
+		cell, err := grid.Canvas(index)
+		if err != nil {
+			continue
+		}
+		s.log.Debug("getting cell",
+			zap.Int("index", index),
+			zap.Int("start X", cell.Bounds().Min.X),
+			zap.Int("start Y", cell.Bounds().Min.Y),
+			zap.Int("end X", cell.Bounds().Max.X),
+			zap.Int("end Y", cell.Bounds().Max.Y),
+		)
+
+		if err := s.renderGame(ctx, cell, liveGame, nil); err != nil {
+			return err
+		}
+
+		draw.Draw(canvas, cell.Bounds(), cell, image.Point{}, draw.Over)
+	}
+
+	/*
+		if err := grid.DrawToBase(canvas); err != nil {
+			return err
+		}
+	*/
+
+	if err := canvas.Render(); err != nil {
+		return err
+	}
+
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	case <-time.After(s.config.boardDelay):
+	}
+
+	return nil
+}
+
 func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
 	select {
 	case <-ctx.Done():
@@ -416,10 +497,24 @@ func (s *SportBoard) HasPriority() bool {
 	return false
 }
 
-func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload chan struct{}) error {
+func (s *SportBoard) SetCachedGame(key int, game Game) {
 	s.Lock()
 	defer s.Unlock()
+	s.cachedLiveGames[key] = game
+}
 
+func (s *SportBoard) GetCachedGame(key int) (Game, error) {
+	s.Lock()
+	defer s.Unlock()
+	g, ok := s.cachedLiveGames[key]
+	if ok {
+		return g, nil
+	}
+
+	return nil, fmt.Errorf("no cache for game %d", key)
+}
+
+func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload chan struct{}) error {
 	defer func() {
 		select {
 		case preload <- struct{}{}:
@@ -428,11 +523,11 @@ func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload cha
 	}()
 
 	gameOver := false
-	cached, hasCached := s.cachedLiveGames[game.GetID()]
+	cached, err := s.GetCachedGame(game.GetID())
 
 	// If a game is over or is more than 30min away from scheduled start,
 	// let's not load live game data.
-	if hasCached && cached != nil {
+	if err == nil && cached != nil {
 		var err error
 
 		gameOver, err = cached.IsComplete()
@@ -486,7 +581,7 @@ func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload cha
 			continue
 		}
 
-		s.cachedLiveGames[game.GetID()] = g
+		s.SetCachedGame(game.GetID(), g)
 
 		s.log.Debug("successfully set preloader data", zap.Int("game ID", game.GetID()))
 		return nil
