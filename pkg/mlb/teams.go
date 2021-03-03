@@ -111,10 +111,12 @@ func GetTeams(ctx context.Context) ([]*Team, error) {
 		return nil, fmt.Errorf("failed to unmarshal MLB divisions: %w", err)
 	}
 
+OUTER:
 	for _, team := range teams.Teams {
 		for _, div := range d.Divisions {
 			if div.ID == team.DivisionData.ID {
 				team.Division = div
+				continue OUTER
 			}
 		}
 	}

@@ -92,14 +92,35 @@ func (n *NHL) AllTeamAbbreviations() []string {
 
 // GetWatchTeams ...
 func (n *NHL) GetWatchTeams(teams []string) []string {
+	watch := make(map[string]struct{})
 	for _, t := range teams {
 		if t == "ALL" {
-			n.log.Info("setting NCAAM watch teams to ALL teams")
+			n.log.Info("setting NHL watch teams to ALL teams")
 			return n.AllTeamAbbreviations()
+		}
+		isDiv := false
+	INNER:
+		for _, team := range n.teams {
+			if team.Division == nil {
+				continue INNER
+			}
+			if team.Division.Abbreviation == t {
+				watch[team.Abbreviation] = struct{}{}
+				isDiv = true
+			}
+		}
+		if !isDiv {
+			watch[t] = struct{}{}
 		}
 	}
 
-	return teams
+	var w []string
+
+	for t := range watch {
+		w = append(w, t)
+	}
+
+	return w
 }
 
 // GetTeams ...
