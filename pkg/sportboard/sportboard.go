@@ -421,23 +421,13 @@ func (s *SportBoard) renderGrid(ctx context.Context, canvas board.Canvas, games 
 		if err != nil {
 			continue
 		}
-		cell, err := grid.Canvas(index)
-		if err != nil {
-			continue
-		}
-		s.log.Debug("getting cell",
-			zap.Int("index", index),
-			zap.Int("start X", cell.Bounds().Min.X),
-			zap.Int("start Y", cell.Bounds().Min.Y),
-			zap.Int("end X", cell.Bounds().Max.X),
-			zap.Int("end Y", cell.Bounds().Max.Y),
-		)
+		cell := grid.Cell(index)
 
-		if err := s.renderGame(ctx, cell, liveGame, nil); err != nil {
+		if err := s.renderGame(ctx, cell.Canvas, liveGame, nil); err != nil {
 			return err
 		}
 
-		draw.Draw(canvas, cell.Bounds(), cell, image.Point{}, draw.Over)
+		draw.Draw(canvas, cell.Bounds, cell.Canvas, image.Point{}, draw.Over)
 	}
 
 	/*

@@ -3,7 +3,6 @@ package rgbrender
 import (
 	"fmt"
 	"image"
-	"image/draw"
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/imgcanvas"
@@ -18,13 +17,18 @@ type Canvaser func(bounds image.Rectangle) (board.Canvas, error)
 
 type Grid struct {
 	log        *zap.Logger
-	canvases   []board.Canvas
+	cells      []*Cell
 	baseCanvas board.Canvas
 	canvaser   Canvaser
 	cols       int
 	rows       int
 	cellX      int
 	cellY      int
+}
+
+type Cell struct {
+	Canvas board.Canvas
+	Bounds image.Rectangle
 }
 
 func NewGrid(canvas board.Canvas, canvaser Canvaser, colWidth int, rowHeight int, log *zap.Logger) (*Grid, error) {
@@ -56,7 +60,7 @@ func NewGrid(canvas board.Canvas, canvaser Canvaser, colWidth int, rowHeight int
 		cellY:      canvas.Bounds().Dy() / numRows,
 	}
 
-	grid.canvases = make([]board.Canvas, numCols*numRows)
+	grid.cells = make([]*Cell, numCols*numRows)
 	grid.log.Info("new grid", zap.Int("num cols", numCols), zap.Int("num rows", numRows))
 
 	if err := grid.generateCells(); err != nil {
@@ -75,12 +79,6 @@ func (g *Grid) generateCells() error {
 			endX := startX + g.cellX
 			endY := startY + g.cellY
 
-			g.log.Debug("new cell",
-				zap.Int("start X", startX),
-				zap.Int("start Y", startY),
-				zap.Int("end X", endX),
-				zap.Int("end Y", endY),
-			)
 			newC, err := g.canvaser(image.Rect(startX, startY, endX, endY))
 			if err != nil {
 				return err
@@ -88,7 +86,17 @@ func (g *Grid) generateCells() error {
 			if newC == nil {
 				return fmt.Errorf("cell canvas was nil")
 			}
-			g.canvases[cellIndex] = newC
+			g.log.Debug("new cell",
+				zap.Int("index", cellIndex),
+				zap.Int("start X", newC.Bounds().Min.X),
+				zap.Int("start Y", newC.Bounds().Min.Y),
+				zap.Int("end X", newC.Bounds().Max.X),
+				zap.Int("end Y", newC.Bounds().Max.Y),
+			)
+			g.cells[cellIndex] = &Cell{
+				Canvas: newC,
+				Bounds: image.Rect(startX, startY, endX, endY),
+			}
 			cellIndex++
 		}
 	}
@@ -97,25 +105,23 @@ func (g *Grid) generateCells() error {
 }
 
 func (g *Grid) Clear() {
-	g.canvases = []board.Canvas{}
+	//g.canvases = []board.Canvas{}
 }
 
 func (g *Grid) Canvases() []board.Canvas {
-	return g.canvases
-}
-
-func (g *Grid) Canvas(index int) (board.Canvas, error) {
-	if index > len(g.canvases)-1 {
-		return nil, fmt.Errorf("invalid index")
+	canvases := []board.Canvas{}
+	for _, c := range g.cells {
+		canvases = append(canvases, c.Canvas)
 	}
 
-	return g.canvases[index], nil
+	return canvases
+}
+
+func (g *Grid) Cell(index int) *Cell {
+	return g.cells[index]
 }
 
 func (g *Grid) DrawToBase(base board.Canvas) error {
-	for _, c := range g.canvases {
-		draw.Draw(base, c.Bounds(), c, image.Point{}, draw.Over)
-	}
 
 	return nil
 }
