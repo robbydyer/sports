@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/draw"
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/imgcanvas"
@@ -28,7 +29,7 @@ type Grid struct {
 	cellX      int
 	cellY      int
 	padding    int
-	paddedPix  []image.Point
+	paddedPix  map[string]image.Point
 }
 
 type Cell struct {
@@ -63,6 +64,7 @@ func NewGrid(canvas board.Canvas, canvaser Canvaser, colWidth int, rowHeight int
 		rows:       numRows,
 		cellX:      canvas.Bounds().Dx() / numCols,
 		cellY:      canvas.Bounds().Dy() / numRows,
+		paddedPix:  make(map[string]image.Point),
 	}
 
 	for _, f := range opts {
@@ -90,15 +92,26 @@ func (g *Grid) generateCells() error {
 	for r := 0; r < g.rows; r++ {
 		for c := 0; c < g.cols; c++ {
 			halfPad := g.padding / 2
-			startX := (c * g.cellX) + halfPad
-			startY := (r * g.cellY) + halfPad
-			endX := (startX + g.cellX) - halfPad
-			endY := (startY + g.cellY) - halfPad
+			realStartX := c * g.cellX
+			realStartY := r * g.cellY
+			realEndX := realStartX + g.cellX
+			realEndY := realStartY + g.cellY
+			startX := realStartX + halfPad
+			startY := realStartY + halfPad
+			endX := realEndX - halfPad
+			endY := realEndY - halfPad
 
-			for x := startX - halfPad; x < endX+halfPad; x++ {
-				for y := startY - halfPad; y < endY+halfPad; y++ {
+			// Save padded pixels, exluding the outermost regions of the canvas
+			for x := realStartX; x < realEndX; x++ {
+				if (realStartX == 0 && x < startX) || (realEndX == (g.cols*g.cellX) && x > endX) {
+					continue
+				}
+				for y := realStartY; y < realEndY; y++ {
+					if (realStartY == 0 && y < startY) || (realEndY == (g.rows*g.cellY) && y > endY) {
+						continue
+					}
 					if x < startX || y < startY || x > endX || y > endY {
-						g.paddedPix = append(g.paddedPix, image.Pt(x, y))
+						g.paddedPix[fmt.Sprintf("%dx%d", x, y)] = image.Pt(x, y)
 					}
 				}
 			}
@@ -160,7 +173,9 @@ func (g *Grid) FillPadded(canvas board.Canvas, clr color.Color) {
 }
 
 func (g *Grid) DrawToBase(base board.Canvas) error {
-
+	for _, cell := range g.cells {
+		draw.Draw(base, cell.Bounds, cell.Canvas, image.Point{}, draw.Over)
+	}
 	return nil
 }
 
