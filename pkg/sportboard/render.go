@@ -15,7 +15,7 @@ import (
 )
 
 func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
-	layers, err := rgbrender.NewLayerRenderer(60*time.Second, s.log)
+	layers, err := rgbrender.NewLayerDrawer(60*time.Second, s.log)
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 			layers.AddTextLayer(rgbrender.ForegroundPriority, i)
 		}
 
-		if err := layers.Render(ctx, canvas); err != nil {
+		if err := layers.Draw(ctx, canvas); err != nil {
 			return err
 		}
 
@@ -133,6 +133,10 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 		}
 		if !(isFavorite && s.config.FavoriteSticky.Load()) {
 			return nil
+		}
+
+		if err := canvas.Render(); err != nil {
+			return err
 		}
 
 		select {
@@ -161,7 +165,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 }
 
 func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
-	layers, err := rgbrender.NewLayerRenderer(60*time.Second, s.log)
+	layers, err := rgbrender.NewLayerDrawer(60*time.Second, s.log)
 	if err != nil {
 		return err
 	}
@@ -235,11 +239,11 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 	default:
 	}
 
-	return layers.Render(ctx, canvas)
+	return layers.Draw(ctx, canvas)
 }
 
 func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
-	layers, err := rgbrender.NewLayerRenderer(60*time.Second, s.log)
+	layers, err := rgbrender.NewLayerDrawer(60*time.Second, s.log)
 	if err != nil {
 		return err
 	}
@@ -332,7 +336,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 		),
 	)
 
-	return layers.Render(ctx, canvas)
+	return layers.Draw(ctx, canvas)
 }
 
 func counterLayer(counter image.Image) *rgbrender.Layer {

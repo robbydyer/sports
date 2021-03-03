@@ -57,6 +57,8 @@ type Config struct {
 	FavoriteTeams     []string       `json:"favoriteTeams"`
 	HideFavoriteScore *atomic.Bool   `json:"hideFavoriteScore"`
 	ShowRecord        *atomic.Bool   `json:"showRecord"`
+	MinimumGridWidth  int            `json:"minimumGridWidth"`
+	MinimumGridHeight int            `json:"minimumGridHeight"`
 }
 
 // FontConfig ...
@@ -218,6 +220,21 @@ func (s *SportBoard) Disable() {
 	s.config.Enabled.Store(false)
 }
 
+// GridSize returns the column width and row height for a grid layout. 0 is returned for
+// both if the canvas is too small for a grid.
+func (s *SportBoard) GridSize(canvas board.Canvas) (int, int) {
+	width := 0
+	height := 0
+	if s.config.MinimumGridWidth > 0 && canvas.Bounds().Dx() > s.config.MinimumGridWidth {
+		width = canvas.Bounds().Dx() / s.config.MinimumGridWidth
+	}
+	if s.config.MinimumGridHeight > 0 && canvas.Bounds().Dy() > s.config.MinimumGridHeight {
+		height = canvas.Bounds().Dy() / s.config.MinimumGridHeight
+	}
+
+	return width, height
+}
+
 // Render ...
 func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	if !s.config.Enabled.Load() {
@@ -345,6 +362,17 @@ OUTER:
 			s.log.Error("failed to render sportboard game", zap.Error(err))
 			return err
 		}
+
+		if canvas.Render(); err != nil {
+			return err
+		}
+
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		case <-time.After(s.config.boardDelay):
+		}
+
 	}
 
 	return nil
@@ -378,12 +406,6 @@ func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGa
 		if err := s.renderUpcomingGame(ctx, canvas, liveGame, counter); err != nil {
 			return fmt.Errorf("failed to render upcoming game: %w", err)
 		}
-	}
-
-	select {
-	case <-ctx.Done():
-		return context.Canceled
-	case <-time.After(s.config.boardDelay):
 	}
 
 	return nil
