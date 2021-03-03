@@ -81,6 +81,17 @@ nhlConfig:
   enabled: true
   boardDelay: "10s"
 
+  # Number of columns in a grid layout. Default 1
+  #gridCols: 3
+
+  # Number of rows in a grid layout. Default 1
+  #gridRows: 2
+
+  # This will draw lines between each cell in a grid. The ratio is a percentage of the
+  # total width of the canvas, so this should be a pretty small number. Defaults to 0,
+  # which has no lines separating cells.
+  #gridPadRatio: 0.015
+
   # watchTeams are teams we show games for. ALL shows all teams in the league
   watchTeams:
   - ALL
@@ -102,6 +113,17 @@ nhlConfig:
 mlbConfig:
   enabled: true
   boardDelay: "10s"
+
+  # Number of columns in a grid layout. Default 1
+  #gridCols: 3
+
+  # Number of rows in a grid layout. Default 1
+  #gridRows: 2
+
+  # This will draw lines between each cell in a grid. The ratio is a percentage of the
+  # total width of the canvas, so this should be a pretty small number. Defaults to 0,
+  # which has no lines separating cells.
+  #gridPadRatio: 0.015
 
   # watchTeams are teams we show games for. ALL shows all teams in the league
   # Special values support:
@@ -127,6 +149,17 @@ mlbConfig:
 ncaamConfig:
   enabled: true
   boardDelay: "10s"
+
+  # Number of columns in a grid layout. Default 1
+  #gridCols: 3
+
+  # Number of rows in a grid layout. Default 1
+  #gridRows: 2
+
+  # This will draw lines between each cell in a grid. The ratio is a percentage of the
+  # total width of the canvas, so this should be a pretty small number. Defaults to 0,
+  # which has no lines separating cells.
+  #gridPadRatio: 0.015
 
   # watchTeams are teams we show games for. ALL shows all teams in the league
   watchTeams:
