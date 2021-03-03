@@ -34,10 +34,6 @@ func NewConsoleMatrix(width int, height int, out io.Writer, logger *zap.Logger) 
 	return c
 }
 
-func (c *ConsoleMatrix) Writer() io.Writer {
-	return c.out
-}
-
 // Reset ...
 func (c *ConsoleMatrix) Reset() {
 	for i := range c.matrix {

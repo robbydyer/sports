@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"io"
 	"os"
 	"sync"
 
@@ -59,10 +58,6 @@ func (e *Emulator) Init() {
 	e.wg.Add(1)
 	go driver.Main(e.mainWindowLoop)
 	e.wg.Wait()
-}
-
-func (e *Emulator) Writer() io.Writer {
-	return nil
 }
 
 func (e *Emulator) mainWindowLoop(s screen.Screen) {

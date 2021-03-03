@@ -4,7 +4,6 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"io"
 
 	"github.com/robbydyer/sports/pkg/board"
 	"go.uber.org/atomic"
@@ -109,5 +108,4 @@ type Matrix interface {
 	Render() error
 	Close() error
 	SetBrightness(brightness int)
-	Writer() io.Writer
 }
