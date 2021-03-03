@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"math"
 	"strings"
 	"sync"
 	"time"
@@ -393,11 +394,48 @@ func (s *SportBoard) renderGrid(ctx context.Context, canvas board.Canvas, games 
 	if err != nil {
 		return err
 	}
-	grid, err := rgbrender.NewGrid(canvas, canvaser, cellWidth, cellHeight, s.log)
+	padding := math.Floor(float64(cellWidth) * 0.015)
+	grid, err := rgbrender.NewGrid(canvas, canvaser, cellWidth, cellHeight, s.log, rgbrender.WithPadding(int(padding)))
 	if err != nil {
 		return err
 	}
 
+	numCells := len(grid.Cells())
+	numGrids := int(math.Ceil(float64(len(games)) / float64(numCells)))
+	totalDelay := int(s.config.boardDelay.Seconds()) * len(games)
+
+	gridDelay := time.Duration(totalDelay/numGrids) * time.Second
+
+	s.log.Debug("setting grid delay", zap.Float64("seconds", gridDelay.Seconds()))
+
+	for i := 0; i < len(games); i++ {
+		endIndex := i + numCells
+		if endIndex > len(games)-1 {
+			endIndex = len(games)
+		}
+		s.log.Debug("grid layout",
+			zap.Int("game start index", i),
+			zap.Int("game end index", endIndex),
+		)
+		if err := s.doGrid(ctx, grid, canvas, games[i:endIndex], cellWidth, cellHeight); err != nil {
+			return err
+		}
+		i += numCells - 1
+		if err := grid.Clear(); err != nil {
+			return err
+		}
+
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		case <-time.After(gridDelay):
+		}
+	}
+
+	return nil
+}
+
+func (s *SportBoard) doGrid(ctx context.Context, grid *rgbrender.Grid, canvas board.Canvas, games []Game, cellWidth int, cellHeight int) error {
 	// Fetch all the scores
 	wg := sync.WaitGroup{}
 
@@ -421,7 +459,11 @@ func (s *SportBoard) renderGrid(ctx context.Context, canvas board.Canvas, games 
 		if err != nil {
 			continue
 		}
-		cell := grid.Cell(index)
+		cell, err := grid.Cell(index)
+		if err != nil {
+			s.log.Error("invalid cell index", zap.Int("index", index))
+			continue
+		}
 
 		if err := s.renderGame(ctx, cell.Canvas, liveGame, nil); err != nil {
 			return err
@@ -435,15 +477,10 @@ func (s *SportBoard) renderGrid(ctx context.Context, canvas board.Canvas, games 
 			return err
 		}
 	*/
+	grid.FillPadded(canvas, color.White)
 
 	if err := canvas.Render(); err != nil {
 		return err
-	}
-
-	select {
-	case <-ctx.Done():
-		return context.Canceled
-	case <-time.After(s.config.boardDelay):
 	}
 
 	return nil

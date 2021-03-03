@@ -3,6 +3,7 @@ package rgbrender
 import (
 	"fmt"
 	"image"
+	"image/color"
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/imgcanvas"
@@ -12,6 +13,8 @@ import (
 
 const maxAllowedCols = 10
 const maxAllowedRows = 10
+
+type GridOption func(grid *Grid) error
 
 type Canvaser func(bounds image.Rectangle) (board.Canvas, error)
 
@@ -24,6 +27,8 @@ type Grid struct {
 	rows       int
 	cellX      int
 	cellY      int
+	padding    int
+	paddedPix  []image.Point
 }
 
 type Cell struct {
@@ -31,7 +36,7 @@ type Cell struct {
 	Bounds image.Rectangle
 }
 
-func NewGrid(canvas board.Canvas, canvaser Canvaser, colWidth int, rowHeight int, log *zap.Logger) (*Grid, error) {
+func NewGrid(canvas board.Canvas, canvaser Canvaser, colWidth int, rowHeight int, log *zap.Logger, opts ...GridOption) (*Grid, error) {
 	if log == nil {
 		var err error
 		log, err = zap.NewDevelopment()
@@ -60,8 +65,18 @@ func NewGrid(canvas board.Canvas, canvaser Canvaser, colWidth int, rowHeight int
 		cellY:      canvas.Bounds().Dy() / numRows,
 	}
 
+	for _, f := range opts {
+		if err := f(grid); err != nil {
+			return nil, err
+		}
+	}
+
+	if grid.padding > 0 && grid.padding%2 != 0 {
+		grid.padding++
+	}
+
 	grid.cells = make([]*Cell, numCols*numRows)
-	grid.log.Info("new grid", zap.Int("num cols", numCols), zap.Int("num rows", numRows))
+	grid.log.Info("new grid", zap.Int("num cols", numCols), zap.Int("num rows", numRows), zap.Int("padding", grid.padding))
 
 	if err := grid.generateCells(); err != nil {
 		return nil, err
@@ -72,12 +87,21 @@ func NewGrid(canvas board.Canvas, canvaser Canvaser, colWidth int, rowHeight int
 
 func (g *Grid) generateCells() error {
 	cellIndex := 0
-	for c := 0; c < g.cols; c++ {
-		for r := 0; r < g.rows; r++ {
-			startX := c * g.cellX
-			startY := r * g.cellY
-			endX := startX + g.cellX
-			endY := startY + g.cellY
+	for r := 0; r < g.rows; r++ {
+		for c := 0; c < g.cols; c++ {
+			halfPad := g.padding / 2
+			startX := (c * g.cellX) + halfPad
+			startY := (r * g.cellY) + halfPad
+			endX := (startX + g.cellX) - halfPad
+			endY := (startY + g.cellY) - halfPad
+
+			for x := startX - halfPad; x < endX+halfPad; x++ {
+				for y := startY - halfPad; y < endY+halfPad; y++ {
+					if x < startX || y < startY || x > endX || y > endY {
+						g.paddedPix = append(g.paddedPix, image.Pt(x, y))
+					}
+				}
+			}
 
 			newC, err := g.canvaser(image.Rect(startX, startY, endX, endY))
 			if err != nil {
@@ -104,8 +128,9 @@ func (g *Grid) generateCells() error {
 	return nil
 }
 
-func (g *Grid) Clear() {
-	//g.canvases = []board.Canvas{}
+func (g *Grid) Clear() error {
+	g.cells = make([]*Cell, g.cols*g.rows)
+	return g.generateCells()
 }
 
 func (g *Grid) Canvases() []board.Canvas {
@@ -117,13 +142,33 @@ func (g *Grid) Canvases() []board.Canvas {
 	return canvases
 }
 
-func (g *Grid) Cell(index int) *Cell {
-	return g.cells[index]
+func (g *Grid) Cells() []*Cell {
+	return g.cells
+}
+
+func (g *Grid) Cell(index int) (*Cell, error) {
+	if index > len(g.cells)-1 {
+		return nil, fmt.Errorf("no cell at index %d, max of %d", index, len(g.cells)-1)
+	}
+	return g.cells[index], nil
+}
+
+func (g *Grid) FillPadded(canvas board.Canvas, clr color.Color) {
+	for _, pt := range g.paddedPix {
+		canvas.Set(pt.X, pt.Y, clr)
+	}
 }
 
 func (g *Grid) DrawToBase(base board.Canvas) error {
 
 	return nil
+}
+
+func WithPadding(pad int) GridOption {
+	return func(g *Grid) error {
+		g.padding = pad
+		return nil
+	}
 }
 
 func GetCanvaser(canvas board.Canvas, logger *zap.Logger) (Canvaser, error) {
