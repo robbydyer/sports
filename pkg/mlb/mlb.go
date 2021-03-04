@@ -3,7 +3,6 @@ package mlb
 import (
 	"context"
 	"fmt"
-	"image"
 	"sync"
 	"time"
 
@@ -34,7 +33,6 @@ type MLB struct {
 	games           map[string][]*Game
 	logos           map[string]*logo.Logo
 	logoLock        sync.RWMutex
-	logoSourceCache map[string]image.Image
 	log             *zap.Logger
 	defaultLogoConf *[]*logo.Config
 	sync.Mutex
@@ -43,10 +41,9 @@ type MLB struct {
 // New ...
 func New(ctx context.Context, logger *zap.Logger) (*MLB, error) {
 	m := &MLB{
-		games:           make(map[string][]*Game),
-		logos:           make(map[string]*logo.Logo),
-		logoSourceCache: make(map[string]image.Image),
-		log:             logger,
+		games: make(map[string][]*Game),
+		logos: make(map[string]*logo.Logo),
+		log:   logger,
 	}
 
 	if err := m.UpdateTeams(ctx); err != nil {
@@ -58,7 +55,7 @@ func New(ctx context.Context, logger *zap.Logger) (*MLB, error) {
 	}
 
 	c := cron.New()
-	if _, err := c.AddFunc("0 5 * * *", m.cacheClear); err != nil {
+	if _, err := c.AddFunc("0 5 * * *", func() { m.CacheClear(context.Background()) }); err != nil {
 		return nil, fmt.Errorf("failed to set cron job for cacheClear: %w", err)
 	}
 	c.Start()
@@ -67,18 +64,16 @@ func New(ctx context.Context, logger *zap.Logger) (*MLB, error) {
 }
 
 // CacheClear ...
-func (m *MLB) cacheClear() {
+func (m *MLB) CacheClear(ctx context.Context) {
+	m.log.Warn("clearing MLB cache")
 	for k := range m.games {
 		delete(m.games, k)
 	}
-	if err := m.UpdateGames(context.Background(), util.Today().Format(DateFormat)); err != nil {
+	if err := m.UpdateGames(ctx, util.Today().Format(DateFormat)); err != nil {
 		m.log.Error("failed to get today's games", zap.Error(err))
 	}
 	for k := range m.logos {
 		delete(m.logos, k)
-	}
-	for k := range m.logoSourceCache {
-		delete(m.logoSourceCache, k)
 	}
 }
 

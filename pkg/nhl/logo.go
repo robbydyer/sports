@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	yaml "github.com/ghodss/yaml"
-	"github.com/hashicorp/go-multierror"
 
 	"github.com/robbydyer/sports/pkg/logo"
 )
@@ -36,13 +35,6 @@ func (n *NHL) setLogoCache(logoKey string, l *logo.Logo) {
 	n.logos[logoKey] = l
 }
 
-func (n *NHL) setLogoSourceCache(logoKey string, img image.Image) {
-	n.logoLock.Lock()
-	defer n.logoLock.Unlock()
-
-	n.logoSourceCache[logoKey] = img
-}
-
 // GetLogo ...
 func (n *NHL) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
 	l, err := n.getLogoCache(logoKey)
@@ -50,16 +42,11 @@ func (n *NHL) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config
 		return l, nil
 	}
 
-	sources, err := n.logoSources(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	if n.defaultLogoConf == nil {
 		n.defaultLogoConf = &[]*logo.Config{}
 	}
 
-	l, err = GetLogo(logoKey, logoConf, bounds, sources, n.defaultLogoConf)
+	l, err = GetLogo(ctx, logoKey, logoConf, bounds, n.defaultLogoConf)
 	if err != nil {
 		return nil, err
 	}
@@ -72,26 +59,26 @@ func (n *NHL) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config
 }
 
 // GetLogo is a generic logo getter. Useful for testing
-func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logoSources map[string]image.Image, defaultConfigs *[]*logo.Config) (*logo.Logo, error) {
+func GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle, defaultConfigs *[]*logo.Config) (*logo.Logo, error) {
 	p := strings.Split(logoKey, "_")
 	if len(p) < 2 {
 		return nil, fmt.Errorf("invalid logo key '%s'", logoConf.Abbrev)
 	}
 	teamAbbrev := p[0]
 
-	if _, ok := logoSources[teamAbbrev]; !ok {
-		return nil, fmt.Errorf("did not find logo source for %s", teamAbbrev)
+	logoGetter := func(ctx context.Context) (image.Image, error) {
+		return logoSource(ctx, teamAbbrev)
 	}
 
 	if logoConf != nil {
-		l := logo.New(logoKey, logoSources[teamAbbrev], logoCacheDir, bounds, logoConf)
+		l := logo.New(logoKey, logoGetter, logoCacheDir, bounds, logoConf)
 
 		return l, nil
 	}
 
 	for _, d := range *defaultConfigs {
 		if d.Abbrev == logoKey {
-			l := logo.New(logoKey, logoSources[teamAbbrev], logoCacheDir, bounds, d)
+			l := logo.New(logoKey, logoGetter, logoCacheDir, bounds, d)
 			return l, nil
 		}
 	}
@@ -118,7 +105,7 @@ func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logo
 
 	for _, d := range *defaultConfigs {
 		if d.Abbrev == logoKey {
-			l := logo.New(logoKey, logoSources[teamAbbrev], logoCacheDir, bounds, d)
+			l := logo.New(logoKey, logoGetter, logoCacheDir, bounds, d)
 			return l, nil
 		}
 	}
@@ -126,34 +113,17 @@ func GetLogo(logoKey string, logoConf *logo.Config, bounds image.Rectangle, logo
 	return nil, fmt.Errorf("failed to prepare logo")
 }
 
-func (n *NHL) logoSources(ctx context.Context) (map[string]image.Image, error) {
-	if len(n.logoSourceCache) == len(ALL) {
-		return n.logoSourceCache, nil
+func logoSource(ctx context.Context, abbreviation string) (image.Image, error) {
+	f, err := assets.Open(fmt.Sprintf("assets/logos/%s.png", abbreviation))
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	i, err := png.Decode(f)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode logo source %s: %w", abbreviation, err)
 	}
 
-	errs := &multierror.Error{}
-
-	for _, t := range ALL {
-		select {
-		case <-ctx.Done():
-			return nil, context.Canceled
-		default:
-		}
-		f, err := assets.Open(fmt.Sprintf("assets/logos/%s.png", t))
-		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("failed to get logo for %s", t))
-			continue
-		}
-		defer f.Close()
-
-		i, err := png.Decode(f)
-		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("failed to decode logo for %s", t))
-			continue
-		}
-
-		n.setLogoSourceCache(t, i)
-	}
-
-	return n.logoSourceCache, errs.ErrorOrNil()
+	return i, nil
 }

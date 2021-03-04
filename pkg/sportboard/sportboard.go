@@ -85,6 +85,7 @@ type API interface {
 	GetWatchTeams(teams []string) []string
 	TeamRecord(ctx context.Context, team Team) string
 	TeamRank(ctx context.Context, team Team) string
+	CacheClear(ctx context.Context)
 }
 
 // Team ...
@@ -202,9 +203,22 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 }
 
 func (s *SportBoard) cacheClear() {
-	s.log.Warn("Clearing cached live games")
+	s.Lock()
+	defer s.Unlock()
+	s.drawLock.Lock()
+	defer s.drawLock.Unlock()
+	s.logoLock.Lock()
+	defer s.logoLock.Unlock()
+
+	s.log.Warn("Clearing cache")
 	for k := range s.cachedLiveGames {
 		delete(s.cachedLiveGames, k)
+	}
+	for k := range s.logoDrawCache {
+		delete(s.logoDrawCache, k)
+	}
+	for k := range s.logos {
+		delete(s.logos, k)
 	}
 }
 

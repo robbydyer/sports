@@ -75,23 +75,22 @@ func (n *NcaaM) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Conf
 		return nil, fmt.Errorf("failed to convert sportboard.Team to ncaam.Team")
 	}
 
-	src, err := n.logoSource(ctx, team)
-	if err != nil {
-		return nil, fmt.Errorf("could not find logo source for %s: %w", teamAbbrev, err)
-	}
-
 	var l *logo.Logo
 	defer n.setLogoCache(logoKey, l)
 
+	logoGetter := func(ctx context.Context) (image.Image, error) {
+		return n.logoSource(ctx, team)
+	}
+
 	if logoConf != nil {
-		l = logo.New(logoKey, src, logoCacheDir, bounds, logoConf)
+		l = logo.New(logoKey, logoGetter, logoCacheDir, bounds, logoConf)
 
 		return l, nil
 	}
 
 	for _, d := range *n.defaultLogoConf {
 		if d.Abbrev == logoKey {
-			l = logo.New(logoKey, src, logoCacheDir, bounds, d)
+			l = logo.New(logoKey, logoGetter, logoCacheDir, bounds, d)
 
 			return l, nil
 		}
@@ -110,7 +109,7 @@ func (n *NcaaM) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Conf
 
 	*n.defaultLogoConf = append(*n.defaultLogoConf, c)
 
-	l = logo.New(logoKey, src, logoCacheDir, bounds, c)
+	l = logo.New(logoKey, logoGetter, logoCacheDir, bounds, c)
 
 	return l, nil
 }

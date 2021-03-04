@@ -99,7 +99,7 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, bounds image.Rectangle,
 	var renderErr error
 	if l != nil {
 		var renderedLogo image.Image
-		renderedLogo, renderErr = l.RenderLeftAligned(bounds, logoWidth)
+		renderedLogo, renderErr = l.RenderLeftAligned(ctx, bounds, logoWidth)
 		if renderErr != nil {
 			s.log.Error("failed to render home logo", zap.Error(renderErr))
 		} else {
@@ -150,7 +150,7 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, bounds image.Rectangle,
 	var renderErr error
 	if l != nil {
 		var renderedLogo image.Image
-		renderedLogo, renderErr = l.RenderRightAligned(bounds, logoWidth+textWidth)
+		renderedLogo, renderErr = l.RenderRightAligned(ctx, bounds, logoWidth+textWidth)
 		if renderErr != nil {
 			s.log.Error("failed to render away logo", zap.Error(renderErr))
 		} else {

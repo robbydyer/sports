@@ -71,16 +71,11 @@ func (m *MockMLBAPI) GetLogo(ctx context.Context, logoKey string, logoConf *logo
 		return l, nil
 	}
 
-	sources, err := m.logoSources(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	if m.defaultLogoConf == nil {
 		m.defaultLogoConf = &[]*logo.Config{}
 	}
 
-	l, err = GetLogo(logoKey, logoConf, bounds, sources, m.defaultLogoConf)
+	l, err := GetLogo(ctx, logoKey, logoConf, bounds, m.defaultLogoConf)
 	if err != nil {
 		return nil, err
 	}
@@ -90,6 +85,10 @@ func (m *MockMLBAPI) GetLogo(ctx context.Context, logoKey string, logoConf *logo
 	m.logos[fullLogoKey] = l
 
 	return l, nil
+}
+
+func (m *MockMLBAPI) CacheClear(ctx context.Context) {
+	return
 }
 
 func (m *MockMLBAPI) logoSources(ctx context.Context) (map[string]image.Image, error) {
