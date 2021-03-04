@@ -179,6 +179,16 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 		return err
 	}
 
+	if s.config.ShowRecord.Load() {
+		infos, err := s.teamInfoLayers(liveGame, canvas.Bounds())
+		if err != nil {
+			return err
+		}
+		for _, i := range infos {
+			layers.AddTextLayer(rgbrender.ForegroundPriority, i)
+		}
+	}
+
 	for _, l := range logos {
 		layers.AddLayer(rgbrender.BackgroundPriority, l)
 	}
@@ -259,6 +269,16 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 	logos, err := s.logoLayers(liveGame, canvas.Bounds())
 	if err != nil {
 		return err
+	}
+
+	if s.config.ShowRecord.Load() {
+		infos, err := s.teamInfoLayers(liveGame, canvas.Bounds())
+		if err != nil {
+			return err
+		}
+		for _, i := range infos {
+			layers.AddTextLayer(rgbrender.ForegroundPriority, i)
+		}
 	}
 
 	for _, l := range logos {
@@ -394,6 +414,11 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 		return nil, err
 	}
 
+	s.log.Debug("showing team records",
+		zap.String("home", homeTeam.GetAbbreviation()),
+		zap.String("away", awayTeam.GetAbbreviation()),
+	)
+
 	return []*rgbrender.TextLayer{
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
@@ -414,10 +439,10 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 				rank := text[0]
 				record := text[1]
 				if rank != "" {
-					_ = writer.WriteAligned(rgbrender.LeftTop, canvas, canvas.Bounds(), []string{rank}, color.White)
+					_ = writer.WriteAlignedBoxed(rgbrender.LeftTop, canvas, canvas.Bounds(), []string{rank}, color.White, color.Black)
 				}
 				if record != "" {
-					_ = writer.WriteAligned(rgbrender.LeftBottom, canvas, canvas.Bounds(), []string{record}, color.White)
+					_ = writer.WriteAlignedBoxed(rgbrender.LeftBottom, canvas, canvas.Bounds(), []string{record}, color.White, color.Black)
 				}
 				return nil
 			},
@@ -441,10 +466,10 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 				rank := text[0]
 				record := text[1]
 				if rank != "" {
-					_ = writer.WriteAligned(rgbrender.RightTop, canvas, canvas.Bounds(), []string{rank}, color.White)
+					_ = writer.WriteAlignedBoxed(rgbrender.RightTop, canvas, canvas.Bounds(), []string{rank}, color.White, color.Black)
 				}
 				if record != "" {
-					_ = writer.WriteAligned(rgbrender.RightBottom, canvas, canvas.Bounds(), []string{record}, color.White)
+					_ = writer.WriteAlignedBoxed(rgbrender.RightBottom, canvas, canvas.Bounds(), []string{record}, color.White, color.Black)
 				}
 				return nil
 			},
