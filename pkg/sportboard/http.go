@@ -76,5 +76,4 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			},
 		},
 	}, nil
-
 }

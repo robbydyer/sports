@@ -66,7 +66,7 @@ func GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds 
 	teamAbbrev := p[0]
 
 	logoGetter := func(ctx context.Context) (image.Image, error) {
-		return logoSource(ctx, teamAbbrev)
+		return logoSource(teamAbbrev)
 	}
 
 	if logoConf != nil {
@@ -112,7 +112,7 @@ func GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds 
 	return nil, fmt.Errorf("failed to prepare logo")
 }
 
-func logoSource(ctx context.Context, abbreviation string) (image.Image, error) {
+func logoSource(abbreviation string) (image.Image, error) {
 	f, err := assets.Open(fmt.Sprintf("assets/logos/%s.png", abbreviation))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get logo for %s: %w", abbreviation, err)

@@ -158,8 +158,8 @@ func MockLiveGameGetter(ctx context.Context, link string) (sportboard.Game, erro
 	return nil, fmt.Errorf("could not locate live game with Link '%s'", link)
 }
 
+// CacheClear ...
 func (m *MockNHLAPI) CacheClear(ctx context.Context) {
-	return
 }
 
 // NewMock ...

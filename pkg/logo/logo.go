@@ -14,12 +14,13 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
-type LogoSourceGetter func(ctx context.Context) (image.Image, error)
+// SourceGetter is a func type that retrieves a source logo image.Image
+type SourceGetter func(ctx context.Context) (image.Image, error)
 
 // Logo is used to manage logo rendering
 type Logo struct {
 	key              string
-	sourceLogoGetter LogoSourceGetter
+	sourceLogoGetter SourceGetter
 	bounds           image.Rectangle
 	targetDirectory  string
 	config           *Config
@@ -43,7 +44,7 @@ type Pt struct {
 }
 
 // New ...
-func New(key string, getter LogoSourceGetter, targetDirectory string, matrixBounds image.Rectangle, conf *Config) *Logo {
+func New(key string, getter SourceGetter, targetDirectory string, matrixBounds image.Rectangle, conf *Config) *Logo {
 	return &Logo{
 		key:              key,
 		targetDirectory:  targetDirectory,
