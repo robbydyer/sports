@@ -95,7 +95,11 @@ func (l *Logo) GetThumbnail(ctx context.Context, size image.Rectangle) (image.Im
 
 			src, err := l.sourceLogoGetter(ctx)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to get logo source for %s: %w", l.config.Abbrev, err)
+			}
+
+			if src == nil {
+				return nil, fmt.Errorf("failed to get logo source for %s", l.config.Abbrev)
 			}
 
 			// Create the thumbnail

@@ -10,6 +10,7 @@ import (
 
 	"github.com/robfig/cron/v3"
 
+	"github.com/robbydyer/sports/pkg/espn"
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/util"
@@ -35,15 +36,17 @@ type MLB struct {
 	logoLock        sync.RWMutex
 	log             *zap.Logger
 	defaultLogoConf *[]*logo.Config
+	espnAPI         *espn.ESPN
 	sync.Mutex
 }
 
 // New ...
 func New(ctx context.Context, logger *zap.Logger) (*MLB, error) {
 	m := &MLB{
-		games: make(map[string][]*Game),
-		logos: make(map[string]*logo.Logo),
-		log:   logger,
+		games:   make(map[string][]*Game),
+		logos:   make(map[string]*logo.Logo),
+		log:     logger,
+		espnAPI: espn.New(logger),
 	}
 
 	if err := m.UpdateTeams(ctx); err != nil {

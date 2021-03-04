@@ -45,7 +45,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 			layers.AddLayer(rgbrender.BackgroundPriority, l)
 		}
 
-		layers.AddTextLayer(rgbrender.ForegroundPriority,
+		layers.AddTextLayer(rgbrender.BackgroundPriority+1,
 			rgbrender.NewTextLayer(
 				func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
 					quarter, err := liveGame.GetQuarter()
@@ -64,18 +64,19 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 					return writer, []string{quarter, clock}, nil
 				},
 				func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
-					return writer.WriteAligned(
+					return writer.WriteAlignedBoxed(
 						rgbrender.CenterTop,
 						canvas,
 						canvas.Bounds(),
 						text,
 						s.config.TimeColor,
+						color.Black,
 					)
 				},
 			),
 		)
 
-		layers.AddTextLayer(rgbrender.ForegroundPriority,
+		layers.AddTextLayer(rgbrender.BackgroundPriority+1,
 			rgbrender.NewTextLayer(
 				func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
 					isFavorite, err := s.isFavoriteGame(liveGame)
@@ -100,12 +101,13 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 					return writer, score, nil
 				},
 				func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
-					return writer.WriteAligned(
+					return writer.WriteAlignedBoxed(
 						rgbrender.CenterBottom,
 						canvas,
 						canvas.Bounds(),
 						text,
 						s.config.ScoreColor,
+						color.Black,
 					)
 				},
 			),
@@ -181,7 +183,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 		layers.AddLayer(rgbrender.BackgroundPriority, l)
 	}
 
-	layers.AddTextLayer(rgbrender.ForegroundPriority,
+	layers.AddTextLayer(rgbrender.BackgroundPriority+1,
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
 				timeWriter, err := s.getTimeWriter(canvas.Bounds())
@@ -202,17 +204,18 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 				return timeWriter, []string{gameTimeStr}, nil
 			},
 			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
-				return writer.WriteAligned(
+				return writer.WriteAlignedBoxed(
 					rgbrender.CenterTop,
 					canvas,
 					canvas.Bounds(),
 					text,
 					s.config.TimeColor,
+					color.Black,
 				)
 			},
 		),
 	)
-	layers.AddTextLayer(rgbrender.ForegroundPriority,
+	layers.AddTextLayer(rgbrender.BackgroundPriority+1,
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
 				scoreWriter, err := s.getScoreWriter(canvas.Bounds())
@@ -222,12 +225,13 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 				return scoreWriter, []string{"VS"}, nil
 			},
 			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
-				return writer.WriteAligned(
+				return writer.WriteAlignedBoxed(
 					rgbrender.CenterCenter,
 					canvas,
 					canvas.Bounds(),
 					text,
 					s.config.ScoreColor,
+					color.Black,
 				)
 			},
 		),
@@ -261,7 +265,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 		layers.AddLayer(rgbrender.BackgroundPriority, l)
 	}
 
-	layers.AddTextLayer(rgbrender.ForegroundPriority,
+	layers.AddTextLayer(rgbrender.BackgroundPriority+1,
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
 				writer, err := s.getTimeWriter(canvas.Bounds())
@@ -271,18 +275,19 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 				return writer, []string{"FINAL"}, nil
 			},
 			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
-				return writer.WriteAligned(
+				return writer.WriteAlignedBoxed(
 					rgbrender.CenterTop,
 					canvas,
 					canvas.Bounds(),
 					text,
 					s.config.TimeColor,
+					color.Black,
 				)
 			},
 		),
 	)
 
-	layers.AddTextLayer(rgbrender.ForegroundPriority,
+	layers.AddTextLayer(rgbrender.BackgroundPriority+1,
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
 				isFavorite, err := s.isFavoriteGame(liveGame)
@@ -307,12 +312,13 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 				return writer, score, nil
 			},
 			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
-				return writer.WriteAligned(
+				return writer.WriteAlignedBoxed(
 					rgbrender.CenterBottom,
 					canvas,
 					canvas.Bounds(),
 					text,
 					s.config.ScoreColor,
+					color.Black,
 				)
 			},
 		),
@@ -340,6 +346,20 @@ func counterLayer(counter image.Image) *rgbrender.Layer {
 		nil,
 		func(canvas board.Canvas, img image.Image) error {
 			draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
+			return nil
+		},
+	)
+}
+
+func (s *SportBoard) blackoutTextBoxLayer(canvas board.Canvas) *rgbrender.Layer {
+	return rgbrender.NewLayer(
+		nil,
+		func(canvas board.Canvas, img image.Image) error {
+			w := s.textAreaWidth(canvas.Bounds())
+			logoW := (canvas.Bounds().Dx() - w) / 2
+
+			bounds := image.Rect(logoW, 0, logoW+w, canvas.Bounds().Max.Y)
+			draw.Draw(canvas, bounds, image.NewUniform(color.White), image.Point{}, draw.Over)
 			return nil
 		},
 	)

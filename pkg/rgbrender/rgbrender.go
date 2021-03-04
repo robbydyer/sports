@@ -6,6 +6,7 @@ import (
 	"image/draw"
 	"math"
 
+	"github.com/robbydyer/sports/pkg/board"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
@@ -131,7 +132,7 @@ func ZoomImageSize(img image.Image, zoom float64) (int, int) {
 }
 
 // DrawRectangle ...
-func DrawRectangle(canvas *rgb.Canvas, startX int, startY int, sizeX int, sizeY int, fillColor color.Color) error {
+func DrawRectangle(canvas board.Canvas, startX int, startY int, sizeX int, sizeY int, fillColor color.Color) error {
 	rect := image.Rect(startX, startY, startX+sizeX, startY+sizeY)
 
 	rgba := image.NewRGBA(rect)
