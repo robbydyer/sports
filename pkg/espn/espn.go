@@ -15,9 +15,10 @@ import (
 	"strings"
 	"sync"
 
+	"go.uber.org/zap"
+
 	"github.com/robbydyer/sports/pkg/rgbrender"
 	"github.com/robbydyer/sports/pkg/util"
-	"go.uber.org/zap"
 )
 
 //go:embed assets
@@ -25,6 +26,7 @@ var assets embed.FS
 
 const cacheDir = "/tmp/sportsmatrix_logos/espn"
 
+// ESPN is used for accessing ESPN API's
 type ESPN struct {
 	log         *zap.Logger
 	teams       []*Team
@@ -33,13 +35,17 @@ type ESPN struct {
 	sync.Mutex
 }
 
+// Team ...
 type Team struct {
 	Abbreviation string  `json:"abbreviation"`
 	Logos        []*Logo `json:"logos"`
 }
+
+// Logo ...
 type Logo struct {
 	Href string `json:"href"`
 }
+
 type teamData struct {
 	Sports []struct {
 		Leagues []struct {
@@ -50,6 +56,7 @@ type teamData struct {
 	} `json:"sports"`
 }
 
+// New ...
 func New(logger *zap.Logger) *ESPN {
 	return &ESPN{
 		log:         logger,
@@ -58,12 +65,14 @@ func New(logger *zap.Logger) *ESPN {
 	}
 }
 
+// ClearCache ...
 func (e *ESPN) ClearCache() error {
 	e.teams = []*Team{}
 
 	return nil
 }
 
+// GetTeams ...
 func (e *ESPN) GetTeams(ctx context.Context, sport string, league string) ([]*Team, error) {
 	e.teamLock.Lock()
 	defer e.teamLock.Unlock()
@@ -106,6 +115,7 @@ func (e *ESPN) GetTeams(ctx context.Context, sport string, league string) ([]*Te
 	return teams, nil
 }
 
+// GetLogo ...
 func (e *ESPN) GetLogo(ctx context.Context, sport string, league string, teamAbbreviation string, logoURLSearch string) (image.Image, error) {
 	l, ok := e.logoLockers[teamAbbreviation]
 	if !ok {
@@ -118,15 +128,14 @@ func (e *ESPN) GetLogo(ctx context.Context, sport string, league string, teamAbb
 	defer l.Unlock()
 
 	if err := ensureCacheDir(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to ensure logo cache dir exists")
 	}
 
 	cacheFile := filepath.Join(cacheDir, fmt.Sprintf("%s_%s_%s.png", sport, league, teamAbbreviation))
 
 	if _, err := os.Stat(cacheFile); err != nil {
 		if !os.IsNotExist(err) {
-			e.log.Error("failed to detect if logo cache file exists", zap.Error(err))
-			return nil, err
+			return nil, fmt.Errorf("failed to detect if logo cache file exists: %w", err)
 		}
 	} else {
 		e.log.Debug("reading source logo from cache",
@@ -136,14 +145,14 @@ func (e *ESPN) GetLogo(ctx context.Context, sport string, league string, teamAbb
 		)
 		r, err := os.Open(cacheFile)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to open logo cache file: %w", err)
 		}
 		return png.Decode(r)
 	}
 
 	teams, err := e.GetTeams(ctx, sport, league)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to fetch team info for logo: %w", err)
 	}
 
 	var i image.Image
@@ -191,17 +200,15 @@ OUTER:
 		}
 	}
 
-	go func() {
-		e.log.Debug("saving source logo to cache",
-			zap.String("sport", sport),
-			zap.String("league", league),
-			zap.String("team", teamAbbreviation),
-		)
-		if err := rgbrender.SavePng(i, cacheFile); err != nil {
-			e.log.Error("failed to save logo to cache", zap.Error(err))
-			_ = os.Remove(cacheFile)
-		}
-	}()
+	e.log.Debug("saving source logo to cache",
+		zap.String("sport", sport),
+		zap.String("league", league),
+		zap.String("team", teamAbbreviation),
+	)
+	if err := rgbrender.SavePng(i, cacheFile); err != nil {
+		e.log.Error("failed to save logo to cache", zap.Error(err))
+		_ = os.Remove(cacheFile)
+	}
 
 	return i, nil
 }
@@ -214,6 +221,7 @@ func ensureCacheDir() error {
 	}
 	return nil
 }
+
 func pullTeams(ctx context.Context, sport string, league string) ([]byte, error) {
 	uri, err := url.Parse(fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s/%s/teams", sport, league))
 	if err != nil {

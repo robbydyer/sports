@@ -44,6 +44,9 @@ func ResizeGIF(g *gif.GIF, bounds image.Rectangle, zoom float64) error {
 
 // SavePng ...
 func SavePng(img image.Image, fileName string) error {
+	if img == nil {
+		return fmt.Errorf("cannot save nil image.Image as PNG")
+	}
 	f, err := os.Create(fileName)
 	if err != nil {
 		return err

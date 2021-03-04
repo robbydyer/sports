@@ -2,16 +2,12 @@ package nhl
 
 import (
 	"context"
-	"embed"
 	"fmt"
 	"image"
 	"strings"
 
 	"github.com/robbydyer/sports/pkg/logo"
 )
-
-//go:embed assets
-var assets embed.FS
 
 func (n *NHL) getLogoCache(logoKey string) (*logo.Logo, error) {
 	n.logoLock.RLock()
@@ -71,7 +67,7 @@ func (n *NHL) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config
 
 	for _, d := range *n.defaultLogoConf {
 		if d.Abbrev == logoKey {
-			l := logo.New(logoKey, logoGetter, logoCacheDir, bounds, d)
+			l = logo.New(logoKey, logoGetter, logoCacheDir, bounds, d)
 			return l, nil
 		}
 	}

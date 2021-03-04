@@ -18,6 +18,7 @@ func Today() time.Time {
 	return time.Now().Local()
 }
 
+// PullPng GETs a png and returns it decoded as an image.Image
 func PullPng(ctx context.Context, url string) (image.Image, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

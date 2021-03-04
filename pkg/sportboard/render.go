@@ -351,20 +351,6 @@ func counterLayer(counter image.Image) *rgbrender.Layer {
 	)
 }
 
-func (s *SportBoard) blackoutTextBoxLayer(canvas board.Canvas) *rgbrender.Layer {
-	return rgbrender.NewLayer(
-		nil,
-		func(canvas board.Canvas, img image.Image) error {
-			w := s.textAreaWidth(canvas.Bounds())
-			logoW := (canvas.Bounds().Dx() - w) / 2
-
-			bounds := image.Rect(logoW, 0, logoW+w, canvas.Bounds().Max.Y)
-			draw.Draw(canvas, bounds, image.NewUniform(color.White), image.Point{}, draw.Over)
-			return nil
-		},
-	)
-}
-
 func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbrender.Layer, error) {
 	homeTeam, err := liveGame.HomeTeam()
 	if err != nil {
