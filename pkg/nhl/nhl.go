@@ -9,6 +9,7 @@ import (
 	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
 
+	"github.com/robbydyer/sports/pkg/espn"
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/util"
@@ -33,15 +34,17 @@ type NHL struct {
 	logoLock        sync.RWMutex
 	log             *zap.Logger
 	defaultLogoConf *[]*logo.Config
+	espnAPI         *espn.ESPN
 	sync.Mutex
 }
 
 // New ...
 func New(ctx context.Context, logger *zap.Logger) (*NHL, error) {
 	n := &NHL{
-		games: make(map[string][]*Game),
-		logos: make(map[string]*logo.Logo),
-		log:   logger,
+		games:   make(map[string][]*Game),
+		logos:   make(map[string]*logo.Logo),
+		log:     logger,
+		espnAPI: espn.New(logger),
 	}
 
 	if err := n.UpdateTeams(ctx); err != nil {
@@ -73,6 +76,7 @@ func (n *NHL) CacheClear(ctx context.Context) {
 	for k := range n.logos {
 		delete(n.logos, k)
 	}
+	_ = n.espnAPI.ClearCache()
 }
 
 // HTTPPathPrefix returns the prefix of HTTP calls to this board. i.e. /nhl/foo

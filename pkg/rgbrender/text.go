@@ -159,3 +159,55 @@ func (t *TextWriter) WriteAligned(align Align, canvas draw.Image, bounds image.R
 
 	return nil
 }
+
+// WriteAlignedBoxed writes text aligned within a given bounds and draws a box sized to the text width
+func (t *TextWriter) WriteAlignedBoxed(align Align, canvas draw.Image, bounds image.Rectangle, str []string, clr color.Color, boxColor color.Color) error {
+	if t.font == nil {
+		return fmt.Errorf("font is not set")
+	}
+	drawer := &font.Drawer{
+		Dst: canvas,
+		Src: image.NewUniform(clr),
+		Face: truetype.NewFace(t.font,
+			&truetype.Options{
+				Size:    t.FontSize,
+				Hinting: font.HintingFull,
+			},
+		),
+	}
+
+	var maxXWidth fixed.Int26_6
+	for _, s := range str {
+		if width := drawer.MeasureString(s); width > fixed.Int26_6(maxXWidth) {
+			maxXWidth = width
+		}
+	}
+
+	yHeight := len(str) * int(math.Floor(t.FontSize+t.LineSpace))
+
+	boxAlign, err := AlignPosition(align, canvas.Bounds(), maxXWidth.Ceil(), yHeight)
+	if err != nil {
+		return err
+	}
+	draw.Draw(canvas, boxAlign, image.NewUniform(boxColor), image.Point{}, draw.Over)
+
+	writeBox, err := AlignPosition(align, bounds, maxXWidth.Floor(), yHeight)
+	if err != nil {
+		return err
+	}
+
+	// lineY represents how much space to add for the newline
+	lineY := int(math.Floor(t.FontSize + t.LineSpace))
+
+	startX := writeBox.Min.X + t.XStartCorrection
+	y := int(math.Floor(t.FontSize)) + writeBox.Min.Y + t.YStartCorrection
+	drawer.Dot = fixed.P(startX, y)
+
+	for _, s := range str {
+		drawer.DrawString(s)
+		y += lineY + t.YStartCorrection
+		drawer.Dot = fixed.P(startX, y)
+	}
+
+	return nil
+}

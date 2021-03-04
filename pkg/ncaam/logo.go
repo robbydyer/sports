@@ -5,8 +5,6 @@ import (
 	"embed"
 	"fmt"
 	"image"
-	"image/png"
-	"net/http"
 	"strings"
 
 	"go.uber.org/zap"
@@ -65,21 +63,11 @@ func (n *NcaaM) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Conf
 		n.logoConfOnce[dimKey] = struct{}{}
 	}
 
-	t, err := n.TeamFromAbbreviation(ctx, teamAbbrev)
-	if err != nil {
-		return nil, err
-	}
-
-	team, ok := t.(*Team)
-	if !ok {
-		return nil, fmt.Errorf("failed to convert sportboard.Team to ncaam.Team")
-	}
-
 	var l *logo.Logo
 	defer n.setLogoCache(logoKey, l)
 
 	logoGetter := func(ctx context.Context) (image.Image, error) {
-		return n.logoSource(ctx, team)
+		return n.espnAPI.GetLogo(ctx, "basketball", "mens-college-basketball", teamAbbrev, logoSearch(teamAbbrev))
 	}
 
 	if logoConf != nil {
@@ -129,44 +117,11 @@ func (n *NcaaM) loadDefaultLogoConfigs(bounds image.Rectangle) error {
 	return nil
 }
 
-func (n *NcaaM) logoSource(ctx context.Context, team *Team) (image.Image, error) {
-	something := team.LogoURL
-	for _, logo := range team.Logos {
-		if logo.Href != "" {
-			something = logo.Href
-
-			// Prefer the "dark" style logos
-			if strings.Contains(logo.Href, "dark") {
-				break
-			}
-		}
+func logoSearch(team string) string {
+	switch team {
+	case "IOWA":
+		return "dark"
 	}
 
-	if something != "" {
-		n.log.Info("pulling team logo",
-			zap.String("team", team.Abbreviation),
-			zap.String("url", something),
-		)
-		return pullPng(ctx, something)
-	}
-
-	return nil, fmt.Errorf("no logo URL defined for team %s", team.Abbreviation)
-}
-
-func pullPng(ctx context.Context, url string) (image.Image, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	client := http.DefaultClient
-
-	req = req.WithContext(ctx)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	return png.Decode(resp.Body)
+	return "scoreboard"
 }

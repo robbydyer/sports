@@ -11,6 +11,7 @@ import (
 	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
 
+	"github.com/robbydyer/sports/pkg/espn"
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/util"
@@ -60,6 +61,7 @@ type NcaaM struct {
 	defaultLogoConf *[]*logo.Config
 	logoConfOnce    map[string]struct{}
 	allTeams        []string
+	espnAPI         *espn.ESPN
 	sync.Mutex
 }
 
@@ -71,6 +73,7 @@ func New(ctx context.Context, logger *zap.Logger) (*NcaaM, error) {
 		logoConfOnce:    make(map[string]struct{}),
 		games:           make(map[string][]*Game),
 		defaultLogoConf: &[]*logo.Config{},
+		espnAPI:         espn.New(logger),
 	}
 
 	if _, err := n.GetTeams(ctx); err != nil {
@@ -106,6 +109,7 @@ func (n *NcaaM) CacheClear(ctx context.Context) {
 	if err := n.UpdateGames(ctx, util.Today().Format(DateFormat)); err != nil {
 		n.log.Error("failed to get today's games", zap.Error(err))
 	}
+	_ = n.espnAPI.ClearCache()
 }
 
 // GetTeams ...
