@@ -109,6 +109,7 @@ func (n *NcaaM) CacheClear(ctx context.Context) {
 	if err := n.UpdateGames(ctx, util.Today().Format(DateFormat)); err != nil {
 		n.log.Error("failed to get today's games", zap.Error(err))
 	}
+	_ = n.espnAPI.ClearCache()
 }
 
 // GetTeams ...

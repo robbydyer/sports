@@ -76,6 +76,7 @@ func (n *NHL) CacheClear(ctx context.Context) {
 	for k := range n.logos {
 		delete(n.logos, k)
 	}
+	_ = n.espnAPI.ClearCache()
 }
 
 // HTTPPathPrefix returns the prefix of HTTP calls to this board. i.e. /nhl/foo

@@ -78,6 +78,7 @@ func (m *MLB) CacheClear(ctx context.Context) {
 	for k := range m.logos {
 		delete(m.logos, k)
 	}
+	_ = m.espnAPI.ClearCache()
 }
 
 // HTTPPathPrefix returns the path prefix for the HTTP handlers for this board
