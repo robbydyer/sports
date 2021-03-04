@@ -54,6 +54,11 @@ type teamData struct {
 			} `json:"teams"`
 		} `json:"leagues"`
 	} `json:"sports"`
+	Groups []struct {
+		Children []struct {
+			Teams []*Team `json:"teams"`
+		} `json:"children"`
+	} `json:"groups"`
 }
 
 // New ...
@@ -92,6 +97,12 @@ func (e *ESPN) GetTeams(ctx context.Context, sport string, league string) ([]*Te
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		e.log.Info("pulling team info from assets",
+			zap.String("sport", sport),
+			zap.String("league", league),
+			zap.String("file", assetFile),
+		)
 	}
 
 	var d *teamData
@@ -105,9 +116,18 @@ func (e *ESPN) GetTeams(ctx context.Context, sport string, league string) ([]*Te
 		for _, league := range sport.Leagues {
 			for _, t := range league.Teams {
 				teams = append(teams, t.Team)
-				e.logoLockers[t.Team.Abbreviation] = &sync.Mutex{}
 			}
 		}
+	}
+
+	for _, group := range d.Groups {
+		for _, c := range group.Children {
+			teams = append(teams, c.Teams...)
+		}
+	}
+
+	for _, t := range teams {
+		e.logoLockers[t.Abbreviation] = &sync.Mutex{}
 	}
 
 	e.teams = teams
@@ -223,7 +243,7 @@ func ensureCacheDir() error {
 }
 
 func pullTeams(ctx context.Context, sport string, league string) ([]byte, error) {
-	uri, err := url.Parse(fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s/%s/teams", sport, league))
+	uri, err := url.Parse(fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s", teamEndpoint(sport, league)))
 	if err != nil {
 		return nil, err
 	}
@@ -248,4 +268,13 @@ func pullTeams(ctx context.Context, sport string, league string) ([]byte, error)
 	defer resp.Body.Close()
 
 	return ioutil.ReadAll(resp.Body)
+}
+
+func teamEndpoint(sport string, league string) string {
+	switch league {
+	case "mens-college-basketball":
+		return "basketball/mens-college-basketball/groups"
+	}
+
+	return fmt.Sprintf("%s/%s/teams", sport, league)
 }

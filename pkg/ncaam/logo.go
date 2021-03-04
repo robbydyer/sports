@@ -120,7 +120,7 @@ func (n *NcaaM) loadDefaultLogoConfigs(bounds image.Rectangle) error {
 func logoSearch(team string) string {
 	switch team {
 	case "IOWA":
-		return "dark/scoreboard"
+		return "dark"
 	}
 
 	return "scoreboard"
