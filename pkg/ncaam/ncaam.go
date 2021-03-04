@@ -82,7 +82,7 @@ func New(ctx context.Context, logger *zap.Logger) (*NcaaM, error) {
 	}
 
 	c := cron.New()
-	if _, err := c.AddFunc("0 5 * * *", n.cacheClear); err != nil {
+	if _, err := c.AddFunc("0 5 * * *", func() { n.CacheClear(context.Background()) }); err != nil {
 		return nil, fmt.Errorf("failed to set cron job for cacheClear: %w", err)
 	}
 	c.Start()
@@ -91,12 +91,20 @@ func New(ctx context.Context, logger *zap.Logger) (*NcaaM, error) {
 }
 
 // CacheClear ...
-func (n *NcaaM) cacheClear() {
+func (n *NcaaM) CacheClear(ctx context.Context) {
+	n.log.Warn("clearing NCAAM cache")
 	for k := range n.games {
 		delete(n.games, k)
 	}
 	for k := range n.logos {
 		delete(n.logos, k)
+	}
+	n.teams = nil
+	if _, err := n.GetTeams(ctx); err != nil {
+		n.log.Error("failed to get teams after cache clear", zap.Error(err))
+	}
+	if err := n.UpdateGames(ctx, util.Today().Format(DateFormat)); err != nil {
+		n.log.Error("failed to get today's games", zap.Error(err))
 	}
 }
 

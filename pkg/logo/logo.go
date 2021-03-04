@@ -1,6 +1,7 @@
 package logo
 
 import (
+	"context"
 	"fmt"
 	"image"
 	"image/draw"
@@ -13,15 +14,18 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
+// SourceGetter is a func type that retrieves a source logo image.Image
+type SourceGetter func(ctx context.Context) (image.Image, error)
+
 // Logo is used to manage logo rendering
 type Logo struct {
-	key             string
-	sourceLogo      image.Image
-	bounds          image.Rectangle
-	targetDirectory string
-	config          *Config
-	thumbnail       image.Image
-	log             *zap.Logger
+	key              string
+	sourceLogoGetter SourceGetter
+	bounds           image.Rectangle
+	targetDirectory  string
+	config           *Config
+	thumbnail        image.Image
+	log              *zap.Logger
 }
 
 // Config ...
@@ -40,13 +44,13 @@ type Pt struct {
 }
 
 // New ...
-func New(key string, sourceLogo image.Image, targetDirectory string, matrixBounds image.Rectangle, conf *Config) *Logo {
+func New(key string, getter SourceGetter, targetDirectory string, matrixBounds image.Rectangle, conf *Config) *Logo {
 	return &Logo{
-		key:             key,
-		targetDirectory: targetDirectory,
-		sourceLogo:      sourceLogo,
-		config:          conf,
-		bounds:          matrixBounds,
+		key:              key,
+		targetDirectory:  targetDirectory,
+		sourceLogoGetter: getter,
+		config:           conf,
+		bounds:           matrixBounds,
 	}
 }
 
@@ -72,7 +76,7 @@ func (l *Logo) ThumbnailFilename(size image.Rectangle) string {
 }
 
 // GetThumbnail returns the resized image
-func (l *Logo) GetThumbnail(size image.Rectangle) (image.Image, error) {
+func (l *Logo) GetThumbnail(ctx context.Context, size image.Rectangle) (image.Image, error) {
 	if l.thumbnail != nil {
 		return l.thumbnail, nil
 	}
@@ -88,8 +92,14 @@ func (l *Logo) GetThumbnail(size image.Rectangle) (image.Image, error) {
 					}
 				}
 			}
+
+			src, err := l.sourceLogoGetter(ctx)
+			if err != nil {
+				return nil, err
+			}
+
 			// Create the thumbnail
-			l.thumbnail = rgbrender.ResizeImage(l.sourceLogo, size, l.config.Pt.Zoom)
+			l.thumbnail = rgbrender.ResizeImage(src, size, l.config.Pt.Zoom)
 
 			go func() {
 				l.ensureLogger()
@@ -120,8 +130,8 @@ func (l *Logo) GetThumbnail(size image.Rectangle) (image.Image, error) {
 }
 
 // RenderLeftAligned renders the logo on the left side of the matrix
-func (l *Logo) RenderLeftAligned(bounds image.Rectangle, width int) (image.Image, error) {
-	thumb, err := l.GetThumbnail(l.bounds)
+func (l *Logo) RenderLeftAligned(ctx context.Context, bounds image.Rectangle, width int) (image.Image, error) {
+	thumb, err := l.GetThumbnail(ctx, l.bounds)
 	if err != nil {
 		return nil, err
 	}
@@ -141,8 +151,8 @@ func (l *Logo) RenderLeftAligned(bounds image.Rectangle, width int) (image.Image
 }
 
 // RenderRightAligned renders the logo on the right side of the matrix
-func (l *Logo) RenderRightAligned(bounds image.Rectangle, width int) (image.Image, error) {
-	thumb, err := l.GetThumbnail(l.bounds)
+func (l *Logo) RenderRightAligned(ctx context.Context, bounds image.Rectangle, width int) (image.Image, error) {
+	thumb, err := l.GetThumbnail(ctx, l.bounds)
 	if err != nil {
 		return nil, err
 	}

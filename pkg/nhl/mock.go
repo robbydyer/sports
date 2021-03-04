@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"image"
-	"image/png"
 	"time"
 
 	yaml "github.com/ghodss/yaml"
@@ -71,16 +70,11 @@ func (m *MockNHLAPI) GetLogo(ctx context.Context, logoKey string, logoConf *logo
 		return l, nil
 	}
 
-	sources, err := m.logoSources(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	if m.defaultLogoConf == nil {
 		m.defaultLogoConf = &[]*logo.Config{}
 	}
 
-	l, err = GetLogo(logoKey, logoConf, bounds, sources, m.defaultLogoConf)
+	l, err := GetLogo(ctx, logoKey, logoConf, bounds, m.defaultLogoConf)
 	if err != nil {
 		return nil, err
 	}
@@ -90,34 +84,6 @@ func (m *MockNHLAPI) GetLogo(ctx context.Context, logoKey string, logoConf *logo
 	m.logos[fullLogoKey] = l
 
 	return l, nil
-}
-
-func (m *MockNHLAPI) logoSources(ctx context.Context) (map[string]image.Image, error) {
-	if len(m.logoSourceCache) == len(ALL) {
-		return m.logoSourceCache, nil
-	}
-
-	for _, t := range ALL {
-		select {
-		case <-ctx.Done():
-			return nil, context.Canceled
-		default:
-		}
-		f, err := assets.Open(fmt.Sprintf("assets/logos/%s.png", t))
-		if err != nil {
-			return nil, err
-		}
-		defer f.Close()
-
-		i, err := png.Decode(f)
-		if err != nil {
-			return nil, err
-		}
-
-		m.logoSourceCache[t] = i
-	}
-
-	return m.logoSourceCache, nil
 }
 
 // AllTeamAbbreviations ...
@@ -190,6 +156,10 @@ func MockLiveGameGetter(ctx context.Context, link string) (sportboard.Game, erro
 	}
 
 	return nil, fmt.Errorf("could not locate live game with Link '%s'", link)
+}
+
+// CacheClear ...
+func (m *MockNHLAPI) CacheClear(ctx context.Context) {
 }
 
 // NewMock ...
