@@ -5,9 +5,7 @@ Go-based software to control a raspberry pi LED matrix.
 
 This is a Go project for displaying various types of "Boards" on a Raspberry Pi controlled RGB Matrix. The ideas here were heavily inspired by https://github.com/riffnshred/nhl-led-scoreboard . It uses some CGO bindings for the RGB matrix library https://github.com/hzeller/rpi-rgb-led-matrix. I chose to create my own project based off of those existing ideas because I wanted to be able to easily extend support for additional sports (see [Roadmap](#roadmap) section). I chose to write this in Go because I prefer it over Python, and theoretically it will run more efficiently than a Python-based one.
 
-I am currently running this with a Pi-zero. It performs perfectly well so far. I've tried to implement caching whenever possible at various layers to make this thing as efficient as possible. It aims to reduce IO by storing images and such in memory.
-
-*WARNING* This project is still very early in development. There will be lots of churn and breakage for a while.
+I run this on a Pi zero and a Pi 4. If you want to use the "Web Board" feature (see [Web UI](#web-ui)), I recommend at least a Pi 3.
 
 #### Table of Contents
 - [Board Types](#current-board-types)<br>
