@@ -3,59 +3,45 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
+import { GetStatus, CallMatrix } from './util.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
-
-var BACKEND = "http://" + window.location.host
 
 class Home extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { "disablerChecked": false };
-    }
-    callmatrix(path) {
-        console.log(`Calling matrix API ${path}`)
-        fetch(`${BACKEND}/api/${path}`, {
-            method: "GET",
-            mode: "cors",
-        });
+        this.state = { "screen": false, "webboard": false };
     }
     async componentDidMount() {
-        const resp = await fetch(`${BACKEND}/api/status`,
-            {
-                method: "GET",
-                mode: "cors",
-            }
-        );
-
-        const status = await resp.text();
-
-        if (resp.ok) {
-            if (status === "true") {
-                console.log("board is enabled", status)
-                this.setState({ "disablerChecked": true })
-            } else {
-                console.log("board is disabled", status)
-                this.setState({ "disablerChecked": false })
-            }
-        }
+        await GetStatus("status", (val) => {
+            this.setState({ "screen": val })
+        })
+        await GetStatus("webboardstatus", (val) => {
+            this.setState({ "webboard": val })
+        })
     }
 
-    handleSwitch = () => {
-        if (!this.state.disablerChecked) {
-            console.log("enabling board")
-            this.callmatrix("screenon")
+    handleSwitch = (apiOn, apiOff, stateVar) => {
+        var currentState = this.state[stateVar]
+        console.log("handle switch", currentState)
+        if (currentState) {
+            console.log("Turn off", apiOff)
+            CallMatrix(apiOff);
         } else {
-            console.log("disabling board")
-            this.callmatrix("screenoff")
+            console.log("Turn on", apiOn)
+            CallMatrix(apiOn);
         }
-        this.setState({ "disablerChecked": !this.state.disablerChecked })
+        this.setState(prev => ({
+            [stateVar]: !prev[stateVar],
+        }))
     }
+
     render() {
         return (
             <Container fluid>
                 <Row className="text-center">
                     <Col>
-                        <Form.Switch id="enabler" label="Screen On/Off" checked={this.state.disablerChecked} onChange={this.handleSwitch} />
+                        <Form.Switch id="screen" label="Screen On/Off" checked={this.state["screen"]} onChange={() => this.handleSwitch("screenon", "screenoff", "screen")} />
+                        <Form.Switch id="webboard" label="Web Board On/Off" checked={this.state["webboard"]} onChange={() => this.handleSwitch("webboardon", "webboardoff", "webboard")} />
                     </Col>
                 </Row>
             </Container>

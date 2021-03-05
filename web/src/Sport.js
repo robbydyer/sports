@@ -9,52 +9,48 @@ import Image from 'react-bootstrap/Image';
 import nhllogo from './nhllogo.jpeg';
 import mlblogo from './mlb.png';
 import ncaamlogo from './ncaam.png'
-
-var BACKEND = "http://" + window.location.host
+import { GetStatus, CallMatrix } from './util';
 
 class Sport extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { "disablerChecked": false };
+        this.state = {
+            "enabled": false,
+            "hideFavorite": false,
+            "stickyFavorite": false,
+        };
     }
-    callmatrix(path) {
-        console.log(`Calling matrix API nhl/${path}`)
-        fetch(`${BACKEND}/api/${this.props.sport}/${path}`, {
-            method: "GET",
-            mode: "cors",
-        });
-    }
-
     async componentDidMount() {
-        const resp = await fetch(`${BACKEND}/api/${this.props.sport}/status`,
-            {
-                method: "GET",
-                mode: "cors",
-            }
-        );
-
-        const status = await resp.text();
-
-        if (resp.ok) {
-            if (status === "true") {
-                console.log("board is enabled", status)
-                this.setState({ "disablerChecked": true })
-            } else {
-                console.log("board is disabled", status)
-                this.setState({ "disablerChecked": false })
-            }
-        }
+        await GetStatus(`${this.props.sport}/status`, (val) => {
+            this.setState({
+                "enabled": val,
+            })
+        })
+        await GetStatus(`${this.props.sport}/favoritescorestatus`, (val) => {
+            this.setState({
+                "hideFavorite": val,
+            })
+        })
+        await GetStatus(`${this.props.sport}/favoritestickystatus`, (val) => {
+            this.setState({
+                "stickyFavorite": val,
+            })
+        })
     }
 
-    handleSwitch = () => {
-        if (!this.state.disablerChecked) {
-            console.log("enabling board")
-            this.callmatrix("enable")
+    handleSwitch = (apiOn, apiOff, stateVar) => {
+        var currentState = this.state[stateVar]
+        console.log("handle switch", currentState)
+        if (currentState) {
+            console.log("Turn off", apiOff)
+            CallMatrix(apiOff);
         } else {
-            console.log("disabling board")
-            this.callmatrix("disable")
+            console.log("Turn on", apiOn)
+            CallMatrix(apiOn);
         }
-        this.setState({ "disablerChecked": !this.state.disablerChecked })
+        this.setState(prev => ({
+            [stateVar]: !prev[stateVar],
+        }))
     }
 
     logosrc() {
@@ -72,14 +68,22 @@ class Sport extends React.Component {
                 <Row className="text-center"><Col><Image src={this.logosrc()} style={{ height: '100px', width: 'auto' }} fluid /></Col></Row>
                 <Row className="text-center">
                     <Col>
-                        <Form.Switch id="enabler" label="Enable/Disable" checked={this.state.disablerChecked} onChange={this.handleSwitch} />
+                        <Form.Switch id="enabler" label="Enable/Disable" checked={this.state.enabled}
+                            onChange={() => this.handleSwitch(`${this.props.sport}/enable`, `${this.props.sport}/disable`, "enabled")} />
                     </Col>
                 </Row>
-
-                <Row className="text-center"><Col><Button onClick={() => this.callmatrix("hidefavoritescore")}>Hide Favorite Scores</Button></Col></Row>
-                <Row className="text-center"><Col><Button onClick={() => this.callmatrix("showfavoritescore")}>Show Favorite Scores</Button></Col></Row>
-                <Row className="text-center"><Col><Button onClick={() => this.callmatrix("favoritesticky")}>Sticky Favorite Team</Button></Col></Row>
-                <Row className="text-center"><Col><Button onClick={() => this.callmatrix("favoriteunstick")}>Unstick Favorite Team</Button></Col></Row>
+                <Row className="text-center">
+                    <Col>
+                        <Form.Switch id="favscore" label="Hide Favorite Scores" checked={this.state.hideFavorite}
+                            onChange={() => this.handleSwitch(`${this.props.sport}/hidefavoritescore`, `${this.props.sport}/showfavoritescore`, "hideFavorite")} />
+                    </Col>
+                </Row>
+                <Row className="text-center">
+                    <Col>
+                        <Form.Switch id="favscore" label="Stick Favorite Live Games" checked={this.state.stickyFavorite}
+                            onChange={() => this.handleSwitch(`${this.props.sport}/favoritesticky`, `${this.props.sport}/favoriteunstick`, "stickyFavorite")} />
+                    </Col>
+                </Row>
             </Container>
         )
     }

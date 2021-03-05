@@ -28,6 +28,17 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			},
 		},
 		{
+			Path: fmt.Sprintf("/%s/favoritescorestatus", s.api.HTTPPathPrefix()),
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "text/plain")
+				if s.config.HideFavoriteScore.Load() {
+					_, _ = w.Write([]byte("true"))
+					return
+				}
+				_, _ = w.Write([]byte("false"))
+			},
+		},
+		{
 			Path: fmt.Sprintf("/%s/favoritesticky", s.api.HTTPPathPrefix()),
 			Handler: func(wrter http.ResponseWriter, req *http.Request) {
 				s.log.Info("setting favorite teams to sticky")
@@ -39,6 +50,17 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Handler: func(wrter http.ResponseWriter, req *http.Request) {
 				s.log.Info("setting favorite teams to not stick")
 				s.config.FavoriteSticky.Store(false)
+			},
+		},
+		{
+			Path: fmt.Sprintf("/%s/favoritestickystatus", s.api.HTTPPathPrefix()),
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "text/plain")
+				if s.config.FavoriteSticky.Load() {
+					_, _ = w.Write([]byte("true"))
+					return
+				}
+				_, _ = w.Write([]byte("false"))
 			},
 		},
 		{
