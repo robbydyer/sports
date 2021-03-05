@@ -24,6 +24,9 @@ type SportsMatrix struct {
 	screenIsOn    *atomic.Bool
 	screenOff     chan struct{}
 	screenOn      chan struct{}
+	webBoardIsOn  *atomic.Bool
+	webBoardOn    chan struct{}
+	webBoardOff   chan struct{}
 	serveBlock    chan struct{}
 	log           *zap.Logger
 	boardCtx      context.Context
@@ -100,15 +103,18 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 	cfg.Defaults()
 
 	s := &SportsMatrix{
-		boards:     boards,
-		cfg:        cfg,
-		log:        logger,
-		screenOff:  make(chan struct{}),
-		screenOn:   make(chan struct{}),
-		serveBlock: make(chan struct{}),
-		close:      make(chan struct{}),
-		screenIsOn: atomic.NewBool(true),
-		canvases:   canvases,
+		boards:       boards,
+		cfg:          cfg,
+		log:          logger,
+		screenOff:    make(chan struct{}),
+		screenOn:     make(chan struct{}),
+		serveBlock:   make(chan struct{}),
+		close:        make(chan struct{}),
+		screenIsOn:   atomic.NewBool(true),
+		webBoardIsOn: atomic.NewBool(false),
+		webBoardOn:   make(chan struct{}),
+		webBoardOff:  make(chan struct{}),
+		canvases:     canvases,
 	}
 
 	// Add an ImgCanvas
@@ -214,21 +220,66 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 				_ = canvas.Clear()
 			}
 			s.boardCtx, s.boardCancel = context.WithCancel(ctx)
+			s.webBoardOff <- struct{}{}
 			s.Unlock()
 		case <-s.screenOn:
 			changed := s.screenIsOn.CAS(false, true)
 			if changed {
 				s.log.Warn("screen turning on")
 				s.serveBlock <- struct{}{}
-
-				go func() {
-					if err := s.launchWebBoard(s.boardCtx); err != nil {
-						s.log.Error("failed to launch web board", zap.Error(err))
-					}
-				}()
+				if s.cfg.LaunchWebBoard {
+					s.webBoardOn <- struct{}{}
+				}
 			} else {
 				s.log.Warn("screen is already on")
 			}
+		}
+	}
+}
+
+func (s *SportsMatrix) webBoardWatcher(ctx context.Context) {
+	webCtx, webCancel := context.WithCancel(ctx)
+	defer webCancel()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-s.webBoardOff:
+			if !s.webBoardIsOn.Load() {
+				s.log.Warn("web board is already off")
+				continue
+			}
+			webCancel()
+			s.webBoardIsOn.Store(false)
+		case <-s.webBoardOn:
+			if s.webBoardIsOn.Load() {
+				s.log.Warn("web board is already on")
+				continue
+			}
+			go func() {
+				tries := 0
+				for {
+					select {
+					case <-webCtx.Done():
+						return
+					default:
+					}
+					if err := s.launchWebBoard(webCtx); err != nil {
+						if err == context.Canceled {
+							s.log.Warn("web board context canceled, closing", zap.Error(err))
+							return
+						}
+						s.log.Error("failed to launch web board", zap.Error(err))
+					}
+					tries++
+					if tries > 10 {
+						s.log.Error("failed too many times to launch web board")
+						return
+					}
+					time.Sleep(5 * time.Second)
+				}
+			}()
+			s.webBoardIsOn.Store(true)
 		}
 	}
 }
@@ -244,12 +295,9 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 	s.boardCtx, s.boardCancel = context.WithCancel(ctx)
 	defer s.boardCancel()
 
+	go s.webBoardWatcher(ctx)
 	if s.cfg.LaunchWebBoard {
-		go func() {
-			if err := s.launchWebBoard(s.boardCtx); err != nil {
-				s.log.Error("failed to launch web board", zap.Error(err))
-			}
-		}()
+		s.webBoardOn <- struct{}{}
 	}
 
 	go s.screenWatcher(ctx)

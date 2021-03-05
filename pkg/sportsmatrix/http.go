@@ -37,22 +37,6 @@ func (s *SportsMatrix) startHTTP() chan error {
 
 	router := mux.NewRouter()
 
-	s.httpEndpoints = append(s.httpEndpoints,
-		"/api/screenoff",
-		"/api/screenon",
-	)
-
-	router.HandleFunc("/api/screenoff", s.turnScreenOff)
-	router.HandleFunc("/api/screenon", s.turnScreenOn)
-	router.HandleFunc("/api/status", func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("Content-Type", "text/plain")
-		if s.screenIsOn.Load() {
-			_, _ = w.Write([]byte("true"))
-			return
-		}
-		_, _ = w.Write([]byte("false"))
-	})
-
 	register := func(name string, h *board.HTTPHandler) {
 		if !strings.HasPrefix(h.Path, "/api") {
 			h.Path = filepath.Join("/api", h.Path)
@@ -60,6 +44,10 @@ func (s *SportsMatrix) startHTTP() chan error {
 		s.log.Info("registering http handler", zap.String("name", name), zap.String("path", h.Path))
 		router.HandleFunc(h.Path, h.Handler)
 		s.httpEndpoints = append(s.httpEndpoints, h.Path)
+	}
+
+	for _, h := range s.httpHandlers() {
+		register("sportsmatrix", h)
 	}
 
 	for _, b := range s.boards {
@@ -121,14 +109,61 @@ func (s *SportsMatrix) startHTTP() chan error {
 	return errChan
 }
 
-func (s *SportsMatrix) turnScreenOff(respWriter http.ResponseWriter, req *http.Request) {
-	s.Lock()
-	defer s.Unlock()
-	s.screenOff <- struct{}{}
-}
-
-func (s *SportsMatrix) turnScreenOn(respWriter http.ResponseWriter, req *http.Request) {
-	s.Lock()
-	defer s.Unlock()
-	s.screenOn <- struct{}{}
+func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
+	return []*board.HTTPHandler{
+		{
+			Path: "/api/screenon",
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.Lock()
+				defer s.Unlock()
+				s.screenOn <- struct{}{}
+			},
+		},
+		{
+			Path: "/api/screenoff",
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.Lock()
+				defer s.Unlock()
+				s.screenOff <- struct{}{}
+			},
+		},
+		{
+			Path: "/api/status",
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "text/plain")
+				if s.screenIsOn.Load() {
+					_, _ = w.Write([]byte("true"))
+					return
+				}
+				_, _ = w.Write([]byte("false"))
+			},
+		},
+		{
+			Path: "/api/webboardon",
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.Lock()
+				defer s.Unlock()
+				s.webBoardOn <- struct{}{}
+			},
+		},
+		{
+			Path: "/api/webboardoff",
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.Lock()
+				defer s.Unlock()
+				s.webBoardOff <- struct{}{}
+			},
+		},
+		{
+			Path: "/api/webboardstatus",
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "text/plain")
+				if s.webBoardIsOn.Load() {
+					_, _ = w.Write([]byte("true"))
+					return
+				}
+				_, _ = w.Write([]byte("false"))
+			},
+		},
+	}
 }

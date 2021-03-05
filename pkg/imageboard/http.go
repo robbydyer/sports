@@ -45,6 +45,17 @@ func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			},
 		},
 		{
+			Path: "/img/diskcachestatus",
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "text/plain")
+				if i.config.UseDiskCache.Load() {
+					_, _ = w.Write([]byte("true"))
+					return
+				}
+				_, _ = w.Write([]byte("false"))
+			},
+		},
+		{
 			Path: "/img/enablememcache",
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				i.log.Info("enabled memory cache for image board")
@@ -57,6 +68,17 @@ func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				i.log.Info("disabling memory cache for image board")
 				i.config.UseMemCache.Store(false)
 				i.cacheClear()
+			},
+		},
+		{
+			Path: "/img/memcachestatus",
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "text/plain")
+				if i.config.UseMemCache.Load() {
+					_, _ = w.Write([]byte("true"))
+					return
+				}
+				_, _ = w.Write([]byte("false"))
 			},
 		},
 		{
