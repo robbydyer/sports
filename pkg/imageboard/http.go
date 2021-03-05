@@ -2,6 +2,8 @@ package imageboard
 
 import (
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/robbydyer/sports/pkg/board"
 )
@@ -42,6 +44,7 @@ func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				i.log.Info("disabling disk cache for image board")
 				i.config.UseDiskCache.Store(false)
+				_ = os.RemoveAll(filepath.Join(diskCacheDir))
 			},
 		},
 		{

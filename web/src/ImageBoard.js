@@ -62,7 +62,7 @@ class ImageBoard extends React.Component {
                 </Row>
                 <Row className="text-center">
                     <Col>
-                        <Form.Switch id="mem" label="Enable Memory Cache" checked={this.state.diskcache}
+                        <Form.Switch id="disk" label="Enable Disk Cache" checked={this.state.diskcache}
                             onChange={() => this.handleSwitch("img/enablediskcache", "img/disablediskcache", "diskcache")} />
                     </Col>
                 </Row>
