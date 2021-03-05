@@ -202,6 +202,7 @@ func (s *SportsMatrix) GetImgCanvas() (*imgcanvas.ImgCanvas, error) {
 }
 
 func (s *SportsMatrix) screenWatcher(ctx context.Context) {
+	webBoardWasOn := false
 	for {
 		select {
 		case <-ctx.Done():
@@ -220,6 +221,7 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 				_ = canvas.Clear()
 			}
 			s.boardCtx, s.boardCancel = context.WithCancel(ctx)
+			webBoardWasOn = s.webBoardIsOn.Load()
 			s.webBoardOff <- struct{}{}
 			s.Unlock()
 		case <-s.screenOn:
@@ -227,7 +229,7 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 			if changed {
 				s.log.Warn("screen turning on")
 				s.serveBlock <- struct{}{}
-				if s.cfg.LaunchWebBoard {
+				if webBoardWasOn {
 					s.webBoardOn <- struct{}{}
 				}
 			} else {
@@ -238,7 +240,8 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 }
 
 func (s *SportsMatrix) webBoardWatcher(ctx context.Context) {
-	webCtx, webCancel := context.WithCancel(ctx)
+	var webCtx context.Context
+	var webCancel context.CancelFunc
 	defer webCancel()
 	for {
 		select {
@@ -256,6 +259,8 @@ func (s *SportsMatrix) webBoardWatcher(ctx context.Context) {
 				s.log.Warn("web board is already on")
 				continue
 			}
+			webCtx, webCancel = context.WithCancel(ctx)
+			defer webCancel()
 			go func() {
 				tries := 0
 				for {
