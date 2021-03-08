@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/robbydyer/sports/pkg/util"
 )
 
 //go:embed assets/divisions.json
@@ -27,6 +29,9 @@ type Team struct {
 	DivisionData struct {
 		ID int `json:"id"`
 	} `json:"division"`
+	Roster struct {
+		Roster []*Player `json:"roster"`
+	} `json:"roster"`
 	Division *division
 	score    int
 }
@@ -83,7 +88,7 @@ func (t *Team) setGameTimes() error {
 
 // GetTeams ...
 func GetTeams(ctx context.Context) ([]*Team, error) {
-	uri := fmt.Sprintf("%s/teams?expand=team.stats,team.schedule.previous,team.schedule.next", baseURL)
+	uri := fmt.Sprintf("%s/teams?expand=team.roster,team.schedule.next&season=%s", baseURL, GetSeason(util.Today()))
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, err
