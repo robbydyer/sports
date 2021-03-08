@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"math"
 
 	"go.uber.org/zap"
 
@@ -21,24 +22,29 @@ type GridOption func(grid *Grid) error
 
 // Grid manages sub-canvas "cells" of a larger canvas
 type Grid struct {
-	log       *zap.Logger
-	cells     []*Cell
-	cols      int
-	rows      int
-	cellX     int
-	cellY     int
-	padding   int
-	paddedPix map[string]image.Point
+	baseCanvas   board.Canvas
+	log          *zap.Logger
+	cells        []*Cell
+	cols         int
+	rows         int
+	cellX        []int
+	cellY        []int
+	padRatio     float64
+	padding      int
+	paddedPix    map[string]image.Point
+	cellStyleSet bool
 }
 
 // Cell contains a canvas and it's bounds related to it's parent canvas
 type Cell struct {
 	Canvas board.Canvas
 	Bounds image.Rectangle
+	Col    int
+	Row    int
 }
 
 // NewGrid ...
-func NewGrid(canvas board.Canvas, colWidth int, rowHeight int, log *zap.Logger, opts ...GridOption) (*Grid, error) {
+func NewGrid(canvas board.Canvas, numCols int, numRows int, log *zap.Logger, opts ...GridOption) (*Grid, error) {
 	if log == nil {
 		var err error
 		log, err = zap.NewDevelopment()
@@ -46,9 +52,6 @@ func NewGrid(canvas board.Canvas, colWidth int, rowHeight int, log *zap.Logger, 
 			return nil, err
 		}
 	}
-
-	numCols := canvas.Bounds().Dx() / colWidth
-	numRows := canvas.Bounds().Dy() / rowHeight
 
 	if numCols > maxAllowedCols {
 		return nil, fmt.Errorf("unsupported number of columns %d", numCols)
@@ -58,18 +61,30 @@ func NewGrid(canvas board.Canvas, colWidth int, rowHeight int, log *zap.Logger, 
 	}
 
 	grid := &Grid{
-		log:       log,
-		cols:      numCols,
-		rows:      numRows,
-		cellX:     canvas.Bounds().Dx() / numCols,
-		cellY:     canvas.Bounds().Dy() / numRows,
-		paddedPix: make(map[string]image.Point),
+		baseCanvas: canvas,
+		log:        log,
+		cols:       numCols,
+		rows:       numRows,
+		paddedPix:  make(map[string]image.Point),
+		cellX:      make([]int, numCols),
+		cellY:      make([]int, numRows),
 	}
 
 	for _, f := range opts {
 		if err := f(grid); err != nil {
 			return nil, err
 		}
+	}
+
+	if !grid.cellStyleSet {
+		f := WithUniformCells()
+		if err := f(grid); err != nil {
+			return nil, err
+		}
+	}
+
+	if grid.padRatio > 0 {
+		grid.padding = int(grid.padRatio * float64(canvas.Bounds().Dx()))
 	}
 
 	if grid.padding > 0 && grid.padding%2 != 0 {
@@ -87,14 +102,33 @@ func NewGrid(canvas board.Canvas, colWidth int, rowHeight int, log *zap.Logger, 
 }
 
 func (g *Grid) generateCells() error {
+	if len(g.cellX) != g.cols {
+		return fmt.Errorf("invalid number of cell width settings")
+	}
+	if len(g.cellY) != g.rows {
+		return fmt.Errorf("invalid number of cell height settings")
+	}
 	cellIndex := 0
 	for r := 0; r < g.rows; r++ {
 		for c := 0; c < g.cols; c++ {
 			halfPad := g.padding / 2
-			realStartX := c * g.cellX
-			realStartY := r * g.cellY
-			realEndX := realStartX + g.cellX
-			realEndY := realStartY + g.cellY
+			realStartX := 0
+			if c > 0 {
+				for i := c - 1; i >= 0; i-- {
+					realStartX += g.cellX[i]
+				}
+			}
+
+			realStartY := 0
+
+			if r > 0 {
+				for i := r - 1; i >= 0; i-- {
+					realStartY += g.cellY[i]
+				}
+			}
+
+			realEndX := realStartX + g.cellX[c]
+			realEndY := realStartY + g.cellY[r]
 			startX := realStartX + halfPad
 			startY := realStartY + halfPad
 			endX := realEndX - halfPad
@@ -102,11 +136,11 @@ func (g *Grid) generateCells() error {
 
 			// Save padded pixels, exluding the outermost regions of the canvas
 			for x := realStartX; x < realEndX; x++ {
-				if (realStartX == 0 && x < startX) || (realEndX == (g.cols*g.cellX) && x > endX) {
+				if (realStartX == 0 && x < startX) || (realEndX == (g.cols*g.cellX[c]) && x > endX) {
 					continue
 				}
 				for y := realStartY; y < realEndY; y++ {
-					if (realStartY == 0 && y < startY) || (realEndY == (g.rows*g.cellY) && y > endY) {
+					if (realStartY == 0 && y < startY) || (realEndY == (g.rows*g.cellY[r]) && y > endY) {
 						continue
 					}
 					if x < startX || y < startY || x > endX || y > endY {
@@ -115,19 +149,21 @@ func (g *Grid) generateCells() error {
 				}
 			}
 
-			newC := board.NewBlankCanvas(g.cellX, g.cellY, g.log)
+			newC := board.NewBlankCanvas(g.cellX[c], g.cellY[r], g.log)
 			if newC == nil {
 				return fmt.Errorf("cell canvas was nil")
 			}
 			g.log.Debug("new cell",
 				zap.Int("index", cellIndex),
-				zap.Int("start X", newC.Bounds().Min.X),
-				zap.Int("start Y", newC.Bounds().Min.Y),
-				zap.Int("end X", newC.Bounds().Max.X),
-				zap.Int("end Y", newC.Bounds().Max.Y),
+				zap.Int("start X", startX),
+				zap.Int("start Y", startY),
+				zap.Int("end X", endX),
+				zap.Int("end Y", endY),
 			)
 			g.cells[cellIndex] = &Cell{
 				Canvas: newC,
+				Row:    r,
+				Col:    c,
 				Bounds: image.Rect(startX, startY, endX, endY),
 			}
 			cellIndex++
@@ -156,6 +192,30 @@ func (g *Grid) Cell(index int) (*Cell, error) {
 	return g.cells[index], nil
 }
 
+// GetRow get all the cells in the given row
+func (g *Grid) GetRow(row int) []*Cell {
+	cells := []*Cell{}
+	for _, c := range g.cells {
+		if c.Row == row {
+			cells = append(cells, c)
+		}
+	}
+
+	return cells
+}
+
+// GetCol gets all the cells in a given column
+func (g *Grid) GetCol(col int) []*Cell {
+	cells := []*Cell{}
+	for _, c := range g.cells {
+		if c.Col == col {
+			cells = append(cells, c)
+		}
+	}
+
+	return cells
+}
+
 // FillPadded fills the cell padding with a color
 func (g *Grid) FillPadded(canvas board.Canvas, clr color.Color) {
 	for _, pt := range g.paddedPix {
@@ -171,10 +231,67 @@ func (g *Grid) DrawToBase(base board.Canvas) error {
 	return nil
 }
 
-// WithPadding is an option to specify padding width between cells
-func WithPadding(pad int) GridOption {
+// WithPadding is an option to specify padding width between cells as a percentage of canvas width
+func WithPadding(pad float64) GridOption {
 	return func(g *Grid) error {
-		g.padding = pad
+		g.padRatio = pad
+		return nil
+	}
+}
+
+// WithUniformCells sets all cell sizes to a uniform size
+func WithUniformCells() GridOption {
+	return func(g *Grid) error {
+		if g.baseCanvas == nil {
+			return fmt.Errorf("base canvas not set")
+		}
+		g.log.Debug("uniform grid")
+		cellX := g.baseCanvas.Bounds().Dx() / g.cols
+		cellY := g.baseCanvas.Bounds().Dy() / g.rows
+
+		for i := 0; i < g.cols; i++ {
+			g.cellX[i] = cellX
+		}
+
+		for i := 0; i < g.rows; i++ {
+			g.cellY[i] = cellY
+		}
+
+		g.cellStyleSet = true
+
+		return nil
+	}
+}
+
+// WithCellRatios sets col/row sizes with ratios
+func WithCellRatios(colRatios []float64, rowRatios []float64) GridOption {
+	return func(g *Grid) error {
+		g.log.Debug("grid with col/row ratios")
+		if len(colRatios) != g.cols {
+			return fmt.Errorf("invalid number of col ratios, must match number of cols")
+		}
+		if len(rowRatios) != g.rows {
+			return fmt.Errorf("invalid number of row ratios, must match number of rows")
+		}
+
+		for i, r := range colRatios {
+			g.cellX[i] = int(math.Floor(r * float64(g.baseCanvas.Bounds().Dx())))
+			g.log.Debug("cellX",
+				zap.Int("index", i),
+				zap.Int("size", g.cellX[i]),
+			)
+		}
+
+		for i, r := range rowRatios {
+			g.cellY[i] = int(math.Floor(r * float64(g.baseCanvas.Bounds().Dy())))
+			g.log.Debug("cellY",
+				zap.Int("index", i),
+				zap.Int("size", g.cellY[i]),
+			)
+		}
+
+		g.cellStyleSet = true
+
 		return nil
 	}
 }
