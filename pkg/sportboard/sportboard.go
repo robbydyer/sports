@@ -372,7 +372,7 @@ OUTER:
 			zap.Int("cell width", width),
 			zap.Int("cell height", height),
 		)
-		return s.renderGrid(boardCtx, canvas, games, width, height)
+		return s.renderGrid(boardCtx, canvas, games, w, h)
 	}
 
 	preloader := make(map[int]chan struct{})
@@ -457,16 +457,16 @@ OUTER:
 	return nil
 }
 
-func (s *SportBoard) renderGrid(ctx context.Context, canvas board.Canvas, games []Game, cellWidth int, cellHeight int) error {
+func (s *SportBoard) renderGrid(ctx context.Context, canvas board.Canvas, games []Game, cols int, rows int) error {
 	var opts []rgbrender.GridOption
 	if s.config.GridPadRatio > 0 {
-		padding := math.Floor(float64(cellWidth) * 0.015)
-		opts = append(opts, rgbrender.WithPadding(int(padding)))
+		opts = append(opts, rgbrender.WithPadding(s.config.GridPadRatio))
 	}
+	opts = append(opts, rgbrender.WithUniformCells())
 	grid, err := rgbrender.NewGrid(
 		canvas,
-		cellWidth,
-		cellHeight,
+		cols,
+		rows,
 		s.log,
 		opts...,
 	)

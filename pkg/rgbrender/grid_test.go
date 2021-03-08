@@ -18,16 +18,16 @@ func TestGridLayout(t *testing.T) {
 		name         string
 		canvasWidth  int
 		canvasHeight int
-		colWidth     int
-		rowHeight    int
+		cols         int
+		rows         int
 		expectedNum  int
 	}{
 		{
 			name:         "square",
 			canvasWidth:  100,
 			canvasHeight: 100,
-			colWidth:     50,
-			rowHeight:    50,
+			cols:         2,
+			rows:         2,
 			expectedNum:  4,
 		},
 	}
@@ -41,15 +41,15 @@ func TestGridLayout(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			canvas := board.NewBlankCanvas(100, 100, log)
-			grid, err := NewGrid(canvas, test.colWidth, test.rowHeight, nil)
+			grid, err := NewGrid(canvas, test.cols, test.rows, nil, WithUniformCells())
 			require.NoError(t, err)
 			require.Equal(t, test.expectedNum, len(grid.cells))
 
 			for _, cell := range grid.Cells() {
 				c := cell.Canvas
 				require.NotNil(t, c)
-				require.Equal(t, test.colWidth, c.Bounds().Dx())
-				require.Equal(t, test.rowHeight, c.Bounds().Dy())
+				require.Equal(t, test.canvasWidth/test.cols, c.Bounds().Dx())
+				require.Equal(t, test.canvasHeight/test.rows, c.Bounds().Dy())
 			}
 		})
 	}
@@ -59,7 +59,7 @@ func TestGrid(t *testing.T) {
 	log, err := zap.NewDevelopment()
 	require.NoError(t, err)
 	canvas := board.NewBlankCanvas(100, 100, log)
-	grid, err := NewGrid(canvas, 50, 50, log)
+	grid, err := NewGrid(canvas, 2, 2, log, WithUniformCells())
 	require.NoError(t, err)
 
 	clr := color.RGBA{

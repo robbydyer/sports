@@ -242,7 +242,6 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 func (s *SportsMatrix) webBoardWatcher(ctx context.Context) {
 	var webCtx context.Context
 	var webCancel context.CancelFunc
-	defer webCancel()
 	for {
 		select {
 		case <-ctx.Done():
