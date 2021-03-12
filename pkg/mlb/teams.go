@@ -33,6 +33,11 @@ type Team struct {
 	} `json:"division"`
 	Division *division
 	Runs     int
+	Roster   []*Player
+}
+
+type rosterData struct {
+	Roster []*Player
 }
 
 type divisionData struct {
@@ -119,7 +124,54 @@ OUTER:
 				continue OUTER
 			}
 		}
+
+		if err := team.setRoster(ctx); err != nil {
+			return nil, err
+		}
 	}
 
 	return teams.Teams, nil
+}
+
+func (t *Team) setRoster(ctx context.Context) error {
+	uri, err := url.Parse(fmt.Sprintf("%s/%s/roster", linkBase, t.Link))
+	if err != nil {
+		return err
+	}
+
+	yr := strconv.Itoa(time.Now().Year())
+	v := uri.Query()
+	v.Set("season", yr)
+
+	uri.RawQuery = v.Encode()
+
+	req, err := http.NewRequest("GET", uri.String(), nil)
+	if err != nil {
+		return err
+	}
+
+	req = req.WithContext(ctx)
+
+	client := http.DefaultClient
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	var dat *rosterData
+
+	if err := json.Unmarshal(body, &dat); err != nil {
+		return err
+	}
+
+	t.Roster = dat.Roster
+
+	return nil
 }

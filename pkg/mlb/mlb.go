@@ -219,3 +219,8 @@ func (m *MLB) TeamRecord(ctx context.Context, team sportboard.Team) string {
 func (m *MLB) TeamRank(ctx context.Context, team sportboard.Team) string {
 	return ""
 }
+
+// GetSeason gets the season identifier based on a date, i.e. 2020
+func GetSeason(day time.Time) string {
+	return fmt.Sprint(day.Year())
+}
