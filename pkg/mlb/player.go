@@ -12,7 +12,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/statboard"
-	"github.com/robbydyer/sports/pkg/util"
 )
 
 const (
@@ -38,14 +37,27 @@ type Player struct {
 
 type playerStatData struct {
 	Stats []struct {
+		Type struct {
+			DisplayName string `json:"displayName"`
+		} `json:"type"`
+		Group struct {
+			DisplayName string `json:"displayName"`
+		} `json:"group"`
 		Splits []struct {
-			Season string       `json:"season"`
-			Stat   *playerStats `json:"stat"`
+			Stat *playerStats `json:"stat"`
 		}
 	}
 }
 
 type playerStats struct {
+	Average  string `json:"avg"`
+	HomeRuns int    `json:"homeRuns"`
+	RBI      int    `json:"rbi"`
+	OPS      string `json:"ops"`
+	ERA      string `json:"era"`
+	Wins     int    `json:"wins"`
+	Losses   int    `json:"losses"`
+	Saves    int    `json:"saves"`
 }
 
 // PlayerCategories returns the possible categories a player falls into
@@ -123,14 +135,14 @@ func (p *Player) GetCategory() string {
 
 func (p *Player) setStats(ctx context.Context) error {
 	//"https://statsapi.web.nhl.com/api/v1/people/8478445/stats?stats=statsSingleSeason&season=20202021"
-	uri, err := url.Parse(fmt.Sprintf("https://statsapi.web.nhl.com/api/v1/people/%d/stats", p.Person.ID))
+	uri, err := url.Parse(fmt.Sprintf("%s/v1/people/%d", baseURL, p.Person.ID))
 	if err != nil {
 		return err
 	}
 
 	v := uri.Query()
-	v.Set("stats", "statsSingleSeason")
-	v.Set("season", GetSeason(util.Today()))
+	// TODO: Change this to "season" for type
+	v.Set("hydrate", "stats=(group=[hitting,pitching,fielding],type=career),currentTeam")
 
 	uri.RawQuery = v.Encode()
 
@@ -160,6 +172,13 @@ func (p *Player) setStats(ctx context.Context) error {
 	}
 
 	for _, all := range pStat.Stats {
+		cat := p.GetCategory()
+		if cat == "hitter" && all.Group.DisplayName != "hitting" {
+			continue
+		}
+		if cat == "pitcher" && all.Group.DisplayName != "pitching" {
+			continue
+		}
 		for _, s := range all.Splits {
 			p.Stats = s.Stat
 			return nil
