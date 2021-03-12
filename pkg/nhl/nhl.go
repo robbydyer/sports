@@ -70,6 +70,9 @@ func (n *NHL) CacheClear(ctx context.Context) {
 	for k := range n.games {
 		delete(n.games, k)
 	}
+	if err := n.UpdateTeams(ctx); err != nil {
+		n.log.Error("failed to update teams", zap.Error(err))
+	}
 	if err := n.UpdateGames(context.Background(), util.Today().Format(DateFormat)); err != nil {
 		n.log.Error("failed to get today's games", zap.Error(err))
 	}
@@ -179,6 +182,11 @@ func (n *NHL) League() string {
 	return "NHL"
 }
 
+// LeagueShortName ...
+func (n *NHL) LeagueShortName() string {
+	return "NHL"
+}
+
 // UpdateTeams ...
 func (n *NHL) UpdateTeams(ctx context.Context) error {
 	teamList, err := GetTeams(ctx)
@@ -211,4 +219,15 @@ func (n *NHL) TeamRecord(ctx context.Context, team sportboard.Team) string {
 // TeamRank ...
 func (n *NHL) TeamRank(ctx context.Context, team sportboard.Team) string {
 	return ""
+}
+
+// GetSeason gets the season identifier based on a date, i.e. 20202021
+func GetSeason(day time.Time) string {
+	year := day.Year()
+
+	if day.Month() > 6 {
+		return fmt.Sprintf("%d%d", year, year+1)
+	}
+
+	return fmt.Sprintf("%d%d", year-1, year)
 }

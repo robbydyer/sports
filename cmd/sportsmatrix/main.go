@@ -26,6 +26,7 @@ import (
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
+	"github.com/robbydyer/sports/pkg/statboard"
 	"github.com/robbydyer/sports/pkg/sysboard"
 )
 
@@ -148,10 +149,14 @@ func (r *rootArgs) setConfigDefaults() {
 	if r.config.NHLConfig == nil {
 		r.config.NHLConfig = &sportboard.Config{
 			Enabled: atomic.NewBool(false),
+			Stats: &statboard.Config{
+				Enabled: atomic.NewBool(false),
+			},
 		}
 	}
 
 	r.config.NHLConfig.SetDefaults()
+	r.config.NHLConfig.Stats.SetDefaults()
 
 	if r.config.ImageConfig == nil {
 		r.config.ImageConfig = &imageboard.Config{
@@ -223,13 +228,13 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 
 	var boards []board.Board
 
-	if r.config.NHLConfig != nil {
-		api, err := nhl.New(ctx, logger)
-		if err != nil {
-			return boards, err
-		}
+	nhlAPI, err := nhl.New(ctx, logger)
+	if err != nil {
+		return boards, err
+	}
 
-		b, err := sportboard.New(ctx, api, bounds, logger, r.config.NHLConfig)
+	if r.config.NHLConfig != nil {
+		b, err := sportboard.New(ctx, nhlAPI, bounds, logger, r.config.NHLConfig)
 		if err != nil {
 			return boards, err
 		}
@@ -258,6 +263,15 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 		b, err := sportboard.New(ctx, api, bounds, logger, r.config.NCAAMConfig)
 		if err != nil {
 			return boards, err
+		}
+
+		boards = append(boards, b)
+	}
+
+	if r.config.NHLConfig.Stats != nil {
+		b, err := statboard.New(ctx, nhlAPI, r.config.NHLConfig.Stats, logger)
+		if err != nil {
+			return nil, err
 		}
 
 		boards = append(boards, b)

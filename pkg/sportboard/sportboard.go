@@ -18,6 +18,7 @@ import (
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/rgbrender"
+	"github.com/robbydyer/sports/pkg/statboard"
 	"github.com/robbydyer/sports/pkg/util"
 )
 
@@ -49,21 +50,22 @@ type Config struct {
 	boardDelay        time.Duration
 	TimeColor         color.Color
 	ScoreColor        color.Color
-	Enabled           *atomic.Bool   `json:"enabled"`
-	BoardDelay        string         `json:"boardDelay"`
-	FavoriteSticky    *atomic.Bool   `json:"favoriteSticky"`
-	ScoreFont         *FontConfig    `json:"scoreFont"`
-	TimeFont          *FontConfig    `json:"timeFont"`
-	LogoConfigs       []*logo.Config `json:"logoConfigs"`
-	WatchTeams        []string       `json:"watchTeams"`
-	FavoriteTeams     []string       `json:"favoriteTeams"`
-	HideFavoriteScore *atomic.Bool   `json:"hideFavoriteScore"`
-	ShowRecord        *atomic.Bool   `json:"showRecord"`
-	GridCols          int            `json:"gridCols"`
-	GridRows          int            `json:"gridRows"`
-	GridPadRatio      float64        `json:"gridPadRatio"`
-	MinimumGridWidth  int            `json:"minimumGridWidth"`
-	MinimumGridHeight int            `json:"minimumGridHeight"`
+	Enabled           *atomic.Bool      `json:"enabled"`
+	BoardDelay        string            `json:"boardDelay"`
+	FavoriteSticky    *atomic.Bool      `json:"favoriteSticky"`
+	ScoreFont         *FontConfig       `json:"scoreFont"`
+	TimeFont          *FontConfig       `json:"timeFont"`
+	LogoConfigs       []*logo.Config    `json:"logoConfigs"`
+	WatchTeams        []string          `json:"watchTeams"`
+	FavoriteTeams     []string          `json:"favoriteTeams"`
+	HideFavoriteScore *atomic.Bool      `json:"hideFavoriteScore"`
+	ShowRecord        *atomic.Bool      `json:"showRecord"`
+	GridCols          int               `json:"gridCols"`
+	GridRows          int               `json:"gridRows"`
+	GridPadRatio      float64           `json:"gridPadRatio"`
+	MinimumGridWidth  int               `json:"minimumGridWidth"`
+	MinimumGridHeight int               `json:"minimumGridHeight"`
+	Stats             *statboard.Config `json:"stats"`
 }
 
 // FontConfig ...

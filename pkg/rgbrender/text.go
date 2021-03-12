@@ -82,13 +82,11 @@ func GetFont(name string) (*truetype.Font, error) {
 	return freetype.ParseFont(f)
 }
 
-// Write ...
-func (t *TextWriter) Write(canvas draw.Image, bounds image.Rectangle, str []string, clr color.Color) error {
+func (t *TextWriter) getDrawer(canvas draw.Image, clr color.Color) (*font.Drawer, error) {
 	if t.font == nil {
-		return fmt.Errorf("font is not set")
+		return nil, fmt.Errorf("font is not set")
 	}
-	startX := bounds.Min.X + t.XStartCorrection
-	drawer := &font.Drawer{
+	return &font.Drawer{
 		Dst: canvas,
 		Src: image.NewUniform(clr),
 		Face: truetype.NewFace(t.font,
@@ -97,7 +95,16 @@ func (t *TextWriter) Write(canvas draw.Image, bounds image.Rectangle, str []stri
 				Hinting: font.HintingFull,
 			},
 		),
+	}, nil
+}
+
+// Write ...
+func (t *TextWriter) Write(canvas draw.Image, bounds image.Rectangle, str []string, clr color.Color) error {
+	drawer, err := t.getDrawer(canvas, clr)
+	if err != nil {
+		return err
 	}
+	startX := bounds.Min.X + t.XStartCorrection
 
 	// lineY represents how much space to add for the newline
 	lineY := int(math.Floor(t.FontSize + t.LineSpace))
@@ -116,18 +123,9 @@ func (t *TextWriter) Write(canvas draw.Image, bounds image.Rectangle, str []stri
 
 // WriteAligned writes text aligned within a given bounds
 func (t *TextWriter) WriteAligned(align Align, canvas draw.Image, bounds image.Rectangle, str []string, clr color.Color) error {
-	if t.font == nil {
-		return fmt.Errorf("font is not set")
-	}
-	drawer := &font.Drawer{
-		Dst: canvas,
-		Src: image.NewUniform(clr),
-		Face: truetype.NewFace(t.font,
-			&truetype.Options{
-				Size:    t.FontSize,
-				Hinting: font.HintingFull,
-			},
-		),
+	drawer, err := t.getDrawer(canvas, clr)
+	if err != nil {
+		return err
 	}
 
 	var maxXWidth fixed.Int26_6
@@ -160,20 +158,26 @@ func (t *TextWriter) WriteAligned(align Align, canvas draw.Image, bounds image.R
 	return nil
 }
 
+// MeasureStrings measures the pixel width of a list of strings
+func (t *TextWriter) MeasureStrings(canvas draw.Image, str []string) ([]int, error) {
+	lengths := make([]int, len(str))
+	drawer, err := t.getDrawer(canvas, color.White)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, s := range str {
+		lengths[i] = drawer.MeasureString(s).Ceil()
+	}
+
+	return lengths, nil
+}
+
 // WriteAlignedBoxed writes text aligned within a given bounds and draws a box sized to the text width
 func (t *TextWriter) WriteAlignedBoxed(align Align, canvas draw.Image, bounds image.Rectangle, str []string, clr color.Color, boxColor color.Color) error {
-	if t.font == nil {
-		return fmt.Errorf("font is not set")
-	}
-	drawer := &font.Drawer{
-		Dst: canvas,
-		Src: image.NewUniform(clr),
-		Face: truetype.NewFace(t.font,
-			&truetype.Options{
-				Size:    t.FontSize,
-				Hinting: font.HintingFull,
-			},
-		),
+	drawer, err := t.getDrawer(canvas, clr)
+	if err != nil {
+		return err
 	}
 
 	var maxXWidth fixed.Int26_6

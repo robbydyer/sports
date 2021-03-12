@@ -85,6 +85,9 @@ func NewGrid(canvas board.Canvas, numCols int, numRows int, log *zap.Logger, opt
 
 	if grid.padRatio > 0 {
 		grid.padding = int(grid.padRatio * float64(canvas.Bounds().Dx()))
+		if grid.padding < 1 {
+			grid.padding = 2
+		}
 	}
 
 	if grid.padding > 0 && grid.padding%2 != 0 {
@@ -153,13 +156,15 @@ func (g *Grid) generateCells() error {
 			if newC == nil {
 				return fmt.Errorf("cell canvas was nil")
 			}
-			g.log.Debug("new cell",
-				zap.Int("index", cellIndex),
-				zap.Int("start X", startX),
-				zap.Int("start Y", startY),
-				zap.Int("end X", endX),
-				zap.Int("end Y", endY),
-			)
+			/*
+				g.log.Debug("new cell",
+					zap.Int("index", cellIndex),
+					zap.Int("start X", startX),
+					zap.Int("start Y", startY),
+					zap.Int("end X", endX),
+					zap.Int("end Y", endY),
+				)
+			*/
 			g.cells[cellIndex] = &Cell{
 				Canvas: newC,
 				Row:    r,
@@ -171,6 +176,16 @@ func (g *Grid) generateCells() error {
 	}
 
 	return nil
+}
+
+// NumRows ...
+func (g *Grid) NumRows() int {
+	return g.rows
+}
+
+// NumCols ...
+func (g *Grid) NumCols() int {
+	return g.cols
 }
 
 // Clear removes cells and regenerates them

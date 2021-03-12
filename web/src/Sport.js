@@ -18,12 +18,18 @@ class Sport extends React.Component {
             "enabled": false,
             "hideFavorite": false,
             "stickyFavorite": false,
+            "stats": false,
         };
     }
     async componentDidMount() {
         await GetStatus(`${this.props.sport}/status`, (val) => {
             this.setState({
                 "enabled": val,
+            })
+        })
+        await GetStatus(`${this.props.sport}/stats/status`, (val) => {
+            this.setState({
+                "stats": val,
             })
         })
         await GetStatus(`${this.props.sport}/favoritescorestatus`, (val) => {
@@ -70,6 +76,12 @@ class Sport extends React.Component {
                     <Col>
                         <Form.Switch id="enabler" label="Enable/Disable" checked={this.state.enabled}
                             onChange={() => this.handleSwitch(`${this.props.sport}/enable`, `${this.props.sport}/disable`, "enabled")} />
+                    </Col>
+                </Row>
+                <Row className="text-center">
+                    <Col>
+                        <Form.Switch id="stats" label="Stats" checked={this.state.stats}
+                            onChange={() => this.handleSwitch(`${this.props.sport}/stats/enable`, `${this.props.sport}/stats/disable`, "stats")} />
                     </Col>
                 </Row>
                 <Row className="text-center">
