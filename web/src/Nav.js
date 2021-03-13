@@ -14,6 +14,7 @@ class TopNav extends React.Component {
         return (
             <Container fluid>
                 <Navbar expand="sm" bg="dark" variant="dark" hidden={this.props.location.pathname === "/board" ? true : false}>
+                    <Navbar.Brand>SportsMatrix</Navbar.Brand>
                     <Navbar.Toggle aria-controls="basic-navbar-nav"></Navbar.Toggle>
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="mr-auto">
@@ -26,6 +27,7 @@ class TopNav extends React.Component {
                             <Nav.Link as={Link} to="/sys">System Info</Nav.Link>
                             <Nav.Link as={Link} to="/board">Live Board</Nav.Link>
                         </Nav>
+                        <Navbar.Text>v0.0.18</Navbar.Text>
                     </Navbar.Collapse>
                 </Navbar>
             </Container >
