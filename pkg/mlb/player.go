@@ -1,4 +1,4 @@
-package nhl
+package mlb
 
 import (
 	"context"
@@ -13,27 +13,14 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/statboard"
-	"github.com/robbydyer/sports/pkg/util"
 )
 
 const (
-	skater = "skater"
-	goalie = "goalie"
+	hitter  = "hitter"
+	pitcher = "pitcher"
 )
 
-var statShortNames = map[string]string{
-	"goals":              "G",
-	"assists":            "A",
-	"shots":              "S",
-	"games":              "GP",
-	"pim":                "PIM",
-	"plusMinus":          "+/-",
-	"hits":               "HIT",
-	"record":             "W/L",
-	"savePercentage":     "SV%",
-	"goalAgainstAverage": "GAA",
-	"shutouts":           "SO",
-}
+var statShortNames = map[string]string{}
 
 // Player ...
 type Player struct {
@@ -50,43 +37,46 @@ type Player struct {
 }
 
 type playerStatData struct {
-	Stats []struct {
-		Splits []struct {
-			Season string       `json:"season"`
-			Stat   *playerStats `json:"stat"`
+	People []struct {
+		Stats []struct {
+			Type struct {
+				DisplayName string `json:"displayName"`
+			} `json:"type"`
+			Group struct {
+				DisplayName string `json:"displayName"`
+			} `json:"group"`
+			Splits []struct {
+				Stat *playerStats `json:"stat"`
+			}
 		}
-	}
+	} `json:"people"`
 }
 
 type playerStats struct {
-	Assists            int     `json:"assists"`
-	Goals              int     `json:"goals"`
-	Shots              int     `json:"shots"`
-	Games              int     `json:"games"`
-	Hits               int     `json:"hits"`
-	PlusMinus          int     `json:"plusMinus"`
-	Pim                int     `json:"pim"`
-	Wins               int     `json:"wins"`
-	Losses             int     `json:"losses"`
-	SavePercentage     float64 `json:"savePercentage"`
-	GoalAgainstAverage float64 `json:"goalAgainstAverage"`
-	Shutouts           int     `json:"shutouts"`
+	Average  string `json:"avg"`
+	HomeRuns int    `json:"homeRuns"`
+	RBI      int    `json:"rbi"`
+	OPS      string `json:"ops"`
+	ERA      string `json:"era"`
+	Wins     int    `json:"wins"`
+	Losses   int    `json:"losses"`
+	Saves    int    `json:"saves"`
 }
 
 // PlayerCategories returns the possible categories a player falls into
-func (n *NHL) PlayerCategories() []string {
+func (m *MLB) PlayerCategories() []string {
 	return []string{
-		skater,
-		goalie,
+		hitter,
+		pitcher,
 	}
 }
 
 // FindPlayer ...
-func (n *NHL) FindPlayer(ctx context.Context, first string, last string) (statboard.Player, error) {
+func (m *MLB) FindPlayer(ctx context.Context, first string, last string) (statboard.Player, error) {
 	full := fmt.Sprintf("%s %s", strings.ToLower(first), strings.ToLower(last))
 
-	for _, team := range n.teams {
-		for _, p := range team.Roster.Roster {
+	for _, team := range m.teams {
+		for _, p := range team.Roster {
 			if full == strings.ToLower(p.Person.FullName) {
 				if p.Stats == nil {
 					if err := p.setStats(ctx); err != nil {
@@ -102,18 +92,20 @@ func (n *NHL) FindPlayer(ctx context.Context, first string, last string) (statbo
 }
 
 // ListPlayers ...
-func (n *NHL) ListPlayers(ctx context.Context, teamAbbreviation string) ([]statboard.Player, error) {
+func (m *MLB) ListPlayers(ctx context.Context, teamAbbreviation string) ([]statboard.Player, error) {
 	var players []statboard.Player
-	for _, team := range n.teams {
+	for _, team := range m.teams {
 		if team.Abbreviation != teamAbbreviation {
 			continue
 		}
 
+		m.log.Debug("fetching MLB player stats for team", zap.String("team", team.Abbreviation))
+
 	INNER:
-		for _, p := range team.Roster.Roster {
+		for _, p := range team.Roster {
 			if p.Stats == nil {
 				if err := p.setStats(ctx); err != nil {
-					n.log.Error("could not find stats for player", zap.Error(err))
+					m.log.Error("could not find stats for player", zap.Error(err))
 					continue INNER
 				}
 			}
@@ -127,13 +119,13 @@ func (n *NHL) ListPlayers(ctx context.Context, teamAbbreviation string) ([]statb
 }
 
 // GetPlayer ...
-func (n *NHL) GetPlayer(ctx context.Context, id string) (statboard.Player, error) {
+func (m *MLB) GetPlayer(ctx context.Context, id string) (statboard.Player, error) {
 	intID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return nil, err
 	}
-	for _, team := range n.teams {
-		for _, player := range team.Roster.Roster {
+	for _, team := range m.teams {
+		for _, player := range team.Roster {
 			if player.Person.ID == intID {
 				if player.Stats == nil {
 					if err := player.setStats(ctx); err != nil {
@@ -157,25 +149,26 @@ func (p *Player) UpdateStats(ctx context.Context) error {
 	return nil
 }
 
-// GetCategory returns the player's catgeory: skater or goalie
+// GetCategory returns the player's catgeory: pitcher or hitter
 func (p *Player) GetCategory() string {
-	if strings.ToLower(p.PlayerPosition.Name) == "goalie" {
-		return goalie
+	switch strings.ToLower(p.PlayerPosition.Name) {
+	case "pitcher":
+		return pitcher
 	}
 
-	return skater
+	return hitter
 }
 
 func (p *Player) setStats(ctx context.Context) error {
-	//"https://statsapi.web.nhl.com/api/v1/people/8478445/stats?stats=statsSingleSeason&season=20202021"
-	uri, err := url.Parse(fmt.Sprintf("https://statsapi.web.nhl.com/api/v1/people/%d/stats", p.Person.ID))
+	uri, err := url.Parse(fmt.Sprintf("%s/v1/people/%d", baseURL, p.Person.ID))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse URI: %w", err)
 	}
 
 	v := uri.Query()
-	v.Set("stats", "statsSingleSeason")
-	v.Set("season", GetSeason(util.Today()))
+	// TODO: Change this to "season" for type
+	v.Set("hydrate", "stats(group=[hitting,pitching,fielding],type=career)")
+	v.Set("currentTeam", "")
 
 	uri.RawQuery = v.Encode()
 
@@ -189,7 +182,7 @@ func (p *Player) setStats(ctx context.Context) error {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("GET failed: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -201,13 +194,22 @@ func (p *Player) setStats(ctx context.Context) error {
 	var pStat *playerStatData
 
 	if err := json.Unmarshal(body, &pStat); err != nil {
-		return err
+		return fmt.Errorf("failed to unmarshal request: %w", err)
 	}
 
-	for _, all := range pStat.Stats {
-		for _, s := range all.Splits {
-			p.Stats = s.Stat
-			return nil
+	for _, person := range pStat.People {
+		for _, all := range person.Stats {
+			cat := p.GetCategory()
+			if cat == "hitter" && all.Group.DisplayName != "hitting" {
+				continue
+			}
+			if cat == "pitcher" && all.Group.DisplayName != "pitching" {
+				continue
+			}
+			for _, s := range all.Splits {
+				p.Stats = s.Stat
+				return nil
+			}
 		}
 	}
 
@@ -215,23 +217,20 @@ func (p *Player) setStats(ctx context.Context) error {
 }
 
 // AvailableStats ...
-func (n *NHL) AvailableStats(ctx context.Context, category string) ([]string, error) {
-	if category == goalie {
+func (m *MLB) AvailableStats(ctx context.Context, category string) ([]string, error) {
+	if category == pitcher {
 		return []string{
-			"record",
-			"savePercentage",
-			"goalAgainstAverage",
-			"shutouts",
+			"wins",
+			"losses",
+			"saves",
+			"era",
 		}, nil
 	}
 	return []string{
-		"goals",
-		"assists",
-		"shots",
-		"pim",
-		"hits",
-		"games",
-		"plusMinus",
+		"avg",
+		"homeRuns",
+		"rbi",
+		"ops",
 	}, nil
 }
 
@@ -249,35 +248,29 @@ func (p *Player) GetStat(stat string) string {
 		return ""
 	}
 	switch strings.ToLower(stat) {
-	case "assists":
-		return fmt.Sprint(p.Stats.Assists)
-	case "goals":
-		return fmt.Sprint(p.Stats.Goals)
-	case "shots":
-		return fmt.Sprint(p.Stats.Shots)
-	case "games":
-		return fmt.Sprint(p.Stats.Games)
-	case "hits":
-		return fmt.Sprint(p.Stats.Hits)
-	case "plusminus":
-		return fmt.Sprint(p.Stats.PlusMinus)
-	case "pim":
-		return fmt.Sprint(p.Stats.Pim)
-	case "record":
-		return fmt.Sprintf("%d-%d", p.Stats.Wins, p.Stats.Losses)
-	case "savepercentage":
-		return fmt.Sprint(p.Stats.SavePercentage)
-	case "goalagainstaverage":
-		return fmt.Sprint(p.Stats.GoalAgainstAverage)
-	case "shutouts":
-		return fmt.Sprint(p.Stats.Shutouts)
+	case "avg":
+		return p.Stats.Average
+	case "homeruns":
+		return fmt.Sprint(p.Stats.HomeRuns)
+	case "rbi":
+		return fmt.Sprint(p.Stats.RBI)
+	case "ops":
+		return p.Stats.OPS
+	case "era":
+		return p.Stats.ERA
+	case "wins":
+		return fmt.Sprint(p.Stats.Wins)
+	case "losses":
+		return fmt.Sprint(p.Stats.Losses)
+	case "saves":
+		return fmt.Sprint(p.Stats.Saves)
 	}
 
 	return "?"
 }
 
 // StatShortName returns a short name representation of the stat, if any
-func (n *NHL) StatShortName(stat string) string {
+func (m *MLB) StatShortName(stat string) string {
 	s, ok := statShortNames[stat]
 	if ok {
 		return s

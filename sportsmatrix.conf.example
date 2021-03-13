@@ -79,6 +79,16 @@ sysConfig:
 ## NHL config
 nhlConfig:
   enabled: true
+
+  # Config for stats board. Either enter a list of teams, players, or both. Goalies and Skaters
+  # will display separate stats.
+  stats:
+    enabled: true
+    teams:
+    - NYI
+    #players:
+    #- Mathew Barzal
+    
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -113,6 +123,15 @@ nhlConfig:
 mlbConfig:
   enabled: true
   boardDelay: "10s"
+
+  # Config for stats board. Either enter a list of teams, players, or both. Pitchers and Hitters
+  # will display separate stats.
+  stats:
+    enabled: true
+    teams:
+    - ATL
+    #players:
+    #- Ronald Acuna Jr.
 
   # Number of columns in a grid layout. Default 1
   #gridCols: 3

@@ -86,6 +86,9 @@ func (s *StatBoard) Render(ctx context.Context, canvas board.Canvas) error {
 }
 
 func (s *StatBoard) doRender(ctx context.Context, canvas board.Canvas, players []Player) error {
+	if len(players) < 1 {
+		return nil
+	}
 	select {
 	case <-ctx.Done():
 		return context.Canceled
