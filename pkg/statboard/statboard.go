@@ -34,7 +34,6 @@ type Config struct {
 type API interface {
 	FindPlayer(ctx context.Context, firstName string, lastName string) (Player, error)
 	GetPlayer(ctx context.Context, id string) (Player, error)
-	UpdatePlayer(ctx context.Context, id string) (Player, error)
 	AvailableStats(ctx context.Context, playerCategory string) ([]string, error)
 	StatShortName(stat string) string
 	ListPlayers(ctx context.Context, teamAbbreviation string) ([]Player, error)
@@ -50,6 +49,7 @@ type Player interface {
 	GetStat(stat string) string
 	Position() string
 	GetCategory() string
+	UpdateStats(ctx context.Context) error
 }
 
 // SetDefaults ...

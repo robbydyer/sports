@@ -175,9 +175,13 @@ func (r *rootArgs) setConfigDefaults() {
 	if r.config.MLBConfig == nil {
 		r.config.MLBConfig = &sportboard.Config{
 			Enabled: atomic.NewBool(false),
+			Stats: &statboard.Config{
+				Enabled: atomic.NewBool(false),
+			},
 		}
 	}
 	r.config.MLBConfig.SetDefaults()
+	r.config.MLBConfig.Stats.SetDefaults()
 
 	if r.config.NCAAMConfig == nil {
 		r.config.NCAAMConfig = &sportboard.Config{
@@ -232,35 +236,13 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 	if err != nil {
 		return boards, err
 	}
+	mlbAPI, err := mlb.New(ctx, logger)
+	if err != nil {
+		return boards, err
+	}
 
 	if r.config.NHLConfig != nil {
 		b, err := sportboard.New(ctx, nhlAPI, bounds, logger, r.config.NHLConfig)
-		if err != nil {
-			return boards, err
-		}
-
-		boards = append(boards, b)
-	}
-	if r.config.MLBConfig != nil {
-		api, err := mlb.New(ctx, logger)
-		if err != nil {
-			return boards, err
-		}
-
-		b, err := sportboard.New(ctx, api, bounds, logger, r.config.MLBConfig)
-		if err != nil {
-			return boards, err
-		}
-
-		boards = append(boards, b)
-	}
-	if r.config.NCAAMConfig != nil {
-		api, err := ncaam.New(ctx, logger)
-		if err != nil {
-			return boards, err
-		}
-
-		b, err := sportboard.New(ctx, api, bounds, logger, r.config.NCAAMConfig)
 		if err != nil {
 			return boards, err
 		}
@@ -272,6 +254,34 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 		b, err := statboard.New(ctx, nhlAPI, r.config.NHLConfig.Stats, logger)
 		if err != nil {
 			return nil, err
+		}
+
+		boards = append(boards, b)
+	}
+	if r.config.MLBConfig != nil {
+		b, err := sportboard.New(ctx, mlbAPI, bounds, logger, r.config.MLBConfig)
+		if err != nil {
+			return boards, err
+		}
+
+		boards = append(boards, b)
+	}
+	if r.config.MLBConfig.Stats != nil {
+		b, err := statboard.New(ctx, mlbAPI, r.config.MLBConfig.Stats, logger)
+		if err != nil {
+			return nil, err
+		}
+		boards = append(boards, b)
+	}
+	if r.config.NCAAMConfig != nil {
+		api, err := ncaam.New(ctx, logger)
+		if err != nil {
+			return boards, err
+		}
+
+		b, err := sportboard.New(ctx, api, bounds, logger, r.config.NCAAMConfig)
+		if err != nil {
+			return boards, err
 		}
 
 		boards = append(boards, b)

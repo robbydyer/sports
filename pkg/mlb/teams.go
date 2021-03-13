@@ -37,7 +37,7 @@ type Team struct {
 }
 
 type rosterData struct {
-	Roster []*Player
+	Roster []*Player `json:"roster"`
 }
 
 type divisionData struct {
@@ -124,7 +124,9 @@ OUTER:
 				continue OUTER
 			}
 		}
+	}
 
+	for _, team := range teams.Teams {
 		if err := team.setRoster(ctx); err != nil {
 			return nil, err
 		}

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"go.uber.org/zap"
@@ -127,12 +128,28 @@ func (n *NHL) ListPlayers(ctx context.Context, teamAbbreviation string) ([]statb
 
 // GetPlayer ...
 func (n *NHL) GetPlayer(ctx context.Context, id string) (statboard.Player, error) {
-	return nil, nil
+	intID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	for _, team := range n.teams {
+		for _, player := range team.Roster.Roster {
+			if player.Person.ID == intID {
+				return player, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("could not find player")
 }
 
-// UpdatePlayer ...
-func (n *NHL) UpdatePlayer(ctx context.Context, id string) (statboard.Player, error) {
-	return nil, nil
+// UpdateStats ...
+func (p *Player) UpdateStats(ctx context.Context) error {
+	if err := p.setStats(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetCategory returns the player's catgeory: skater or goalie

@@ -97,6 +97,7 @@ func (m *MLB) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 	var tList []sportboard.Team
 
 	for _, t := range m.teams {
+		m.log.Debug("got team", zap.String("team", t.Abbreviation), zap.Int("num players", len(t.Roster)))
 		tList = append(tList, t)
 	}
 
@@ -145,6 +146,11 @@ func (m *MLB) DateStr(d time.Time) string {
 
 // League ...
 func (m *MLB) League() string {
+	return "MLB"
+}
+
+// LeagueShortName ...
+func (m *MLB) LeagueShortName() string {
 	return "MLB"
 }
 
