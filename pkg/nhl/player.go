@@ -135,6 +135,11 @@ func (n *NHL) GetPlayer(ctx context.Context, id string) (statboard.Player, error
 	for _, team := range n.teams {
 		for _, player := range team.Roster.Roster {
 			if player.Person.ID == intID {
+				if player.Stats == nil {
+					if err := player.setStats(ctx); err != nil {
+						return nil, err
+					}
+				}
 				return player, nil
 			}
 		}

@@ -127,6 +127,11 @@ func (m *MLB) GetPlayer(ctx context.Context, id string) (statboard.Player, error
 	for _, team := range m.teams {
 		for _, player := range team.Roster {
 			if player.Person.ID == intID {
+				if player.Stats == nil {
+					if err := player.setStats(ctx); err != nil {
+						return nil, err
+					}
+				}
 				return player, nil
 			}
 		}
@@ -144,7 +149,7 @@ func (p *Player) UpdateStats(ctx context.Context) error {
 	return nil
 }
 
-// GetCategory returns the player's catgeory: skater or goalie
+// GetCategory returns the player's catgeory: pitcher or hitter
 func (p *Player) GetCategory() string {
 	switch strings.ToLower(p.PlayerPosition.Name) {
 	case "pitcher":
