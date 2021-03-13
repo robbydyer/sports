@@ -149,9 +149,11 @@ func (r *rootArgs) setConfigDefaults() {
 	if r.config.NHLConfig == nil {
 		r.config.NHLConfig = &sportboard.Config{
 			Enabled: atomic.NewBool(false),
-			Stats: &statboard.Config{
-				Enabled: atomic.NewBool(false),
-			},
+		}
+	}
+	if r.config.NHLConfig.Stats == nil {
+		r.config.NHLConfig.Stats = &statboard.Config{
+			Enabled: atomic.NewBool(false),
 		}
 	}
 
@@ -175,9 +177,11 @@ func (r *rootArgs) setConfigDefaults() {
 	if r.config.MLBConfig == nil {
 		r.config.MLBConfig = &sportboard.Config{
 			Enabled: atomic.NewBool(false),
-			Stats: &statboard.Config{
-				Enabled: atomic.NewBool(false),
-			},
+		}
+	}
+	if r.config.MLBConfig.Stats == nil {
+		r.config.MLBConfig.Stats = &statboard.Config{
+			Enabled: atomic.NewBool(false),
 		}
 	}
 	r.config.MLBConfig.SetDefaults()
