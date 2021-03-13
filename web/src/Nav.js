@@ -27,7 +27,7 @@ class TopNav extends React.Component {
                             <Nav.Link as={Link} to="/sys">System Info</Nav.Link>
                             <Nav.Link as={Link} to="/board">Live Board</Nav.Link>
                         </Nav>
-                        <Navbar.Text>v0.0.18</Navbar.Text>
+                        <Navbar.Text>v0.0.19</Navbar.Text>
                     </Navbar.Collapse>
                 </Navbar>
             </Container >
