@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 IN_DOCKER="${IN_DOCKER:-no}"
-IMG="sportsmatrixlinter"
+IMG="golangci/golangci-lint:v1.38"
 
 if [ "${IN_DOCKER}" = "no" ]; then
     MOUNTOPTION=""
@@ -11,9 +11,7 @@ if [ "${IN_DOCKER}" = "no" ]; then
             MOUNTOPTION=":delegated"
     fi
 
-    set -x
-    cd "${ROOT}"
-    docker build -f Dockerfile.lint -t "${IMG}" .
+    docker pull "${IMG}"
 
     exec docker run -t --rm \
         -e IN_DOCKER=yes \
