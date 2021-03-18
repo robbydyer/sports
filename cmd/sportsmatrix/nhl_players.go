@@ -49,7 +49,7 @@ func (c *nhlPlayersCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, p := range players {
-		fmt.Println(p.FirstName(false))
+		fmt.Println(p.FirstName())
 	}
 
 	return nil

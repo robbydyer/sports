@@ -55,8 +55,8 @@ type API interface {
 
 // Player ...
 type Player interface {
-	FirstName(shorten bool) string
-	LastName(shorten bool) string
+	FirstName() string
+	LastName() string
 	GetStat(stat string) string
 	StatColor(stat string) color.Color
 	Position() string
@@ -109,7 +109,7 @@ func New(ctx context.Context, api API, config *Config, logger *zap.Logger, opts 
 
 func defaultSorter(players []Player) []Player {
 	sort.SliceStable(players, func(i, j int) bool {
-		return players[i].LastName(false) < players[j].LastName(false)
+		return players[i].LastName() < players[j].LastName()
 	})
 
 	return players

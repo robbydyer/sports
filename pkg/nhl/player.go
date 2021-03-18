@@ -293,7 +293,7 @@ func (n *NHL) StatShortName(stat string) string {
 }
 
 // FirstName ...
-func (p *Player) FirstName(shorten bool) string {
+func (p *Player) FirstName() string {
 	parts := strings.Fields(p.Person.FullName)
 	if len(parts) > 0 {
 		return parts[0]
@@ -303,7 +303,7 @@ func (p *Player) FirstName(shorten bool) string {
 }
 
 // LastName ...
-func (p *Player) LastName(shorten bool) string {
+func (p *Player) LastName() string {
 	parts := strings.Fields(p.Person.FullName)
 	if len(parts) > 0 {
 		return strings.Join(parts[1:], " ")

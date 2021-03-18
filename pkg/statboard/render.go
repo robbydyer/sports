@@ -121,7 +121,7 @@ func (s *StatBoard) doRender(ctx context.Context, canvas board.Canvas, players [
 
 	players = s.sorter(players)
 
-	if s.config.LimitPlayers > 0 {
+	if s.config.LimitPlayers > 0 && len(players) > s.config.LimitPlayers {
 		players = players[0:s.config.LimitPlayers]
 	}
 
@@ -239,7 +239,7 @@ func (s *StatBoard) renderTitleRow(ctx context.Context, row []*rgbrender.Cell, w
 
 func (s *StatBoard) renderPlayer(ctx context.Context, player Player, row []*rgbrender.Cell, writer *rgbrender.TextWriter, stats []string) error {
 	s.log.Debug("render player",
-		zap.String("name", player.LastName(false)),
+		zap.String("name", player.LastName()),
 	)
 	for index, cell := range row {
 		select {
@@ -253,7 +253,7 @@ func (s *StatBoard) renderPlayer(ctx context.Context, player Player, row []*rgbr
 				cell.Canvas,
 				cell.Canvas.Bounds(),
 				[]string{
-					player.LastName(true),
+					maxedStr(player.LastName(), maxNameLength(cell.Canvas.Bounds())),
 				},
 				color.White,
 			); err != nil {

@@ -53,31 +53,21 @@ func SortByScore(players []statboard.Player) []statboard.Player {
 }
 
 // FirstName ...
-func (p *Player) FirstName(shorten bool) string {
+func (p *Player) FirstName() string {
 	parts := strings.Fields(p.Athlete.DisplayName)
 	if len(parts) < 1 {
 		return ""
-	}
-	if shorten {
-		return parts[0][0:1]
 	}
 	return parts[0]
 }
 
 // LastName ...
-func (p *Player) LastName(shorten bool) string {
+func (p *Player) LastName() string {
 	parts := strings.Fields(p.Athlete.DisplayName)
 	if len(parts) < 1 {
 		return ""
 	}
-	l := strings.Join(parts[1:], " ")
-
-	if !shorten || len(l) <= maxNameLength {
-		return l
-	}
-
-	i := maxNameLength / 2
-	return fmt.Sprintf("%s..%s", l[0:i], l[len(l)-i+1:len(l)-1])
+	return strings.Join(parts[1:], " ")
 }
 
 // GetStat ...
