@@ -145,7 +145,7 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 		maxName = nameMax
 	}
 
-	strs := []string{}
+	var strs []string
 	if prefixCol > 0 {
 		strs = []string{strings.Repeat("0", prefixCol), strings.Repeat("0", maxName)}
 		for _, s := range statCols {

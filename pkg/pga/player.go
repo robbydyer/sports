@@ -97,6 +97,7 @@ func (p *Player) GetStat(stat string) string {
 	return ""
 }
 
+// PrefixCol returns the col before the player's name, leaderboard position
 func (p *Player) PrefixCol() string {
 	if p.Status == nil || p.Status.Position == nil {
 		return ""
