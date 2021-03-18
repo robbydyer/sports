@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"image/color"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -267,6 +268,11 @@ func (p *Player) GetStat(stat string) string {
 	}
 
 	return "?"
+}
+
+// StatColor ...
+func (p *Player) StatColor(stat string) color.Color {
+	return color.White
 }
 
 // StatShortName returns a short name representation of the stat, if any

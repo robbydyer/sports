@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"math"
+	"strings"
 
 	"go.uber.org/zap"
 
@@ -54,8 +55,8 @@ func getReadableFontSize(bounds image.Rectangle) float64 {
 }
 
 func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, players []Player, writer *rgbrender.TextWriter, stats []string) (*rgbrender.Grid, error) {
-	maxName := ""
 	maxStat := ""
+	maxName := ""
 
 	for _, player := range players {
 		select {
@@ -63,6 +64,7 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 			return nil, context.Canceled
 		default:
 		}
+
 		if len(player.LastName()) > len(maxName) {
 			maxName = player.LastName()
 		}
@@ -84,6 +86,12 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 		zap.Int("statlen", len(maxStat)),
 		zap.String("stat", maxStat),
 	)
+
+	nameMax := maxNameLength(canvas.Bounds())
+
+	if len(maxName) > nameMax {
+		maxName = strings.Repeat("x", nameMax)
+	}
 
 	widths, err := writer.MeasureStrings(canvas, []string{maxName, maxStat})
 	if err != nil {
@@ -140,4 +148,24 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 		rgbrender.WithPadding(padSize),
 		rgbrender.WithCellRatios(cellXRatios, cellYRatios),
 	)
+}
+
+func maxNameLength(canvas image.Rectangle) int {
+	return canvas.Dx() / 4
+}
+
+func maxedStr(str string, max int) string {
+	if max <= 0 || len(str) < max {
+		return str
+	}
+
+	start := float64(float64(max-2) / 2)
+	i := int(start)
+	j := int(start)
+	if math.Trunc(start) != start {
+		i = int(math.Ceil(start))
+		j = int(math.Floor(start))
+	}
+
+	return fmt.Sprintf("%s..%s", str[0:i], str[len(str)-j:])
 }

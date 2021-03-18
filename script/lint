@@ -11,8 +11,6 @@ if [ "${IN_DOCKER}" = "no" ]; then
             MOUNTOPTION=":delegated"
     fi
 
-    docker pull "${IMG}"
-
     exec docker run -t --rm \
         -e IN_DOCKER=yes \
         -u $(id -u):$(id -g) \
