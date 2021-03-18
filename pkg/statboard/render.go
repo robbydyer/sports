@@ -3,7 +3,6 @@ package statboard
 import (
 	"context"
 	"image/color"
-	"sort"
 	"strings"
 	"time"
 
@@ -120,9 +119,11 @@ func (s *StatBoard) doRender(ctx context.Context, canvas board.Canvas, players [
 		return err
 	}
 
-	sort.SliceStable(players, func(i, j int) bool {
-		return players[i].LastName() < players[j].LastName()
-	})
+	players = s.sorter(players)
+
+	if s.config.LimitPlayers > 0 {
+		players = players[0:s.config.LimitPlayers]
+	}
 
 	grid, err := s.getStatGrid(ctx, canvas, players, writer, stats)
 	if err != nil {
@@ -136,17 +137,19 @@ func (s *StatBoard) doRender(ctx context.Context, canvas board.Canvas, players [
 		zap.Int("num players", len(players)),
 	)
 
-	row := 1
+	row := 0
 	for i := 0; i < len(players); i++ {
 		select {
 		case <-ctx.Done():
 			return context.Canceled
 		default:
 		}
-		if row == 1 {
+
+		if row == 0 && s.withTitleRow {
 			if err := s.renderTitleRow(ctx, grid.GetRow(0), writer, stats); err != nil {
 				return err
 			}
+			row++
 		}
 
 		if row < grid.NumRows() {
@@ -185,7 +188,8 @@ func (s *StatBoard) doRender(ctx context.Context, canvas board.Canvas, players [
 		case <-time.After(delay):
 		}
 
-		row = 1
+		row = 0
+
 		if err := grid.Clear(); err != nil {
 			return err
 		}
@@ -235,7 +239,7 @@ func (s *StatBoard) renderTitleRow(ctx context.Context, row []*rgbrender.Cell, w
 
 func (s *StatBoard) renderPlayer(ctx context.Context, player Player, row []*rgbrender.Cell, writer *rgbrender.TextWriter, stats []string) error {
 	s.log.Debug("render player",
-		zap.String("name", player.LastName()),
+		zap.String("name", player.LastName(false)),
 	)
 	for index, cell := range row {
 		select {
@@ -249,7 +253,7 @@ func (s *StatBoard) renderPlayer(ctx context.Context, player Player, row []*rgbr
 				cell.Canvas,
 				cell.Canvas.Bounds(),
 				[]string{
-					player.LastName(),
+					player.LastName(true),
 				},
 				color.White,
 			); err != nil {
@@ -258,6 +262,10 @@ func (s *StatBoard) renderPlayer(ctx context.Context, player Player, row []*rgbr
 			continue
 		}
 		stat := player.GetStat(stats[index-1])
+		clr := player.StatColor(stats[index-1])
+		if clr == nil {
+			clr = color.White
+		}
 		if err := writer.WriteAligned(
 			rgbrender.CenterCenter,
 			cell.Canvas,
@@ -265,7 +273,7 @@ func (s *StatBoard) renderPlayer(ctx context.Context, player Player, row []*rgbr
 			[]string{
 				stat,
 			},
-			color.White,
+			clr,
 		); err != nil {
 			return err
 		}

@@ -63,8 +63,8 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 			return nil, context.Canceled
 		default:
 		}
-		if len(player.LastName()) > len(maxName) {
-			maxName = player.LastName()
+		if len(player.LastName(true)) > len(maxName) {
+			maxName = player.LastName(true)
 		}
 
 		for _, stat := range stats {

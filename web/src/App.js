@@ -35,6 +35,7 @@ class App extends React.Component {
           <Route path="/" exact component={Home} />
           <Route path="/nhl" render={() => <Sport sport="nhl" />} />
           <Route path="/mlb" render={() => <Sport sport="mlb" />} />
+          <Route path="/pga" render={() => <Sport sport="pga" />} />
           <Route path="/ncaam" render={() => <Sport sport="ncaam" />} />
           <Route path="/img" exact component={ImageBoard} />
           <Route path="/clock" exact component={Clock} />

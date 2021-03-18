@@ -23,6 +23,7 @@ import (
 	"github.com/robbydyer/sports/pkg/mlb"
 	"github.com/robbydyer/sports/pkg/ncaam"
 	"github.com/robbydyer/sports/pkg/nhl"
+	"github.com/robbydyer/sports/pkg/pga"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
@@ -200,6 +201,15 @@ func (r *rootArgs) setConfigDefaults() {
 		}
 	}
 	r.config.SysConfig.SetDefaults()
+
+	if r.config.PGA == nil {
+		r.config.PGA = &statboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
+	r.config.PGA.SetDefaults()
+	r.config.PGA.Teams = append(r.config.PGA.Teams, "players")
+	r.config.PGA.LimitPlayers = 50
 }
 
 func (r *rootArgs) getRGBMatrix(logger *zap.Logger) (rgb.Matrix, error) {
@@ -311,6 +321,18 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 		b, err := sysboard.New(logger, r.config.SysConfig)
 		if err != nil {
 			return boards, err
+		}
+		boards = append(boards, b)
+	}
+
+	if r.config.PGA != nil {
+		api, err := pga.New()
+		if err != nil {
+			return nil, err
+		}
+		b, err := statboard.New(ctx, api, r.config.PGA, logger, statboard.WithSorter(pga.SortByScore), statboard.WithTitleRow(false))
+		if err != nil {
+			return nil, err
 		}
 		boards = append(boards, b)
 	}

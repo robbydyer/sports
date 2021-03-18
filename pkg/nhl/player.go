@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"image/color"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -276,6 +277,11 @@ func (p *Player) GetStat(stat string) string {
 	return "?"
 }
 
+// StatColor ...
+func (p *Player) StatColor(stat string) color.Color {
+	return color.White
+}
+
 // StatShortName returns a short name representation of the stat, if any
 func (n *NHL) StatShortName(stat string) string {
 	s, ok := statShortNames[stat]
@@ -287,7 +293,7 @@ func (n *NHL) StatShortName(stat string) string {
 }
 
 // FirstName ...
-func (p *Player) FirstName() string {
+func (p *Player) FirstName(shorten bool) string {
 	parts := strings.Fields(p.Person.FullName)
 	if len(parts) > 0 {
 		return parts[0]
@@ -297,7 +303,7 @@ func (p *Player) FirstName() string {
 }
 
 // LastName ...
-func (p *Player) LastName() string {
+func (p *Player) LastName(shorten bool) string {
 	parts := strings.Fields(p.Person.FullName)
 	if len(parts) > 0 {
 		return strings.Join(parts[1:], " ")
