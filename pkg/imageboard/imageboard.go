@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/draw"
 	"image/gif"
+	"image/png"
 	"os"
 	"path/filepath"
 	"sort"
@@ -394,11 +395,14 @@ func (i *ImageBoard) getSizedImage(path string, bounds image.Rectangle, preloade
 		i.log.Debug("checking for cached file", zap.String("file", cachedFile))
 		if exists, err := afero.Exists(i.fs, cachedFile); err == nil && exists {
 			i.log.Debug("cached file exists", zap.String("file", cachedFile))
-			img, err := i.getSizedImageDiskCache(path)
+			img, err := i.getSizedImageDiskCache(cachedFile)
 			if err != nil {
 				return nil, err
 			}
-			i.log.Debug("got file from disk cache", zap.String("file", cachedFile))
+			i.log.Debug("got file from disk cache",
+				zap.String("file", cachedFile),
+				zap.String("size", fmt.Sprintf("%d_%d", img.Bounds().Dx(), img.Bounds().Dy())),
+			)
 			if i.config.UseMemCache.Load() {
 				i.imageCache[key] = img
 			}
@@ -425,7 +429,7 @@ func (i *ImageBoard) getSizedImage(path string, bounds image.Rectangle, preloade
 	sizedImg := rgbrender.ResizeImage(img, bounds, 1)
 
 	if i.config.UseDiskCache.Load() {
-		if err := rgbrender.SavePngAfero(i.fs, img, cachedFile); err != nil {
+		if err := rgbrender.SavePngAfero(i.fs, sizedImg, cachedFile); err != nil {
 			i.log.Error("failed to save resized PNG to disk", zap.Error(err))
 		}
 	}
@@ -550,12 +554,31 @@ func (i *ImageBoard) getSizedImageDiskCache(path string) (image.Image, error) {
 	}
 	defer f.Close()
 
+	if strings.HasSuffix(strings.ToLower(path), ".png") {
+		img, err := png.Decode(f)
+		if err != nil {
+			return nil, err
+		}
+
+		i.log.Debug("got PNG from disk cache",
+			zap.String("path", path),
+			zap.String("size", fmt.Sprintf("%dx%d", img.Bounds().Dx(), img.Bounds().Dy())),
+		)
+
+		return img, nil
+	}
+
 	img, _, err := image.Decode(f)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode image: %w", err)
 	}
 
-	return img, err
+	i.log.Debug("got non-png from disk cache",
+		zap.String("path", path),
+		zap.String("size", fmt.Sprintf("%dx%d", img.Bounds().Dx(), img.Bounds().Dy())),
+	)
+
+	return img, nil
 }
 
 // HasPriority ...
