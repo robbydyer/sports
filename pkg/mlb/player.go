@@ -21,7 +21,14 @@ const (
 	pitcher = "pitcher"
 )
 
-var statShortNames = map[string]string{}
+var statShortNames = map[string]string{
+	"homeruns": "HR",
+	"avg":      "AVG",
+	"wins":     "W",
+	"losses":   "L",
+	"saves":    "SV",
+	"era":      "ERA",
+}
 
 // Player ...
 type Player struct {
@@ -277,7 +284,7 @@ func (p *Player) StatColor(stat string) color.Color {
 
 // StatShortName returns a short name representation of the stat, if any
 func (m *MLB) StatShortName(stat string) string {
-	s, ok := statShortNames[stat]
+	s, ok := statShortNames[strings.ToLower(stat)]
 	if ok {
 		return s
 	}
@@ -302,4 +309,9 @@ func (p *Player) LastName() string {
 		return strings.Join(parts[1:], " ")
 	}
 	return p.Person.FullName
+}
+
+// PrefixCol ...
+func (p *Player) PrefixCol() string {
+	return ""
 }

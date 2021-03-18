@@ -277,6 +277,11 @@ func (p *Player) GetStat(stat string) string {
 	return "?"
 }
 
+// PrefixCol ...
+func (p *Player) PrefixCol() string {
+	return ""
+}
+
 // StatColor ...
 func (p *Player) StatColor(stat string) color.Color {
 	return color.White

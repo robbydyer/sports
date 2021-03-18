@@ -3,6 +3,7 @@ package statboard
 import (
 	"context"
 	"image/color"
+	"image/draw"
 	"sort"
 	"sync"
 	"time"
@@ -15,12 +16,13 @@ import (
 
 // StatBoard ...
 type StatBoard struct {
-	config       *Config
-	log          *zap.Logger
-	api          API
-	writers      map[string]*rgbrender.TextWriter
-	sorter       Sorter
-	withTitleRow bool
+	config        *Config
+	log           *zap.Logger
+	api           API
+	writers       map[string]*rgbrender.TextWriter
+	sorter        Sorter
+	withTitleRow  bool
+	withPrefixCol bool
 	sync.Mutex
 }
 
@@ -40,6 +42,11 @@ type OptionFunc func(s *StatBoard) error
 
 // Sorter sorts the ordering of a Player list for the stat board
 type Sorter func(players []Player) []Player
+
+// StringMeasurer measures the width of strings as they would be written to a canvas
+type StringMeasurer interface {
+	MeasureStrings(canvas draw.Image, strs []string) ([]int, error)
+}
 
 // API ...
 type API interface {
@@ -62,6 +69,7 @@ type Player interface {
 	Position() string
 	GetCategory() string
 	UpdateStats(ctx context.Context) error
+	PrefixCol() string
 }
 
 // SetDefaults ...
@@ -87,11 +95,12 @@ func (c *Config) SetDefaults() {
 // New ...
 func New(ctx context.Context, api API, config *Config, logger *zap.Logger, opts ...OptionFunc) (*StatBoard, error) {
 	s := &StatBoard{
-		config:       config,
-		log:          logger,
-		api:          api,
-		writers:      make(map[string]*rgbrender.TextWriter),
-		withTitleRow: true,
+		config:        config,
+		log:           logger,
+		api:           api,
+		writers:       make(map[string]*rgbrender.TextWriter),
+		withTitleRow:  true,
+		withPrefixCol: false,
 	}
 
 	for _, f := range opts {
@@ -157,6 +166,14 @@ func WithSorter(sorter Sorter) OptionFunc {
 func WithTitleRow(with bool) OptionFunc {
 	return func(s *StatBoard) error {
 		s.withTitleRow = with
+		return nil
+	}
+}
+
+// WithPrefixCol enables/disables the prefix column in the statboard
+func WithPrefixCol(with bool) OptionFunc {
+	return func(s *StatBoard) error {
+		s.withPrefixCol = with
 		return nil
 	}
 }

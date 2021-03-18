@@ -23,19 +23,31 @@ func TestMaxedStr(t *testing.T) {
 			name:     "long",
 			in:       "billygoatandgruff",
 			len:      4,
-			expected: "b..f",
+			expected: "bi..f",
+		},
+		{
+			name:     "exact",
+			in:       "bill",
+			len:      4,
+			expected: "bill",
+		},
+		{
+			name:     "one less",
+			in:       "bill",
+			len:      3,
+			expected: "bi..",
 		},
 		{
 			name:     "longer",
 			in:       "billygoatandgruff",
 			len:      8,
-			expected: "bil..uff",
+			expected: "bill..uff",
 		},
 		{
 			name:     "odd",
 			in:       "billygoatandgruff",
 			len:      7,
-			expected: "bil..ff",
+			expected: "bill..ff",
 		},
 	}
 

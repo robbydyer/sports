@@ -14,26 +14,26 @@ import (
 // Player ...
 type Player struct {
 	ID      string `json:"id"`
-	Athlete struct {
+	Athlete *struct {
 		DisplayName string `json:"displayName"`
 		Flag        struct {
 			Href string `json:"href"`
 		} `json:"flag"`
 	}
-	Status struct {
+	Status *struct {
 		TeeTime  string `json:"teeTime"`
 		Hole     int    `json:"hole"`
 		Thru     int    `json:"thru"`
-		Position struct {
+		Position *struct {
 			DisplayName string `json:"displayName"`
 			ID          string `json:"id"`
 		}
 	} `json:"status"`
-	Score struct {
+	Score *struct {
 		DisplayValue string `json:"displayValue"`
 	} `json:"score"`
 	SortOrder  int `json:"sortOrder"`
-	Statistics []struct {
+	Statistics []*struct {
 		Name         string `json:"name"`
 		DisplayValue string `json:"displayValue"`
 	} `json:"statistics"`
@@ -89,12 +89,20 @@ func (p *Player) GetStat(stat string) string {
 		}
 		return p.Score.DisplayValue
 	case "position":
-		return p.Status.Position.DisplayName
+		return strings.TrimLeft(p.Status.Position.DisplayName, "T")
 	case "sort":
 		return fmt.Sprint(p.SortOrder)
 	}
 
 	return ""
+}
+
+// PrefixCol returns the col before the player's name, leaderboard position
+func (p *Player) PrefixCol() string {
+	if p.Status == nil || p.Status.Position == nil {
+		return ""
+	}
+	return strings.TrimLeft(p.Status.Position.DisplayName, "T")
 }
 
 // StatColor ...
