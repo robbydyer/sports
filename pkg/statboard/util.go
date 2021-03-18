@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"image/draw"
 	"math"
 	"strings"
 
@@ -54,9 +55,31 @@ func getReadableFontSize(bounds image.Rectangle) float64 {
 	return 0.125 * float64(bounds.Dx())
 }
 
+func getGridRatios(writer StringMeasurer, canvas draw.Image, strs []string) ([]float64, error) {
+	widths, err := writer.MeasureStrings(canvas, strs)
+	if err != nil {
+		return nil, err
+	}
+
+	ratios := []float64{}
+
+	total := 0
+	for i, w := range widths {
+		if total > canvas.Bounds().Dx() {
+			break
+		}
+		ratios[i] = float64(float64(w) / float64(canvas.Bounds().Dx()))
+		total += w
+	}
+
+	return ratios, nil
+}
+
 func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, players []Player, writer *rgbrender.TextWriter, stats []string) (*rgbrender.Grid, error) {
 	maxStat := ""
 	maxName := ""
+
+	statCols := make([]string, len(stats))
 
 	for _, player := range players {
 		select {
@@ -69,13 +92,13 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 			maxName = player.LastName()
 		}
 
-		for _, stat := range stats {
+		for i, stat := range stats {
 			val := player.GetStat(stat)
-			if len(val) > len(maxStat) {
-				maxStat = val
+			if len(val) > len(statCols[i]) {
+				statCols[i] = val
 			}
-			if len(s.api.StatShortName(stat)) > len(maxStat) {
-				maxStat = s.api.StatShortName(stat)
+			if len(stat) > len(statCols[i]) {
+				statCols[i] = stat
 			}
 		}
 	}
