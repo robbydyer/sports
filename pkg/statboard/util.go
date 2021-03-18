@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbrender"
@@ -56,19 +57,48 @@ func getReadableFontSize(bounds image.Rectangle) float64 {
 }
 
 func getGridRatios(writer StringMeasurer, canvas draw.Image, strs []string) ([]float64, error) {
+	if len(strs) < 1 {
+		return []float64{}, nil
+	}
+
 	widths, err := writer.MeasureStrings(canvas, strs)
 	if err != nil {
 		return nil, err
 	}
 
-	ratios := []float64{}
+	pad := canvas.Bounds().Dx() / 64
 
-	total := 0
+	for i := range widths {
+		widths[i] += pad
+	}
+
+	ratios := []float64{
+		float64(float64(widths[0]) / float64(canvas.Bounds().Dx())),
+	}
+
+	total := widths[0]
+	statCols := []int{}
 	for i, w := range widths {
-		if total > canvas.Bounds().Dx() {
+		if i == 0 {
+			continue
+		}
+		if total+w > canvas.Bounds().Dx() {
 			break
 		}
-		ratios[i] = float64(float64(w) / float64(canvas.Bounds().Dx()))
+		total += w
+		statCols = append(statCols, w)
+	}
+
+	leftOver := canvas.Bounds().Dx() - total
+
+	if leftOver/len(statCols) >= 1 {
+		for i := range statCols {
+			statCols[i] += leftOver / len(statCols)
+		}
+	}
+
+	for _, w := range statCols {
+		ratios = append(ratios, float64(float64(w)/float64(canvas.Bounds().Dx())))
 		total += w
 	}
 
@@ -76,10 +106,9 @@ func getGridRatios(writer StringMeasurer, canvas draw.Image, strs []string) ([]f
 }
 
 func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, players []Player, writer *rgbrender.TextWriter, stats []string) (*rgbrender.Grid, error) {
-	maxStat := ""
-	maxName := ""
-
-	statCols := make([]string, len(stats))
+	maxName := 0
+	prefixCol := 0
+	statCols := make([]int, len(stats))
 
 	for _, player := range players {
 		select {
@@ -88,69 +117,56 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 		default:
 		}
 
-		if len(player.LastName()) > len(maxName) {
-			maxName = player.LastName()
+		if len(player.LastName()) > maxName {
+			maxName = len(player.LastName())
+		}
+
+		if s.withPrefixCol {
+			prefix := player.PrefixCol()
+			if len(prefix) > prefixCol {
+				prefixCol = len(prefix)
+			}
 		}
 
 		for i, stat := range stats {
 			val := player.GetStat(stat)
-			if len(val) > len(statCols[i]) {
-				statCols[i] = val
+			if len(val) > statCols[i] {
+				statCols[i] = len(val)
 			}
-			if len(stat) > len(statCols[i]) {
-				statCols[i] = stat
+			if s.withTitleRow && len(s.api.StatShortName(stat)) > statCols[i] {
+				statCols[i] = len(s.api.StatShortName(stat))
 			}
 		}
 	}
-
-	s.log.Debug("max strings",
-		zap.Int("namelen", len(maxName)),
-		zap.String("name", maxName),
-		zap.Int("statlen", len(maxStat)),
-		zap.String("stat", maxStat),
-	)
 
 	nameMax := maxNameLength(canvas.Bounds())
 
-	if len(maxName) > nameMax {
-		maxName = strings.Repeat("x", nameMax)
+	if maxName > nameMax {
+		maxName = nameMax
 	}
 
-	widths, err := writer.MeasureStrings(canvas, []string{maxName, maxStat})
+	strs := []string{}
+	if prefixCol > 0 {
+		strs = []string{strings.Repeat("0", prefixCol), strings.Repeat("0", maxName)}
+		for _, s := range statCols {
+			strs = append(strs, strings.Repeat("0", s))
+		}
+	} else {
+		strs = []string{strings.Repeat("0", maxName)}
+		for _, s := range statCols {
+			strs = append(strs, strings.Repeat("0", s))
+		}
+	}
+
+	fields := []zapcore.Field{}
+	for _, str := range strs {
+		fields = append(fields, zap.String("str", str))
+	}
+	s.log.Debug("cell X Maxes", fields...)
+
+	cellXRatios, err := getGridRatios(writer, canvas, strs)
 	if err != nil {
 		return nil, err
-	}
-
-	if len(widths) != 2 {
-		return nil, fmt.Errorf("unexpected number of measurements, got %d expected %d", len(widths), 2)
-	}
-
-	if widths[0] <= 0 || widths[1] <= 0 {
-		err := fmt.Errorf("failed to determine stat cell size")
-		s.log.Error(err.Error(),
-			zap.Int("name size", widths[0]),
-			zap.Int("stat size", widths[1]),
-		)
-		return nil, err
-	}
-
-	x := canvas.Bounds().Dx() - widths[0]
-
-	numStats := x / widths[1]
-	if numStats > len(stats) {
-		numStats = len(stats)
-	}
-	cellXRatios := make([]float64, numStats+1)
-
-	cellXRatios[0] = float64(widths[0]) / float64(canvas.Bounds().Dx())
-
-	statWidths := float64(1.0-cellXRatios[0]) / float64(numStats)
-
-	for i := range cellXRatios {
-		if i == 0 {
-			continue
-		}
-		cellXRatios[i] = statWidths
 	}
 
 	numRows := int(math.Floor((float64(canvas.Bounds().Dy()) / writer.FontSize)))
@@ -165,7 +181,7 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 
 	return rgbrender.NewGrid(
 		canvas,
-		numStats+1,
+		len(cellXRatios),
 		numRows,
 		s.log,
 		rgbrender.WithPadding(padSize),
@@ -174,20 +190,20 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 }
 
 func maxNameLength(canvas image.Rectangle) int {
-	return canvas.Dx() / 4
+	return canvas.Dx() / 8
 }
 
 func maxedStr(str string, max int) string {
-	if max <= 0 || len(str) < max {
+	if max <= 0 || len(str) <= max {
 		return str
 	}
 
-	start := float64(float64(max-2) / 2)
+	start := float64(float64(max) / 2)
 	i := int(start)
-	j := int(start)
+	j := int(start) - 1
 	if math.Trunc(start) != start {
 		i = int(math.Ceil(start))
-		j = int(math.Floor(start))
+		j = int(math.Floor(start)) - 1
 	}
 
 	return fmt.Sprintf("%s..%s", str[0:i], str[len(str)-j:])

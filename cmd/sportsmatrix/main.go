@@ -329,7 +329,11 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 		if err != nil {
 			return nil, err
 		}
-		b, err := statboard.New(ctx, api, r.config.PGA, logger, statboard.WithSorter(pga.SortByScore), statboard.WithTitleRow(false))
+		b, err := statboard.New(ctx, api, r.config.PGA, logger,
+			statboard.WithSorter(pga.SortByScore),
+			statboard.WithTitleRow(false),
+			statboard.WithPrefixCol(true),
+		)
 		if err != nil {
 			return nil, err
 		}

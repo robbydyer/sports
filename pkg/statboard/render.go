@@ -153,7 +153,7 @@ func (s *StatBoard) doRender(ctx context.Context, canvas board.Canvas, players [
 		}
 
 		if row < grid.NumRows() {
-			if err := s.renderPlayer(ctx, players[i], grid.GetRow(row), writer, stats); err != nil {
+			if err := s.renderPlayer(ctx, players[i], grid.GetRow(row), writer, stats, maxNameLength(canvas.Bounds())); err != nil {
 				return err
 			}
 			row++
@@ -206,9 +206,9 @@ func (s *StatBoard) renderTitleRow(ctx context.Context, row []*rgbrender.Cell, w
 			return context.Canceled
 		default:
 		}
-		if index == 0 {
+		if (index == 0 && !s.withPrefixCol) || (index == 1 && s.withPrefixCol) {
 			if err := writer.WriteAligned(
-				rgbrender.CenterTop,
+				rgbrender.LeftCenter,
 				cell.Canvas,
 				cell.Canvas.Bounds(),
 				[]string{
@@ -222,7 +222,7 @@ func (s *StatBoard) renderTitleRow(ctx context.Context, row []*rgbrender.Cell, w
 		}
 
 		if err := writer.WriteAligned(
-			rgbrender.CenterTop,
+			rgbrender.LeftCenter,
 			cell.Canvas,
 			cell.Canvas.Bounds(),
 			[]string{
@@ -237,23 +237,27 @@ func (s *StatBoard) renderTitleRow(ctx context.Context, row []*rgbrender.Cell, w
 	return nil
 }
 
-func (s *StatBoard) renderPlayer(ctx context.Context, player Player, row []*rgbrender.Cell, writer *rgbrender.TextWriter, stats []string) error {
+func (s *StatBoard) renderPlayer(ctx context.Context, player Player, row []*rgbrender.Cell, writer *rgbrender.TextWriter, stats []string, maxName int) error {
 	s.log.Debug("render player",
 		zap.String("name", player.LastName()),
 	)
+	adder := 1
+	if s.withPrefixCol {
+		adder = 2
+	}
 	for index, cell := range row {
 		select {
 		case <-ctx.Done():
 			return context.Canceled
 		default:
 		}
-		if index == 0 {
+		if index == 0 && s.withPrefixCol {
 			if err := writer.WriteAligned(
 				rgbrender.LeftCenter,
 				cell.Canvas,
 				cell.Canvas.Bounds(),
 				[]string{
-					maxedStr(player.LastName(), maxNameLength(cell.Canvas.Bounds())),
+					player.PrefixCol(),
 				},
 				color.White,
 			); err != nil {
@@ -261,13 +265,27 @@ func (s *StatBoard) renderPlayer(ctx context.Context, player Player, row []*rgbr
 			}
 			continue
 		}
-		stat := player.GetStat(stats[index-1])
-		clr := player.StatColor(stats[index-1])
+		if index == 0 || (index == 1 && s.withPrefixCol) {
+			if err := writer.WriteAligned(
+				rgbrender.LeftCenter,
+				cell.Canvas,
+				cell.Canvas.Bounds(),
+				[]string{
+					maxedStr(player.LastName(), maxName),
+				},
+				color.White,
+			); err != nil {
+				return err
+			}
+			continue
+		}
+		stat := player.GetStat(stats[index-adder])
+		clr := player.StatColor(stats[index-adder])
 		if clr == nil {
 			clr = color.White
 		}
 		if err := writer.WriteAligned(
-			rgbrender.CenterCenter,
+			rgbrender.LeftCenter,
 			cell.Canvas,
 			cell.Canvas.Bounds(),
 			[]string{
