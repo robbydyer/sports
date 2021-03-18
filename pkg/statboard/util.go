@@ -159,7 +159,13 @@ func maxedStr(str string, max int) string {
 		return str
 	}
 
-	i := (max - 2) / 2
+	start := float64(float64(max-2) / 2)
+	i := int(start)
+	j := int(start)
+	if math.Trunc(start) != start {
+		i = int(math.Ceil(start))
+		j = int(math.Floor(start))
+	}
 
-	return fmt.Sprintf("%s..%s", str[0:i], str[len(str)-i:])
+	return fmt.Sprintf("%s..%s", str[0:i], str[len(str)-j:])
 }

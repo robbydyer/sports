@@ -31,6 +31,12 @@ func TestMaxedStr(t *testing.T) {
 			len:      8,
 			expected: "bil..uff",
 		},
+		{
+			name:     "odd",
+			in:       "billygoatandgruff",
+			len:      7,
+			expected: "bil..ff",
+		},
 	}
 
 	for _, test := range tests {

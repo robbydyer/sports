@@ -11,8 +11,6 @@ import (
 	"github.com/robbydyer/sports/pkg/statboard"
 )
 
-const maxNameLength = 8
-
 // Player ...
 type Player struct {
 	ID      string `json:"id"`
