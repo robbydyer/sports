@@ -69,6 +69,9 @@ func SaveGif(img *gif.GIF, fileName string) error {
 
 // SavePngAfero ...
 func SavePngAfero(fs afero.Fs, img image.Image, fileName string) error {
+	if img == nil {
+		return fmt.Errorf("cannot save nil image.Image as PNG")
+	}
 	f, err := fs.Create(fileName)
 	if err != nil {
 		return err
