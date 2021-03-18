@@ -209,3 +209,9 @@ imageConfig:
   #directories:
   #- /home/pi/matrix_images
 
+# PGA Leaderboard
+pga:
+  enabled: false
+
+  # Limit the number of players shown. Defaults to 0, which is no limit
+  #limitPlayers: 50
