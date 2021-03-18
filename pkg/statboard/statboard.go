@@ -35,8 +35,10 @@ type Config struct {
 	LimitPlayers int                 `json:"limitPlayers"`
 }
 
+// OptionFunc provides options to the StatBoard that are not exposed in a Config
 type OptionFunc func(s *StatBoard) error
 
+// Sorter sorts the ordering of a Player list for the stat board
 type Sorter func(players []Player) []Player
 
 // API ...

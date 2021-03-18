@@ -2,6 +2,7 @@ import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Home from './Home.js';
 import Sport from './Sport.js';
+import Pga from './Pga.js';
 import ImageBoard from './ImageBoard.js';
 import Clock from './Clock.js';
 import Board from './Board.js';
@@ -35,7 +36,7 @@ class App extends React.Component {
           <Route path="/" exact component={Home} />
           <Route path="/nhl" render={() => <Sport sport="nhl" />} />
           <Route path="/mlb" render={() => <Sport sport="mlb" />} />
-          <Route path="/pga" render={() => <Sport sport="pga" />} />
+          <Route path="/pga" render={() => <Pga />} />
           <Route path="/ncaam" render={() => <Sport sport="ncaam" />} />
           <Route path="/img" exact component={ImageBoard} />
           <Route path="/clock" exact component={Clock} />

@@ -209,7 +209,6 @@ func (r *rootArgs) setConfigDefaults() {
 	}
 	r.config.PGA.SetDefaults()
 	r.config.PGA.Teams = append(r.config.PGA.Teams, "players")
-	r.config.PGA.LimitPlayers = 50
 }
 
 func (r *rootArgs) getRGBMatrix(logger *zap.Logger) (rgb.Matrix, error) {
