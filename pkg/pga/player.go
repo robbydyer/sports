@@ -32,7 +32,11 @@ type Player struct {
 	Score struct {
 		DisplayValue string `json:"displayValue"`
 	} `json:"score"`
-	SortOrder int `json:"sortOrder"`
+	SortOrder  int `json:"sortOrder"`
+	Statistics []struct {
+		Name         string `json:"name"`
+		DisplayValue string `json:"displayValue"`
+	} `json:"statistics"`
 }
 
 // SortByScore sorts players by score
@@ -76,6 +80,13 @@ func (p *Player) GetStat(stat string) string {
 	case "hole":
 		return fmt.Sprint(p.Status.Thru)
 	case "score":
+		if p.Statistics != nil {
+			for _, stat := range p.Statistics {
+				if stat.Name == "scoreToPar" && stat.DisplayValue != "" {
+					return stat.DisplayValue
+				}
+			}
+		}
 		return p.Score.DisplayValue
 	case "position":
 		return p.Status.Position.DisplayName
