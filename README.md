@@ -21,6 +21,8 @@ I run this on a Pi zero and a Pi 4. If you want to use the "Web Board" feature (
 ## Current Board Types
 
 - NHL, MLB, NCAA Men's Basketball : Shows upcoming, live, and completed games for the day
+- PGA Tour Leaderboard
+- Stats boards- currently supports MLB and NHL.
 - Image Board: Takes a list of directories containg images and displays them. Works with GIF's too!
 - Clock: It's...a clock
 - Sys: Displays basic system info. Currently Mem and CPU usage
@@ -85,7 +87,7 @@ The Web UI is accessible at `http://[HOSTNAME OR IP]:[PORT]`, where port is what
 ![example1](assets/images/ui4.png) ![example2](assets/images/ui3.png) ![example3](assets/images/ui2.png) ![example4](assets/images/ui1.png)
 
 Example of the Web Board:<br>
-![webboard](assets/images/webboard.png)
+![webboard](assets/images/tv_nhl.jpg)
 
 ## API endpoints
 The sportsmatrix creates some HTTP endpoints for on-the-fly changes. The matrix itself registers some endpoints, and each board is capable of registering it's own.
@@ -224,6 +226,18 @@ Any new boards just need to implement the [board.Board](pkg/board/board.go) inte
 
 ## Examples
 ![NHL example 2](assets/images/nhl_example.jpg)
+
+![MLB example](assets/images/mlb_board.jpg)
+
+![PGA Board](assets/images/pga.jpeg)
+
+![NHL Stats](assets/images/nhl_stats.jpg)
+
+![MLB Stats](assets/images/mlb_stats.jpg)
+
+![TV MLB](assets/images/tv_mlb.jpg)
+
+![TV NHL Stats](assets/images/tv_nhl_stats.jpg)
 
 In real life, this is a GIF of Mario running. This is using the Image Board.
 ![image example](assets/images/mario_board.jpg)
