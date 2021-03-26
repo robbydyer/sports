@@ -36,6 +36,19 @@ RUN apt-get update && \
     wget && \ 
   rm -rf /var/lib/apt/lists/*
 
+RUN GOIMG= && a="$(dpkg --print-architecture)" && \
+    case "${a##*-}" in \
+      arm64) GOIMG="go1.16.2.linux-arm64.tar.gz";; \
+      amd64) GOIMG="go1.16.2.linux-amd64.tar.gz";;\
+      *) echo "unsupported arch ${a}"; exit1 ;;\
+    esac && \
+    curl -L https://golang.org/dl/${GOIMG} -o /tmp/${GOIMG} && \
+    tar -C /usr/local -xzf /tmp/${GOIMG} && \
+    /usr/local/go/bin/go version && \
+    rm -f /tmp/${GOIMG}
+
+ENV PATH="/usr/local/go/bin:${PATH}"
+
 ENV CMAKE_VERSION 3.16.4
 
 RUN export CMAKE_DIR=cmake-$CMAKE_VERSION && \
@@ -49,10 +62,6 @@ RUN export CMAKE_DIR=cmake-$CMAKE_VERSION && \
   rm -rf ../$CMAKE_ARCH \
     ../$CMAKE_DIR
 
-ADD https://golang.org/dl/go1.16.2.linux-arm64.tar.gz /tmp/
-RUN tar -C /usr/local -xzf /tmp/go1.16.2.linux-arm64.tar.gz
-
-ENV PATH="/usr/local/go/bin:${PATH}"
 
 # NOTE: These versions must be the same on the target host
 ENV RPI_SHA=f73fca0
