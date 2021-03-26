@@ -1,43 +1,16 @@
 #!/bin/bash
 set -euo pipefail
 
-ROOT=$(git rev-parse --show-toplevel)
-cd "${ROOT}"
-IN_DOCKER="${IN_DOCKER:-no}"
-SUFFIX="test"
-
-if [ "${IN_DOCKER}" = "no" ]; then
-  source "${ROOT}/script/build.pibuilder"
-  pibuilder=$(latestpibuilder)
-
-  exec docker run -t --rm \
-    -e IN_DOCKER=yes \
-    -v "${ROOT}":/src \
-    -w /src \
-    ${pibuilder} \
-    /src/script/$(basename $0)
-fi
-
-# Inside docker
-
-export CGO_ENABLED=1
-export GOCACHE=/src/.cache
-
 set -x
-if [ ! -d "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" ]; then
-  if [ -d "${ROOT}/pkg/rgmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" ]; then
-    mv "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
-  else
-    cp -r "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
-  fi
-fi
+ROOT=$(git rev-parse --show-toplevel)
 
-if [ ! -f "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/lib/librgbmatrix.so.1" ]; then
-  cd "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
-  make
-fi
+source "${ROOT}/script/build.pibuilder"
+pibuilder=$(latestpibuilder)
 
-trap "mv ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" EXIT
-
-cd /src
-go test -v -mod=vendor ./...
+docker run -t --rm \
+  -e CGO_ENABLED=1 \
+  -e GOCACHE=/src/.cache \
+  -v "${ROOT}":/src \
+  -w /src \
+  ${pibuilder} \
+  bash -cex "go test -v ./..."
