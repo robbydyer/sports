@@ -3,31 +3,24 @@ set -euo pipefail
 
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 IN_DOCKER="${IN_DOCKER:-no}"
-IMG="golangci/golangci-lint:v1.38"
+IMG="robbydyer/rgbmatrixlint:latest"
 
-if [ "${IN_DOCKER}" = "no" ]; then
-    MOUNTOPTION=""
-    if [ "$(uname -s)" = "Darwin" ]; then
-            MOUNTOPTION=":delegated"
-    fi
-
-    exec docker run -t --rm \
-        -e IN_DOCKER=yes \
-        -u $(id -u):$(id -g) \
-        -v "${ROOT}":/src${MOUNTOPTION} \
-        -w /src \
-        -e GOCACHE="/src/.cache" \
-        -e GOLANGCI_LINT_CACHE="/src/.cache" \
-        -e GO111MODULE=on \
-        -e CGO_ENABLED=1 \
-        "${IMG}" \
-        /src/script/$(basename $0)
+MOUNTOPTION=""
+fix=""
+if [ "$(uname -s)" = "Darwin" ]; then
+  MOUNTOPTION=":delegated"
+  fix="--fix"
 fi
 
-# Inside docker
-
-if [ ! -d /src/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ]; then
-  cp -r /sportslibs/rpi-rgb-led-matrix /src/pkg/rgbmatrix-rpi/lib/
-fi
-
-golangci-lint run --verbose --fix
+set -x
+docker run -t --rm \
+  -e IN_DOCKER=yes \
+  -u $(id -u):$(id -g) \
+  -v "${ROOT}":/src${MOUNTOPTION} \
+  -w /src \
+  -e GOCACHE="/src/.cache" \
+  -e GOLANGCI_LINT_CACHE="/src/.cache" \
+  -e GO111MODULE=on \
+  -e CGO_ENABLED=1 \
+  "${IMG}" \
+  bash -cex "golangci-lint run --verbose ${fix}"
