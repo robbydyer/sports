@@ -26,3 +26,11 @@ export function CallMatrix(path) {
     });
     console.log("Response", resp.ok);
 }
+export async function GetVersion(callback) {
+    var resp = await fetch(`${BACKEND}/api/version`, {
+        method: "GET",
+        mode: "cors",
+    });
+    const ver = await resp.text();
+    callback(ver);
+}

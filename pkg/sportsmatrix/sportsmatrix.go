@@ -16,6 +16,8 @@ import (
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
+var version = "noversion"
+
 // SportsMatrix controls the RGB matrix. It rotates through a list of given board.Board
 type SportsMatrix struct {
 	cfg           *Config

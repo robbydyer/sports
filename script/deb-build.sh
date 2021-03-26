@@ -7,14 +7,14 @@ ARCH="$(uname -m)"
 sudo apt-get install -y build-essential
 
 cd "${ROOT}"
-script/build.local
+VERSION="${VERSION}" script/build.local
 
 tmp="$(mktemp -d /tmp/sportsbuild.XXXX)"
 echo "Build Dir: ${tmp}"
 
 d="sportsmatrix-${VERSION}_${ARCH}"
 
-mkdir "${tmp}/${d}" 
+mkdir "${tmp}/${d}"
 cd "${tmp}/${d}"
 
 mkdir -p DEBIAN etc/systemd/system usr/local/bin etc/logrotate.d
@@ -42,6 +42,8 @@ Restart=always
 RestartSec=1
 User=root
 ExecStart=/usr/local/bin/sportsmatrix run -f /var/log/sportsmatrix.log
+StandardOutput=file:/var/log/sportsmatrix_out.log
+StandardError=file:/var/log/sportsmatrix_out.log
 
 [Install]
 WantedBy=multi-user.target
@@ -53,6 +55,16 @@ EOF
 
 cat <<EOF > etc/logrotate.d/sportsmatrix
 /var/log/sportsmatrix.log
+{
+        rotate 3
+        daily
+        missingok
+        notifempty
+        delaycompress
+        compress
+}
+
+/var/log/sportsmatrix_out.log
 {
         rotate 3
         daily

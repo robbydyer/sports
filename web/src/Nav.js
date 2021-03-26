@@ -5,10 +5,24 @@ import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 import { Link } from 'react-router-dom';
 import { withRouter } from "react-router";
+import { GetVersion } from './util';
 
 class TopNav extends React.Component {
     constructor(props) {
         super(props);
+        this.state = {
+            "version": "",
+        }
+    }
+    componentDidMount() {
+        if (this.state.version === "") {
+            console.log("fetching version")
+            GetVersion((val) => {
+                this.setState({
+                    "version": val,
+                })
+            })
+        }
     }
     render() {
         return (
@@ -28,7 +42,7 @@ class TopNav extends React.Component {
                             <Nav.Link as={Link} to="/sys">System Info</Nav.Link>
                             <Nav.Link as={Link} to="/board">Live Board</Nav.Link>
                         </Nav>
-                        <Navbar.Text>v0.0.21</Navbar.Text>
+                        <Navbar.Text>{this.state.version}</Navbar.Text>
                     </Navbar.Collapse>
                 </Navbar>
             </Container >
