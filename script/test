@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT=$(git rev-parse --show-toplevel)
 cd "${ROOT}"
 IN_DOCKER="${IN_DOCKER:-no}"
+SUFFIX="arm7"
 
 if [ "${IN_DOCKER}" = "no" ]; then
   source "${ROOT}/script/build.pibuilder"

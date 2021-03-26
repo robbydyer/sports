@@ -20,6 +20,6 @@ buildpibuilder() {
   img=$(latestpibuilder)
 
   if [ "$(docker images -q ${img})" = "" ]; then
-    docker build -f Dockerfile.pibuilder -t ${img} -t pibuilder:latest .
+    docker build -f Dockerfile.pibuilder -t ${img} -t robbydyer/pibuilder:latest .
   fi
 }
