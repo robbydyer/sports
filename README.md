@@ -225,18 +225,25 @@ script/build.arm7
 Any new boards just need to implement the [board.Board](pkg/board/board.go) interface. A new sports type board would be best to implement the API, Team, and Game interfaces in a [sportboard.SportBoard](pkg/sportboard/sportboard.go) (See the [NHL Board](pkg/nhl/nhl.go) for an example).
 
 ## Examples
+NHL
 ![NHL example 2](assets/images/nhl_example.jpg)
 
+MLB
 ![MLB example](assets/images/mlb_board.jpg)
 
+PGA Tour Leaderboard
 ![PGA Board](assets/images/pga.jpeg)
 
+NHL Stats
 ![NHL Stats](assets/images/nhl_stats.jpg)
 
+MLB Stats
 ![MLB Stats](assets/images/mlb_stats.jpg)
 
+TV Mode, MLB Board
 ![TV MLB](assets/images/tv_mlb.jpg)
 
+TV Mode, NHL Stats
 ![TV NHL Stats](assets/images/tv_nhl_stats.jpg)
 
 In real life, this is a GIF of Mario running. This is using the Image Board.
