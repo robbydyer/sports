@@ -112,6 +112,13 @@ func (s *SportsMatrix) startHTTP() chan error {
 func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
 	return []*board.HTTPHandler{
 		{
+			Path: "/api/version",
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				_, _ = w.Write([]byte(version))
+				return
+			},
+		},
+		{
 			Path: "/api/screenon",
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				s.Lock()

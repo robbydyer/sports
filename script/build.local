@@ -5,6 +5,7 @@ set -euo pipefail
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 cd "${ROOT}"
 SUFFIX="bin"
+VERSION="${VERSION:-devbuild}"
 
 set -x
 export CGO_ENABLED=1
@@ -20,4 +21,5 @@ if [ ! -f ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/lib/librgbmatrix.so.1
 fi
 
 cd "${ROOT}"
-go build -mod=vendor -o sportsmatrix.${SUFFIX}  ./cmd/sportsmatrix
+set -x
+go build -mod=vendor -o sportsmatrix.${SUFFIX} -ldflags="-X github.com/robbydyer/sports/pkg/sportsmatrix.version=${VERSION}" ./cmd/sportsmatrix
