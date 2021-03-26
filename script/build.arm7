@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+set -x
 
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 cd "${ROOT}"
@@ -31,7 +32,6 @@ export GOARM=7
 export CC=arm-linux-gnueabihf-gcc
 export CXX=arm-linux-gnueabihf-g++
 
-set -x
 if [ ! -d "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" ]; then
   if [ -d "${ROOT}/pkg/rgmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" ]; then
     mv "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
