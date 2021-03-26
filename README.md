@@ -131,7 +131,7 @@ For easy/faster testing without compiling on a Pi, you can use the `ConsoleMatri
 $ script/shell.console
 ...
 # Set the --test or -t flag to use the ConsoleMatrix
-root@1be09d37bbd9:/src# go run -mod=vendor ./cmd/sportsmatrix/ run -t -c matrix.conf
+root@1be09d37bbd9:/src# go run ./cmd/sportsmatrix/ run -t -c matrix.conf
 ...
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 |
