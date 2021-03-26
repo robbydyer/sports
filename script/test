@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT=$(git rev-parse --show-toplevel)
 cd "${ROOT}"
 IN_DOCKER="${IN_DOCKER:-no}"
-SUFFIX="arm7"
+SUFFIX="test"
 
 if [ "${IN_DOCKER}" = "no" ]; then
   source "${ROOT}/script/build.pibuilder"
@@ -36,6 +36,8 @@ if [ ! -f "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/lib/librgbmatrix.so.
   cd "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
   make
 fi
+
+trap "mv ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" EXIT
 
 cd /src
 go test -v -mod=vendor ./...

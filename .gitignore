@@ -2,8 +2,8 @@ tmp/
 web/.eslintcache
 .idea
 pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/
-pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.armv6l/
-pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.arm7/
+pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.*
+!pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE/
 sportsmatrix.bin
 sportsmatrix.arm*
 *.swp
