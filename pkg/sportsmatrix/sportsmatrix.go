@@ -21,6 +21,7 @@ var version = "noversion"
 // SportsMatrix controls the RGB matrix. It rotates through a list of given board.Board
 type SportsMatrix struct {
 	cfg           *Config
+	isServing     chan struct{}
 	canvases      []board.Canvas
 	boards        []board.Board
 	screenIsOn    *atomic.Bool
@@ -116,6 +117,7 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 		webBoardIsOn: atomic.NewBool(false),
 		webBoardOn:   make(chan struct{}),
 		webBoardOff:  make(chan struct{}),
+		isServing:    make(chan struct{}, 1),
 		canvases:     canvases,
 	}
 
@@ -188,19 +190,6 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 	}()
 
 	return s, nil
-}
-
-// GetImgCanvas checks the matrix for board.Canvas of type imgcanvas.ImgCanvas
-func (s *SportsMatrix) GetImgCanvas() (*imgcanvas.ImgCanvas, error) {
-	for _, canvas := range s.canvases {
-		switch c := canvas.(type) {
-		case *imgcanvas.ImgCanvas:
-			return c, nil
-		default:
-		}
-	}
-
-	return nil, fmt.Errorf("ImgCanvas is not set")
 }
 
 func (s *SportsMatrix) screenWatcher(ctx context.Context) {
@@ -314,6 +303,12 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 
 	clearer := sync.Once{}
 
+	// This is really only for testing.
+	select {
+	case s.isServing <- struct{}{}:
+	default:
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -359,6 +354,7 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 	for _, b := range s.boards {
 		select {
 		case <-ctx.Done():
+			s.log.Error("board context was canceled")
 			return
 		default:
 		}
@@ -397,7 +393,18 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 				}
 			}(canvas)
 		}
-		wg.Wait()
+		done := make(chan struct{})
+
+		go func() {
+			defer close(done)
+			wg.Wait()
+		}()
+
+		select {
+		case <-ctx.Done():
+			return
+		case <-done:
+		}
 
 		select {
 		case renderDone <- struct{}{}:
@@ -407,7 +414,11 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 		// If for some reason the render returns really quickly, like
 		// the board not implementing a delay, let's sleep here for a bit
 		if time.Since(renderStart) < 2*time.Second {
-			time.Sleep(5 * time.Second)
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(5 * time.Second):
+			}
 		}
 	}
 }

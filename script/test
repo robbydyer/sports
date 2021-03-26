@@ -25,7 +25,7 @@ export GOCACHE=/src/.cache
 
 set -x
 if [ ! -d "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" ]; then
-  if [ -d "${ROOT}/pkg/rgmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" ]; then
+  if [ -d "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" ]; then
     mv "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
   else
     cp -r "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
