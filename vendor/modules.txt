@@ -24,11 +24,6 @@ github.com/golang/freetype/truetype
 # github.com/gorilla/mux v1.8.0
 ## explicit
 github.com/gorilla/mux
-# github.com/hashicorp/errwrap v1.0.0
-github.com/hashicorp/errwrap
-# github.com/hashicorp/go-multierror v1.0.0
-## explicit
-github.com/hashicorp/go-multierror
 # github.com/hashicorp/hcl v1.0.0
 github.com/hashicorp/hcl
 github.com/hashicorp/hcl/hcl/ast
@@ -47,8 +42,6 @@ github.com/jezek/xgb
 github.com/jezek/xgb/render
 github.com/jezek/xgb/shm
 github.com/jezek/xgb/xproto
-# github.com/jphsd/glui v0.0.0-20210213195601-206b7774bf97
-## explicit
 # github.com/kr/text v0.1.0
 github.com/kr/text
 # github.com/mackerelio/go-osstat v0.1.0
@@ -89,8 +82,6 @@ github.com/robbydyer/exp/shiny/screen
 # github.com/robfig/cron/v3 v3.0.1
 ## explicit
 github.com/robfig/cron/v3
-# github.com/sirupsen/logrus v1.7.0
-## explicit
 # github.com/spf13/afero v1.1.2
 ## explicit
 github.com/spf13/afero
