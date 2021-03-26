@@ -8,14 +8,13 @@ IN_DOCKER="${IN_DOCKER:-no}"
 if [ "${IN_DOCKER}" = "no" ]; then
   source "${ROOT}/script/build.pibuilder"
   pibuilder=$(latestpibuilder)
-  buildpibuilder
 
   exec docker run -t --rm \
     -e IN_DOCKER=yes \
     -v "${ROOT}":/src \
     -w /src \
-    pibuilder \
-    /src/script/test
+    ${pibuilder} \
+    /src/script/$(basename $0)
 fi
 
 # Inside docker

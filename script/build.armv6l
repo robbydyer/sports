@@ -19,7 +19,7 @@ if [ "${IN_DOCKER}" = "no" ]; then
     set -x
     source "${ROOT}/script/build.pibuilder"
     pibuilder=$(latestpibuilder)
-    buildpibuilder
+
     exec docker run -t --rm \
       -e IN_DOCKER=yes \
       -v "${ROOT}":/src \
@@ -53,6 +53,6 @@ if [ ! -f "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/lib/librgbmatrix.so.
 fi
 
 cd "${ROOT}"
-go build -mod=vendor -o sportsmatrix.${SUFFIX}  ./cmd/sportsmatrix
+go build -o sportsmatrix.${SUFFIX}  ./cmd/sportsmatrix
 
 mv "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}"

@@ -13,8 +13,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: build docker image
-      run: docker build -f Dockerfile.pibuilder -t pibuilder .
+    - name: Test
+      run: ./script/test
 
     - name: Build
       run: ./script/build.arm7

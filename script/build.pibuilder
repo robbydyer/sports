@@ -12,7 +12,7 @@ getsha() {
 }
 
 latestpibuilder() {
-  echo "pibuilder:$(getsha "${ROOT}/Dockerfile.pibuilder")"
+  echo "robbydyer/pibuilder:$(getsha "${ROOT}/Dockerfile.pibuilder")"
 }
 
 buildpibuilder() {
