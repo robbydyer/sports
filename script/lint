@@ -26,10 +26,13 @@ if [ "${IN_DOCKER}" = "no" ]; then
       /src/script/$(basename $0)
 fi
 
-# Inside docker
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 
-if [ ! -d /src/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ]; then
-  cp -r /sportslibs/rpi-rgb-led-matrix /src/pkg/rgbmatrix-rpi/lib/
+if [ ! -d ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ]; then
+  if [ -d /sportslibs/rpi-rgb-led-matrix ]; then
+    mv /sportslibs/rpi-rgb-led-matrix ${ROOT}/pkg/rgbmatrix-rpi/lib/
+    trap "rm -rf ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" EXIT
+  fi
 fi
 
 fix=""
