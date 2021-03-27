@@ -30,7 +30,7 @@ ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd 
 
 if [ ! -d ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ]; then
   if [ -d /sportslibs/rpi-rgb-led-matrix ]; then
-    mv /sportslibs/rpi-rgb-led-matrix ${ROOT}/pkg/rgbmatrix-rpi/lib/
+    cp -r /sportslibs/rpi-rgb-led-matrix ${ROOT}/pkg/rgbmatrix-rpi/lib/
     trap "rm -rf ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" EXIT
   fi
 fi

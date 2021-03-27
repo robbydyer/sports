@@ -40,7 +40,7 @@ if [ ! -f "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/lib/librgbmatrix.so.
   make
 fi
 
-trap "mv ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" EXIT
+trap "mv ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX} || true" EXIT
 
 cd "${ROOT}"
 go build -o sportsmatrix.${SUFFIX}  ./cmd/sportsmatrix
