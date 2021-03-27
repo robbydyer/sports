@@ -3,26 +3,27 @@ set -euo pipefail
 
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 IN_DOCKER="${IN_DOCKER:-no}"
-IMG="golangci/golangci-lint:v1.38"
+IMG="robbydyer/rgbmatrixlint:latest"
 
 if [ "${IN_DOCKER}" = "no" ]; then
-    MOUNTOPTION=""
-    if [ "$(uname -s)" = "Darwin" ]; then
-      MOUNTOPTION=":delegated"
-    fi
+  MOUNTOPTION=""
+  if [ "$(uname -s)" = "Darwin" ]; then
+    MOUNTOPTION=":delegated"
+  fi
 
-    exec docker run -t --rm \
-        -e IN_DOCKER=yes \
-        -u $(id -u):$(id -g) \
-        -v "${ROOT}":/src${MOUNTOPTION} \
-        -w /src \
-        -e GOCACHE="/src/.cache" \
-        -e GOLANGCI_LINT_CACHE="/src/.cache" \
-        -e GO111MODULE=on \
-        -e CGO_ENABLED=1 \
-        -e GITHUB_ACTIONS="${GITHUB_ACTIONS:-}" \
-        "${IMG}" \
-        /src/script/$(basename $0)
+  set -x
+  exec docker run -t --rm \
+      -e IN_DOCKER=yes \
+      -u $(id -u):$(id -g) \
+      -v "${ROOT}":/src${MOUNTOPTION} \
+      -w /src \
+      -e GOCACHE="/src/.cache" \
+      -e GOLANGCI_LINT_CACHE="/src/.cache" \
+      -e GO111MODULE=on \
+      -e CGO_ENABLED=1 \
+      -e GITHUB_ACTIONS="${GITHUB_ACTIONS:-}" \
+      "${IMG}" \
+      /src/script/$(basename $0)
 fi
 
 # Inside docker
