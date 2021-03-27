@@ -7,9 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/robbydyer/sports/pkg/board"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
+
+	"github.com/robbydyer/sports/pkg/board"
 )
 
 func TestSportsMatrix(t *testing.T) {
