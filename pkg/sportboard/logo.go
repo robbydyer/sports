@@ -10,15 +10,31 @@ import (
 	"github.com/robbydyer/sports/pkg/logo"
 )
 
-func (s *SportBoard) logoConfig(logoKey string) (*logo.Config, error) {
+func (s *SportBoard) logoConfig(logoKey string, bounds image.Rectangle) *logo.Config {
 	for _, conf := range s.config.LogoConfigs {
 		if conf.Abbrev == logoKey {
-			return conf, nil
+			return conf
 		}
 	}
 
 	s.log.Warn("no logo config defined, defaults will be used", zap.String("logo key", logoKey))
-	return nil, fmt.Errorf("no logo config for %s", logoKey)
+
+	zoom := float64(1)
+
+	if bounds.Dx() == bounds.Dy() {
+		zoom = 0.8
+	}
+
+	return &logo.Config{
+		Abbrev: logoKey,
+		XSize:  bounds.Dx(),
+		YSize:  bounds.Dy(),
+		Pt: &logo.Pt{
+			X:    0,
+			Y:    0,
+			Zoom: zoom,
+		},
+	}
 }
 
 func (s *SportBoard) getLogoDrawCache(logoKey string) (image.Image, error) {
@@ -76,7 +92,7 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, bounds image.Rectangle,
 	l, err := s.getLogoCache(logoKey)
 	if err != nil {
 		var err error
-		logoConf, _ := s.logoConfig(logoKey)
+		logoConf := s.logoConfig(logoKey, bounds)
 
 		s.log.Debug("fetching logo",
 			zap.String("logoKey", logoKey),
@@ -129,7 +145,7 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, bounds image.Rectangle,
 	l, err := s.getLogoCache(logoKey)
 	if err != nil {
 		var err error
-		logoConf, _ := s.logoConfig(logoKey)
+		logoConf := s.logoConfig(logoKey, bounds)
 
 		s.log.Debug("fetching logo",
 			zap.String("abbreviation", abbreviation),
