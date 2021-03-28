@@ -22,7 +22,7 @@ func (s *SportBoard) logoConfig(logoKey string, bounds image.Rectangle) *logo.Co
 	zoom := float64(1)
 
 	if bounds.Dx() == bounds.Dy() {
-		zoom = 0.75
+		zoom = 0.8
 	}
 
 	return &logo.Config{
