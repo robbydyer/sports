@@ -51,7 +51,7 @@ func (n *NHL) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config
 
 	p := strings.Split(logoKey, "_")
 	if len(p) < 2 {
-		return nil, fmt.Errorf("invalid logo key '%s'", logoConf.Abbrev)
+		return nil, fmt.Errorf("invalid logo key '%s'", logoKey)
 	}
 	teamAbbrev := p[0]
 

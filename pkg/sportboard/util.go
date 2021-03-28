@@ -23,7 +23,7 @@ func (s *SportBoard) getTimeWriter(bounds image.Rectangle) (*rgbrender.TextWrite
 		return nil, err
 	}
 
-	timeWriter.FontSize = 0.125 * float64(bounds.Dx())
+	timeWriter.FontSize = 0.25 * float64(bounds.Dy())
 	timeWriter.YStartCorrection = -1 * ((bounds.Dy() / 32) + 1)
 
 	s.log.Debug("time writer font",
@@ -51,7 +51,7 @@ func (s *SportBoard) getScoreWriter(bounds image.Rectangle) (*rgbrender.TextWrit
 		return nil, fmt.Errorf("failed to load font for score: %w", err)
 	}
 
-	size := 0.25 * float64(bounds.Dx())
+	size := 0.5 * float64(bounds.Dy())
 
 	scoreWriter := rgbrender.NewTextWriter(fnt, size)
 

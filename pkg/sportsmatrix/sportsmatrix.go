@@ -49,6 +49,7 @@ type Config struct {
 	ScreenOffTimes []string            `json:"screenOffTimes"`
 	ScreenOnTimes  []string            `json:"screenOnTimes"`
 	WebBoardWidth  int                 `json:"webBoardWidth"`
+	WebBoardHeight int                 `json:"webBoardHeight"`
 	LaunchWebBoard bool                `json:"launchWebBoard"`
 	WebBoardUser   string              `json:"webBoardUser"`
 }
@@ -123,14 +124,20 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 
 	// Add an ImgCanvas
 	if s.cfg.WebBoardWidth == 0 {
-		s.cfg.WebBoardWidth = 800
+		if s.cfg.WebBoardHeight != 0 {
+			s.cfg.WebBoardWidth = s.cfg.WebBoardHeight * 2
+		} else {
+			s.cfg.WebBoardWidth = 800
+		}
 	}
-	height := s.cfg.WebBoardWidth / 2
+	if s.cfg.WebBoardHeight == 0 {
+		s.cfg.WebBoardHeight = s.cfg.WebBoardWidth / 2
+	}
 	s.log.Info("init web baord",
 		zap.Int("X", s.cfg.WebBoardWidth),
-		zap.Int("Y", height),
+		zap.Int("Y", s.cfg.WebBoardHeight),
 	)
-	s.canvases = append(s.canvases, imgcanvas.New(s.cfg.WebBoardWidth, height, s.log))
+	s.canvases = append(s.canvases, imgcanvas.New(s.cfg.WebBoardWidth, s.cfg.WebBoardHeight, s.log))
 
 	for _, b := range s.boards {
 		s.log.Info("Registering board", zap.String("board", b.Name()))
