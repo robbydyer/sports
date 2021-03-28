@@ -10,10 +10,10 @@ import (
 	"github.com/robbydyer/sports/pkg/logo"
 )
 
-func (s *SportBoard) logoConfig(logoKey string, bounds image.Rectangle) (*logo.Config, error) {
+func (s *SportBoard) logoConfig(logoKey string, bounds image.Rectangle) *logo.Config {
 	for _, conf := range s.config.LogoConfigs {
 		if conf.Abbrev == logoKey {
-			return conf, nil
+			return conf
 		}
 	}
 
@@ -34,7 +34,7 @@ func (s *SportBoard) logoConfig(logoKey string, bounds image.Rectangle) (*logo.C
 			Y:    0,
 			Zoom: zoom,
 		},
-	}, nil
+	}
 }
 
 func (s *SportBoard) getLogoDrawCache(logoKey string) (image.Image, error) {
@@ -92,7 +92,7 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, bounds image.Rectangle,
 	l, err := s.getLogoCache(logoKey)
 	if err != nil {
 		var err error
-		logoConf, _ := s.logoConfig(logoKey, bounds)
+		logoConf := s.logoConfig(logoKey, bounds)
 
 		s.log.Debug("fetching logo",
 			zap.String("logoKey", logoKey),
@@ -145,7 +145,7 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, bounds image.Rectangle,
 	l, err := s.getLogoCache(logoKey)
 	if err != nil {
 		var err error
-		logoConf, _ := s.logoConfig(logoKey, bounds)
+		logoConf := s.logoConfig(logoKey, bounds)
 
 		s.log.Debug("fetching logo",
 			zap.String("abbreviation", abbreviation),
