@@ -37,7 +37,7 @@ if [ ! -f "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/lib/librgbmatrix.so.
   make
 fi
 
-trap "mv ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" EXIT
+trap "mv ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX} &> /dev/null || true" EXIT
 
 cd /src
 go test -v -mod=vendor ./...

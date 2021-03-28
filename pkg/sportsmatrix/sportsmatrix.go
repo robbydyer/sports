@@ -287,15 +287,18 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 		}
 	}()
 
+	watcherCtx, watcherCancel := context.WithCancel(ctx)
+	defer watcherCancel()
+
 	s.boardCtx, s.boardCancel = context.WithCancel(ctx)
 	defer s.boardCancel()
 
-	go s.webBoardWatcher(ctx)
+	go s.webBoardWatcher(watcherCtx)
 	if s.cfg.LaunchWebBoard {
 		s.webBoardOn <- struct{}{}
 	}
 
-	go s.screenWatcher(ctx)
+	go s.screenWatcher(watcherCtx)
 
 	if len(s.boards) < 1 {
 		return fmt.Errorf("no boards configured")
@@ -312,7 +315,7 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			s.boardCancel()
+			s.log.Warn("context canceled during matrix loop")
 			return context.Canceled
 		default:
 		}
@@ -380,14 +383,17 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 
 		var wg sync.WaitGroup
 
+	CANVASES:
 		for _, canvas := range s.canvases {
+			if !canvas.Enabled() {
+				s.log.Warn("canvas is disabled, skipping", zap.String("canvas", canvas.Name()))
+				continue CANVASES
+			}
+
 			wg.Add(1)
 			go func(canvas board.Canvas) {
 				defer wg.Done()
-				if !canvas.Enabled() {
-					s.log.Warn("canvas is disabled, skipping", zap.String("canvas", canvas.Name()))
-					return
-				}
+				s.log.Debug("rendering board", zap.String("board", b.Name()))
 				if err := b.Render(ctx, canvas); err != nil {
 					s.log.Error(err.Error())
 				}
@@ -400,11 +406,14 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 			wg.Wait()
 		}()
 
+		s.log.Debug("waiting for canvases to be rendered to")
 		select {
 		case <-ctx.Done():
+			s.log.Warn("context canceled waiting for canvases to render")
 			return
 		case <-done:
 		}
+		s.log.Debug("done waiting for canvases")
 
 		select {
 		case renderDone <- struct{}{}:
@@ -414,8 +423,10 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 		// If for some reason the render returns really quickly, like
 		// the board not implementing a delay, let's sleep here for a bit
 		if time.Since(renderStart) < 2*time.Second {
+			s.log.Warn("board rendered under 2 seconds, sleeping 5 seconds", zap.String("board", b.Name()))
 			select {
 			case <-ctx.Done():
+				s.log.Warn("context canceled while sleeping 5 seconds")
 				return
 			case <-time.After(5 * time.Second):
 			}
