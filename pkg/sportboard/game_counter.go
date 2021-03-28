@@ -12,8 +12,8 @@ import (
 
 // RenderGameCounter ...
 func (s *SportBoard) RenderGameCounter(canvas board.Canvas, numGames int, activeIndex int) (image.Image, error) {
-	spacing := canvas.Bounds().Dx() / 64
-	pixSize := canvas.Bounds().Dx() / 64
+	spacing := canvas.Bounds().Dy() / 32
+	pixSize := canvas.Bounds().Dy() / 32
 	totalWidth := (numGames * spacing) + (pixSize * (numGames - 1))
 
 	aligned, err := rgbrender.AlignPosition(rgbrender.CenterBottom, canvas.Bounds(), totalWidth, 1)
