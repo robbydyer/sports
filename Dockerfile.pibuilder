@@ -1,4 +1,21 @@
+FROM debian:buster AS rgbbuilder
+
+RUN apt-get update && \
+    apt-get install -y \
+    automake \
+    build-essential \
+    gcc \
+    g++ \
+    git
+
+COPY ./pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE /tmp/rpi-rgb-led-matrix
+
+RUN cd /tmp/rpi-rgb-led-matrix && \
+    make
+
 FROM debian:buster
+
+COPY --from=rgbbuilder /tmp/rpi-rgb-led-matrix /sportslibs/rpi-rgb-led-matrix
 
 ENV GNU_HOST=arm-linux-gnueabihf
 ENV C_COMPILER_ARM_LINUX=$GNU_HOST-gcc
@@ -65,7 +82,6 @@ RUN export CMAKE_DIR=cmake-$CMAKE_VERSION && \
 
 # NOTE: These versions must be the same on the target host
 ENV RPI_SHA=f73fca0
-ENV WIRINGPI_SHA=6d9ce35
 
 # MMAL/VCOS (https://github.com/raspberrypi/userland)
 RUN RPI_DIR=/raspberrypi && \
@@ -81,21 +97,23 @@ RUN RPI_DIR=/raspberrypi && \
   make -j `nproc` && \
   make install DESTDIR=$CROSS_INSTALL_PREFIX/ && \
   cd / && \
-  rm -rf $RPI_DIR && \
-  # WiringPi
-  # https://github.com/WiringPi/WiringPi
-  WPI_DIR=/wpi && \
-  WPI_WIRING_PI_DIR=$WPI_DIR/wiringPi && \
-  git clone --single-branch --branch master https://github.com/WiringPi/WiringPi.git $WPI_DIR && \
-  cd $WPI_DIR && \
-  git checkout $WIRINGPI_SHA && \
-  cd $WPI_WIRING_PI_DIR && \
-  CC=$C_COMPILER_ARM_LINUX make -j `nproc` && \
-  make install DESTDIR=$CROSS_INSTALL_PREFIX PREFIX="" && \
-  cd / && \
-  rm -rf $WPI_DIR
+  rm -rf $RPI_DIR
 
-RUN git clone --progress --verbose https://github.com/raspberrypi/tools.git --depth=1 pitools
+# WiringPi
+# https://github.com/WiringPi/WiringPi
+#ENV WIRINGPI_SHA=6d9ce35
+#RUN  WPI_DIR=/wpi && \
+#  WPI_WIRING_PI_DIR=$WPI_DIR/wiringPi && \
+#  git clone --single-branch --branch master https://github.com/WiringPi/WiringPi.git $WPI_DIR && \
+#  cd $WPI_DIR && \
+#  git checkout $WIRINGPI_SHA && \
+#  cd $WPI_WIRING_PI_DIR && \
+#  CC=$C_COMPILER_ARM_LINUX make -j `nproc` && \
+#  make install DESTDIR=$CROSS_INSTALL_PREFIX PREFIX="" && \
+#  cd / && \
+#  rm -rf $WPI_DIR
+
+#RUN git clone --progress --verbose https://github.com/raspberrypi/tools.git --depth=1 pitools
 
 ENV TZ=America/New_York
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
