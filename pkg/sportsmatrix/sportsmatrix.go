@@ -21,6 +21,7 @@ var version = "noversion"
 // SportsMatrix controls the RGB matrix. It rotates through a list of given board.Board
 type SportsMatrix struct {
 	cfg           *Config
+	isServing     chan struct{}
 	canvases      []board.Canvas
 	boards        []board.Board
 	screenIsOn    *atomic.Bool
@@ -116,6 +117,7 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 		webBoardIsOn: atomic.NewBool(false),
 		webBoardOn:   make(chan struct{}),
 		webBoardOff:  make(chan struct{}),
+		isServing:    make(chan struct{}, 1),
 		canvases:     canvases,
 	}
 
@@ -188,19 +190,6 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 	}()
 
 	return s, nil
-}
-
-// GetImgCanvas checks the matrix for board.Canvas of type imgcanvas.ImgCanvas
-func (s *SportsMatrix) GetImgCanvas() (*imgcanvas.ImgCanvas, error) {
-	for _, canvas := range s.canvases {
-		switch c := canvas.(type) {
-		case *imgcanvas.ImgCanvas:
-			return c, nil
-		default:
-		}
-	}
-
-	return nil, fmt.Errorf("ImgCanvas is not set")
 }
 
 func (s *SportsMatrix) screenWatcher(ctx context.Context) {
@@ -298,15 +287,18 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 		}
 	}()
 
+	watcherCtx, watcherCancel := context.WithCancel(ctx)
+	defer watcherCancel()
+
 	s.boardCtx, s.boardCancel = context.WithCancel(ctx)
 	defer s.boardCancel()
 
-	go s.webBoardWatcher(ctx)
+	go s.webBoardWatcher(watcherCtx)
 	if s.cfg.LaunchWebBoard {
 		s.webBoardOn <- struct{}{}
 	}
 
-	go s.screenWatcher(ctx)
+	go s.screenWatcher(watcherCtx)
 
 	if len(s.boards) < 1 {
 		return fmt.Errorf("no boards configured")
@@ -314,10 +306,16 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 
 	clearer := sync.Once{}
 
+	// This is really only for testing.
+	select {
+	case s.isServing <- struct{}{}:
+	default:
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
-			s.boardCancel()
+			s.log.Warn("context canceled during matrix loop")
 			return context.Canceled
 		default:
 		}
@@ -359,6 +357,7 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 	for _, b := range s.boards {
 		select {
 		case <-ctx.Done():
+			s.log.Error("board context was canceled")
 			return
 		default:
 		}
@@ -384,20 +383,37 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 
 		var wg sync.WaitGroup
 
+	CANVASES:
 		for _, canvas := range s.canvases {
+			if !canvas.Enabled() {
+				s.log.Warn("canvas is disabled, skipping", zap.String("canvas", canvas.Name()))
+				continue CANVASES
+			}
+
 			wg.Add(1)
 			go func(canvas board.Canvas) {
 				defer wg.Done()
-				if !canvas.Enabled() {
-					s.log.Warn("canvas is disabled, skipping", zap.String("canvas", canvas.Name()))
-					return
-				}
+				s.log.Debug("rendering board", zap.String("board", b.Name()))
 				if err := b.Render(ctx, canvas); err != nil {
 					s.log.Error(err.Error())
 				}
 			}(canvas)
 		}
-		wg.Wait()
+		done := make(chan struct{})
+
+		go func() {
+			defer close(done)
+			wg.Wait()
+		}()
+
+		s.log.Debug("waiting for canvases to be rendered to")
+		select {
+		case <-ctx.Done():
+			s.log.Warn("context canceled waiting for canvases to render")
+			return
+		case <-done:
+		}
+		s.log.Debug("done waiting for canvases")
 
 		select {
 		case renderDone <- struct{}{}:
@@ -407,7 +423,13 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 		// If for some reason the render returns really quickly, like
 		// the board not implementing a delay, let's sleep here for a bit
 		if time.Since(renderStart) < 2*time.Second {
-			time.Sleep(5 * time.Second)
+			s.log.Warn("board rendered under 2 seconds, sleeping 5 seconds", zap.String("board", b.Name()))
+			select {
+			case <-ctx.Done():
+				s.log.Warn("context canceled while sleeping 5 seconds")
+				return
+			case <-time.After(5 * time.Second):
+			}
 		}
 	}
 }

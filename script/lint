@@ -3,31 +3,43 @@ set -euo pipefail
 
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 IN_DOCKER="${IN_DOCKER:-no}"
-IMG="golangci/golangci-lint:v1.38"
+IMG="robbydyer/rgbmatrixlint:latest"
 
 if [ "${IN_DOCKER}" = "no" ]; then
-    MOUNTOPTION=""
-    if [ "$(uname -s)" = "Darwin" ]; then
-            MOUNTOPTION=":delegated"
-    fi
+  MOUNTOPTION=""
+  if [ "$(uname -s)" = "Darwin" ]; then
+    MOUNTOPTION=":delegated"
+  fi
 
-    exec docker run -t --rm \
-        -e IN_DOCKER=yes \
-        -u $(id -u):$(id -g) \
-        -v "${ROOT}":/src${MOUNTOPTION} \
-        -w /src \
-        -e GOCACHE="/src/.cache" \
-        -e GOLANGCI_LINT_CACHE="/src/.cache" \
-        -e GO111MODULE=on \
-        -e CGO_ENABLED=1 \
-        "${IMG}" \
-        /src/script/$(basename $0)
+  set -x
+  exec docker run -t --rm \
+      -e IN_DOCKER=yes \
+      -u $(id -u):$(id -g) \
+      -v "${ROOT}":/src${MOUNTOPTION} \
+      -w /src \
+      -e GOCACHE="/src/.cache" \
+      -e GOLANGCI_LINT_CACHE="/src/.cache" \
+      -e GO111MODULE=on \
+      -e CGO_ENABLED=1 \
+      -e GITHUB_ACTIONS="${GITHUB_ACTIONS:-}" \
+      "${IMG}" \
+      /src/script/$(basename $0)
 fi
 
-# Inside docker
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 
-if [ ! -d /src/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ]; then
-  cp -r /sportslibs/rpi-rgb-led-matrix /src/pkg/rgbmatrix-rpi/lib/
+if [ ! -d ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ]; then
+  if [ -d /sportslibs/rpi-rgb-led-matrix ]; then
+    cp -r /sportslibs/rpi-rgb-led-matrix ${ROOT}/pkg/rgbmatrix-rpi/lib/
+    trap "rm -rf ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" EXIT
+  fi
 fi
 
-golangci-lint run --verbose --fix
+fix=""
+
+if [ ! -n "${GITHUB_ACTIONS}" ]; then
+  fix="--fix"
+fi
+
+set -x
+golangci-lint run --verbose ${fix}

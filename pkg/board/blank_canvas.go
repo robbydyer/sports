@@ -16,7 +16,6 @@ type BlankCanvas struct {
 	pixels  []uint32
 	enabled *atomic.Bool
 	log     *zap.Logger
-	done    chan struct{}
 	sync.Mutex
 }
 
@@ -28,7 +27,6 @@ func NewBlankCanvas(width int, height int, logger *zap.Logger) *BlankCanvas {
 		pixels:  make([]uint32, (width * height)),
 		enabled: atomic.NewBool(false),
 		log:     logger,
-		done:    make(chan struct{}),
 	}
 
 	return i
@@ -41,8 +39,6 @@ func (i *BlankCanvas) Name() string {
 
 // Close ...
 func (i *BlankCanvas) Close() error {
-	i.done <- struct{}{}
-
 	return nil
 }
 
