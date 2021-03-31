@@ -175,9 +175,9 @@ func GetGames(ctx context.Context, dateStr string) ([]*Game, error) {
 	v := uri.Query()
 	v.Set("lang", "en")
 	v.Set("region", "us")
-	//v.Set("limit", "500")
+	// v.Set("limit", "500")
 	v.Set("dates", dateStr)
-	//v.Set("groups", "50")
+	// v.Set("groups", "50")
 
 	uri.RawQuery = v.Encode()
 

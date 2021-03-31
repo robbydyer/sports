@@ -9,12 +9,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/robfig/cron/v3"
+	"go.uber.org/zap"
+
 	"github.com/robbydyer/sports/pkg/espn"
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/util"
-	"github.com/robfig/cron/v3"
-	"go.uber.org/zap"
 )
 
 const logoCacheDir = "/tmp/sportsmatrix_logos/nba"
