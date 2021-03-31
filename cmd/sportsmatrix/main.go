@@ -21,6 +21,7 @@ import (
 	"github.com/robbydyer/sports/pkg/clock"
 	"github.com/robbydyer/sports/pkg/imageboard"
 	"github.com/robbydyer/sports/pkg/mlb"
+	"github.com/robbydyer/sports/pkg/nba"
 	"github.com/robbydyer/sports/pkg/ncaam"
 	"github.com/robbydyer/sports/pkg/nhl"
 	"github.com/robbydyer/sports/pkg/pga"
@@ -195,6 +196,13 @@ func (r *rootArgs) setConfigDefaults() {
 	}
 	r.config.NCAAMConfig.SetDefaults()
 
+	if r.config.NBAConfig == nil {
+		r.config.NBAConfig = &sportboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
+	r.config.NBAConfig.SetDefaults()
+
 	if r.config.SysConfig == nil {
 		r.config.SysConfig = &sysboard.Config{
 			Enabled: atomic.NewBool(false),
@@ -299,6 +307,19 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 
 		boards = append(boards, b)
 	}
+	if r.config.NBAConfig != nil {
+		api, err := nba.New(ctx, logger)
+		if err != nil {
+			return nil, err
+		}
+
+		b, err := sportboard.New(ctx, api, bounds, logger, r.config.NBAConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		boards = append(boards, b)
+	}
 
 	if r.config.ImageConfig != nil {
 		b, err := imageboard.New(afero.NewOsFs(), r.config.ImageConfig, logger)
@@ -360,6 +381,7 @@ func (r *rootArgs) setTodayFuncs(today string) error {
 	r.config.NHLConfig.TodayFunc = f
 	r.config.MLBConfig.TodayFunc = f
 	r.config.NCAAMConfig.TodayFunc = f
+	r.config.NBAConfig.TodayFunc = f
 
 	return nil
 }

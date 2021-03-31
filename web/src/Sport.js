@@ -8,7 +8,8 @@ import Form from 'react-bootstrap/Form';
 import Image from 'react-bootstrap/Image';
 import nhllogo from './nhllogo.jpeg';
 import mlblogo from './mlb.png';
-import ncaamlogo from './ncaam.png'
+import ncaamlogo from './ncaam.png';
+import nbalogo from './nba.png';
 import { GetStatus, CallMatrix } from './util';
 
 class Sport extends React.Component {
@@ -64,6 +65,8 @@ class Sport extends React.Component {
             return nhllogo
         } else if (this.props.sport == "ncaam") {
             return ncaamlogo
+        } else if (this.props.sport == "nba") {
+            return nbalogo
         } else {
             return mlblogo
         }
