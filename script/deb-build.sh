@@ -77,6 +77,8 @@ EOF
 
 cat <<EOF > DEBIAN/postinst
 sudo systemctl daemon-reload
+sudo rm -rf /tmp/sportsmatrix*
+sudo systemctl restart sportsmatrix
 EOF
 
 chmod 755 DEBIAN/postinst
