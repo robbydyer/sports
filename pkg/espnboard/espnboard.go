@@ -20,9 +20,6 @@ import (
 // DateFormat for getting games
 const DateFormat = "20060102"
 
-// Conferences ...
-var Conferences = []string{}
-
 // Leaguer ...
 type Leaguer interface {
 	Sport() string
@@ -41,6 +38,7 @@ type ESPNBoard struct {
 	allTeams        []string
 	logoLock        sync.RWMutex
 	logoLockers     map[string]*sync.Mutex
+	conferenceNames map[string]struct{}
 	sync.Mutex
 }
 
@@ -56,7 +54,7 @@ func (e *ESPNBoard) logoCacheDir() (string, error) {
 
 // New ...
 func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger) (*ESPNBoard, error) {
-	n := &ESPNBoard{
+	e := &ESPNBoard{
 		leaguer:         leaguer,
 		log:             logger,
 		games:           make(map[string][]*Game),
@@ -64,23 +62,24 @@ func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger) (*ESPNBoard, 
 		logoConfOnce:    make(map[string]struct{}),
 		defaultLogoConf: &[]*logo.Config{},
 		logoLockers:     make(map[string]*sync.Mutex),
+		conferenceNames: make(map[string]struct{}),
 	}
 
-	if _, err := n.GetTeams(ctx); err != nil {
+	if _, err := e.GetTeams(ctx); err != nil {
 		return nil, err
 	}
 
-	if err := n.UpdateGames(ctx, util.Today().Format(DateFormat)); err != nil {
+	if err := e.UpdateGames(ctx, util.Today().Format(DateFormat)); err != nil {
 		return nil, err
 	}
 
 	c := cron.New()
-	if _, err := c.AddFunc("0 5 * * *", func() { n.CacheClear(context.Background()) }); err != nil {
+	if _, err := c.AddFunc("0 5 * * *", func() { e.CacheClear(context.Background()) }); err != nil {
 		return nil, fmt.Errorf("failed to set cron job for cacheClear: %w", err)
 	}
 	c.Start()
 
-	return n, nil
+	return e, nil
 }
 
 // CacheClear ...
@@ -116,6 +115,10 @@ func (e *ESPNBoard) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 	for _, t := range e.teams {
 		e.allTeams = append(e.allTeams, t.Abbreviation)
 		tList = append(tList, t)
+
+		if t.Conference != nil {
+			e.conferenceNames[t.Conference.Abbreviation] = struct{}{}
+		}
 	}
 
 	return tList, nil
@@ -178,7 +181,7 @@ func (e *ESPNBoard) AllTeamAbbreviations() []string {
 
 // GetWatchTeams ...
 func (e *ESPNBoard) GetWatchTeams(teams []string) []string {
-	watch := []string{}
+	watch := make(map[string]struct{})
 	if len(teams) == 0 {
 		teams = append(teams, "ALL")
 	}
@@ -188,24 +191,29 @@ OUTER:
 			e.log.Info("setting ESPNBoard watch teams to ALL teams")
 			return e.AllTeamAbbreviations()
 		}
-		for _, conf := range Conferences {
-			if strings.ToLower(t) == conf {
-				e.log.Info("adding teams to watchlist from conference", zap.String("conference", conf))
-				watch = append(watch, e.TeamsInConference(conf)...)
-				continue OUTER
+		confTeams := e.TeamsInConference(t)
+		if len(confTeams) > 0 {
+			for _, team := range confTeams {
+				watch[team] = struct{}{}
 			}
+			continue OUTER
 		}
-		watch = append(watch, t)
 	}
 
-	return watch
+	ret := []string{}
+	for k := range watch {
+		ret = append(ret, k)
+	}
+
+	return ret
 }
 
 // TeamsInConference ...
 func (e *ESPNBoard) TeamsInConference(conference string) []string {
+	conference = strings.ToLower(conference)
 	ret := []string{}
 	for _, team := range e.teams {
-		if team.Conference.Abbreviation == conference {
+		if strings.Contains(strings.ToLower(team.Conference.Abbreviation), conference) {
 			ret = append(ret, team.Abbreviation)
 		}
 	}

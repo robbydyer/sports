@@ -24,9 +24,8 @@ var assets embed.FS
 
 // Conference ...
 type Conference struct {
-	Name         string  `json:"name"`
-	Abbreviation string  `json:"abbreviation"`
-	Teams        []*Team `json:"teams"`
+	Name         string
+	Abbreviation string
 }
 
 // Team implements sportboard.Team
@@ -61,8 +60,13 @@ type teamData struct {
 		} `json:"leagues"`
 	} `json:"sports"`
 	Groups []struct {
-		Children []struct {
-			Teams []*Team `json:"teams"`
+		// This is the Conference abbreviation
+		Abbreviation string `json:"abbreviation"`
+		Children     []struct {
+			// Division abbreviation
+			Abbreviation string  `json:"abbreviation"`
+			Name         string  `json:"name"`
+			Teams        []*Team `json:"teams"`
 		} `json:"children"`
 	} `json:"groups"`
 }
@@ -126,8 +130,17 @@ func (e *ESPNBoard) getTeams(ctx context.Context) ([]*Team, error) {
 	}
 
 	for _, group := range d.Groups {
+		conf := group.Abbreviation
 		for _, c := range group.Children {
-			teams = append(teams, c.Teams...)
+			division := c.Abbreviation
+			for _, team := range c.Teams {
+				conf := &Conference{
+					Name:         c.Name,
+					Abbreviation: fmt.Sprintf("%s_%s", conf, division),
+				}
+				team.Conference = conf
+				teams = append(teams, team)
+			}
 		}
 	}
 
