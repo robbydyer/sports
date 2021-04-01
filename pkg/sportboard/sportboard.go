@@ -174,11 +174,7 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 	}
 
 	if len(config.WatchTeams) == 0 {
-		if len(config.FavoriteTeams) > 0 {
-			config.WatchTeams = config.FavoriteTeams
-		} else {
-			config.WatchTeams = s.api.AllTeamAbbreviations()
-		}
+		config.WatchTeams = []string{"ALL"}
 	}
 
 	for _, i := range config.WatchTeams {
