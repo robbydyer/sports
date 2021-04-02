@@ -97,7 +97,7 @@ func (n *mls) HTTPPathPrefix() string {
 	return "mls"
 }
 
-// NewNBA ...
+// NewMLS ...
 func NewMLS(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &mls{}, logger)
 }
