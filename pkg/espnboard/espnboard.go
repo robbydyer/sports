@@ -184,6 +184,11 @@ func (e *ESPNBoard) AllTeamAbbreviations() []string {
 
 // GetWatchTeams ...
 func (e *ESPNBoard) GetWatchTeams(teams []string) []string {
+	if len(teams) == 0 {
+		e.log.Info("setting ESPNBoard watch teams to ALL teams")
+		return e.AllTeamAbbreviations()
+	}
+
 	confs := make([]string, len(e.conferenceNames))
 	i := 0
 	for k := range e.conferenceNames {
@@ -194,11 +199,9 @@ func (e *ESPNBoard) GetWatchTeams(teams []string) []string {
 		zap.String("league", e.leaguer.League()),
 		zap.Strings("conferences", confs),
 	)
+
 	watch := make(map[string]struct{})
-	if len(teams) == 0 {
-		e.log.Info("setting ESPNBoard watch teams to ALL teams")
-		return e.AllTeamAbbreviations()
-	}
+
 OUTER:
 	for _, t := range teams {
 		if t == "ALL" {
