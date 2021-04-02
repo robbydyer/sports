@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/robbydyer/sports/pkg/ncaam"
+	"github.com/robbydyer/sports/pkg/espnboard"
 )
 
 type ncaamCmd struct {
@@ -42,7 +42,7 @@ func (c *ncaamCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}()
 
-	n, err := ncaam.New(ctx, logger)
+	n, err := espnboard.NewNCAAMensBasketball(ctx, logger)
 	if err != nil {
 		return err
 	}
