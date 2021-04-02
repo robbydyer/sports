@@ -175,7 +175,7 @@ func (p *Player) setStats(ctx context.Context) error {
 
 	v := uri.Query()
 	// TODO: Change this to "season" for type
-	v.Set("hydrate", "stats(group=[hitting,pitching,fielding],type=career)")
+	v.Set("hydrate", "stats(group=[hitting,pitching,fielding],type=season)")
 	v.Set("currentTeam", "")
 
 	uri.RawQuery = v.Encode()
