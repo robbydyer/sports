@@ -20,7 +20,7 @@ I run this on a Pi zero and a Pi 4. If you want to use the "Web Board" feature (
 
 ## Current Board Types
 
-- NHL, MLB, NFL, MLS, NCAA Men's Basketball : Shows upcoming, live, and completed games for the day
+- NHL, MLB, NFL, NBA, MLS, NCAA Men's Basketball : Shows upcoming, live, and completed games for the day
 - PGA Tour Leaderboard
 - Stats boards- currently supports MLB and NHL.
 - Image Board: Takes a list of directories containg images and displays them. Works with GIF's too!
@@ -30,7 +30,7 @@ I run this on a Pi zero and a Pi 4. If you want to use the "Web Board" feature (
 ## Roadmap
 
 #### More Sports
-My goal is to add new boards for all the major sports that I'm personally interested in. For now, that list includes College Football, NFL, and possibly something for PGA Tour (maybe in time for the Masters?).
+- NCAA Football
 
 #### Web API for on-the-fly config changes
 ~I ultimately would like to integrate a web API that allows certain things to be modified on the fly- this would ideally mean a simple web UI for tweaking things without having to access the Pi and restart the service.~
