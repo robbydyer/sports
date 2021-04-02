@@ -22,8 +22,10 @@ const DateFormat = "20060102"
 
 // Leaguer ...
 type Leaguer interface {
-	Sport() string
 	League() string
+	APIPath() string
+	TeamEndpoints() []string
+	HTTPPathPrefix() string
 }
 
 // ESPNBoard ...
@@ -43,7 +45,7 @@ type ESPNBoard struct {
 }
 
 func (e *ESPNBoard) logoCacheDir() (string, error) {
-	cacheDir := fmt.Sprintf("tmp/sportsmatrix_logos/%s_%s", e.leaguer.Sport(), e.leaguer.League())
+	cacheDir := fmt.Sprintf("/tmp/sportsmatrix_logos/%s", e.leaguer.APIPath())
 	if _, err := os.Stat(cacheDir); err != nil {
 		if os.IsNotExist(err) {
 			return cacheDir, os.MkdirAll(cacheDir, 0755)
@@ -91,6 +93,7 @@ func (e *ESPNBoard) CacheClear(ctx context.Context) {
 	for k := range e.logos {
 		delete(e.logos, k)
 	}
+	e.allTeams = []string{}
 	e.teams = nil
 	if _, err := e.GetTeams(ctx); err != nil {
 		e.log.Error("failed to get teams after cache clear", zap.Error(err))
@@ -171,7 +174,7 @@ func (e *ESPNBoard) League() string {
 
 // HTTPPathPrefix ...
 func (e *ESPNBoard) HTTPPathPrefix() string {
-	return strings.ToLower(e.leaguer.League())
+	return e.leaguer.HTTPPathPrefix()
 }
 
 // AllTeamAbbreviations ...
@@ -181,9 +184,20 @@ func (e *ESPNBoard) AllTeamAbbreviations() []string {
 
 // GetWatchTeams ...
 func (e *ESPNBoard) GetWatchTeams(teams []string) []string {
+	confs := make([]string, len(e.conferenceNames))
+	i := 0
+	for k := range e.conferenceNames {
+		confs[i] = k
+		i++
+	}
+	e.log.Debug("getting watch teams",
+		zap.String("league", e.leaguer.League()),
+		zap.Strings("conferences", confs),
+	)
 	watch := make(map[string]struct{})
 	if len(teams) == 0 {
-		teams = append(teams, "ALL")
+		e.log.Info("setting ESPNBoard watch teams to ALL teams")
+		return e.AllTeamAbbreviations()
 	}
 OUTER:
 	for _, t := range teams {
@@ -191,18 +205,17 @@ OUTER:
 			e.log.Info("setting ESPNBoard watch teams to ALL teams")
 			return e.AllTeamAbbreviations()
 		}
-		confTeams := e.TeamsInConference(t)
-		if len(confTeams) > 0 {
-			for _, team := range confTeams {
-				watch[team] = struct{}{}
-			}
-			continue OUTER
+		for _, team := range e.TeamsInConference(t) {
+			watch[team] = struct{}{}
 		}
+		continue OUTER
 	}
 
-	ret := []string{}
+	ret := make([]string, len(watch))
+	i = 0
 	for k := range watch {
-		ret = append(ret, k)
+		ret[i] = k
+		i++
 	}
 
 	return ret
@@ -211,6 +224,17 @@ OUTER:
 // TeamsInConference ...
 func (e *ESPNBoard) TeamsInConference(conference string) []string {
 	conference = strings.ToLower(conference)
+	found := false
+	for c := range e.conferenceNames {
+		if strings.Contains(strings.ToLower(c), conference) {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil
+	}
+	e.log.Debug("checking conference for teams", zap.String("conference", conference))
 	ret := []string{}
 	for _, team := range e.teams {
 		if strings.Contains(strings.ToLower(team.Conference.Abbreviation), conference) {
@@ -254,6 +278,10 @@ func (e *ESPNBoard) TeamRank(ctx context.Context, team sportboard.Team) string {
 		return ""
 	}
 
+	if err := realTeam.setDetails(ctx, e.leaguer.APIPath(), e.log); err != nil {
+		e.log.Error("failed to set team details", zap.Error(err))
+	}
+
 	return strconv.Itoa(realTeam.rank)
 }
 
@@ -269,6 +297,10 @@ func (e *ESPNBoard) TeamRecord(ctx context.Context, team sportboard.Team) string
 
 	if realTeam == nil {
 		return ""
+	}
+
+	if err := realTeam.setDetails(ctx, e.leaguer.APIPath(), e.log); err != nil {
+		e.log.Error("failed to set team details", zap.Error(err))
 	}
 
 	return realTeam.record

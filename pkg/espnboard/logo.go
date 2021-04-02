@@ -39,6 +39,7 @@ func (e *ESPNBoard) setLogoCache(logoKey string, l *logo.Logo) {
 
 // GetLogo ...
 func (e *ESPNBoard) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error) {
+	logoKey = fmt.Sprintf("%s_%s", e.leaguer.HTTPPathPrefix(), logoKey)
 	if l, err := e.getLogoCache(logoKey); err == nil {
 		return l, nil
 	}
@@ -48,14 +49,14 @@ func (e *ESPNBoard) GetLogo(ctx context.Context, logoKey string, logoConf *logo.
 		return nil, err
 	}
 
-	// A logoKey should be TEAM_HOME|AWAY_XxY, ie. ALA_HOME_64x32
+	// A logoKey should be LEAGUE_TEAM_HOME|AWAY_XxY, ie. ncaam_ALA_HOME_64x32
 	p := strings.Split(logoKey, "_")
-	if len(p) < 3 {
+	if len(p) < 4 {
 		return nil, fmt.Errorf("invalid logo key")
 	}
 
-	teamAbbrev := p[0]
-	dimKey := p[2]
+	teamAbbrev := p[1]
+	dimKey := p[3]
 
 	_, ok := e.logoConfOnce[dimKey]
 	if !ok {
@@ -65,7 +66,7 @@ func (e *ESPNBoard) GetLogo(ctx context.Context, logoKey string, logoConf *logo.
 		)
 		if err := e.loadDefaultLogoConfigs(bounds); err != nil {
 			// Log the error, but don't return. We'll just use defaults
-			e.log.Warn("no defaults defined for NFL logos")
+			e.log.Warn("no defaults defined for logos", zap.String("league", e.leaguer.League()))
 		}
 		e.logoConfOnce[dimKey] = struct{}{}
 	}
@@ -74,7 +75,7 @@ func (e *ESPNBoard) GetLogo(ctx context.Context, logoKey string, logoConf *logo.
 	defer e.setLogoCache(logoKey, l)
 
 	logoGetter := func(ctx context.Context) (image.Image, error) {
-		return e.GetLogoSource(ctx, "football", "nfl", teamAbbrev, logoSearch(teamAbbrev))
+		return e.GetLogoSource(ctx, teamAbbrev, logoSearch(teamAbbrev))
 	}
 
 	if logoConf != nil {
@@ -134,7 +135,7 @@ func logoSearch(team string) string {
 }
 
 // GetLogoSource ...
-func (e *ESPNBoard) GetLogoSource(ctx context.Context, sport string, league string, teamAbbreviation string, logoURLSearch string) (image.Image, error) {
+func (e *ESPNBoard) GetLogoSource(ctx context.Context, teamAbbreviation string, logoURLSearch string) (image.Image, error) {
 	l, ok := e.logoLockers[teamAbbreviation]
 	if !ok {
 		e.Lock()
@@ -150,7 +151,7 @@ func (e *ESPNBoard) GetLogoSource(ctx context.Context, sport string, league stri
 		return nil, err
 	}
 
-	cacheFile := filepath.Join(cacheDir, fmt.Sprintf("%s_%s_%s.png", sport, league, teamAbbreviation))
+	cacheFile := filepath.Join(cacheDir, fmt.Sprintf("%s_%s.png", e.leaguer.League(), teamAbbreviation))
 
 	if _, err := os.Stat(cacheFile); err != nil {
 		if !os.IsNotExist(err) {
@@ -158,8 +159,7 @@ func (e *ESPNBoard) GetLogoSource(ctx context.Context, sport string, league stri
 		}
 	} else {
 		e.log.Debug("reading source logo from cache",
-			zap.String("sport", sport),
-			zap.String("league", league),
+			zap.String("league", e.leaguer.League()),
 			zap.String("team", teamAbbreviation),
 		)
 		r, err := os.Open(cacheFile)
@@ -173,6 +173,11 @@ func (e *ESPNBoard) GetLogoSource(ctx context.Context, sport string, league stri
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch team info for logo: %w", err)
 	}
+
+	e.log.Debug("looking for logo source",
+		zap.String("league", e.leaguer.League()),
+		zap.String("team", teamAbbreviation),
+	)
 
 	var i image.Image
 OUTER:
@@ -209,8 +214,7 @@ OUTER:
 
 		e.log.Debug("pulling logo from API",
 			zap.String("URL", href),
-			zap.String("sport", sport),
-			zap.String("league", league),
+			zap.String("league", e.leaguer.League()),
 			zap.String("team", teamAbbreviation),
 		)
 		i, err = util.PullPng(ctx, href)
@@ -220,8 +224,7 @@ OUTER:
 	}
 
 	e.log.Debug("saving source logo to cache",
-		zap.String("sport", sport),
-		zap.String("league", league),
+		zap.String("league", e.leaguer.League()),
 		zap.String("team", teamAbbreviation),
 	)
 	if err := rgbrender.SavePng(i, cacheFile); err != nil {

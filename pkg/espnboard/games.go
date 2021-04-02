@@ -40,6 +40,7 @@ type Game struct {
 	Away     *Team
 	GameTime time.Time
 	status   *status
+	leaguer  Leaguer
 }
 
 type status struct {
@@ -121,7 +122,7 @@ func (g *Game) GetClock() (string, error) {
 // GetUpdate ...
 func (g *Game) GetUpdate(ctx context.Context) (sportboard.Game, error) {
 	uri, err := url.Parse(
-		fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard/%s", g.ID),
+		fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s/scoreboard/%s", g.leaguer.APIPath(), g.ID),
 	)
 	if err != nil {
 		return nil, err
@@ -169,7 +170,7 @@ func (g *Game) GetStartTime(ctx context.Context) (time.Time, error) {
 // GetGames gets the games for a given date
 func (e *ESPNBoard) GetGames(ctx context.Context, dateStr string) ([]*Game, error) {
 	// http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?lang=en&region=us&limit=500&dates=20191121&groups=50
-	uri, err := url.Parse(fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s/%s/scoreboard", e.leaguer.Sport(), e.leaguer.League()))
+	uri, err := url.Parse(fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s/scoreboard", e.leaguer.APIPath()))
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +189,6 @@ func (e *ESPNBoard) GetGames(ctx context.Context, dateStr string) ([]*Game, erro
 
 	e.log.Debug("fetching games",
 		zap.String("date", dateStr),
-		zap.String("sport", e.leaguer.Sport()),
 		zap.String("league", e.leaguer.League()),
 		zap.String("uri", uri.String()),
 	)
@@ -224,6 +224,8 @@ func (e *ESPNBoard) GetGames(ctx context.Context, dateStr string) ([]*Game, erro
 		if err != nil {
 			return nil, err
 		}
+
+		game.leaguer = e.leaguer
 
 		games = append(games, game)
 	}

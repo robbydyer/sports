@@ -16,6 +16,7 @@ import (
 	// embed
 	_ "embed"
 
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )
 
@@ -30,6 +31,7 @@ type Conference struct {
 
 // Team implements sportboard.Team
 type Team struct {
+	hasDetail    *atomic.Bool
 	ID           string  `json:"id"`
 	Name         string  `json:"name"`
 	Abbreviation string  `json:"abbreviation"`
@@ -94,39 +96,59 @@ func (e *ESPNBoard) getTeams(ctx context.Context) ([]*Team, error) {
 		return e.teams, nil
 	}
 
-	assetFile := fmt.Sprintf("%s_%s_teams.json", e.leaguer.Sport(), e.leaguer.League())
+	assetFiles := []string{
+		fmt.Sprintf("%s_teams.json", e.leaguer.HTTPPathPrefix()),
+		fmt.Sprintf("%s_groups.json", e.leaguer.HTTPPathPrefix()),
+	}
 
-	dat, err := assets.ReadFile(filepath.Join("assets", assetFile))
-	if err != nil {
-		e.log.Info("pulling team info from API",
-			zap.String("sport", e.leaguer.Sport()),
-			zap.String("league", e.leaguer.League()),
-		)
-		dat, err = pullTeams(ctx, e.leaguer.Sport(), e.leaguer.League())
+	teams := []*Team{}
+
+	foundAsset := false
+	for _, assetFile := range assetFiles {
+		dat, err := assets.ReadFile(filepath.Join("assets", assetFile))
 		if err != nil {
-			return nil, err
+			continue
 		}
-	} else {
 		e.log.Info("pulling team info from assets",
-			zap.String("sport", e.leaguer.Sport()),
 			zap.String("league", e.leaguer.League()),
 			zap.String("file", assetFile),
 		)
+		t, err := parseTeamData(dat)
+		if err != nil {
+			return nil, err
+		}
+		teams = append(teams, t...)
+		foundAsset = true
 	}
 
+	if foundAsset {
+		return teams, nil
+	}
+
+	e.log.Info("pulling team info from API",
+		zap.String("league", e.leaguer.League()),
+	)
+	for _, endpoint := range e.leaguer.TeamEndpoints() {
+		dat, err := pullTeams(ctx, endpoint)
+		if err != nil {
+			return nil, err
+		}
+		t, err := parseTeamData(dat)
+		if err != nil {
+			return nil, err
+		}
+		teams = append(teams, t...)
+	}
+
+	return teams, nil
+}
+
+func parseTeamData(dat []byte) ([]*Team, error) {
+	teamSet := make(map[string]*Team)
 	var d *teamData
 
 	if err := json.Unmarshal(dat, &d); err != nil {
 		return nil, err
-	}
-
-	var teams []*Team
-	for _, sport := range d.Sports {
-		for _, league := range sport.Leagues {
-			for _, t := range league.Teams {
-				teams = append(teams, t.Team)
-			}
-		}
 	}
 
 	for _, group := range d.Groups {
@@ -139,28 +161,38 @@ func (e *ESPNBoard) getTeams(ctx context.Context) ([]*Team, error) {
 					Abbreviation: fmt.Sprintf("%s_%s", conf, division),
 				}
 				team.Conference = conf
-				teams = append(teams, team)
+				teamSet[team.Abbreviation] = team
 			}
 		}
 	}
 
-	for _, team := range teams {
-		if err := team.setDetails(ctx, e.leaguer.Sport(), e.leaguer.League(), e.log); err != nil {
-			return nil, err
+	var teams []*Team
+	for _, sport := range d.Sports {
+		for _, league := range sport.Leagues {
+			for _, t := range league.Teams {
+				teamSet[t.Team.Abbreviation] = t.Team
+			}
 		}
+	}
+
+	for _, team := range teamSet {
+		team.hasDetail = atomic.NewBool(false)
+		teams = append(teams, team)
 	}
 
 	return teams, nil
 }
 
-func (t *Team) setDetails(ctx context.Context, sport string, league string, log *zap.Logger) error {
+// setDetails sets info about a team's record, rank, etc
+func (t *Team) setDetails(ctx context.Context, apiPath string, log *zap.Logger) error {
 	t.Lock()
 	defer t.Unlock()
-	if t.record != "" {
+
+	if t.hasDetail.Load() {
 		return nil
 	}
 
-	uri := fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s/%s/teams/%s", sport, league, t.ID)
+	uri := fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s/teams/%s", apiPath, t.ID)
 
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
@@ -202,6 +234,8 @@ func (t *Team) setDetails(ctx context.Context, sport string, league string, log 
 	}
 	log.Error("did not find record for team", zap.String("team", t.Abbreviation))
 
+	t.hasDetail.Store(true)
+
 	return nil
 }
 
@@ -232,14 +266,14 @@ func (t *Team) Score() int {
 	return p
 }
 
-func pullTeams(ctx context.Context, sport string, league string) ([]byte, error) {
-	uri, err := url.Parse(fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s", teamEndpoint(sport, league)))
+func pullTeams(ctx context.Context, endpoint string) ([]byte, error) {
+	uri, err := url.Parse(fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s", endpoint))
 	if err != nil {
 		return nil, err
 	}
 
 	v := uri.Query()
-	v.Set("limit", "400")
+	v.Set("limit", "500")
 
 	uri.RawQuery = v.Encode()
 
@@ -258,12 +292,4 @@ func pullTeams(ctx context.Context, sport string, league string) ([]byte, error)
 	defer resp.Body.Close()
 
 	return ioutil.ReadAll(resp.Body)
-}
-
-func teamEndpoint(sport string, league string) string {
-	switch league {
-	case "mens-college-basketball":
-		return "basketball/mens-college-basketball/groups"
-	}
-	return fmt.Sprintf("%s/%s/teams", sport, league)
 }

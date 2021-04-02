@@ -7,7 +7,6 @@ import (
 	"image/color"
 	"image/draw"
 	"math"
-	"strings"
 	"sync"
 	"time"
 
@@ -34,6 +33,7 @@ type SportBoard struct {
 	logoDrawCache   map[string]image.Image
 	scoreWriters    map[string]*rgbrender.TextWriter
 	timeWriters     map[string]*rgbrender.TextWriter
+	watchTeams      []string
 	drawLock        sync.RWMutex
 	logoLock        sync.RWMutex
 	sync.Mutex
@@ -177,12 +177,6 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		config.WatchTeams = []string{"ALL"}
 	}
 
-	for _, i := range config.WatchTeams {
-		if strings.ToUpper(i) == "ALL" {
-			config.WatchTeams = s.api.AllTeamAbbreviations()
-		}
-	}
-
 	if _, err := s.api.GetTeams(ctx); err != nil {
 		return nil, err
 	}
@@ -307,6 +301,13 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	}
 
 	// Determine which games are watched so that the game counter is accurate
+	if len(s.watchTeams) < 1 {
+		s.watchTeams = s.api.GetWatchTeams(s.config.WatchTeams)
+		s.log.Debug("watch teams",
+			zap.String("league", s.api.League()),
+			zap.Strings("teeams", s.watchTeams),
+		)
+	}
 
 	var games []Game
 OUTER:
@@ -319,7 +320,7 @@ OUTER:
 		if err != nil {
 			return err
 		}
-		for _, watchTeam := range s.api.GetWatchTeams(s.config.WatchTeams) {
+		for _, watchTeam := range s.watchTeams {
 			team, err := s.api.TeamFromAbbreviation(boardCtx, watchTeam)
 			if err != nil {
 				return err
