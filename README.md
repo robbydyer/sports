@@ -20,7 +20,7 @@ I run this on a Pi zero and a Pi 4. If you want to use the "Web Board" feature (
 
 ## Current Board Types
 
-- NHL, MLB, NCAA Men's Basketball : Shows upcoming, live, and completed games for the day
+- NHL, MLB, NFL, MLS, NCAA Men's Basketball : Shows upcoming, live, and completed games for the day
 - PGA Tour Leaderboard
 - Stats boards- currently supports MLB and NHL.
 - Image Board: Takes a list of directories containg images and displays them. Works with GIF's too!
