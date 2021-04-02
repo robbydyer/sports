@@ -22,7 +22,6 @@ import (
 	"github.com/robbydyer/sports/pkg/espnboard"
 	"github.com/robbydyer/sports/pkg/imageboard"
 	"github.com/robbydyer/sports/pkg/mlb"
-	"github.com/robbydyer/sports/pkg/nba"
 	"github.com/robbydyer/sports/pkg/nhl"
 	"github.com/robbydyer/sports/pkg/pga"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
@@ -315,7 +314,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 		boards = append(boards, b)
 	}
 	if r.config.NBAConfig != nil {
-		api, err := nba.New(ctx, logger)
+		api, err := espnboard.NewNBA(ctx, logger)
 		if err != nil {
 			return nil, err
 		}

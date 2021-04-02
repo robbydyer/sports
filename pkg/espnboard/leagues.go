@@ -18,7 +18,7 @@ func (n *nfl) APIPath() string {
 }
 
 func (n *nfl) TeamEndpoints() []string {
-	return []string{filepath.Join(n.APIPath(), "teams")}
+	return []string{filepath.Join(n.APIPath(), "groups")}
 }
 
 func (n *nfl) HTTPPathPrefix() string {
@@ -54,4 +54,27 @@ func (n *ncaam) HTTPPathPrefix() string {
 // NewNCAAMensBasketball ...
 func NewNCAAMensBasketball(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &ncaam{}, logger)
+}
+
+type nba struct{}
+
+func (n *nba) League() string {
+	return "NBA"
+}
+
+func (n *nba) APIPath() string {
+	return "basketball/nba"
+}
+
+func (n *nba) TeamEndpoints() []string {
+	return []string{filepath.Join(n.APIPath(), "groups")}
+}
+
+func (n *nba) HTTPPathPrefix() string {
+	return "nba"
+}
+
+// NewNBA ...
+func NewNBA(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
+	return New(ctx, &nba{}, logger)
 }
