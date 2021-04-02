@@ -151,7 +151,7 @@ func (e *ESPNBoard) GetLogoSource(ctx context.Context, teamAbbreviation string, 
 		return nil, err
 	}
 
-	cacheFile := filepath.Join(cacheDir, fmt.Sprintf("%s_%s.png", e.leaguer.League(), teamAbbreviation))
+	cacheFile := filepath.Join(cacheDir, fmt.Sprintf("%s_%s.png", e.leaguer.HTTPPathPrefix(), teamAbbreviation))
 
 	if _, err := os.Stat(cacheFile); err != nil {
 		if !os.IsNotExist(err) {
