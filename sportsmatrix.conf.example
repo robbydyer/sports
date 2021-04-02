@@ -201,7 +201,73 @@ ncaamConfig:
   showRecord: false
 
 ## NBA Config
-nbaConfig
+nbaConfig:
+  enabled: true
+  boardDelay: "10s"
+
+  # Number of columns in a grid layout. Default 1
+  #gridCols: 3
+
+  # Number of rows in a grid layout. Default 1
+  #gridRows: 2
+
+  # This will draw lines between each cell in a grid. The ratio is a percentage of the
+  # total width of the canvas, so this should be a pretty small number. Defaults to 0,
+  # which has no lines separating cells.
+  #gridPadRatio: 0.015
+
+  # watchTeams are teams we show games for. ALL shows all teams in the league
+  watchTeams:
+  - ALL
+
+  # favoriteTeams are teams that we can hide scores for, and set to "Sticky" on live games
+  #favoriteTeams:
+  #- ATL
+
+  # Hides scores for your favoriteTeams games. DVR is a father's life saver
+  hideFavoriteScore: true
+
+  # Tells the matrix to lock onto a live game that a favorite team is playing in
+  favoriteSticky: false
+
+  # Set to true to show a team's record on the scoreboard
+  showRecord: false
+
+## NFL Config
+nflConfig:
+  enabled: true
+  boardDelay: "10s"
+
+  # Number of columns in a grid layout. Default 1
+  #gridCols: 3
+
+  # Number of rows in a grid layout. Default 1
+  #gridRows: 2
+
+  # This will draw lines between each cell in a grid. The ratio is a percentage of the
+  # total width of the canvas, so this should be a pretty small number. Defaults to 0,
+  # which has no lines separating cells.
+  #gridPadRatio: 0.015
+
+  # watchTeams are teams we show games for. ALL shows all teams in the league
+  watchTeams:
+  - ALL
+
+  # favoriteTeams are teams that we can hide scores for, and set to "Sticky" on live games
+  #favoriteTeams:
+  #- ATL
+
+  # Hides scores for your favoriteTeams games. DVR is a father's life saver
+  hideFavoriteScore: true
+
+  # Tells the matrix to lock onto a live game that a favorite team is playing in
+  favoriteSticky: false
+
+  # Set to true to show a team's record on the scoreboard
+  showRecord: false
+
+## MLS Config
+mlsConfig:
   enabled: true
   boardDelay: "10s"
 

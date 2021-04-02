@@ -92,7 +92,10 @@ type teamDetails struct {
 // GetTeams reads team data sourced via http://site.api.espn.com/apis/site/v2/sports/football/nfl/groups
 func (e *ESPNBoard) getTeams(ctx context.Context) ([]*Team, error) {
 	if len(e.teams) > 1 {
-		e.log.Debug("returning cached ESPN teams", zap.Int("num teams", len(e.teams)))
+		e.log.Debug("returning cached ESPN teams",
+			zap.Int("num teams", len(e.teams)),
+			zap.String("league", e.leaguer.League()),
+		)
 		return e.teams, nil
 	}
 
