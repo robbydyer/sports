@@ -105,12 +105,10 @@ func (e *ESPNBoard) CacheClear(ctx context.Context) {
 
 // GetTeams ...
 func (e *ESPNBoard) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
-	if e.teams == nil {
-		var err error
-		e.teams, err = e.getTeams(ctx)
-		if err != nil {
-			return nil, err
-		}
+	var err error
+	e.teams, err = e.getTeams(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	var tList []sportboard.Team
@@ -240,6 +238,9 @@ func (e *ESPNBoard) TeamsInConference(conference string) []string {
 	e.log.Debug("checking conference for teams", zap.String("conference", conference))
 	ret := []string{}
 	for _, team := range e.teams {
+		if team.Conference == nil {
+			continue
+		}
 		if strings.Contains(strings.ToLower(team.Conference.Abbreviation), conference) {
 			ret = append(ret, team.Abbreviation)
 		}

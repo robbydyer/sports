@@ -223,6 +223,8 @@ func (t *Team) setDetails(ctx context.Context, apiPath string, log *zap.Logger) 
 
 	t.rank = details.Team.Rank
 
+	defer t.hasDetail.Store(true)
+
 	for _, i := range details.Team.Record.Items {
 		if strings.ToLower(i.Type) != "total" {
 			continue
@@ -233,8 +235,6 @@ func (t *Team) setDetails(ctx context.Context, apiPath string, log *zap.Logger) 
 		return nil
 	}
 	log.Error("did not find record for team", zap.String("team", t.Abbreviation))
-
-	t.hasDetail.Store(true)
 
 	return nil
 }

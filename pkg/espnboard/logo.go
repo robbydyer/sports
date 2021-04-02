@@ -136,13 +136,13 @@ func logoSearch(team string) string {
 
 // GetLogoSource ...
 func (e *ESPNBoard) GetLogoSource(ctx context.Context, teamAbbreviation string, logoURLSearch string) (image.Image, error) {
+	e.Lock()
 	l, ok := e.logoLockers[teamAbbreviation]
 	if !ok {
-		e.Lock()
 		e.logoLockers[teamAbbreviation] = &sync.Mutex{}
 		l = e.logoLockers[teamAbbreviation]
-		e.Unlock()
 	}
+	e.Unlock()
 	l.Lock()
 	defer l.Unlock()
 
