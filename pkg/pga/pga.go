@@ -44,6 +44,7 @@ func (p *PGA) AvailableStats(ctx context.Context, playerCategory string) ([]stri
 	return []string{
 		"score",
 		"hole",
+		"teetime",
 	}, nil
 }
 

@@ -23,18 +23,21 @@ type StatBoard struct {
 	sorter        Sorter
 	withTitleRow  bool
 	withPrefixCol bool
+	lastUpdate    time.Time
 	sync.Mutex
 }
 
 // Config ...
 type Config struct {
-	boardDelay   time.Duration
-	BoardDelay   string              `json:"boardDelay"`
-	Enabled      *atomic.Bool        `json:"enabled"`
-	Players      []string            `json:"players"`
-	Teams        []string            `json:"teams"`
-	StatOverride map[string][]string `json:"statOverride"`
-	LimitPlayers int                 `json:"limitPlayers"`
+	boardDelay     time.Duration
+	updateInterval time.Duration
+	BoardDelay     string              `json:"boardDelay"`
+	Enabled        *atomic.Bool        `json:"enabled"`
+	Players        []string            `json:"players"`
+	Teams          []string            `json:"teams"`
+	StatOverride   map[string][]string `json:"statOverride"`
+	LimitPlayers   int                 `json:"limitPlayers"`
+	UpdateInterval string              `json:"updateInterval"`
 }
 
 // OptionFunc provides options to the StatBoard that are not exposed in a Config
@@ -81,10 +84,22 @@ func (c *Config) SetDefaults() {
 		d, err := time.ParseDuration(c.BoardDelay)
 		if err != nil {
 			c.boardDelay = 0 * time.Second
+		} else {
+			c.boardDelay = d
 		}
-		c.boardDelay = d
 	} else {
 		c.boardDelay = 0 * time.Second
+	}
+
+	if c.UpdateInterval != "" {
+		d, err := time.ParseDuration(c.UpdateInterval)
+		if err != nil {
+			c.updateInterval = 10 * time.Minute
+		} else {
+			c.updateInterval = d
+		}
+	} else {
+		c.updateInterval = 10 * time.Minute
 	}
 
 	if c.StatOverride == nil {
@@ -94,6 +109,14 @@ func (c *Config) SetDefaults() {
 
 // New ...
 func New(ctx context.Context, api API, config *Config, logger *zap.Logger, opts ...OptionFunc) (*StatBoard, error) {
+	if config.updateInterval < 10*time.Minute {
+		logger.Warn("statboard updateInterval was too low, using defaults",
+			zap.String("league", api.LeagueShortName()),
+			zap.String("configured", config.updateInterval.String()),
+			zap.String("minimum", "10m"),
+		)
+		config.updateInterval = 10 * time.Minute
+	}
 	s := &StatBoard{
 		config:        config,
 		log:           logger,

@@ -38,6 +38,12 @@ func (s *StatBoard) Render(ctx context.Context, canvas board.Canvas) error {
 
 	go s.enablerCancel(boardCtx, boardCancel)
 
+	doUpdate := false
+	if time.Since(s.lastUpdate) > s.config.updateInterval {
+		doUpdate = true
+		s.lastUpdate = time.Now()
+	}
+
 	// var players []Player
 	players := make(map[string][]Player)
 	for _, abbrev := range s.config.Teams {
@@ -47,6 +53,19 @@ func (s *StatBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		}
 		for _, player := range p {
 			cat := player.GetCategory()
+			if doUpdate {
+				s.log.Debug("updating player stats",
+					zap.String("league", s.api.LeagueShortName()),
+					zap.String("player", player.LastName()),
+				)
+				if err := player.UpdateStats(ctx); err != nil {
+					s.log.Error("failed to update player stats",
+						zap.Error(err),
+						zap.String("league", s.api.LeagueShortName()),
+						zap.String("player", player.LastName()),
+					)
+				}
+			}
 			players[cat] = append(players[cat], player)
 		}
 
