@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/robbydyer/sports/pkg/statboard"
 )
@@ -76,7 +77,17 @@ func (p *Player) LastName() string {
 func (p *Player) GetStat(stat string) string {
 	switch strings.ToLower(stat) {
 	case "teetime":
-		return p.Status.TeeTime
+		if p.Status == nil {
+			return ""
+		}
+		t, err := time.Parse("2006-01-02T15:04Z", p.Status.TeeTime)
+		if err != nil {
+			return p.Status.TeeTime
+		}
+		if time.Until(t) < 0 {
+			return ""
+		}
+		return t.Local().Format("03:04PM")
 	case "hole":
 		return fmt.Sprint(p.Status.Thru)
 	case "score":
