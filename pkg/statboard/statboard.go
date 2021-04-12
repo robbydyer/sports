@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"image/draw"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -141,7 +142,7 @@ func New(ctx context.Context, api API, config *Config, logger *zap.Logger, opts 
 
 func defaultSorter(players []Player) []Player {
 	sort.SliceStable(players, func(i, j int) bool {
-		return players[i].LastName() < players[j].LastName()
+		return strings.ToLower(players[i].LastName()) < strings.ToLower(players[j].LastName())
 	})
 
 	return players
