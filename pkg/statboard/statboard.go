@@ -2,6 +2,7 @@ package statboard
 
 import (
 	"context"
+	"fmt"
 	"image/color"
 	"image/draw"
 	"sort"
@@ -11,6 +12,8 @@ import (
 
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
+
+	"github.com/robfig/cron/v3"
 
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
@@ -39,6 +42,8 @@ type Config struct {
 	StatOverride   map[string][]string `json:"statOverride"`
 	LimitPlayers   int                 `json:"limitPlayers"`
 	UpdateInterval string              `json:"updateInterval"`
+	OnTimes        []string            `json:"onTimes"`
+	OffTimes       []string            `json:"offTimes"`
 }
 
 // OptionFunc provides options to the StatBoard that are not exposed in a Config
@@ -136,6 +141,43 @@ func New(ctx context.Context, api API, config *Config, logger *zap.Logger, opts 
 	if s.sorter == nil {
 		s.sorter = defaultSorter
 	}
+
+	if len(config.OnTimes) < 1 && len(config.OffTimes) < 1 {
+		return s, nil
+	}
+	c := cron.New()
+
+	for _, off := range config.OffTimes {
+		s.log.Info("statboard will be scheduled to turn off",
+			zap.String("turn off", off),
+			zap.String("league", s.api.LeagueShortName()),
+		)
+		_, err := c.AddFunc(off, func() {
+			s.log.Warn("statboard turning off",
+				zap.String("league", s.api.LeagueShortName()),
+			)
+			s.Disable()
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to add cron for statboard off time: %w", err)
+		}
+	}
+	for _, on := range config.OnTimes {
+		s.log.Info("statboard will be scheduled to turn off",
+			zap.String("turn on", on),
+			zap.String("league", s.api.LeagueShortName()),
+		)
+		_, err := c.AddFunc(on, func() {
+			s.log.Warn("statboard turning on",
+				zap.String("league", s.api.LeagueShortName()),
+			)
+			s.Enable()
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to add cron for statboard on time: %w", err)
+		}
+	}
+	c.Start()
 
 	return s, nil
 }
