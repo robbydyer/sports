@@ -314,3 +314,9 @@ pga:
 
   # Limit the number of players shown. Defaults to 0, which is no limit
   #limitPlayers: 50
+
+  # This schedules the PGA leaderboard to turn on Thursday morning, and off Sunday night
+  onTimes:
+  - 00 07 * * 4
+  offTimes:
+  - 00 23 * * 0
