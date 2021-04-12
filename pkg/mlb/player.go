@@ -80,7 +80,7 @@ func (m *MLB) PlayerCategories() []string {
 }
 
 func fName(f string, l string) string {
-	return strings.Replace(fmt.Sprintf("%s%s", f, l), " ", "", 0)
+	return strings.Replace(fmt.Sprintf("%s%s", f, l), " ", "", -1)
 }
 
 // FindPlayer ...
