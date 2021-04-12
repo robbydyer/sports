@@ -79,13 +79,17 @@ func (m *MLB) PlayerCategories() []string {
 	}
 }
 
+func fName(f string, l string) string {
+	return strings.Replace(fmt.Sprintf("%s%s", f, l), " ", "", 0)
+}
+
 // FindPlayer ...
 func (m *MLB) FindPlayer(ctx context.Context, first string, last string) (statboard.Player, error) {
-	full := fmt.Sprintf("%s %s", strings.ToLower(first), strings.ToLower(last))
+	full := fName(first, last)
 
 	for _, team := range m.teams {
 		for _, p := range team.Roster {
-			if full == strings.ToLower(p.Person.FullName) {
+			if full == fName(p.FirstName(), p.LastName()) {
 				if p.Stats == nil {
 					if err := p.setStats(ctx); err != nil {
 						return nil, err
@@ -112,6 +116,9 @@ func (m *MLB) ListPlayers(ctx context.Context, teamAbbreviation string) ([]statb
 	INNER:
 		for _, p := range team.Roster {
 			if p.Stats == nil {
+				m.log.Debug("fetching MLB player stats",
+					zap.String("player", p.LastName()),
+				)
 				if err := p.setStats(ctx); err != nil {
 					m.log.Error("could not find stats for player", zap.Error(err))
 					continue INNER

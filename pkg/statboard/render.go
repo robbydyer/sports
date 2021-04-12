@@ -94,8 +94,12 @@ func (s *StatBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		players[cat] = append(players[cat], player)
 	}
 
-	for _, cat := range s.api.PlayerCategories() {
-		if err := s.doRender(boardCtx, canvas, players[cat]); err != nil {
+	for cat, p := range players {
+		s.log.Debug("rendering category",
+			zap.String("category", cat),
+			zap.Int("num players", len(p)),
+		)
+		if err := s.doRender(boardCtx, canvas, p); err != nil {
 			return err
 		}
 	}
@@ -141,6 +145,10 @@ func (s *StatBoard) doRender(ctx context.Context, canvas board.Canvas, players [
 	players = s.sorter(players)
 
 	if s.config.LimitPlayers > 0 && len(players) > s.config.LimitPlayers {
+		s.log.Warn("limiting player cound",
+			zap.String("league", s.api.LeagueShortName()),
+			zap.Int("limit", s.config.LimitPlayers),
+		)
 		players = players[0:s.config.LimitPlayers]
 	}
 
@@ -151,13 +159,26 @@ func (s *StatBoard) doRender(ctx context.Context, canvas board.Canvas, players [
 
 	playersPerGrid := grid.NumRows() - 1
 
-	s.log.Debug("writing player stats",
-		zap.Int("players per grid", playersPerGrid),
-		zap.Int("num players", len(players)),
-	)
+	for i, p := range players {
+		s.log.Debug("writing player stats",
+			zap.Int("index", i),
+			zap.String("name", p.LastName()),
+			zap.Int("players per grid", playersPerGrid),
+			zap.Int("num players", len(players)),
+		)
+	}
+
+	delay := time.Duration(grid.NumRows()) * time.Second
+
+	if s.config.boardDelay.Seconds() > 0 {
+		delay = delay + s.config.boardDelay
+	}
+
+	s.log.Debug("setting statboard delay", zap.Int("seconds", int(delay.Seconds())))
 
 	row := 0
-	for i := 0; i < len(players); i++ {
+	i := 0
+	for {
 		select {
 		case <-ctx.Done():
 			return context.Canceled
@@ -171,32 +192,33 @@ func (s *StatBoard) doRender(ctx context.Context, canvas board.Canvas, players [
 			row++
 		}
 
-		if row < grid.NumRows() {
+		if row < grid.NumRows() && i < len(players) {
+			s.log.Debug("render player stats",
+				zap.Int("index", i),
+				zap.String("name", players[i].LastName()),
+				zap.Int("players per grid", playersPerGrid),
+				zap.Int("num players", len(players)),
+			)
 			if err := s.renderPlayer(ctx, players[i], grid.GetRow(row), writer, stats, maxNameLength(canvas.Bounds())); err != nil {
-				return err
+				s.log.Error("failed to render player", zap.Error(err))
 			}
 			row++
+			i++
 
-			if i < len(players)-1 {
-				continue
-			}
+			continue
 		}
 
 		s.log.Debug("drawing grid to base canvas")
 		if err := grid.DrawToBase(canvas); err != nil {
+			s.log.Error("failed to draw grid", zap.Error(err))
 			return err
 		}
 
 		grid.FillPadded(canvas, color.White)
 
 		if err := canvas.Render(); err != nil {
+			s.log.Error("failed to render canvas", zap.Error(err))
 			return err
-		}
-
-		delay := time.Duration(row*2) * time.Second
-
-		if s.config.boardDelay.Seconds() > 0 {
-			delay = delay + s.config.boardDelay
 		}
 
 		s.log.Debug("delaying stat board", zap.Int("seconds", int(delay.Seconds())))
@@ -210,9 +232,18 @@ func (s *StatBoard) doRender(ctx context.Context, canvas board.Canvas, players [
 		row = 0
 
 		if err := grid.Clear(); err != nil {
+			s.log.Error("failed to clear grid", zap.Error(err))
 			return err
 		}
+
+		if i >= len(players) {
+			break
+		}
 	}
+
+	s.log.Debug("rendered players",
+		zap.Int("number players", i),
+	)
 
 	return nil
 }
