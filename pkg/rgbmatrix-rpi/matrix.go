@@ -101,8 +101,9 @@ type HardwareConfig struct {
 	// non-standard wirings.
 	DisableHardwarePulsing bool `json:"disableHardwarePulsing"`
 
-	ShowRefreshRate bool `json:"showRefreshRate"`
-	InverseColors   bool `json:"inverseColors"`
+	ShowRefreshRate bool   `json:"showRefreshRate"`
+	InverseColors   bool   `json:"inverseColors"`
+	LedRGBSequence  string `json:"ledRgbSequence"`
 
 	// Name of GPIO mapping used
 	HardwareMapping string `json:"hardwareMapping"`
@@ -128,6 +129,10 @@ func (c *HardwareConfig) toC() *C.struct_RGBLedMatrixOptions {
 	o.scan_mode = C.int(c.ScanMode)
 	o.hardware_mapping = C.CString(c.HardwareMapping)
 	o.limit_refresh_rate_hz = C.int(c.LimitRefreshRateHz)
+
+	if c.LedRGBSequence != "" {
+		o.leg_rgb_sequence = C.CString(c.LedRGBSequence)
+	}
 
 	if c.ShowRefreshRate == true {
 		C.set_show_refresh_rate(o, C.int(1))

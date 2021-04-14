@@ -60,6 +60,23 @@ sportsMatrixConfig:
     # High number gives more accurate color, but can reduce frame rate
     #pwmlsbNanoseconds: 130
 
+    # Displays LED panel refresh rate to stdout
+    #showRefreshRate: false
+
+    # Set to true if your panel's colors are inverted
+    #inverseColors: false
+
+    # Change this if your panel swaps color sequence
+    #ledRgbSequence: rgb
+
+    #Disable the PWM hardware subsystem to create pulses. Typically, you don't
+	  #want to disable hardware pulsing, this is mostly for debugging and figuring
+	  #out if there is interference with the sound system.
+	  #This won't do anything if output enable is not connected to GPIO 18 in
+	  #non-standard wirings
+
+    #disableHardwarePulsing: false
+
   # Hardware runtime options. Pi 4's and possibly 3's might need to set gpioSlowdown to something
   # higher than the default of 0.
   #runtimeOptions:
