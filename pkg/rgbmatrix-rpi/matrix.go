@@ -131,7 +131,7 @@ func (c *HardwareConfig) toC() *C.struct_RGBLedMatrixOptions {
 	o.limit_refresh_rate_hz = C.int(c.LimitRefreshRateHz)
 
 	if c.LedRGBSequence != "" {
-		o.leg_rgb_sequence = C.CString(c.LedRGBSequence)
+		o.led_rgb_sequence = C.CString(c.LedRGBSequence)
 	}
 
 	if c.ShowRefreshRate == true {
