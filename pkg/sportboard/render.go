@@ -257,9 +257,9 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 		),
 	)
 
-	if counter != nil && !s.config.ScrollMode.Load() {
-		layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
-	}
+	//if counter != nil && !s.config.ScrollMode.Load() {
+	layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
+	//}
 
 	select {
 	case <-ctx.Done():
@@ -364,9 +364,9 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 		}
 	}
 
-	if counter != nil && !s.config.ScrollMode.Load() {
-		layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
-	}
+	//if counter != nil && !s.config.ScrollMode.Load() {
+	layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
+	//}
 
 	return layers.Draw(ctx, canvas)
 }
@@ -375,7 +375,7 @@ func counterLayer(counter image.Image) *rgbrender.Layer {
 	return rgbrender.NewLayer(
 		nil,
 		func(canvas board.Canvas, img image.Image) error {
-			draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
+			draw.Draw(canvas, counter.Bounds(), counter, image.Point{}, draw.Over)
 			return nil
 		},
 	)

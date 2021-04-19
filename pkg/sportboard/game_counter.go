@@ -12,11 +12,12 @@ import (
 
 // RenderGameCounter ...
 func (s *SportBoard) RenderGameCounter(canvas board.Canvas, numGames int, activeIndex int) (image.Image, error) {
-	spacing := canvas.Bounds().Dy() / 32
-	pixSize := canvas.Bounds().Dy() / 32
+	bounds := rgbrender.ZeroedBounds(canvas.Bounds())
+	spacing := bounds.Dy() / 32
+	pixSize := bounds.Dy() / 32
 	totalWidth := (numGames * spacing) + (pixSize * (numGames - 1))
 
-	aligned, err := rgbrender.AlignPosition(rgbrender.CenterBottom, canvas.Bounds(), totalWidth, 1)
+	aligned, err := rgbrender.AlignPosition(rgbrender.CenterBottom, bounds, totalWidth, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +35,7 @@ func (s *SportBoard) RenderGameCounter(canvas board.Canvas, numGames int, active
 		zap.Int("pix size", pixSize),
 	)
 
-	img := image.NewRGBA(canvas.Bounds())
+	img := image.NewRGBA(bounds)
 
 	yPix := aligned.Max.Y - 1
 	for i := 0; i < totalWidth; i += spacing + 1 {

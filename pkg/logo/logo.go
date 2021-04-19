@@ -158,23 +158,25 @@ func (l *Logo) RenderLeftAligned(ctx context.Context, bounds image.Rectangle, en
 	i := image.NewRGBA(newBounds)
 	draw.Draw(i, align, thumb, image.Point{}, draw.Over)
 
-	l.log.Debug("logo left alignment",
-		zap.Int("end X", endX),
-		zap.Int("size X", bounds.Dx()),
-		zap.Int("size Y", bounds.Dy()),
-		zap.Int("newBounds min X", newBounds.Min.X),
-		zap.Int("newBounds min Y", newBounds.Min.Y),
-		zap.Int("newBounds max X", newBounds.Max.X),
-		zap.Int("newBounds max Y", newBounds.Max.Y),
-		zap.Int("align min X", align.Min.X),
-		zap.Int("align min Y", align.Min.Y),
-		zap.Int("align max X", align.Max.X),
-		zap.Int("align max Y", align.Max.Y),
-		zap.Int("img min X", i.Bounds().Min.X),
-		zap.Int("img min Y", i.Bounds().Min.Y),
-		zap.Int("img max X", i.Bounds().Max.X),
-		zap.Int("img max Y", i.Bounds().Max.Y),
-	)
+	if l.log != nil {
+		l.log.Debug("logo left alignment",
+			zap.Int("end X", endX),
+			zap.Int("size X", bounds.Dx()),
+			zap.Int("size Y", bounds.Dy()),
+			zap.Int("newBounds min X", newBounds.Min.X),
+			zap.Int("newBounds min Y", newBounds.Min.Y),
+			zap.Int("newBounds max X", newBounds.Max.X),
+			zap.Int("newBounds max Y", newBounds.Max.Y),
+			zap.Int("align min X", align.Min.X),
+			zap.Int("align min Y", align.Min.Y),
+			zap.Int("align max X", align.Max.X),
+			zap.Int("align max Y", align.Max.Y),
+			zap.Int("img min X", i.Bounds().Min.X),
+			zap.Int("img min Y", i.Bounds().Min.Y),
+			zap.Int("img max X", i.Bounds().Max.X),
+			zap.Int("img max Y", i.Bounds().Max.Y),
+		)
+	}
 
 	return i, nil
 }
