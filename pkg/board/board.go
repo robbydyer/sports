@@ -35,9 +35,8 @@ type Canvas interface {
 	Enabler
 	Name() string
 	Clear() error
-	Render() error
+	Render(ctx context.Context) error
 	GetHTTPHandlers() ([]*HTTPHandler, error)
 	Close() error
 	Scrollable() bool
-	PaddedBounds() image.Rectangle
 }

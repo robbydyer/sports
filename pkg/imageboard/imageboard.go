@@ -330,7 +330,7 @@ func (i *ImageBoard) renderImages(ctx context.Context, canvas board.Canvas, imag
 
 		draw.Draw(canvas, align, img, image.Point{}, draw.Over)
 
-		if err := canvas.Render(); err != nil {
+		if err := canvas.Render(ctx); err != nil {
 			return err
 		}
 

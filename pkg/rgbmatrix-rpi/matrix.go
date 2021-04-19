@@ -42,9 +42,11 @@ import (
 	"fmt"
 	"image/color"
 	"os"
+	"sync"
 	"unsafe"
 
 	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi/emulator"
+	"go.uber.org/atomic"
 )
 
 // DefaultConfig default WS281x configuration
@@ -217,6 +219,8 @@ type RGBLedMatrix struct {
 	matrix *C.struct_RGBLedMatrix
 	buffer *C.struct_LedCanvas
 	leds   []C.uint32_t
+	closed *atomic.Bool
+	sync.Mutex
 }
 
 const MatrixEmulatorENV = "MATRIX_EMULATOR"
@@ -246,6 +250,7 @@ func NewRGBLedMatrix(config *HardwareConfig, rtOptions *RuntimeOptions) (c Matri
 		matrix: m,
 		buffer: b,
 		leds:   make([]C.uint32_t, w*h),
+		closed: atomic.NewBool(false),
 	}
 	if m == nil {
 		return nil, fmt.Errorf("unable to allocate memory")
@@ -289,6 +294,12 @@ func (c *RGBLedMatrix) Apply(leds []color.Color) error {
 
 // Render update the display with the data from the LED buffer
 func (c *RGBLedMatrix) Render() error {
+	c.Lock()
+	defer c.Unlock()
+
+	if c.closed.Load() {
+		return nil
+	}
 	// Check this so we don't cause a panic
 	if len(c.leds) < 1 {
 		return fmt.Errorf("led buffer is empty")
@@ -320,6 +331,9 @@ func (c *RGBLedMatrix) Set(position int, color color.Color) {
 
 // Close finalizes the ws281x interface
 func (c *RGBLedMatrix) Close() error {
+	c.Lock()
+	defer c.Unlock()
+	defer c.closed.Store(true)
 	C.led_matrix_delete(c.matrix)
 	return nil
 }

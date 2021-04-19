@@ -97,5 +97,39 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				s.api.CacheClear(context.Background())
 			},
 		},
+		{
+			Path: fmt.Sprintf("/%s/scrollon", s.api.HTTPPathPrefix()),
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.log.Info("enabling scroll mode", zap.String("board", s.api.League()))
+				select {
+				case s.cancelBoard <- struct{}{}:
+				default:
+				}
+				s.config.ScrollMode.Store(true)
+			},
+		},
+		{
+			Path: fmt.Sprintf("/%s/scrolloff", s.api.HTTPPathPrefix()),
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.log.Info("disabling scroll mode", zap.String("board", s.api.League()))
+				select {
+				case s.cancelBoard <- struct{}{}:
+				default:
+				}
+				s.config.ScrollMode.Store(false)
+			},
+		},
+		{
+			Path: fmt.Sprintf("/%s/scrollstatus", s.api.HTTPPathPrefix()),
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.log.Debug("get board scroll status", zap.String("board", s.Name()))
+				w.Header().Set("Content-Type", "text/plain")
+				if s.config.ScrollMode.Load() {
+					_, _ = w.Write([]byte("true"))
+					return
+				}
+				_, _ = w.Write([]byte("false"))
+			},
+		},
 	}, nil
 }

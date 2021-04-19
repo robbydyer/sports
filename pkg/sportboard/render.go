@@ -141,22 +141,13 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 			return nil
 		}
 
-		if s.config.ScrollMode.Load() {
-			s.log.Debug("running board in scroll mode",
-				zap.String("league", s.api.League()),
-			)
-			if err := rgbrender.Scroll(ctx, canvas, 50*time.Millisecond); err != nil {
-				return err
-			}
-		} else {
-			if err := canvas.Render(); err != nil {
-				return err
-			}
-			select {
-			case <-ctx.Done():
-				return context.Canceled
-			case <-time.After(s.config.boardDelay - 3*time.Second):
-			}
+		if err := canvas.Render(ctx); err != nil {
+			return err
+		}
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		case <-time.After(s.config.boardDelay - 3*time.Second):
 		}
 
 		liveGame, err = liveGame.GetUpdate(ctx)

@@ -1,6 +1,7 @@
 package rgbmatrix
 
 import (
+	"context"
 	"image"
 	"image/color"
 	"image/draw"
@@ -40,7 +41,7 @@ func (c *Canvas) Scrollable() bool {
 }
 
 // Render update the display with the data from the LED buffer
-func (c *Canvas) Render() error {
+func (c *Canvas) Render(ctx context.Context) error {
 	return c.m.Render()
 }
 

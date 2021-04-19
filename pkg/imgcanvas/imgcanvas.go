@@ -2,6 +2,7 @@ package imgcanvas
 
 import (
 	"bytes"
+	"context"
 	"image"
 	"image/color"
 	"image/png"
@@ -38,7 +39,7 @@ func New(width int, height int, logger *zap.Logger) *ImgCanvas {
 
 	_ = i.Clear()
 
-	_ = i.Render()
+	_ = i.Render(context.Background())
 
 	go i.disableWatcher()
 
@@ -91,7 +92,7 @@ func (i *ImgCanvas) disableWatcher() {
 // Clear sets the canvas to all black
 func (i *ImgCanvas) Clear() error {
 	i.blackOut()
-	return i.Render()
+	return i.Render(context.Background())
 }
 
 func (i *ImgCanvas) blackOut() {
@@ -101,7 +102,7 @@ func (i *ImgCanvas) blackOut() {
 }
 
 // Render stores the state of the image as a PNG
-func (i *ImgCanvas) Render() error {
+func (i *ImgCanvas) Render(ctx context.Context) error {
 	defer i.blackOut()
 
 	if !i.Enabled() {

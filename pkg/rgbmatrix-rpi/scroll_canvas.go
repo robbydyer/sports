@@ -95,9 +95,7 @@ func (c *ScrollCanvas) Close() error {
 }
 
 // Render update the display with the data from the LED buffer
-func (c *ScrollCanvas) Render() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+func (c *ScrollCanvas) Render(ctx context.Context) error {
 	if c.direction == rightToLeft {
 		if err := c.rightToLeft(ctx); err != nil {
 			return err
@@ -164,6 +162,11 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 	)
 	thisX := c.w
 	for {
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		default:
+		}
 		c.log.Debug("scrolling",
 			zap.Int("thisX", thisX),
 		)

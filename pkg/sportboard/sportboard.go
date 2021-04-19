@@ -36,6 +36,7 @@ type SportBoard struct {
 	watchTeams      []string
 	drawLock        sync.RWMutex
 	logoLock        sync.RWMutex
+	cancelBoard     chan struct{}
 	sync.Mutex
 }
 
@@ -166,6 +167,7 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		cachedLiveGames: make(map[int]Game),
 		timeWriters:     make(map[string]*rgbrender.TextWriter),
 		scoreWriters:    make(map[string]*rgbrender.TextWriter),
+		cancelBoard:     make(chan struct{}),
 	}
 
 	if s.config.boardDelay < 10*time.Second {
@@ -278,6 +280,9 @@ func (s *SportBoard) enablerCancel(ctx context.Context, cancel context.CancelFun
 	for {
 		select {
 		case <-ctx.Done():
+			return
+		case <-s.cancelBoard:
+			cancel()
 			return
 		case <-ticker.C:
 			if !s.config.Enabled.Load() {
@@ -461,7 +466,7 @@ OUTER:
 			return err
 		}
 
-		if err := canvas.Render(); err != nil {
+		if err := canvas.Render(boardCtx); err != nil {
 			return err
 		}
 
@@ -621,7 +626,7 @@ func (s *SportBoard) doGrid(ctx context.Context, grid *rgbrender.Grid, canvas bo
 
 	draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
 
-	if err := canvas.Render(); err != nil {
+	if err := canvas.Render(ctx); err != nil {
 		return err
 	}
 
