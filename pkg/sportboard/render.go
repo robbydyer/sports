@@ -139,19 +139,27 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 			return nil
 		}
 
-		if err := canvas.Render(); err != nil {
-			return err
-		}
-
-		select {
-		case <-ctx.Done():
-			return context.Canceled
-		case <-time.After(s.config.boardDelay - 3*time.Second):
+		if s.config.ScrollMode.Load() {
+			s.log.Debug("running board in scroll mode",
+				zap.String("league", s.api.League()),
+			)
+			if err := rgbrender.Scroll(ctx, canvas, 50*time.Millisecond); err != nil {
+				return err
+			}
+		} else {
+			if err := canvas.Render(); err != nil {
+				return err
+			}
+			select {
+			case <-ctx.Done():
+				return context.Canceled
+			case <-time.After(s.config.boardDelay - 3*time.Second):
+			}
 		}
 
 		liveGame, err = liveGame.GetUpdate(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to update stickey game: %w", err)
+			return fmt.Errorf("failed to update sticky game: %w", err)
 		}
 		s.log.Debug("updated live sticky game")
 
@@ -247,7 +255,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 		),
 	)
 
-	if counter != nil {
+	if counter != nil && !s.config.ScrollMode.Load() {
 		layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
 	}
 
@@ -354,7 +362,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 		}
 	}
 
-	if counter != nil {
+	if counter != nil && !s.config.ScrollMode.Load() {
 		layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
 	}
 

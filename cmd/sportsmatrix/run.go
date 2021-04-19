@@ -71,7 +71,11 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	canvases = append(canvases, rgb.NewCanvas(matrix))
+	c, err := rgb.NewCanvas(matrix, rgb.WithXPadding(32))
+	if err != nil {
+		return err
+	}
+	canvases = append(canvases, c)
 
 	mtrx, err := sportsmatrix.New(ctx, logger, s.rArgs.config.SportsMatrixConfig, canvases, boards...)
 	if err != nil {

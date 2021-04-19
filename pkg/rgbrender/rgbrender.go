@@ -1,13 +1,18 @@
 package rgbrender
 
 import (
+	"context"
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
 	"math"
+	"time"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/robbydyer/sports/pkg/board"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
+	"go.uber.org/zap"
 )
 
 // Align represents alignment vertically and horizontally
@@ -146,4 +151,82 @@ func DrawRectangle(canvas board.Canvas, startX int, startY int, sizeX int, sizeY
 	draw.Draw(canvas, canvas.Bounds(), rgba, image.Point{}, draw.Over)
 
 	return nil
+}
+
+// CopyImage ...
+func CopyImage(canvas image.Image) image.Image {
+	img := image.NewRGBA(
+		image.Rect(
+			canvas.Bounds().Min.X-20,
+			canvas.Bounds().Min.Y,
+			canvas.Bounds().Max.X+20,
+			canvas.Bounds().Max.Y,
+		),
+	)
+	for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
+		for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
+			img.Set(x, y, canvas.At(x, y))
+		}
+	}
+
+	return img
+}
+
+// ShiftX shifts each pixel of a canvas image moveX number of pixels
+func ShiftX(img draw.Image, moveX int) {
+	orig := CopyImage(img)
+	for x := -20; x < img.Bounds().Dx()+20; x++ {
+		for y := 0; y < img.Bounds().Dy(); y++ {
+			shift := x + moveX
+			if shift < orig.Bounds().Dx() {
+				img.Set(shift, y, orig.At(x, y))
+			}
+			if (moveX > 0 && x < moveX) || (moveX < 0 && x > moveX) {
+				img.Set(x, y, color.Black)
+			}
+		}
+	}
+}
+
+// CopyTo ...
+func CopyTo(source image.Image, dest draw.Image) {
+	for x := -20; x < source.Bounds().Dx()+20; x++ {
+		for y := 0; y < source.Bounds().Dy(); y++ {
+			dest.Set(x, y, source.At(x, y))
+		}
+	}
+}
+
+// Scroll ...
+func Scroll(ctx context.Context, canvas board.Canvas, interval time.Duration) error {
+	log := ctxzap.Extract(ctx)
+	origImg := CopyImage(canvas)
+
+	thisX := canvas.Bounds().Dx()
+	for {
+		if thisX == -1*canvas.Bounds().Dx() {
+			return nil
+		}
+
+		if log != nil {
+			log.Debug("scrolling canvas",
+				zap.Int("shiftX", thisX),
+			)
+		}
+
+		ShiftX(canvas, thisX)
+		thisX--
+
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		case <-time.After(interval):
+		}
+
+		if err := canvas.Render(); err != nil {
+			return fmt.Errorf("failed to render canvas during scroll: %w", err)
+		}
+
+		CopyTo(origImg, canvas)
+	}
 }

@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/robfig/cron/v3"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
@@ -66,6 +67,7 @@ type Config struct {
 	MinimumGridWidth  int               `json:"minimumGridWidth"`
 	MinimumGridHeight int               `json:"minimumGridHeight"`
 	Stats             *statboard.Config `json:"stats"`
+	ScrollMode        *atomic.Bool      `json:"scrollMode"`
 }
 
 // FontConfig ...
@@ -142,6 +144,9 @@ func (c *Config) SetDefaults() {
 	}
 	if c.ShowRecord == nil {
 		c.ShowRecord = atomic.NewBool(false)
+	}
+	if c.ScrollMode == nil {
+		c.ScrollMode = atomic.NewBool(false)
 	}
 	if c.MinimumGridWidth == 0 {
 		c.MinimumGridWidth = 64
@@ -442,15 +447,24 @@ OUTER:
 			return err
 		}
 
-		if err := canvas.Render(); err != nil {
-			return err
+		if s.config.ScrollMode.Load() {
+			s.log.Debug("running board in scroll mode",
+				zap.String("league", s.api.League()),
+			)
+			if err := rgbrender.Scroll(ctxzap.ToContext(ctx, s.log), canvas, 50*time.Millisecond); err != nil {
+				return err
+			}
+		} else {
+			if err := canvas.Render(); err != nil {
+				return err
+			}
+			select {
+			case <-boardCtx.Done():
+				return context.Canceled
+			case <-time.After(s.config.boardDelay):
+			}
 		}
 
-		select {
-		case <-boardCtx.Done():
-			return context.Canceled
-		case <-time.After(s.config.boardDelay):
-		}
 	}
 
 	return nil
