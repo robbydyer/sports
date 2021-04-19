@@ -71,7 +71,9 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	scroll, err := rgb.NewScrollCanvas(matrix, logger, rgb.WithRightToLeft())
+	scroll, err := rgb.NewScrollCanvas(matrix, logger,
+		rgb.WithRightToLeft(),
+	)
 	if err != nil {
 		return err
 	}

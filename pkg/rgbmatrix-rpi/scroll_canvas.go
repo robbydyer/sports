@@ -77,6 +77,11 @@ func (c *ScrollCanvas) Name() string {
 	return "RGB ScrollCanvas"
 }
 
+// SetScrollSpeed ...
+func (c *ScrollCanvas) SetScrollSpeed(d time.Duration) {
+	c.interval = d
+}
+
 // Clear set all the leds on the matrix with color.Black
 func (c *ScrollCanvas) Clear() error {
 	draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Src)
@@ -165,7 +170,7 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			return context.Canceled
-		default:
+		case <-time.After(c.interval):
 		}
 		c.log.Debug("scrolling",
 			zap.Int("thisX", thisX),
@@ -183,12 +188,6 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 			}
 		}
 
-		select {
-		case <-ctx.Done():
-			return context.Canceled
-		case <-time.After(c.interval):
-		}
-
 		if err := c.m.Render(); err != nil {
 			return err
 		}
@@ -200,6 +199,14 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 func WithRightToLeft() ScrollCanvasOption {
 	return func(c *ScrollCanvas) error {
 		c.direction = rightToLeft
+		return nil
+	}
+}
+
+// WithScrollSpeed ...
+func WithScrollSpeed(d time.Duration) ScrollCanvasOption {
+	return func(c *ScrollCanvas) error {
+		c.interval = d
 		return nil
 	}
 }

@@ -150,7 +150,7 @@ func (s *SysBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		return err
 	}
 
-	if err := canvas.Render(); err != nil {
+	if err := canvas.Render(ctx); err != nil {
 		return err
 	}
 

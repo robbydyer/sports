@@ -169,7 +169,7 @@ func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
 				return
 			}
 
-			if err := canvas.Render(); err != nil {
+			if err := canvas.Render(ctx); err != nil {
 				return
 			}
 		}

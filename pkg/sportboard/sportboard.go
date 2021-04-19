@@ -407,6 +407,8 @@ OUTER:
 
 	preloaderTimeout := s.config.boardDelay + (10 * time.Second)
 
+	defer canvas.Clear()
+
 	for gameIndex, game := range games {
 		select {
 		case <-boardCtx.Done():

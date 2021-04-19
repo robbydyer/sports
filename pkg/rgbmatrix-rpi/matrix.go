@@ -333,6 +333,9 @@ func (c *RGBLedMatrix) Set(position int, color color.Color) {
 func (c *RGBLedMatrix) Close() error {
 	c.Lock()
 	defer c.Unlock()
+	if c.closed.Load() {
+		return nil
+	}
 	defer c.closed.Store(true)
 	C.led_matrix_delete(c.matrix)
 	return nil
