@@ -17,7 +17,7 @@ const (
 	leftToRight = 2
 	bottomToTop = 3
 	topToBottom = 4
-	defaultPad  = 20
+	defaultPad  = 32
 )
 
 type ScrollCanvas struct {
@@ -55,6 +55,13 @@ func NewScrollCanvas(m Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (
 		c.actual = image.NewRGBA(image.Rect(0-c.pad, 0-c.pad, c.w+c.pad, c.h+c.pad))
 	}
 
+	c.log.Debug("creating scroll canvas",
+		zap.Int("min X", c.Bounds().Min.X),
+		zap.Int("min Y", c.Bounds().Min.Y),
+		zap.Int("max X", c.Bounds().Max.X),
+		zap.Int("max Y", c.Bounds().Max.Y),
+	)
+
 	return c, nil
 }
 
@@ -73,8 +80,8 @@ func (c *ScrollCanvas) Name() string {
 // Clear set all the leds on the matrix with color.Black
 func (c *ScrollCanvas) Clear() error {
 	draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Src)
-	for x := 0; x < c.w; x++ {
-		for y := 0; y < c.h; y++ {
+	for x := 0; x < c.w-1; x++ {
+		for y := 0; y < c.h-1; y++ {
 			c.m.Set(c.position(x, y), color.Black)
 		}
 	}
@@ -89,7 +96,7 @@ func (c *ScrollCanvas) Close() error {
 
 // Render update the display with the data from the LED buffer
 func (c *ScrollCanvas) Render() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	if c.direction == rightToLeft {
 		if err := c.rightToLeft(ctx); err != nil {
@@ -109,7 +116,8 @@ func (c *ScrollCanvas) ColorModel() color.Model {
 
 // Bounds return the topology of the Canvas
 func (c *ScrollCanvas) Bounds() image.Rectangle {
-	return image.Rect(0, 0, c.w, c.h)
+	return c.actual.Bounds()
+	//return image.Rect(0, 0, c.w, c.h)
 }
 
 // PaddedBounds ...
@@ -148,8 +156,13 @@ func (c *ScrollCanvas) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 }
 
 func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
-	c.log.Debug("scrolling right to left")
-	thisX := c.actual.Bounds().Dx()
+	c.log.Debug("scrolling right to left",
+		zap.Int("min X", c.actual.Bounds().Min.X),
+		zap.Int("min Y", c.actual.Bounds().Min.Y),
+		zap.Int("max X", c.actual.Bounds().Max.X),
+		zap.Int("max Y", c.actual.Bounds().Max.Y),
+	)
+	thisX := c.w
 	for {
 		c.log.Debug("scrolling",
 			zap.Int("thisX", thisX),
@@ -158,8 +171,8 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 			return nil
 		}
 
-		for x := c.actual.Bounds().Min.X; x < c.actual.Bounds().Dx(); x++ {
-			for y := c.actual.Bounds().Min.Y; y < c.actual.Bounds().Dy(); y++ {
+		for x := c.actual.Bounds().Min.X; x < c.actual.Bounds().Max.X; x++ {
+			for y := c.actual.Bounds().Min.Y; y < c.actual.Bounds().Max.Y; y++ {
 				shiftX := x + thisX
 				if shiftX > 0 && shiftX < c.w && y > 0 && y < c.h {
 					c.m.Set(c.position(shiftX, y), c.actual.At(x, y))

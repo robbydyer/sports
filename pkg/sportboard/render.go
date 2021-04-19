@@ -15,6 +15,8 @@ import (
 )
 
 func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
+	s.logCanvas(canvas, "render live canvas size")
+
 	layers, err := rgbrender.NewLayerDrawer(60*time.Second, s.log)
 	if err != nil {
 		return err
@@ -67,7 +69,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 					return writer.WriteAlignedBoxed(
 						rgbrender.CenterTop,
 						canvas,
-						canvas.Bounds(),
+						rgbrender.ZeroedBounds(canvas.Bounds()),
 						text,
 						s.config.TimeColor,
 						color.Black,
@@ -104,7 +106,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 					return writer.WriteAlignedBoxed(
 						rgbrender.CenterBottom,
 						canvas,
-						canvas.Bounds(),
+						rgbrender.ZeroedBounds(canvas.Bounds()),
 						text,
 						s.config.ScoreColor,
 						color.Black,
@@ -225,7 +227,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 				return writer.WriteAlignedBoxed(
 					rgbrender.CenterTop,
 					canvas,
-					canvas.Bounds(),
+					rgbrender.ZeroedBounds(canvas.Bounds()),
 					text,
 					s.config.TimeColor,
 					color.Black,
@@ -246,7 +248,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 				return writer.WriteAlignedBoxed(
 					rgbrender.CenterCenter,
 					canvas,
-					canvas.Bounds(),
+					rgbrender.ZeroedBounds(canvas.Bounds()),
 					text,
 					s.config.ScoreColor,
 					color.Black,
@@ -306,7 +308,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 				return writer.WriteAlignedBoxed(
 					rgbrender.CenterTop,
 					canvas,
-					canvas.Bounds(),
+					rgbrender.ZeroedBounds(canvas.Bounds()),
 					text,
 					s.config.TimeColor,
 					color.Black,
@@ -343,7 +345,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 				return writer.WriteAlignedBoxed(
 					rgbrender.CenterBottom,
 					canvas,
-					canvas.Bounds(),
+					rgbrender.ZeroedBounds(canvas.Bounds()),
 					text,
 					s.config.ScoreColor,
 					color.Black,
@@ -395,7 +397,21 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 				return s.RenderHomeLogo(ctx, bounds, homeTeam.GetAbbreviation())
 			},
 			func(canvas board.Canvas, img image.Image) error {
-				draw.Draw(canvas, canvas.Bounds(), img, image.Point{}, draw.Over)
+				pt := image.Pt(img.Bounds().Min.X, img.Bounds().Min.Y)
+				b := canvas.Bounds()
+				s.log.Debug("draw home logo",
+					zap.Int("pt X", pt.X),
+					zap.Int("pt Y", pt.Y),
+					zap.Int("canvas min X", b.Bounds().Min.X),
+					zap.Int("canvas min Y", b.Bounds().Min.Y),
+					zap.Int("canvas max X", b.Bounds().Max.X),
+					zap.Int("canvas max Y", b.Bounds().Max.Y),
+					zap.Int("img min X", img.Bounds().Min.X),
+					zap.Int("img min Y", img.Bounds().Min.Y),
+					zap.Int("img max X", img.Bounds().Max.X),
+					zap.Int("img max Y", img.Bounds().Max.Y),
+				)
+				draw.Draw(canvas, img.Bounds(), img, pt, draw.Over)
 				return nil
 			},
 		),
@@ -405,7 +421,8 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 				return s.RenderAwayLogo(ctx, bounds, awayTeam.GetAbbreviation())
 			},
 			func(canvas board.Canvas, img image.Image) error {
-				draw.Draw(canvas, canvas.Bounds(), img, image.Point{}, draw.Over)
+				pt := image.Pt(img.Bounds().Min.X, img.Bounds().Min.Y)
+				draw.Draw(canvas, img.Bounds(), img, pt, draw.Over)
 				return nil
 			},
 		),

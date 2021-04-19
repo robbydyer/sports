@@ -54,6 +54,10 @@ func (c *Canvas) Bounds() image.Rectangle {
 	return image.Rect(0, 0, c.w, c.h)
 }
 
+func (c *Canvas) PaddedBounds() image.Rectangle {
+	return image.Rect(0, 0, c.w, c.h)
+}
+
 // At returns the color of the pixel at (x, y)
 func (c *Canvas) At(x, y int) color.Color {
 	return c.m.At(c.position(x, y))

@@ -2,6 +2,7 @@ package rgbrender
 
 import (
 	"image"
+	"image/color"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -580,6 +581,53 @@ func TestZoomImageSize(t *testing.T) {
 			actualX, actualY := ZoomImageSize(test.img, test.zoom)
 			require.Equal(t, test.expectedX, actualX)
 			require.Equal(t, test.expectedY, actualY)
+		})
+	}
+}
+
+func TestNegativeImagePoint(t *testing.T) {
+	i := image.NewRGBA(image.Rect(-10, -10, 10, 10))
+
+	i.Set(-5, -5, color.Gray16{0xffff})
+
+	require.Equal(t, i.At(0, 0), color.RGBA{R: 0x0, G: 0x0, B: 0x0, A: 0x0}, "Default to black on zero point")
+	require.NotEqual(t, i.At(-5, -5), color.RGBA{R: 0x0, G: 0x0, B: 0x0, A: 0x0}, "Changing color at negative point should work")
+}
+
+func TestZeroedBounds(t *testing.T) {
+	tests := []struct {
+		name     string
+		in       image.Rectangle
+		expected image.Rectangle
+	}{
+		{
+			name:     "no change",
+			in:       image.Rect(0, 0, 1, 1),
+			expected: image.Rect(0, 0, 1, 1),
+		},
+		{
+			name:     "changed",
+			in:       image.Rect(-1, -1, 2, 2),
+			expected: image.Rect(0, 0, 1, 1),
+		},
+		{
+			name:     "changed large",
+			in:       image.Rect(-10, -10, 20, 20),
+			expected: image.Rect(0, 0, 10, 10),
+		},
+		{
+			name:     "changed rectangle",
+			in:       image.Rect(-10, -10, 74, 42),
+			expected: image.Rect(0, 0, 64, 32),
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			require.Equal(t, test.expected, ZeroedBounds(test.in))
 		})
 	}
 }

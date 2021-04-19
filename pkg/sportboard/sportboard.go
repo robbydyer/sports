@@ -303,6 +303,8 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		return nil
 	}
 
+	s.logCanvas(canvas, "sportboard Render() called canvas")
+
 	boardCtx, boardCancel := context.WithCancel(ctx)
 	defer boardCancel()
 
@@ -368,24 +370,28 @@ OUTER:
 	default:
 	}
 
-	w, h := s.GridSize(canvas)
-	s.log.Debug("calculated grid size",
-		zap.Int("cols", w),
-		zap.Int("rows", h),
-		zap.Int("canvas width", canvas.Bounds().Dx()),
-		zap.Int("canvas height", canvas.Bounds().Dy()),
-	)
-	if w > 1 || h > 1 {
-		width := canvas.Bounds().Dx() / w
-		height := canvas.Bounds().Dy() / h
-		s.log.Debug("rendering board as grid",
+	if !s.config.ScrollMode.Load() {
+		w, h := s.GridSize(canvas)
+		s.log.Debug("calculated grid size",
 			zap.Int("cols", w),
 			zap.Int("rows", h),
-			zap.Int("cell width", width),
-			zap.Int("cell height", height),
+			zap.Int("canvas width", canvas.Bounds().Dx()),
+			zap.Int("canvas height", canvas.Bounds().Dy()),
 		)
-		return s.renderGrid(boardCtx, canvas, games, w, h)
+		if w > 1 || h > 1 {
+			width := canvas.Bounds().Dx() / w
+			height := canvas.Bounds().Dy() / h
+			s.log.Debug("rendering board as grid",
+				zap.Int("cols", w),
+				zap.Int("rows", h),
+				zap.Int("cell width", width),
+				zap.Int("cell height", height),
+			)
+			return s.renderGrid(boardCtx, canvas, games, w, h)
+		}
 	}
+
+	s.logCanvas(canvas, "sportboard Render() called canvas after grid")
 
 	preloader := make(map[int]chan struct{})
 	preloader[games[0].GetID()] = make(chan struct{}, 1)
@@ -637,6 +643,8 @@ func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGa
 	if err != nil {
 		return fmt.Errorf("failed to determine if game is complete: %w", err)
 	}
+
+	s.logCanvas(canvas, "sportboard renderGame canvas")
 
 	if isLive {
 		if err := s.renderLiveGame(ctx, canvas, liveGame, counter); err != nil {

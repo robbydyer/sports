@@ -134,17 +134,20 @@ func (l *Logo) GetThumbnail(ctx context.Context, size image.Rectangle) (image.Im
 }
 
 // RenderLeftAligned renders the logo on the left side of the matrix
-func (l *Logo) RenderLeftAligned(ctx context.Context, bounds image.Rectangle, width int) (image.Image, error) {
+func (l *Logo) RenderLeftAligned(ctx context.Context, bounds image.Rectangle, endX int) (image.Image, error) {
 	thumb, err := l.GetThumbnail(ctx, l.bounds)
 	if err != nil {
 		return nil, err
 	}
 
-	startX := thumb.Bounds().Dx() - width
+	startX := 0
 
-	if width < thumb.Bounds().Dx() {
-		startX = width - thumb.Bounds().Dx() + l.config.Pt.X
+	if thumb.Bounds().Dx() > endX {
+		startX = endX - thumb.Bounds().Dx()
 	}
+
+	startX += l.config.Pt.X
+
 	startY := 0 + l.config.Pt.Y
 	newBounds := image.Rect(startX, startY, bounds.Dx()-1, bounds.Dy()-1)
 	align, err := rgbrender.AlignPosition(rgbrender.LeftCenter, newBounds, thumb.Bounds().Dx(), thumb.Bounds().Dy())
@@ -152,16 +155,21 @@ func (l *Logo) RenderLeftAligned(ctx context.Context, bounds image.Rectangle, wi
 		return nil, err
 	}
 
-	i := image.NewRGBA(bounds)
-	draw.Draw(i, align, thumb, image.Pt(align.Min.X, align.Min.Y), draw.Over)
+	i := image.NewRGBA(newBounds)
+	draw.Draw(i, align, thumb, image.Point{}, draw.Over)
 
 	l.log.Debug("logo left alignment",
+		zap.Int("end X", endX),
 		zap.Int("size X", bounds.Dx()),
 		zap.Int("size Y", bounds.Dy()),
-		zap.Int("min X", align.Min.X),
-		zap.Int("min Y", align.Min.Y),
-		zap.Int("max X", align.Max.X),
-		zap.Int("max Y", align.Max.Y),
+		zap.Int("newBounds min X", newBounds.Min.X),
+		zap.Int("newBounds min Y", newBounds.Min.Y),
+		zap.Int("newBounds max X", newBounds.Max.X),
+		zap.Int("newBounds max Y", newBounds.Max.Y),
+		zap.Int("align min X", align.Min.X),
+		zap.Int("align min Y", align.Min.Y),
+		zap.Int("align max X", align.Max.X),
+		zap.Int("align max Y", align.Max.Y),
 		zap.Int("img min X", i.Bounds().Min.X),
 		zap.Int("img min Y", i.Bounds().Min.Y),
 		zap.Int("img max X", i.Bounds().Max.X),
@@ -172,23 +180,23 @@ func (l *Logo) RenderLeftAligned(ctx context.Context, bounds image.Rectangle, wi
 }
 
 // RenderRightAligned renders the logo on the right side of the matrix
-func (l *Logo) RenderRightAligned(ctx context.Context, bounds image.Rectangle, width int) (image.Image, error) {
+func (l *Logo) RenderRightAligned(ctx context.Context, bounds image.Rectangle, startX int) (image.Image, error) {
 	thumb, err := l.GetThumbnail(ctx, l.bounds)
 	if err != nil {
 		return nil, err
 	}
 
-	startX := width + l.config.Pt.X
+	startX = startX + l.config.Pt.X
 	startY := 0 + l.config.Pt.Y
 
-	newBounds := image.Rect(startX, startY, bounds.Dx()-1, bounds.Dy()-1)
+	newBounds := image.Rect(startX, startY, thumb.Bounds().Dx()+startX, thumb.Bounds().Dy()+startY)
 
 	align, err := rgbrender.AlignPosition(rgbrender.RightCenter, newBounds, thumb.Bounds().Dx(), thumb.Bounds().Dy())
 	if err != nil {
 		return nil, err
 	}
 
-	i := image.NewRGBA(bounds)
+	i := image.NewRGBA(newBounds)
 	draw.Draw(i, align, thumb, image.Point{}, draw.Over)
 
 	return i, nil

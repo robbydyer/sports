@@ -73,6 +73,10 @@ func (i *BlankCanvas) Bounds() image.Rectangle {
 	return image.Rect(0, 0, i.width, i.height)
 }
 
+func (i *BlankCanvas) PaddedBounds() image.Rectangle {
+	return image.Rect(0, 0, i.width, i.height)
+}
+
 // At returns the color of the pixel at (x, y)
 func (i *BlankCanvas) At(x, y int) color.Color {
 	pos := i.position(x, y)

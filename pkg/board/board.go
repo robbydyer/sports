@@ -39,4 +39,5 @@ type Canvas interface {
 	GetHTTPHandlers() ([]*HTTPHandler, error)
 	Close() error
 	Scrollable() bool
+	PaddedBounds() image.Rectangle
 }

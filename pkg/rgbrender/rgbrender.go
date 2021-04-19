@@ -153,6 +153,14 @@ func DrawRectangle(canvas board.Canvas, startX int, startY int, sizeX int, sizeY
 	return nil
 }
 
+func DrawImgOver(dest draw.Image, source image.Image) {
+	for x := source.Bounds().Min.X; x < source.Bounds().Max.X; x++ {
+		for y := source.Bounds().Min.Y; x < source.Bounds().Max.Y; y++ {
+			dest.Set(x, y, source.At(x, y))
+		}
+	}
+}
+
 // ZeroedBounds returns an image.Rectangle with square padding stripped off
 func ZeroedBounds(bounds image.Rectangle) image.Rectangle {
 	if bounds.Min.Y >= 0 {
