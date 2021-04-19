@@ -13,43 +13,30 @@ import (
 // image.Image interface and can be used with draw.Draw for example
 type Canvas struct {
 	w, h    int
-	extra   draw.Image
 	m       Matrix
 	closed  bool
 	enabled *atomic.Bool
 }
 
-type CanvasOption func(*Canvas) error
-
 // NewCanvas returns a new Canvas using the given width and height and creates
 // a new WS281x matrix using the given config
-func NewCanvas(m Matrix, opts ...CanvasOption) (*Canvas, error) {
+func NewCanvas(m Matrix) *Canvas {
 	w, h := m.Geometry()
-	c := &Canvas{
+	return &Canvas{
 		w:       w,
 		h:       h,
 		m:       m,
 		enabled: atomic.NewBool(true),
 	}
-
-	for _, f := range opts {
-		if err := f(c); err != nil {
-			return nil, err
-		}
-	}
-
-	return c, nil
-}
-
-func WithXPadding(pad int) CanvasOption {
-	return func(c *Canvas) error {
-		c.extra = image.NewRGBA(image.Rect(0, 0, pad*2, c.h))
-		return nil
-	}
 }
 
 func (c *Canvas) Name() string {
 	return "RGB Canvas"
+}
+
+// Scrollable ...
+func (c *Canvas) Scrollable() bool {
+	return false
 }
 
 // Render update the display with the data from the LED buffer
@@ -64,44 +51,16 @@ func (c *Canvas) ColorModel() color.Model {
 
 // Bounds return the topology of the Canvas
 func (c *Canvas) Bounds() image.Rectangle {
-	pad := 0
-	if c.extra != nil {
-		pad = c.extra.Bounds().Dx() / 2
-	}
-	return image.Rect(0+pad, 0, c.w+pad, c.h)
+	return image.Rect(0, 0, c.w, c.h)
 }
 
 // At returns the color of the pixel at (x, y)
 func (c *Canvas) At(x, y int) color.Color {
-	if c.extra == nil {
-		return c.m.At(c.position(x, y))
-	}
-
-	if x < 0 {
-		return c.extra.At(x*-1, y)
-	}
-	if x > c.w-1 {
-		return c.extra.At(x-c.w-1, y)
-	}
-
 	return c.m.At(c.position(x, y))
 }
 
 // Set set LED at position x,y to the provided 24-bit color value
 func (c *Canvas) Set(x, y int, color color.Color) {
-	if c.extra == nil {
-		c.m.Set(c.position(x, y), color)
-		return
-	}
-
-	if x < 0 {
-		c.extra.Set(x*-1, y, color)
-		return
-	}
-	if x > c.w-1 {
-		c.extra.Set(x-c.w-1, y, color)
-	}
-
 	c.m.Set(c.position(x, y), color)
 }
 

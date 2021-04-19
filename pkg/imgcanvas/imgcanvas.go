@@ -50,6 +50,11 @@ func (i *ImgCanvas) Name() string {
 	return "ImgCanvas"
 }
 
+// Scrollable ...
+func (i *ImgCanvas) Scrollable() bool {
+	return false
+}
+
 // Close ...
 func (i *ImgCanvas) Close() error {
 	i.done <- struct{}{}

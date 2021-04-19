@@ -2,12 +2,12 @@ package nhl
 
 import (
 	"context"
-	// embed
-	_ "embed"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"github.com/robbydyer/sports/pkg/util"
@@ -15,6 +15,9 @@ import (
 
 //go:embed assets/divisions.json
 var divisionAPIData []byte
+
+//go:embed assets
+var assets embed.FS
 
 // Team implements sportboard.Team
 type Team struct {
@@ -88,27 +91,16 @@ func (t *Team) setGameTimes() error {
 
 // GetTeams ...
 func GetTeams(ctx context.Context) ([]*Team, error) {
-	uri := fmt.Sprintf("%s/teams?expand=team.roster,team.schedule.next&season=%s", baseURL, GetSeason(util.Today()))
-	req, err := http.NewRequest("GET", uri, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req = req.WithContext(ctx)
-
-	client := http.DefaultClient
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list teams: %w", err)
-	}
-
-	defer resp.Body.Close()
-
+	var body []byte
 	var teams *teams
+	var err error
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err = assets.ReadFile(filepath.Join("assets", "teams.json"))
 	if err != nil {
-		return nil, fmt.Errorf("failed to read API response body: %w", err)
+		body, err = getTeamAPIData(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if err := json.Unmarshal(body, &teams); err != nil {
@@ -139,4 +131,30 @@ OUTER:
 	}
 
 	return teams.Teams, nil
+}
+
+func getTeamAPIData(ctx context.Context) ([]byte, error) {
+
+	uri := fmt.Sprintf("%s/teams?expand=team.roster,team.schedule.next&season=%s", baseURL, GetSeason(util.Today()))
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req = req.WithContext(ctx)
+
+	client := http.DefaultClient
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list teams: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read API response body: %w", err)
+	}
+
+	return body, nil
 }

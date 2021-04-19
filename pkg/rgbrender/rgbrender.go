@@ -153,13 +153,23 @@ func DrawRectangle(canvas board.Canvas, startX int, startY int, sizeX int, sizeY
 	return nil
 }
 
+// ZeroedBounds returns an image.Rectangle with square padding stripped off
+func ZeroedBounds(bounds image.Rectangle) image.Rectangle {
+	if bounds.Min.Y >= 0 {
+		return bounds
+	}
+	pad := bounds.Min.Y * -1
+
+	return image.Rect(0, 0, bounds.Max.X-pad, bounds.Max.Y-pad)
+}
+
 // CopyImage ...
 func CopyImage(canvas image.Image) image.Image {
 	img := image.NewRGBA(
 		image.Rect(
-			canvas.Bounds().Min.X-20,
+			canvas.Bounds().Min.X,
 			canvas.Bounds().Min.Y,
-			canvas.Bounds().Max.X+20,
+			canvas.Bounds().Max.X,
 			canvas.Bounds().Max.Y,
 		),
 	)
@@ -175,8 +185,8 @@ func CopyImage(canvas image.Image) image.Image {
 // ShiftX shifts each pixel of a canvas image moveX number of pixels
 func ShiftX(img draw.Image, moveX int) {
 	orig := CopyImage(img)
-	for x := -20; x < img.Bounds().Dx()+20; x++ {
-		for y := 0; y < img.Bounds().Dy(); y++ {
+	for x := 0; x < orig.Bounds().Dx(); x++ {
+		for y := 0; y < orig.Bounds().Dy(); y++ {
 			shift := x + moveX
 			if shift < orig.Bounds().Dx() {
 				img.Set(shift, y, orig.At(x, y))
@@ -190,7 +200,7 @@ func ShiftX(img draw.Image, moveX int) {
 
 // CopyTo ...
 func CopyTo(source image.Image, dest draw.Image) {
-	for x := -20; x < source.Bounds().Dx()+20; x++ {
+	for x := 0; x < source.Bounds().Dx(); x++ {
 		for y := 0; y < source.Bounds().Dy(); y++ {
 			dest.Set(x, y, source.At(x, y))
 		}

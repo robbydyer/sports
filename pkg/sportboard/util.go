@@ -11,6 +11,15 @@ import (
 )
 
 func (s *SportBoard) getTimeWriter(bounds image.Rectangle) (*rgbrender.TextWriter, error) {
+	bounds = rgbrender.ZeroedBounds(bounds)
+
+	s.log.Debug("time writer bounds",
+		zap.Int("minX", bounds.Min.X),
+		zap.Int("minY", bounds.Min.Y),
+		zap.Int("maxX", bounds.Max.X),
+		zap.Int("maxY", bounds.Max.Y),
+	)
+
 	k := fmt.Sprintf("%dx%d", bounds.Dx(), bounds.Dy())
 	w, ok := s.timeWriters[k]
 	if ok {
@@ -39,6 +48,8 @@ func (s *SportBoard) getTimeWriter(bounds image.Rectangle) (*rgbrender.TextWrite
 }
 
 func (s *SportBoard) getScoreWriter(bounds image.Rectangle) (*rgbrender.TextWriter, error) {
+	bounds = rgbrender.ZeroedBounds(bounds)
+
 	k := fmt.Sprintf("%dx%d", bounds.Dx(), bounds.Dy())
 	w, ok := s.scoreWriters[k]
 	if ok {
@@ -102,6 +113,7 @@ func (s *SportBoard) isFavorite(abbrev string) bool {
 }
 
 func (s *SportBoard) textAreaWidth(bounds image.Rectangle) int {
+	bounds = rgbrender.ZeroedBounds(bounds)
 	if bounds.Dx() == bounds.Dy() {
 		return bounds.Dx() / 8
 	}

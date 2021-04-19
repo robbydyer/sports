@@ -37,6 +37,10 @@ func (i *BlankCanvas) Name() string {
 	return "BlankCanvas"
 }
 
+func (i *BlankCanvas) Scrollable() bool {
+	return false
+}
+
 // Close ...
 func (i *BlankCanvas) Close() error {
 	return nil

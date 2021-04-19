@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 	"github.com/robfig/cron/v3"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
@@ -295,6 +294,15 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		s.log.Warn("skipping disabled board", zap.String("board", s.api.League()))
 		return nil
 	}
+
+	if s.config.ScrollMode.Load() && !canvas.Scrollable() {
+		return nil
+	}
+
+	if !s.config.ScrollMode.Load() && canvas.Scrollable() {
+		return nil
+	}
+
 	boardCtx, boardCancel := context.WithCancel(ctx)
 	defer boardCancel()
 
@@ -447,17 +455,11 @@ OUTER:
 			return err
 		}
 
-		if s.config.ScrollMode.Load() {
-			s.log.Debug("running board in scroll mode",
-				zap.String("league", s.api.League()),
-			)
-			if err := rgbrender.Scroll(ctxzap.ToContext(ctx, s.log), canvas, 50*time.Millisecond); err != nil {
-				return err
-			}
-		} else {
-			if err := canvas.Render(); err != nil {
-				return err
-			}
+		if err := canvas.Render(); err != nil {
+			return err
+		}
+
+		if !s.config.ScrollMode.Load() {
 			select {
 			case <-boardCtx.Done():
 				return context.Canceled

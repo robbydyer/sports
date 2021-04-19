@@ -140,7 +140,11 @@ func (l *Logo) RenderLeftAligned(ctx context.Context, bounds image.Rectangle, wi
 		return nil, err
 	}
 
-	startX := width - thumb.Bounds().Dx() + l.config.Pt.X
+	startX := thumb.Bounds().Dx() - width
+
+	if width < thumb.Bounds().Dx() {
+		startX = width - thumb.Bounds().Dx() + l.config.Pt.X
+	}
 	startY := 0 + l.config.Pt.Y
 	newBounds := image.Rect(startX, startY, bounds.Dx()-1, bounds.Dy()-1)
 	align, err := rgbrender.AlignPosition(rgbrender.LeftCenter, newBounds, thumb.Bounds().Dx(), thumb.Bounds().Dy())
@@ -149,7 +153,20 @@ func (l *Logo) RenderLeftAligned(ctx context.Context, bounds image.Rectangle, wi
 	}
 
 	i := image.NewRGBA(bounds)
-	draw.Draw(i, align, thumb, image.Point{}, draw.Over)
+	draw.Draw(i, align, thumb, image.Pt(align.Min.X, align.Min.Y), draw.Over)
+
+	l.log.Debug("logo left alignment",
+		zap.Int("size X", bounds.Dx()),
+		zap.Int("size Y", bounds.Dy()),
+		zap.Int("min X", align.Min.X),
+		zap.Int("min Y", align.Min.Y),
+		zap.Int("max X", align.Max.X),
+		zap.Int("max Y", align.Max.Y),
+		zap.Int("img min X", i.Bounds().Min.X),
+		zap.Int("img min Y", i.Bounds().Min.Y),
+		zap.Int("img max X", i.Bounds().Max.X),
+		zap.Int("img max Y", i.Bounds().Max.Y),
+	)
 
 	return i, nil
 }

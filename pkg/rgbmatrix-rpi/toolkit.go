@@ -25,9 +25,8 @@ type ToolKit struct {
 
 // NewToolKit returns a new ToolKit wrapping the given Matrix
 func NewToolKit(m Matrix) *ToolKit {
-	c, _ := NewCanvas(m)
 	return &ToolKit{
-		Canvas: c,
+		Canvas: NewCanvas(m),
 	}
 }
 

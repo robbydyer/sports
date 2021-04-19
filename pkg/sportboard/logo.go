@@ -111,6 +111,9 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, bounds image.Rectangle,
 
 	textWidth := s.textAreaWidth(bounds)
 	logoWidth := (bounds.Dx() - textWidth) / 2
+	if s.config.ScrollMode.Load() {
+		logoWidth = 100
+	}
 
 	var renderErr error
 	if l != nil {

@@ -38,4 +38,5 @@ type Canvas interface {
 	Render() error
 	GetHTTPHandlers() ([]*HTTPHandler, error)
 	Close() error
+	Scrollable() bool
 }
