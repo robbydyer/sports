@@ -53,12 +53,14 @@ func NewGrid(canvas board.Canvas, numCols int, numRows int, log *zap.Logger, opt
 		}
 	}
 
-	if numCols > maxAllowedCols {
-		return nil, fmt.Errorf("unsupported number of columns %d", numCols)
-	}
-	if numRows > maxAllowedRows {
-		return nil, fmt.Errorf("unsupported number of rows %d", numRows)
-	}
+	/*
+		if numCols > maxAllowedCols {
+			return nil, fmt.Errorf("unsupported number of columns %d", numCols)
+		}
+		if numRows > maxAllowedRows {
+			return nil, fmt.Errorf("unsupported number of rows %d", numRows)
+		}
+	*/
 
 	grid := &Grid{
 		baseCanvas: canvas,
@@ -84,7 +86,7 @@ func NewGrid(canvas board.Canvas, numCols int, numRows int, log *zap.Logger, opt
 	}
 
 	if grid.padRatio > 0 {
-		grid.padding = int(grid.padRatio * float64(canvas.Bounds().Dx()))
+		grid.padding = int(grid.padRatio * float64(ZeroedBounds(canvas.Bounds()).Dx()))
 		if grid.padding < 1 {
 			grid.padding = 2
 		}
@@ -289,8 +291,10 @@ func WithCellRatios(colRatios []float64, rowRatios []float64) GridOption {
 			return fmt.Errorf("invalid number of row ratios, must match number of rows")
 		}
 
+		bounds := ZeroedBounds(g.baseCanvas.Bounds())
+
 		for i, r := range colRatios {
-			g.cellX[i] = int(math.Floor(r * float64(g.baseCanvas.Bounds().Dx())))
+			g.cellX[i] = int(math.Floor(r * float64(bounds.Dx())))
 			g.log.Debug("cellX",
 				zap.Int("index", i),
 				zap.Int("size", g.cellX[i]),

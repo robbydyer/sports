@@ -44,6 +44,7 @@ type Config struct {
 	UpdateInterval string              `json:"updateInterval"`
 	OnTimes        []string            `json:"onTimes"`
 	OffTimes       []string            `json:"offTimes"`
+	ScrollMode     *atomic.Bool        `json:"scrollMode"`
 }
 
 // OptionFunc provides options to the StatBoard that are not exposed in a Config
@@ -110,6 +111,10 @@ func (c *Config) SetDefaults() {
 
 	if c.StatOverride == nil {
 		c.StatOverride = make(map[string][]string)
+	}
+
+	if c.ScrollMode == nil {
+		c.ScrollMode = atomic.NewBool(false)
 	}
 }
 
@@ -222,7 +227,7 @@ func (s *StatBoard) Close() error {
 
 // ScrollMode ...
 func (s *StatBoard) ScrollMode() bool {
-	return false
+	return s.config.ScrollMode.Load()
 }
 
 // WithSorter ...

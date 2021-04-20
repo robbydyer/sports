@@ -94,11 +94,20 @@ func (s *StatBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		players[cat] = append(players[cat], player)
 	}
 
+PLAYERS:
 	for cat, p := range players {
 		s.log.Debug("rendering category",
 			zap.String("category", cat),
 			zap.Int("num players", len(p)),
 		)
+
+		if s.config.ScrollMode.Load() && canvas.Scrollable() {
+			if err := s.doScroll(ctx, canvas, p); err != nil {
+				return err
+			}
+			continue PLAYERS
+		}
+
 		if err := s.doRender(boardCtx, canvas, p); err != nil {
 			return err
 		}

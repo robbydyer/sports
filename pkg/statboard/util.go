@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
@@ -61,19 +62,23 @@ func getGridRatios(writer StringMeasurer, canvas draw.Image, strs []string) ([]f
 		return []float64{}, nil
 	}
 
-	widths, err := writer.MeasureStrings(canvas, strs)
+	bounds := rgbrender.ZeroedBounds(canvas.Bounds())
+
+	zeroedCanvas := image.NewRGBA(image.Rect(0, 0, bounds.Max.X, bounds.Max.Y))
+
+	widths, err := writer.MeasureStrings(zeroedCanvas, strs)
 	if err != nil {
 		return nil, err
 	}
 
-	pad := canvas.Bounds().Dx() / 64
+	pad := bounds.Dx() / 64
 
 	for i := range widths {
 		widths[i] += pad
 	}
 
 	ratios := []float64{
-		float64(float64(widths[0]) / float64(canvas.Bounds().Dx())),
+		float64(float64(widths[0]) / float64(bounds.Dx())),
 	}
 
 	total := widths[0]
@@ -82,14 +87,18 @@ func getGridRatios(writer StringMeasurer, canvas draw.Image, strs []string) ([]f
 		if i == 0 {
 			continue
 		}
-		if total+w > canvas.Bounds().Dx() {
+		if total+w > bounds.Dx() {
 			break
 		}
 		total += w
 		statCols = append(statCols, w)
 	}
 
-	leftOver := canvas.Bounds().Dx() - total
+	if len(statCols) == 0 {
+		return []float64{}, nil
+	}
+
+	leftOver := bounds.Dx() - total
 
 	if leftOver/len(statCols) >= 1 {
 		for i := range statCols {
@@ -98,14 +107,15 @@ func getGridRatios(writer StringMeasurer, canvas draw.Image, strs []string) ([]f
 	}
 
 	for _, w := range statCols {
-		ratios = append(ratios, float64(float64(w)/float64(canvas.Bounds().Dx())))
+		ratios = append(ratios, float64(float64(w)/float64(bounds.Dx())))
 		total += w
 	}
 
 	return ratios, nil
 }
 
-func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, players []Player, writer *rgbrender.TextWriter, stats []string) (*rgbrender.Grid, error) {
+// getStatPlaceholders gets a list of strings with longest stat lengths
+func (s *StatBoard) getStatPlaceholders(ctx context.Context, bounds image.Rectangle, players []Player, stats []string) ([]string, error) {
 	maxName := 0
 	prefixCol := 0
 	statCols := make([]int, len(stats))
@@ -139,7 +149,7 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 		}
 	}
 
-	nameMax := maxNameLength(canvas.Bounds())
+	nameMax := maxNameLength(bounds)
 
 	if maxName > nameMax {
 		maxName = nameMax
@@ -158,6 +168,19 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 		}
 	}
 
+	return strs, nil
+}
+
+func rowHeightRatio(bounds image.Rectangle, numRows int) float64 {
+	return (float64(bounds.Dy()) / float64(numRows)) / float64(bounds.Dy())
+}
+
+func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, players []Player, writer *rgbrender.TextWriter, stats []string) (*rgbrender.Grid, error) {
+	strs, err := s.getStatPlaceholders(ctx, rgbrender.ZeroedBounds(canvas.Bounds()), players, stats)
+	if err != nil {
+		return nil, err
+	}
+
 	fields := []zapcore.Field{}
 	for _, str := range strs {
 		fields = append(fields, zap.String("str", str))
@@ -173,7 +196,7 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 
 	cellYRatios := make([]float64, numRows)
 
-	rowHeight := (float64(canvas.Bounds().Dy()) / float64(numRows)) / float64(canvas.Bounds().Dy())
+	rowHeight := rowHeightRatio(rgbrender.ZeroedBounds(canvas.Bounds()), numRows)
 
 	for i := range cellYRatios {
 		cellYRatios[i] = rowHeight
@@ -189,6 +212,46 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 	)
 }
 
+func (s *StatBoard) getScrollGrid(ctx context.Context, canvas *rgbmatrix.ScrollCanvas, players []Player, writer *rgbrender.TextWriter, stats []string) (*rgbrender.Grid, error) {
+	strs, err := s.getStatPlaceholders(ctx, rgbrender.ZeroedBounds(canvas.Bounds()), players, stats)
+	if err != nil {
+		return nil, err
+	}
+
+	fields := []zapcore.Field{}
+	for _, str := range strs {
+		fields = append(fields, zap.String("str", str))
+	}
+	s.log.Debug("cell X Maxes", fields...)
+
+	cellXRatios, err := getGridRatios(writer, canvas, strs)
+	if err != nil {
+		return nil, err
+	}
+
+	numRows := len(players)
+
+	if s.withTitleRow {
+		numRows++
+	}
+
+	rowHeight := rowHeightRatio(canvas.Bounds(), numRows)
+	cellYRatios := make([]float64, numRows)
+	for i := range cellYRatios {
+		cellYRatios[i] = rowHeight
+	}
+
+	return rgbrender.NewGrid(
+		canvas,
+		len(cellXRatios),
+		numRows,
+		s.log,
+		rgbrender.WithPadding(padSize),
+		rgbrender.WithCellRatios(cellXRatios, cellYRatios),
+	)
+
+	return nil, nil
+}
 func maxNameLength(canvas image.Rectangle) int {
 	return canvas.Dx() / 8
 }
