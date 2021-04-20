@@ -106,6 +106,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				default:
 				}
 				s.config.ScrollMode.Store(true)
+				s.cacheClear()
 			},
 		},
 		{
@@ -117,6 +118,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				default:
 				}
 				s.config.ScrollMode.Store(false)
+				s.cacheClear()
 			},
 		},
 		{
