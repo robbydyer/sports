@@ -40,6 +40,10 @@ func (c *Canvas) Scrollable() bool {
 	return false
 }
 
+func (c *Canvas) AlwaysRender() bool {
+	return false
+}
+
 // Render update the display with the data from the LED buffer
 func (c *Canvas) Render(ctx context.Context) error {
 	return c.m.Render()

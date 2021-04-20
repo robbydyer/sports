@@ -53,6 +53,10 @@ func (i *BlankCanvas) Clear() error {
 	return i.Render(context.Background())
 }
 
+func (i *BlankCanvas) AlwaysRender() bool {
+	return true
+}
+
 func (i *BlankCanvas) blackOut() {
 	for x := range i.pixels {
 		i.pixels[x] = colorToUint32(color.Black)

@@ -177,6 +177,10 @@ func (s *SysBoard) Disable() {
 	s.config.Enabled.Store(false)
 }
 
+func (s *SysBoard) ScrollMode() bool {
+	return false
+}
+
 // GetHTTPHandlers ...
 func (s *SysBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 	disable := &board.HTTPHandler{

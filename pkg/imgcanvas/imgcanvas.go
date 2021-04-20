@@ -56,6 +56,10 @@ func (i *ImgCanvas) Scrollable() bool {
 	return false
 }
 
+func (i *ImgCanvas) AlwaysRender() bool {
+	return true
+}
+
 // Close ...
 func (i *ImgCanvas) Close() error {
 	i.done <- struct{}{}

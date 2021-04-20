@@ -77,6 +77,10 @@ func (c *ScrollCanvas) Name() string {
 	return "RGB ScrollCanvas"
 }
 
+func (c *ScrollCanvas) AlwaysRender() bool {
+	return false
+}
+
 // SetScrollSpeed ...
 func (c *ScrollCanvas) SetScrollSpeed(d time.Duration) {
 	c.interval = d

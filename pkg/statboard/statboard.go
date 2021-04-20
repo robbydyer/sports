@@ -220,6 +220,10 @@ func (s *StatBoard) Close() error {
 	return nil
 }
 
+func (s *StatBoard) ScrollMode() bool {
+	return false
+}
+
 // WithSorter ...
 func WithSorter(sorter Sorter) OptionFunc {
 	return func(s *StatBoard) error {

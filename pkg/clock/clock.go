@@ -88,6 +88,10 @@ func (c *Clock) Disable() {
 // Cleanup ...
 func (c *Clock) Cleanup() {}
 
+func (c *Clock) ScrollMode() bool {
+	return false
+}
+
 // Render ...
 func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
 	if !c.config.Enabled.Load() {

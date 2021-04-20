@@ -243,25 +243,30 @@ func (s *SportBoard) Disable() {
 	s.config.Enabled.Store(false)
 }
 
+// ScrollMode ...
+func (s *SportBoard) ScrollMode() bool {
+	return s.config.ScrollMode.Load()
+}
+
 // GridSize returns the column width and row height for a grid layout. 0 is returned for
 // both if the canvas is too small for a grid.
-func (s *SportBoard) GridSize(canvas board.Canvas) (int, int) {
+func (s *SportBoard) GridSize(bounds image.Rectangle) (int, int) {
 	width := 0
 	height := 0
 	if s.config.GridCols > 0 {
-		pixW := canvas.Bounds().Dx() / s.config.GridCols
+		pixW := bounds.Dx() / s.config.GridCols
 		if pixW > s.config.MinimumGridWidth {
 			width = s.config.GridCols
 		} else {
-			width = canvas.Bounds().Dx() / s.config.MinimumGridWidth
+			width = bounds.Dx() / s.config.MinimumGridWidth
 		}
 	}
 	if s.config.GridRows > 0 {
-		pixH := canvas.Bounds().Dy() / s.config.GridRows
+		pixH := bounds.Dy() / s.config.GridRows
 		if pixH > s.config.MinimumGridHeight {
 			height = s.config.GridRows
 		} else {
-			height = canvas.Bounds().Dy() / s.config.MinimumGridHeight
+			height = bounds.Dy() / s.config.MinimumGridHeight
 		}
 	}
 
@@ -300,14 +305,6 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		return nil
 	}
 
-	if s.config.ScrollMode.Load() && !canvas.Scrollable() {
-		return nil
-	}
-
-	if !s.config.ScrollMode.Load() && canvas.Scrollable() {
-		return nil
-	}
-
 	s.logCanvas(canvas, "sportboard Render() called canvas")
 
 	boardCtx, boardCancel := context.WithCancel(ctx)
@@ -334,16 +331,19 @@ OUTER:
 	for _, game := range allGames {
 		home, err := game.HomeTeam()
 		if err != nil {
-			return err
+			s.log.Error("failed to get home team", zap.Error(err))
+			continue OUTER
 		}
 		away, err := game.AwayTeam()
 		if err != nil {
-			return err
+			s.log.Error("failed to get away team", zap.Error(err))
+			continue OUTER
 		}
 		for _, watchTeam := range s.watchTeams {
 			team, err := s.api.TeamFromAbbreviation(boardCtx, watchTeam)
 			if err != nil {
-				return err
+				s.log.Error("failed to get team", zap.Error(err))
+				continue OUTER
 			}
 
 			if home.GetID() == team.GetID() || away.GetID() == team.GetID() {
@@ -375,8 +375,9 @@ OUTER:
 	default:
 	}
 
-	if !s.config.ScrollMode.Load() {
-		w, h := s.GridSize(canvas)
+	if (!s.config.ScrollMode.Load()) || (!canvas.Scrollable()) {
+		bounds := rgbrender.ZeroedBounds(canvas.Bounds())
+		w, h := s.GridSize(bounds)
 		s.log.Debug("calculated grid size",
 			zap.Int("cols", w),
 			zap.Int("rows", h),
@@ -384,8 +385,8 @@ OUTER:
 			zap.Int("canvas height", canvas.Bounds().Dy()),
 		)
 		if w > 1 || h > 1 {
-			width := canvas.Bounds().Dx() / w
-			height := canvas.Bounds().Dy() / h
+			width := bounds.Dx() / w
+			height := bounds.Dy() / h
 			s.log.Debug("rendering board as grid",
 				zap.Int("cols", w),
 				zap.Int("rows", h),
@@ -409,6 +410,7 @@ OUTER:
 
 	defer canvas.Clear()
 
+GAMES:
 	for gameIndex, game := range games {
 		select {
 		case <-boardCtx.Done():
@@ -450,26 +452,27 @@ OUTER:
 		cachedGame, ok := s.cachedLiveGames[game.GetID()]
 		if !ok {
 			s.log.Warn("live game data not ready in time, UNDEFINED", zap.Int("game ID", game.GetID()))
-			continue
+			continue GAMES
 		}
 
 		if cachedGame == nil {
 			s.log.Warn("live game data not ready in time, NIL", zap.Int("game ID", game.GetID()))
-			continue
+			continue GAMES
 		}
 
 		counter, err := s.RenderGameCounter(canvas, len(games), gameIndex)
 		if err != nil {
-			return err
+			s.log.Error("failed to render game counter", zap.Error(err))
 		}
 
 		if err := s.renderGame(boardCtx, canvas, cachedGame, counter); err != nil {
 			s.log.Error("failed to render sportboard game", zap.Error(err))
-			return err
+			continue GAMES
 		}
 
 		if err := canvas.Render(boardCtx); err != nil {
-			return err
+			s.log.Error("failed to render", zap.Error(err))
+			continue GAMES
 		}
 
 		if !s.config.ScrollMode.Load() {

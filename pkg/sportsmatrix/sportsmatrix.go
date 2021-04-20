@@ -397,6 +397,12 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 				continue CANVASES
 			}
 
+			if (b.ScrollMode() && !canvas.Scrollable()) || (!b.ScrollMode() && canvas.Scrollable()) {
+				if !canvas.AlwaysRender() {
+					continue CANVASES
+				}
+			}
+
 			wg.Add(1)
 			go func(canvas board.Canvas) {
 				defer wg.Done()
