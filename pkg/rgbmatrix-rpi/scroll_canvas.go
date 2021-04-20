@@ -17,7 +17,7 @@ const (
 	leftToRight = 2
 	bottomToTop = 3
 	topToBottom = 4
-	defaultPad  = 32
+	defaultPad  = 64
 )
 
 type ScrollCanvas struct {
@@ -53,6 +53,10 @@ func NewScrollCanvas(m Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (
 
 	if c.actual == nil {
 		c.actual = image.NewRGBA(image.Rect(0-c.pad, 0-c.pad, c.w+c.pad, c.h+c.pad))
+	}
+
+	if c.direction == 0 {
+		c.direction = rightToLeft
 	}
 
 	c.log.Debug("creating scroll canvas",

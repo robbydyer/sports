@@ -189,7 +189,7 @@ func (t *TextWriter) WriteAlignedBoxed(align Align, canvas draw.Image, bounds im
 
 	yHeight := len(str) * int(math.Floor(t.FontSize+t.LineSpace))
 
-	boxAlign, err := AlignPosition(align, ZeroedBounds(canvas.Bounds()), maxXWidth.Ceil(), yHeight)
+	boxAlign, err := AlignPosition(align, bounds, maxXWidth.Ceil(), yHeight)
 	if err != nil {
 		return err
 	}

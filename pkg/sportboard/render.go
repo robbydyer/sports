@@ -438,6 +438,14 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 		zap.String("away", awayTeam.GetAbbreviation()),
 	)
 
+	bounds = rgbrender.ZeroedBounds(bounds)
+
+	// Add some padding to the bounds in scroll mode to get less overlap
+	// of the record/rank on the score
+	if s.config.ScrollMode.Load() {
+		bounds = image.Rect(-10, 0, bounds.Max.X+10, bounds.Max.Y)
+	}
+
 	return []*rgbrender.TextLayer{
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
@@ -458,10 +466,24 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 				rank := text[0]
 				record := text[1]
 				if rank != "" {
-					_ = writer.WriteAlignedBoxed(rgbrender.LeftTop, canvas, canvas.Bounds(), []string{rank}, color.White, color.Black)
+					_ = writer.WriteAlignedBoxed(
+						rgbrender.LeftTop,
+						canvas,
+						bounds,
+						[]string{rank},
+						color.White,
+						color.Black,
+					)
 				}
 				if record != "" {
-					_ = writer.WriteAlignedBoxed(rgbrender.LeftBottom, canvas, canvas.Bounds(), []string{record}, color.White, color.Black)
+					_ = writer.WriteAlignedBoxed(
+						rgbrender.LeftBottom,
+						canvas,
+						bounds,
+						[]string{record},
+						color.White,
+						color.Black,
+					)
 				}
 				return nil
 			},
@@ -485,10 +507,23 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 				rank := text[0]
 				record := text[1]
 				if rank != "" {
-					_ = writer.WriteAlignedBoxed(rgbrender.RightTop, canvas, canvas.Bounds(), []string{rank}, color.White, color.Black)
+					_ = writer.WriteAlignedBoxed(
+						rgbrender.RightTop,
+						canvas,
+						bounds,
+						[]string{rank},
+						color.White,
+						color.Black,
+					)
 				}
 				if record != "" {
-					_ = writer.WriteAlignedBoxed(rgbrender.RightBottom, canvas, canvas.Bounds(), []string{record}, color.White, color.Black)
+					_ = writer.WriteAlignedBoxed(rgbrender.RightBottom,
+						canvas,
+						bounds,
+						[]string{record},
+						color.White,
+						color.Black,
+					)
 				}
 				return nil
 			},
