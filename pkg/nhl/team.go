@@ -134,7 +134,6 @@ OUTER:
 }
 
 func getTeamAPIData(ctx context.Context) ([]byte, error) {
-
 	uri := fmt.Sprintf("%s/teams?expand=team.roster,team.schedule.next&season=%s", baseURL, GetSeason(util.Today()))
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {

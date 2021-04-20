@@ -482,7 +482,6 @@ GAMES:
 			case <-time.After(s.config.boardDelay):
 			}
 		}
-
 	}
 
 	return nil

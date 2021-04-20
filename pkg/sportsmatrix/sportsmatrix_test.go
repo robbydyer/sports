@@ -54,6 +54,7 @@ func (b *TestBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 func (b *TestBoard) HasRendered() bool {
 	return b.hasRendered.Load()
 }
+
 func (b *TestBoard) ScrollMode() bool {
 	return false
 }

@@ -17,7 +17,6 @@ const (
 	leftToRight = 2
 	bottomToTop = 3
 	topToBottom = 4
-	defaultPad  = 64
 )
 
 type ScrollCanvas struct {
@@ -42,7 +41,7 @@ func NewScrollCanvas(m Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (
 		enabled:  atomic.NewBool(true),
 		interval: 50 * time.Millisecond,
 		log:      logger,
-		pad:      defaultPad,
+		pad:      w + int(float64(w)*0.25),
 	}
 
 	for _, f := range opts {
@@ -60,6 +59,7 @@ func NewScrollCanvas(m Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (
 	}
 
 	c.log.Debug("creating scroll canvas",
+		zap.Int("padding", c.pad),
 		zap.Int("min X", c.Bounds().Min.X),
 		zap.Int("min Y", c.Bounds().Min.Y),
 		zap.Int("max X", c.Bounds().Max.X),
@@ -128,12 +128,6 @@ func (c *ScrollCanvas) ColorModel() color.Model {
 // Bounds return the topology of the Canvas
 func (c *ScrollCanvas) Bounds() image.Rectangle {
 	return c.actual.Bounds()
-	//return image.Rect(0, 0, c.w, c.h)
-}
-
-// PaddedBounds ...
-func (c *ScrollCanvas) PaddedBounds() image.Rectangle {
-	return c.actual.Bounds()
 }
 
 // At returns the color of the pixel at (x, y)
@@ -173,7 +167,7 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 		zap.Int("max X", c.actual.Bounds().Max.X),
 		zap.Int("max Y", c.actual.Bounds().Max.Y),
 	)
-	thisX := c.w
+	thisX := c.actual.Bounds().Min.X * -1
 	for {
 		select {
 		case <-ctx.Done():
@@ -183,7 +177,7 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 		c.log.Debug("scrolling",
 			zap.Int("thisX", thisX),
 		)
-		if thisX == c.w*-1 {
+		if thisX == c.actual.Bounds().Min.X {
 			return nil
 		}
 
