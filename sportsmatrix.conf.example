@@ -96,6 +96,9 @@ sysConfig:
 nhlConfig:
   enabled: true
 
+  # Displays the scoreboard in a scrolling style instead of statically
+  scrollMode: false
+
   # Config for stats board. Either enter a list of teams, players, or both. Goalies and Skaters
   # will display separate stats.
   stats:
@@ -138,6 +141,10 @@ nhlConfig:
 ## MLB Config
 mlbConfig:
   enabled: true
+
+  # Displays the scoreboard in a scrolling style instead of statically
+  scrollMode: false
+
   boardDelay: "10s"
 
   # Config for stats board. Either enter a list of teams, players, or both. Pitchers and Hitters
@@ -183,6 +190,10 @@ mlbConfig:
 ## NCAA Mens Basketball Config
 ncaamConfig:
   enabled: true
+
+  # Displays the scoreboard in a scrolling style instead of statically
+  scrollMode: false
+
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -219,6 +230,10 @@ ncaamConfig:
 ## NBA Config
 nbaConfig:
   enabled: true
+
+  # Displays the scoreboard in a scrolling style instead of statically
+  scrollMode: false
+
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -252,6 +267,10 @@ nbaConfig:
 ## NFL Config
 nflConfig:
   enabled: true
+
+  # Displays the scoreboard in a scrolling style instead of statically
+  scrollMode: false
+
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -285,6 +304,10 @@ nflConfig:
 ## MLS Config
 mlsConfig:
   enabled: true
+
+  # Displays the scoreboard in a scrolling style instead of statically
+  scrollMode: false
+
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1

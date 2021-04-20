@@ -144,7 +144,7 @@ func PlayImages(ctx context.Context, canvas board.Canvas, images []image.Image, 
 
 		draw.Draw(canvas, center, images[i], image.Point{}, draw.Over)
 
-		if err := canvas.Render(); err != nil {
+		if err := canvas.Render(ctx); err != nil {
 			return err
 		}
 

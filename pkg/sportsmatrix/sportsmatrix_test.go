@@ -55,6 +55,10 @@ func (b *TestBoard) HasRendered() bool {
 	return b.hasRendered.Load()
 }
 
+func (b *TestBoard) ScrollMode() bool {
+	return false
+}
+
 func TestSportsMatrix(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

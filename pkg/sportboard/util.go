@@ -7,10 +7,33 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
-func (s *SportBoard) getTimeWriter(bounds image.Rectangle) (*rgbrender.TextWriter, error) {
+func (s *SportBoard) logCanvas(canvas board.Canvas, msg string) {
+	s.log.Debug(msg,
+		zap.Int("minX", canvas.Bounds().Min.X),
+		zap.Int("minY", canvas.Bounds().Min.Y),
+		zap.Int("maxX", canvas.Bounds().Max.X),
+		zap.Int("maxY", canvas.Bounds().Max.Y),
+	)
+}
+
+func (s *SportBoard) getTimeWriter(canvasBounds image.Rectangle) (*rgbrender.TextWriter, error) {
+	bounds := rgbrender.ZeroedBounds(canvasBounds)
+
+	s.log.Debug("time writer bounds",
+		zap.Int("minX", bounds.Min.X),
+		zap.Int("minY", bounds.Min.Y),
+		zap.Int("maxX", bounds.Max.X),
+		zap.Int("maxY", bounds.Max.Y),
+		zap.Int("starting minX", canvasBounds.Min.X),
+		zap.Int("starting minY", canvasBounds.Min.Y),
+		zap.Int("starting maxX", canvasBounds.Max.X),
+		zap.Int("starting maxY", canvasBounds.Max.Y),
+	)
+
 	k := fmt.Sprintf("%dx%d", bounds.Dx(), bounds.Dy())
 	w, ok := s.timeWriters[k]
 	if ok {
@@ -38,7 +61,9 @@ func (s *SportBoard) getTimeWriter(bounds image.Rectangle) (*rgbrender.TextWrite
 	return timeWriter, nil
 }
 
-func (s *SportBoard) getScoreWriter(bounds image.Rectangle) (*rgbrender.TextWriter, error) {
+func (s *SportBoard) getScoreWriter(canvasBounds image.Rectangle) (*rgbrender.TextWriter, error) {
+	bounds := rgbrender.ZeroedBounds(canvasBounds)
+
 	k := fmt.Sprintf("%dx%d", bounds.Dx(), bounds.Dy())
 	w, ok := s.scoreWriters[k]
 	if ok {
@@ -102,6 +127,7 @@ func (s *SportBoard) isFavorite(abbrev string) bool {
 }
 
 func (s *SportBoard) textAreaWidth(bounds image.Rectangle) int {
+	bounds = rgbrender.ZeroedBounds(bounds)
 	if bounds.Dx() == bounds.Dy() {
 		return bounds.Dx() / 8
 	}

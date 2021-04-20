@@ -26,6 +26,7 @@ type Board interface {
 	Name() string
 	Render(ctx context.Context, canvases Canvas) error
 	GetHTTPHandlers() ([]*HTTPHandler, error)
+	ScrollMode() bool
 }
 
 // Canvas ...
@@ -35,7 +36,9 @@ type Canvas interface {
 	Enabler
 	Name() string
 	Clear() error
-	Render() error
+	Render(ctx context.Context) error
 	GetHTTPHandlers() ([]*HTTPHandler, error)
 	Close() error
+	Scrollable() bool
+	AlwaysRender() bool
 }

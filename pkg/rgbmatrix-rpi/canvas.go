@@ -1,6 +1,7 @@
 package rgbmatrix
 
 import (
+	"context"
 	"image"
 	"image/color"
 	"image/draw"
@@ -34,8 +35,17 @@ func (c *Canvas) Name() string {
 	return "RGB Canvas"
 }
 
+// Scrollable ...
+func (c *Canvas) Scrollable() bool {
+	return false
+}
+
+func (c *Canvas) AlwaysRender() bool {
+	return false
+}
+
 // Render update the display with the data from the LED buffer
-func (c *Canvas) Render() error {
+func (c *Canvas) Render(ctx context.Context) error {
 	return c.m.Render()
 }
 
@@ -46,6 +56,10 @@ func (c *Canvas) ColorModel() color.Model {
 
 // Bounds return the topology of the Canvas
 func (c *Canvas) Bounds() image.Rectangle {
+	return image.Rect(0, 0, c.w, c.h)
+}
+
+func (c *Canvas) PaddedBounds() image.Rectangle {
 	return image.Rect(0, 0, c.w, c.h)
 }
 

@@ -147,3 +147,13 @@ func DrawRectangle(canvas board.Canvas, startX int, startY int, sizeX int, sizeY
 
 	return nil
 }
+
+// ZeroedBounds returns an image.Rectangle with square padding stripped off
+func ZeroedBounds(bounds image.Rectangle) image.Rectangle {
+	if bounds.Min.Y >= 0 {
+		return bounds
+	}
+	pad := bounds.Min.Y * -1
+
+	return image.Rect(0, 0, bounds.Max.X-pad, bounds.Max.Y-pad)
+}

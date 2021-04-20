@@ -121,6 +121,11 @@ func (i *ImageBoard) Disable() {
 	i.config.Enabled.Store(false)
 }
 
+// ScrollMode ...
+func (i *ImageBoard) ScrollMode() bool {
+	return false
+}
+
 // Render ...
 func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	if !i.config.Enabled.Load() {
@@ -330,7 +335,7 @@ func (i *ImageBoard) renderImages(ctx context.Context, canvas board.Canvas, imag
 
 		draw.Draw(canvas, align, img, image.Point{}, draw.Over)
 
-		if err := canvas.Render(); err != nil {
+		if err := canvas.Render(ctx); err != nil {
 			return err
 		}
 

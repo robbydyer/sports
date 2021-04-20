@@ -24,6 +24,8 @@ github.com/golang/freetype/truetype
 # github.com/gorilla/mux v1.8.0
 ## explicit
 github.com/gorilla/mux
+# github.com/grpc-ecosystem/go-grpc-middleware v1.0.0
+## explicit
 # github.com/hashicorp/hcl v1.0.0
 github.com/hashicorp/hcl
 github.com/hashicorp/hcl/hcl/ast

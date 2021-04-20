@@ -8,7 +8,10 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/logo"
+	"github.com/robbydyer/sports/pkg/rgbrender"
 )
+
+const scrollLogoBufferRatio = 0.10
 
 func (s *SportBoard) logoConfig(logoKey string, bounds image.Rectangle) *logo.Config {
 	for _, conf := range s.config.LogoConfigs {
@@ -75,12 +78,13 @@ func (s *SportBoard) getLogoCache(logoKey string) (*logo.Logo, error) {
 }
 
 // RenderHomeLogo ...
-func (s *SportBoard) RenderHomeLogo(ctx context.Context, bounds image.Rectangle, abbreviation string) (image.Image, error) {
+func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvasBounds image.Rectangle, abbreviation string) (image.Image, error) {
 	select {
 	case <-ctx.Done():
 		return nil, context.Canceled
 	default:
 	}
+	bounds := rgbrender.ZeroedBounds(canvasBounds)
 	logoKey := fmt.Sprintf("%s_HOME_%dx%d", abbreviation, bounds.Dx(), bounds.Dy())
 
 	i, err := s.getLogoDrawCache(logoKey)
@@ -110,12 +114,16 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, bounds image.Rectangle,
 	}
 
 	textWidth := s.textAreaWidth(bounds)
-	logoWidth := (bounds.Dx() - textWidth) / 2
+	logoEndX := (bounds.Dx() - textWidth) / 2
+
+	if s.config.ScrollMode.Load() {
+		logoEndX -= int(float64(bounds.Dx()) * scrollLogoBufferRatio)
+	}
 
 	var renderErr error
 	if l != nil {
 		var renderedLogo image.Image
-		renderedLogo, renderErr = l.RenderLeftAligned(ctx, bounds, logoWidth)
+		renderedLogo, renderErr = l.RenderLeftAligned(ctx, bounds, logoEndX)
 		if renderErr != nil {
 			s.log.Error("failed to render home logo", zap.Error(renderErr))
 		} else {
@@ -128,12 +136,13 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, bounds image.Rectangle,
 }
 
 // RenderAwayLogo ...
-func (s *SportBoard) RenderAwayLogo(ctx context.Context, bounds image.Rectangle, abbreviation string) (image.Image, error) {
+func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvasBounds image.Rectangle, abbreviation string) (image.Image, error) {
 	select {
 	case <-ctx.Done():
 		return nil, context.Canceled
 	default:
 	}
+	bounds := rgbrender.ZeroedBounds(canvasBounds)
 	logoKey := fmt.Sprintf("%s_AWAY_%dx%d", abbreviation, bounds.Dx(), bounds.Dy())
 
 	i, err := s.getLogoDrawCache(logoKey)
@@ -162,6 +171,10 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, bounds image.Rectangle,
 
 	textWidth := s.textAreaWidth(bounds)
 	logoWidth := (bounds.Dx() - textWidth) / 2
+
+	if s.config.ScrollMode.Load() {
+		logoWidth += int(float64(bounds.Dx()) * scrollLogoBufferRatio)
+	}
 
 	var renderErr error
 	if l != nil {

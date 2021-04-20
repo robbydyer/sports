@@ -150,7 +150,7 @@ func (s *SysBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		return err
 	}
 
-	if err := canvas.Render(); err != nil {
+	if err := canvas.Render(ctx); err != nil {
 		return err
 	}
 
@@ -175,6 +175,11 @@ func (s *SysBoard) Enable() {
 // Disable ...
 func (s *SysBoard) Disable() {
 	s.config.Enabled.Store(false)
+}
+
+// ScrollMode ...
+func (s *SysBoard) ScrollMode() bool {
+	return false
 }
 
 // GetHTTPHandlers ...

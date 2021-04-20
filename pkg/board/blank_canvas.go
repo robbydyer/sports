@@ -1,6 +1,7 @@
 package board
 
 import (
+	"context"
 	"image"
 	"image/color"
 	"sync"
@@ -37,6 +38,11 @@ func (i *BlankCanvas) Name() string {
 	return "BlankCanvas"
 }
 
+// Scrollable ...
+func (i *BlankCanvas) Scrollable() bool {
+	return false
+}
+
 // Close ...
 func (i *BlankCanvas) Close() error {
 	return nil
@@ -45,7 +51,12 @@ func (i *BlankCanvas) Close() error {
 // Clear sets the canvas to all black
 func (i *BlankCanvas) Clear() error {
 	i.blackOut()
-	return i.Render()
+	return i.Render(context.Background())
+}
+
+// AlwaysRender ...
+func (i *BlankCanvas) AlwaysRender() bool {
+	return true
 }
 
 func (i *BlankCanvas) blackOut() {
@@ -55,7 +66,7 @@ func (i *BlankCanvas) blackOut() {
 }
 
 // Render stores the state of the image as a PNG
-func (i *BlankCanvas) Render() error {
+func (i *BlankCanvas) Render(ctx context.Context) error {
 	return nil
 }
 

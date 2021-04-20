@@ -268,14 +268,14 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 
 	nhlAPI, err := nhl.New(ctx, logger)
 	if err != nil {
-		return boards, err
+		logger.Error("nhl setup failed", zap.Error(err))
 	}
 	mlbAPI, err := mlb.New(ctx, logger)
 	if err != nil {
 		return boards, err
 	}
 
-	if r.config.NHLConfig != nil {
+	if r.config.NHLConfig != nil && nhlAPI != nil {
 		b, err := sportboard.New(ctx, nhlAPI, bounds, logger, r.config.NHLConfig)
 		if err != nil {
 			return boards, err

@@ -216,7 +216,7 @@ func (s *StatBoard) doRender(ctx context.Context, canvas board.Canvas, players [
 
 		grid.FillPadded(canvas, color.White)
 
-		if err := canvas.Render(); err != nil {
+		if err := canvas.Render(ctx); err != nil {
 			s.log.Error("failed to render canvas", zap.Error(err))
 			return err
 		}

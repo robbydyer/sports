@@ -15,6 +15,8 @@ import (
 )
 
 func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
+	s.logCanvas(canvas, "render live canvas size")
+
 	layers, err := rgbrender.NewLayerDrawer(60*time.Second, s.log)
 	if err != nil {
 		return err
@@ -67,7 +69,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 					return writer.WriteAlignedBoxed(
 						rgbrender.CenterTop,
 						canvas,
-						canvas.Bounds(),
+						rgbrender.ZeroedBounds(canvas.Bounds()),
 						text,
 						s.config.TimeColor,
 						color.Black,
@@ -104,7 +106,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 					return writer.WriteAlignedBoxed(
 						rgbrender.CenterBottom,
 						canvas,
-						canvas.Bounds(),
+						rgbrender.ZeroedBounds(canvas.Bounds()),
 						text,
 						s.config.ScoreColor,
 						color.Black,
@@ -139,10 +141,9 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 			return nil
 		}
 
-		if err := canvas.Render(); err != nil {
+		if err := canvas.Render(ctx); err != nil {
 			return err
 		}
-
 		select {
 		case <-ctx.Done():
 			return context.Canceled
@@ -151,7 +152,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 
 		liveGame, err = liveGame.GetUpdate(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to update stickey game: %w", err)
+			return fmt.Errorf("failed to update sticky game: %w", err)
 		}
 		s.log.Debug("updated live sticky game")
 
@@ -217,7 +218,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 				return writer.WriteAlignedBoxed(
 					rgbrender.CenterTop,
 					canvas,
-					canvas.Bounds(),
+					rgbrender.ZeroedBounds(canvas.Bounds()),
 					text,
 					s.config.TimeColor,
 					color.Black,
@@ -238,7 +239,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 				return writer.WriteAlignedBoxed(
 					rgbrender.CenterCenter,
 					canvas,
-					canvas.Bounds(),
+					rgbrender.ZeroedBounds(canvas.Bounds()),
 					text,
 					s.config.ScoreColor,
 					color.Black,
@@ -298,7 +299,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 				return writer.WriteAlignedBoxed(
 					rgbrender.CenterTop,
 					canvas,
-					canvas.Bounds(),
+					rgbrender.ZeroedBounds(canvas.Bounds()),
 					text,
 					s.config.TimeColor,
 					color.Black,
@@ -335,7 +336,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 				return writer.WriteAlignedBoxed(
 					rgbrender.CenterBottom,
 					canvas,
-					canvas.Bounds(),
+					rgbrender.ZeroedBounds(canvas.Bounds()),
 					text,
 					s.config.ScoreColor,
 					color.Black,
@@ -362,10 +363,13 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 }
 
 func counterLayer(counter image.Image) *rgbrender.Layer {
+	if counter == nil {
+		return nil
+	}
 	return rgbrender.NewLayer(
 		nil,
 		func(canvas board.Canvas, img image.Image) error {
-			draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
+			draw.Draw(canvas, counter.Bounds(), counter, image.Point{}, draw.Over)
 			return nil
 		},
 	)
@@ -387,7 +391,21 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 				return s.RenderHomeLogo(ctx, bounds, homeTeam.GetAbbreviation())
 			},
 			func(canvas board.Canvas, img image.Image) error {
-				draw.Draw(canvas, canvas.Bounds(), img, image.Point{}, draw.Over)
+				pt := image.Pt(img.Bounds().Min.X, img.Bounds().Min.Y)
+				b := canvas.Bounds()
+				s.log.Debug("draw home logo",
+					zap.Int("pt X", pt.X),
+					zap.Int("pt Y", pt.Y),
+					zap.Int("canvas min X", b.Bounds().Min.X),
+					zap.Int("canvas min Y", b.Bounds().Min.Y),
+					zap.Int("canvas max X", b.Bounds().Max.X),
+					zap.Int("canvas max Y", b.Bounds().Max.Y),
+					zap.Int("img min X", img.Bounds().Min.X),
+					zap.Int("img min Y", img.Bounds().Min.Y),
+					zap.Int("img max X", img.Bounds().Max.X),
+					zap.Int("img max Y", img.Bounds().Max.Y),
+				)
+				draw.Draw(canvas, img.Bounds(), img, pt, draw.Over)
 				return nil
 			},
 		),
@@ -397,7 +415,8 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 				return s.RenderAwayLogo(ctx, bounds, awayTeam.GetAbbreviation())
 			},
 			func(canvas board.Canvas, img image.Image) error {
-				draw.Draw(canvas, canvas.Bounds(), img, image.Point{}, draw.Over)
+				pt := image.Pt(img.Bounds().Min.X, img.Bounds().Min.Y)
+				draw.Draw(canvas, img.Bounds(), img, pt, draw.Over)
 				return nil
 			},
 		),
@@ -419,6 +438,14 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 		zap.String("away", awayTeam.GetAbbreviation()),
 	)
 
+	bounds = rgbrender.ZeroedBounds(bounds)
+
+	// Add some padding to the bounds in scroll mode to get less overlap
+	// of the record/rank on the score
+	if s.config.ScrollMode.Load() {
+		bounds = image.Rect(-10, 0, bounds.Max.X+10, bounds.Max.Y)
+	}
+
 	return []*rgbrender.TextLayer{
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
@@ -439,10 +466,24 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 				rank := text[0]
 				record := text[1]
 				if rank != "" {
-					_ = writer.WriteAlignedBoxed(rgbrender.LeftTop, canvas, canvas.Bounds(), []string{rank}, color.White, color.Black)
+					_ = writer.WriteAlignedBoxed(
+						rgbrender.LeftTop,
+						canvas,
+						bounds,
+						[]string{rank},
+						color.White,
+						color.Black,
+					)
 				}
 				if record != "" {
-					_ = writer.WriteAlignedBoxed(rgbrender.LeftBottom, canvas, canvas.Bounds(), []string{record}, color.White, color.Black)
+					_ = writer.WriteAlignedBoxed(
+						rgbrender.LeftBottom,
+						canvas,
+						bounds,
+						[]string{record},
+						color.White,
+						color.Black,
+					)
 				}
 				return nil
 			},
@@ -466,10 +507,23 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 				rank := text[0]
 				record := text[1]
 				if rank != "" {
-					_ = writer.WriteAlignedBoxed(rgbrender.RightTop, canvas, canvas.Bounds(), []string{rank}, color.White, color.Black)
+					_ = writer.WriteAlignedBoxed(
+						rgbrender.RightTop,
+						canvas,
+						bounds,
+						[]string{rank},
+						color.White,
+						color.Black,
+					)
 				}
 				if record != "" {
-					_ = writer.WriteAlignedBoxed(rgbrender.RightBottom, canvas, canvas.Bounds(), []string{record}, color.White, color.Black)
+					_ = writer.WriteAlignedBoxed(rgbrender.RightBottom,
+						canvas,
+						bounds,
+						[]string{record},
+						color.White,
+						color.Black,
+					)
 				}
 				return nil
 			},
