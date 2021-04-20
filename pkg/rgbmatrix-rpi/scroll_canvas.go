@@ -271,9 +271,10 @@ func (c *ScrollCanvas) topToBottom(ctx context.Context) error {
 func (c *ScrollCanvas) bottomToTop(ctx context.Context) error {
 	//thisY := c.actual.Bounds().Max.Y
 	thisY := c.firstNonBlankY() + c.h
-	finish := (c.lastNonBlankY() + c.h) * -1
+	finish := (c.lastNonBlankY()) * -1
 	c.log.Debug("scrolling until line",
 		zap.Int("finish line", finish),
+		zap.Int("last Y index", c.actual.Bounds().Max.Y),
 	)
 	for {
 		select {
@@ -318,7 +319,7 @@ func (c *ScrollCanvas) firstNonBlankY() int {
 }
 func (c *ScrollCanvas) lastNonBlankY() int {
 	black := color.RGBA{R: 0x0, G: 0x0, B: 0x0, A: 0x0}
-	for y := c.actual.Bounds().Max.Y; y < c.actual.Bounds().Min.Y; y-- {
+	for y := c.actual.Bounds().Max.Y; y > c.actual.Bounds().Min.Y; y-- {
 		for x := c.actual.Bounds().Min.X; x < c.actual.Bounds().Max.X; x++ {
 			if c.actual.At(x, y) != black {
 				return y + 1
