@@ -88,6 +88,7 @@ func (c *Clock) Disable() {
 // Cleanup ...
 func (c *Clock) Cleanup() {}
 
+// ScrollMode ...
 func (c *Clock) ScrollMode() bool {
 	return false
 }

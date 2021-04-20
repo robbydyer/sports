@@ -177,6 +177,7 @@ func (s *SysBoard) Disable() {
 	s.config.Enabled.Store(false)
 }
 
+// ScrollMode ...
 func (s *SysBoard) ScrollMode() bool {
 	return false
 }

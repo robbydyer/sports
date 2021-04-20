@@ -56,6 +56,7 @@ func (i *ImgCanvas) Scrollable() bool {
 	return false
 }
 
+// AlwaysRender ...
 func (i *ImgCanvas) AlwaysRender() bool {
 	return true
 }
@@ -133,10 +134,6 @@ func (i *ImgCanvas) ColorModel() color.Model {
 
 // Bounds return the topology of the Canvas
 func (i *ImgCanvas) Bounds() image.Rectangle {
-	return image.Rect(0, 0, i.width, i.height)
-}
-
-func (i *ImgCanvas) PaddedBounds() image.Rectangle {
 	return image.Rect(0, 0, i.width, i.height)
 }
 

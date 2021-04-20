@@ -121,6 +121,7 @@ func (i *ImageBoard) Disable() {
 	i.config.Enabled.Store(false)
 }
 
+// ScrollMode ...
 func (i *ImageBoard) ScrollMode() bool {
 	return false
 }

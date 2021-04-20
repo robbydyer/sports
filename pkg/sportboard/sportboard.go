@@ -408,7 +408,7 @@ OUTER:
 
 	preloaderTimeout := s.config.boardDelay + (10 * time.Second)
 
-	defer canvas.Clear()
+	defer func() { _ = canvas.Clear() }()
 
 GAMES:
 	for gameIndex, game := range games {

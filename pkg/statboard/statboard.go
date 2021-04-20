@@ -220,6 +220,7 @@ func (s *StatBoard) Close() error {
 	return nil
 }
 
+// ScrollMode ...
 func (s *StatBoard) ScrollMode() bool {
 	return false
 }
