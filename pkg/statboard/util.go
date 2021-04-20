@@ -22,6 +22,8 @@ func (s *StatBoard) getWriter(bounds image.Rectangle) (*rgbrender.TextWriter, er
 	s.Lock()
 	defer s.Unlock()
 
+	bounds = rgbrender.ZeroedBounds(bounds)
+
 	k := fmt.Sprintf("%dx%d", bounds.Dx(), bounds.Dy())
 	w, ok := s.writers[k]
 	if ok {
@@ -249,8 +251,6 @@ func (s *StatBoard) getScrollGrid(ctx context.Context, canvas *rgbmatrix.ScrollC
 		rgbrender.WithPadding(padSize),
 		rgbrender.WithCellRatios(cellXRatios, cellYRatios),
 	)
-
-	return nil, nil
 }
 func maxNameLength(canvas image.Rectangle) int {
 	return canvas.Dx() / 8

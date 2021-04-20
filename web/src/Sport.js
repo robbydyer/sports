@@ -23,6 +23,7 @@ class Sport extends React.Component {
             "stickyFavorite": false,
             "stats": false,
             "scroll": false,
+            "statscroll": false,
         };
     }
     async componentDidMount() {
@@ -39,6 +40,11 @@ class Sport extends React.Component {
         await GetStatus(`${this.props.sport}/stats/status`, (val) => {
             this.setState({
                 "stats": val,
+            })
+        })
+        await GetStatus(`${this.props.sport}/stats/scrollstatus`, (val) => {
+            this.setState({
+                "statscroll": val,
             })
         })
         await GetStatus(`${this.props.sport}/favoritescorestatus`, (val) => {
@@ -103,6 +109,12 @@ class Sport extends React.Component {
                     <Col>
                         <Form.Switch id="stats" label="Stats" checked={this.state.stats}
                             onChange={() => this.handleSwitch(`${this.props.sport}/stats/enable`, `${this.props.sport}/stats/disable`, "stats")} />
+                    </Col>
+                </Row>
+                <Row className="text-center">
+                    <Col>
+                        <Form.Switch id="statscroll" label="Stats Scroll Mode" checked={this.state.stats}
+                            onChange={() => this.handleSwitch(`${this.props.sport}/stats/scrollon`, `${this.props.sport}/stats/scrolloff`, "statscroll")} />
                     </Col>
                 </Row>
                 <Row className="text-center">

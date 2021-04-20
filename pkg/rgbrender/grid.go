@@ -297,6 +297,7 @@ func WithCellRatios(colRatios []float64, rowRatios []float64) GridOption {
 			g.cellX[i] = int(math.Floor(r * float64(bounds.Dx())))
 			g.log.Debug("cellX",
 				zap.Int("index", i),
+				zap.Float64("ratio", r),
 				zap.Int("size", g.cellX[i]),
 			)
 		}
@@ -305,6 +306,7 @@ func WithCellRatios(colRatios []float64, rowRatios []float64) GridOption {
 			g.cellY[i] = int(math.Floor(r * float64(g.baseCanvas.Bounds().Dy())))
 			g.log.Debug("cellY",
 				zap.Int("index", i),
+				zap.Float64("ratio", r),
 				zap.Int("size", g.cellY[i]),
 			)
 		}

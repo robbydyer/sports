@@ -12,7 +12,7 @@ import (
 func TestScrollCanvas(t *testing.T) {
 	l := zaptest.NewLogger(t)
 	m := NewConsoleMatrix(64, 32, ioutil.Discard, l)
-	c, err := NewScrollCanvas(m, l, WithRightToLeft())
+	c, err := NewScrollCanvas(m, l)
 	require.NoError(t, err)
 
 	defaultPad := 64 + int(float64(64)*0.25)

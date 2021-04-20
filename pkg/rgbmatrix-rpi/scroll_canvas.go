@@ -94,6 +94,11 @@ func (c *ScrollCanvas) SetScrollSpeed(d time.Duration) {
 	c.interval = d
 }
 
+// GetScrollSpeed ...
+func (c *ScrollCanvas) GetScrollSpeed() time.Duration {
+	return c.interval
+}
+
 // SetScrollDirection ...
 func (c *ScrollCanvas) SetScrollDirection(d ScrollDirection) {
 	c.direction = d
@@ -264,7 +269,12 @@ func (c *ScrollCanvas) topToBottom(ctx context.Context) error {
 }
 
 func (c *ScrollCanvas) bottomToTop(ctx context.Context) error {
-	thisY := c.actual.Bounds().Max.Y
+	//thisY := c.actual.Bounds().Max.Y
+	thisY := c.firstNonBlankY() + c.h
+	finish := (c.lastNonBlankY() + c.h) * -1
+	c.log.Debug("scrolling until line",
+		zap.Int("finish line", finish),
+	)
 	for {
 		select {
 		case <-ctx.Done():
@@ -274,7 +284,7 @@ func (c *ScrollCanvas) bottomToTop(ctx context.Context) error {
 		c.log.Debug("scrolling",
 			zap.Int("thisY", thisY),
 		)
-		if thisY == c.actual.Bounds().Min.Y {
+		if thisY == finish {
 			return nil
 		}
 
@@ -292,6 +302,31 @@ func (c *ScrollCanvas) bottomToTop(ctx context.Context) error {
 		}
 		thisY--
 	}
+}
+
+func (c *ScrollCanvas) firstNonBlankY() int {
+	black := color.RGBA{R: 0x0, G: 0x0, B: 0x0, A: 0x0}
+	for y := c.actual.Bounds().Min.Y; y < c.actual.Bounds().Max.Y; y++ {
+		for x := c.actual.Bounds().Min.X; x < c.actual.Bounds().Max.X; x++ {
+			if c.actual.At(x, y) != black {
+				return y - 1
+			}
+		}
+	}
+
+	return c.actual.Bounds().Min.Y
+}
+func (c *ScrollCanvas) lastNonBlankY() int {
+	black := color.RGBA{R: 0x0, G: 0x0, B: 0x0, A: 0x0}
+	for y := c.actual.Bounds().Max.Y; y < c.actual.Bounds().Min.Y; y-- {
+		for x := c.actual.Bounds().Min.X; x < c.actual.Bounds().Max.X; x++ {
+			if c.actual.At(x, y) != black {
+				return y + 1
+			}
+		}
+	}
+
+	return c.actual.Bounds().Max.Y
 }
 
 // WithScrollSpeed ...
