@@ -18,6 +18,9 @@ func (s *StatBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc
 		select {
 		case <-ctx.Done():
 			return
+		case <-s.cancelBoard:
+			cancel()
+			return
 		case <-ticker.C:
 			if !s.config.Enabled.Load() {
 				cancel()
@@ -94,11 +97,20 @@ func (s *StatBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		players[cat] = append(players[cat], player)
 	}
 
+PLAYERS:
 	for cat, p := range players {
 		s.log.Debug("rendering category",
 			zap.String("category", cat),
 			zap.Int("num players", len(p)),
 		)
+
+		if s.config.ScrollMode.Load() && canvas.Scrollable() {
+			if err := s.doScroll(boardCtx, canvas, p); err != nil {
+				return err
+			}
+			continue PLAYERS
+		}
+
 		if err := s.doRender(boardCtx, canvas, p); err != nil {
 			return err
 		}

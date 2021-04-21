@@ -2,6 +2,7 @@ package rgbmatrix
 
 import (
 	"context"
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -12,11 +13,20 @@ import (
 	"go.uber.org/zap"
 )
 
+var black = color.RGBA{R: 0x0, G: 0x0, B: 0x0, A: 0x0}
+
+// ScrollDirection represents the direction the canvas scrolls
+type ScrollDirection int
+
 const (
-	rightToLeft = 1
-	leftToRight = 2
-	bottomToTop = 3
-	topToBottom = 4
+	// RightToLeft ...
+	RightToLeft ScrollDirection = iota
+	// LeftToRight ...
+	LeftToRight
+	// BottomToTop ...
+	BottomToTop
+	// TopToBottom ...
+	TopToBottom
 )
 
 type ScrollCanvas struct {
@@ -24,7 +34,7 @@ type ScrollCanvas struct {
 	m         Matrix
 	enabled   *atomic.Bool
 	actual    *image.RGBA
-	direction int
+	direction ScrollDirection
 	interval  time.Duration
 	log       *zap.Logger
 	pad       int
@@ -35,13 +45,13 @@ type ScrollCanvasOption func(*ScrollCanvas) error
 func NewScrollCanvas(m Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (*ScrollCanvas, error) {
 	w, h := m.Geometry()
 	c := &ScrollCanvas{
-		w:        w,
-		h:        h,
-		m:        m,
-		enabled:  atomic.NewBool(true),
-		interval: 50 * time.Millisecond,
-		log:      logger,
-		pad:      w + int(float64(w)*0.25),
+		w:         w,
+		h:         h,
+		m:         m,
+		enabled:   atomic.NewBool(true),
+		interval:  50 * time.Millisecond,
+		log:       logger,
+		direction: RightToLeft,
 	}
 
 	for _, f := range opts {
@@ -51,11 +61,7 @@ func NewScrollCanvas(m Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (
 	}
 
 	if c.actual == nil {
-		c.actual = image.NewRGBA(image.Rect(0-c.pad, 0-c.pad, c.w+c.pad, c.h+c.pad))
-	}
-
-	if c.direction == 0 {
-		c.direction = rightToLeft
+		c.SetPadding(w + int(float64(w)*0.25))
 	}
 
 	c.log.Debug("creating scroll canvas",
@@ -90,6 +96,33 @@ func (c *ScrollCanvas) SetScrollSpeed(d time.Duration) {
 	c.interval = d
 }
 
+// GetScrollSpeed ...
+func (c *ScrollCanvas) GetScrollSpeed() time.Duration {
+	return c.interval
+}
+
+// SetScrollDirection ...
+func (c *ScrollCanvas) SetScrollDirection(d ScrollDirection) {
+	c.direction = d
+}
+
+// GetScrollDirection ...
+func (c *ScrollCanvas) GetScrollDirection() ScrollDirection {
+	return c.direction
+}
+
+// SetPadding ...
+func (c *ScrollCanvas) SetPadding(pad int) {
+	c.pad = pad
+
+	c.actual = image.NewRGBA(image.Rect(0-c.pad, 0-c.pad, c.w+c.pad, c.h+c.pad))
+}
+
+// GetPadding
+func (c *ScrollCanvas) GetPadding() int {
+	return c.pad
+}
+
 // Clear set all the leds on the matrix with color.Black
 func (c *ScrollCanvas) Clear() error {
 	draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Src)
@@ -109,10 +142,19 @@ func (c *ScrollCanvas) Close() error {
 
 // Render update the display with the data from the LED buffer
 func (c *ScrollCanvas) Render(ctx context.Context) error {
-	if c.direction == rightToLeft {
+	switch c.direction {
+	case RightToLeft:
+		c.log.Debug("scrolling right to left")
 		if err := c.rightToLeft(ctx); err != nil {
 			return err
 		}
+	case BottomToTop:
+		c.log.Debug("scrolling bottom to top")
+		if err := c.bottomToTop(ctx); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("unsupported scroll direction")
 	}
 
 	draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Src)
@@ -181,8 +223,8 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 			return nil
 		}
 
-		for x := c.actual.Bounds().Min.X; x < c.actual.Bounds().Max.X; x++ {
-			for y := c.actual.Bounds().Min.Y; y < c.actual.Bounds().Max.Y; y++ {
+		for x := c.actual.Bounds().Min.X; x <= c.actual.Bounds().Max.X; x++ {
+			for y := c.actual.Bounds().Min.Y; y <= c.actual.Bounds().Max.Y; y++ {
 				shiftX := x + thisX
 				if shiftX > 0 && shiftX < c.w && y > 0 && y < c.h {
 					c.m.Set(c.position(shiftX, y), c.actual.At(x, y))
@@ -197,12 +239,94 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 	}
 }
 
-// WithRightToLeft ...
-func WithRightToLeft() ScrollCanvasOption {
-	return func(c *ScrollCanvas) error {
-		c.direction = rightToLeft
-		return nil
+func (c *ScrollCanvas) topToBottom(ctx context.Context) error {
+	thisY := c.actual.Bounds().Min.Y
+	for {
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		case <-time.After(c.interval):
+		}
+		c.log.Debug("scrolling",
+			zap.Int("thisY", thisY),
+		)
+		if thisY == c.actual.Bounds().Max.Y {
+			return nil
+		}
+
+		for x := c.actual.Bounds().Min.X; x <= c.actual.Bounds().Max.X; x++ {
+			for y := c.actual.Bounds().Min.Y; y <= c.actual.Bounds().Max.Y; y++ {
+				shiftY := y + thisY
+				if shiftY > 0 && shiftY < c.h && x > 0 && x < c.w {
+					c.m.Set(c.position(x, shiftY), c.actual.At(x, y))
+				}
+			}
+		}
+
+		if err := c.m.Render(); err != nil {
+			return err
+		}
+		thisY++
 	}
+}
+
+func (c *ScrollCanvas) bottomToTop(ctx context.Context) error {
+	thisY := firstNonBlankY(c.actual, black) + c.h
+	finish := (lastNonBlankY(c.actual, black) + 1) * -1
+	c.log.Debug("scrolling until line",
+		zap.Int("finish line", finish),
+		zap.Int("last Y index", c.actual.Bounds().Max.Y),
+	)
+	for {
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		case <-time.After(c.interval):
+		}
+		c.log.Debug("scrolling",
+			zap.Int("thisY", thisY),
+		)
+		if thisY == finish {
+			return nil
+		}
+
+		for x := c.actual.Bounds().Min.X; x <= c.actual.Bounds().Max.X; x++ {
+			for y := c.actual.Bounds().Min.Y; y <= c.actual.Bounds().Max.Y; y++ {
+				shiftY := y + thisY
+				if shiftY > 0 && shiftY < c.h && x > 0 && x < c.w {
+					c.m.Set(c.position(x, shiftY), c.actual.At(x, y))
+				}
+			}
+		}
+
+		if err := c.m.Render(); err != nil {
+			return err
+		}
+		thisY--
+	}
+}
+
+func firstNonBlankY(img image.Image, black color.Color) int {
+	for y := img.Bounds().Min.Y; y <= img.Bounds().Max.Y; y++ {
+		for x := img.Bounds().Min.X; x <= img.Bounds().Max.X; x++ {
+			if img.At(x, y) != black {
+				return y
+			}
+		}
+	}
+
+	return img.Bounds().Min.Y
+}
+func lastNonBlankY(img image.Image, black color.Color) int {
+	for y := img.Bounds().Max.Y; y >= img.Bounds().Min.Y; y-- {
+		for x := img.Bounds().Min.X; x <= img.Bounds().Max.X; x++ {
+			if img.At(x, y) != black {
+				return y
+			}
+		}
+	}
+
+	return img.Bounds().Max.Y
 }
 
 // WithScrollSpeed ...
