@@ -48,15 +48,6 @@ func NewGrid(canvas board.Canvas, numCols int, numRows int, log *zap.Logger, opt
 		}
 	}
 
-	/*
-		if numCols > maxAllowedCols {
-			return nil, fmt.Errorf("unsupported number of columns %d", numCols)
-		}
-		if numRows > maxAllowedRows {
-			return nil, fmt.Errorf("unsupported number of rows %d", numRows)
-		}
-	*/
-
 	grid := &Grid{
 		baseCanvas: canvas,
 		log:        log,
