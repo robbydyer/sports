@@ -36,6 +36,7 @@ type SportBoard struct {
 	watchTeams      []string
 	drawLock        sync.RWMutex
 	logoLock        sync.RWMutex
+	enablerLock     sync.Mutex
 	cancelBoard     chan struct{}
 	sync.Mutex
 }
@@ -281,6 +282,8 @@ func (s *SportBoard) GridSize(bounds image.Rectangle) (int, int) {
 }
 
 func (s *SportBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc) {
+	s.enablerLock.Lock()
+	defer s.enablerLock.Unlock()
 	ticker := time.NewTicker(500 * time.Millisecond)
 	for {
 		select {
