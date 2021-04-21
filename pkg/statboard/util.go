@@ -12,7 +12,6 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/robbydyer/sports/pkg/board"
-	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
@@ -200,45 +199,6 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 
 	rowHeight := rowHeightRatio(rgbrender.ZeroedBounds(canvas.Bounds()), numRows)
 
-	for i := range cellYRatios {
-		cellYRatios[i] = rowHeight
-	}
-
-	return rgbrender.NewGrid(
-		canvas,
-		len(cellXRatios),
-		numRows,
-		s.log,
-		rgbrender.WithPadding(padSize),
-		rgbrender.WithCellRatios(cellXRatios, cellYRatios),
-	)
-}
-
-func (s *StatBoard) getScrollGrid(ctx context.Context, canvas *rgbmatrix.ScrollCanvas, players []Player, writer *rgbrender.TextWriter, stats []string) (*rgbrender.Grid, error) {
-	strs, err := s.getStatPlaceholders(ctx, rgbrender.ZeroedBounds(canvas.Bounds()), players, stats)
-	if err != nil {
-		return nil, err
-	}
-
-	fields := []zapcore.Field{}
-	for _, str := range strs {
-		fields = append(fields, zap.String("str", str))
-	}
-	s.log.Debug("cell X Maxes", fields...)
-
-	cellXRatios, err := getGridRatios(writer, canvas, strs)
-	if err != nil {
-		return nil, err
-	}
-
-	numRows := len(players)
-
-	if s.withTitleRow {
-		numRows++
-	}
-
-	rowHeight := rowHeightRatio(canvas.Bounds(), numRows)
-	cellYRatios := make([]float64, numRows)
 	for i := range cellYRatios {
 		cellYRatios[i] = rowHeight
 	}
