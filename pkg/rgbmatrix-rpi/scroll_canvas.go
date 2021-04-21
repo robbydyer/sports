@@ -13,6 +13,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var black = color.RGBA{R: 0x0, G: 0x0, B: 0x0, A: 0x0}
+
 // ScrollDirection represents the direction the canvas scrolls
 type ScrollDirection int
 
@@ -221,8 +223,8 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 			return nil
 		}
 
-		for x := c.actual.Bounds().Min.X; x < c.actual.Bounds().Max.X; x++ {
-			for y := c.actual.Bounds().Min.Y; y < c.actual.Bounds().Max.Y; y++ {
+		for x := c.actual.Bounds().Min.X; x <= c.actual.Bounds().Max.X; x++ {
+			for y := c.actual.Bounds().Min.Y; y <= c.actual.Bounds().Max.Y; y++ {
 				shiftX := x + thisX
 				if shiftX > 0 && shiftX < c.w && y > 0 && y < c.h {
 					c.m.Set(c.position(shiftX, y), c.actual.At(x, y))
@@ -252,8 +254,8 @@ func (c *ScrollCanvas) topToBottom(ctx context.Context) error {
 			return nil
 		}
 
-		for x := c.actual.Bounds().Min.X; x < c.actual.Bounds().Max.X; x++ {
-			for y := c.actual.Bounds().Min.Y; y < c.actual.Bounds().Max.Y; y++ {
+		for x := c.actual.Bounds().Min.X; x <= c.actual.Bounds().Max.X; x++ {
+			for y := c.actual.Bounds().Min.Y; y <= c.actual.Bounds().Max.Y; y++ {
 				shiftY := y + thisY
 				if shiftY > 0 && shiftY < c.h && x > 0 && x < c.w {
 					c.m.Set(c.position(x, shiftY), c.actual.At(x, y))
@@ -269,9 +271,8 @@ func (c *ScrollCanvas) topToBottom(ctx context.Context) error {
 }
 
 func (c *ScrollCanvas) bottomToTop(ctx context.Context) error {
-	//thisY := c.actual.Bounds().Max.Y
-	thisY := c.firstNonBlankY() + c.h
-	finish := (c.lastNonBlankY()) * -1
+	thisY := firstNonBlankY(c.actual, black) + c.h
+	finish := (lastNonBlankY(c.actual, black) + 1) * -1
 	c.log.Debug("scrolling until line",
 		zap.Int("finish line", finish),
 		zap.Int("last Y index", c.actual.Bounds().Max.Y),
@@ -289,8 +290,8 @@ func (c *ScrollCanvas) bottomToTop(ctx context.Context) error {
 			return nil
 		}
 
-		for x := c.actual.Bounds().Min.X; x < c.actual.Bounds().Max.X; x++ {
-			for y := c.actual.Bounds().Min.Y; y < c.actual.Bounds().Max.Y; y++ {
+		for x := c.actual.Bounds().Min.X; x <= c.actual.Bounds().Max.X; x++ {
+			for y := c.actual.Bounds().Min.Y; y <= c.actual.Bounds().Max.Y; y++ {
 				shiftY := y + thisY
 				if shiftY > 0 && shiftY < c.h && x > 0 && x < c.w {
 					c.m.Set(c.position(x, shiftY), c.actual.At(x, y))
@@ -305,29 +306,27 @@ func (c *ScrollCanvas) bottomToTop(ctx context.Context) error {
 	}
 }
 
-func (c *ScrollCanvas) firstNonBlankY() int {
-	black := color.RGBA{R: 0x0, G: 0x0, B: 0x0, A: 0x0}
-	for y := c.actual.Bounds().Min.Y; y < c.actual.Bounds().Max.Y; y++ {
-		for x := c.actual.Bounds().Min.X; x < c.actual.Bounds().Max.X; x++ {
-			if c.actual.At(x, y) != black {
-				return y - 1
+func firstNonBlankY(img image.Image, black color.Color) int {
+	for y := img.Bounds().Min.Y; y <= img.Bounds().Max.Y; y++ {
+		for x := img.Bounds().Min.X; x <= img.Bounds().Max.X; x++ {
+			if img.At(x, y) != black {
+				return y
 			}
 		}
 	}
 
-	return c.actual.Bounds().Min.Y
+	return img.Bounds().Min.Y
 }
-func (c *ScrollCanvas) lastNonBlankY() int {
-	black := color.RGBA{R: 0x0, G: 0x0, B: 0x0, A: 0x0}
-	for y := c.actual.Bounds().Max.Y; y > c.actual.Bounds().Min.Y; y-- {
-		for x := c.actual.Bounds().Min.X; x < c.actual.Bounds().Max.X; x++ {
-			if c.actual.At(x, y) != black {
-				return y + 1
+func lastNonBlankY(img image.Image, black color.Color) int {
+	for y := img.Bounds().Max.Y; y >= img.Bounds().Min.Y; y-- {
+		for x := img.Bounds().Min.X; x <= img.Bounds().Max.X; x++ {
+			if img.At(x, y) != black {
+				return y
 			}
 		}
 	}
 
-	return c.actual.Bounds().Max.Y
+	return img.Bounds().Max.Y
 }
 
 // WithScrollSpeed ...

@@ -252,6 +252,7 @@ func (s *StatBoard) getScrollGrid(ctx context.Context, canvas *rgbmatrix.ScrollC
 		rgbrender.WithCellRatios(cellXRatios, cellYRatios),
 	)
 }
+
 func maxNameLength(canvas image.Rectangle) int {
 	return canvas.Dx() / 8
 }

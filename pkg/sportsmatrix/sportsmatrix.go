@@ -386,8 +386,6 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 			}
 		}()
 
-		renderStart := time.Now()
-
 		var wg sync.WaitGroup
 
 	CANVASES:
@@ -431,18 +429,6 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 		select {
 		case renderDone <- struct{}{}:
 		default:
-		}
-
-		// If for some reason the render returns really quickly, like
-		// the board not implementing a delay, let's sleep here for a bit
-		if time.Since(renderStart) < 2*time.Second {
-			s.log.Warn("board rendered under 2 seconds, sleeping 5 seconds", zap.String("board", b.Name()))
-			select {
-			case <-ctx.Done():
-				s.log.Warn("context canceled while sleeping 5 seconds")
-				return
-			case <-time.After(5 * time.Second):
-			}
 		}
 	}
 }

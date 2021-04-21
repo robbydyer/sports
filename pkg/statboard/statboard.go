@@ -28,6 +28,7 @@ type StatBoard struct {
 	withTitleRow  bool
 	withPrefixCol bool
 	lastUpdate    time.Time
+	cancelBoard   chan struct{}
 	sync.Mutex
 }
 
@@ -135,6 +136,7 @@ func New(ctx context.Context, api API, config *Config, logger *zap.Logger, opts 
 		writers:       make(map[string]*rgbrender.TextWriter),
 		withTitleRow:  true,
 		withPrefixCol: false,
+		cancelBoard:   make(chan struct{}),
 	}
 
 	for _, f := range opts {
@@ -212,7 +214,7 @@ func (s *StatBoard) Disable() {
 
 // Name ...
 func (s *StatBoard) Name() string {
-	return "StatBoard"
+	return fmt.Sprintf("StatBoard: %s", s.api.LeagueShortName())
 }
 
 // Clear ...

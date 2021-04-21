@@ -12,11 +12,6 @@ import (
 	"github.com/robbydyer/sports/pkg/board"
 )
 
-const (
-	maxAllowedCols = 10
-	maxAllowedRows = 10
-)
-
 // GridOption is an option for a Grid
 type GridOption func(grid *Grid) error
 

@@ -42,6 +42,10 @@ func (s *StatBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: fmt.Sprintf("/%s/stats/scrolloff", s.api.HTTPPathPrefix()),
 			Handler: func(wrter http.ResponseWriter, req *http.Request) {
 				s.log.Info("disabling board scroll", zap.String("board", s.Name()))
+				select {
+				case s.cancelBoard <- struct{}{}:
+				default:
+				}
 				s.config.ScrollMode.Store(false)
 			},
 		},
@@ -49,6 +53,10 @@ func (s *StatBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: fmt.Sprintf("/%s/stats/scrollon", s.api.HTTPPathPrefix()),
 			Handler: func(wrter http.ResponseWriter, req *http.Request) {
 				s.log.Info("enabling board scroll", zap.String("board", s.Name()))
+				select {
+				case s.cancelBoard <- struct{}{}:
+				default:
+				}
 				s.config.ScrollMode.Store(true)
 			},
 		},
@@ -57,7 +65,7 @@ func (s *StatBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				s.log.Debug("get board status", zap.String("board", s.Name()))
 				w.Header().Set("Content-Type", "text/plain")
-				if s.Enabled() {
+				if s.config.ScrollMode.Load() {
 					_, _ = w.Write([]byte("true"))
 					return
 				}

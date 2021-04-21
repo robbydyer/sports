@@ -14,12 +14,18 @@ class Pga extends React.Component {
         super(props);
         this.state = {
             "stats": false,
+            "scroll": false,
         };
     }
     async componentDidMount() {
         await GetStatus(`pga/stats/status`, (val) => {
             this.setState({
                 "stats": val,
+            })
+        })
+        await GetStatus(`pga/stats/scrollstatus`, (val) => {
+            this.setState({
+                "scroll": val,
             })
         })
     }
@@ -50,6 +56,12 @@ class Pga extends React.Component {
                     <Col>
                         <Form.Switch id="stats" label="Enable/Disable" checked={this.state.stats}
                             onChange={() => this.handleSwitch(`pga/stats/enable`, `pga/stats/disable`, "stats")} />
+                    </Col>
+                </Row>
+                <Row className="text-center">
+                    <Col>
+                        <Form.Switch id="scroll" label="Scroll Mode" checked={this.state.scroll}
+                            onChange={() => this.handleSwitch(`pga/stats/scrollon`, `pga/stats/scrolloff`, "scroll")} />
                     </Col>
                 </Row>
             </Container>

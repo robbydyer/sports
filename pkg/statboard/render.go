@@ -18,6 +18,9 @@ func (s *StatBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc
 		select {
 		case <-ctx.Done():
 			return
+		case <-s.cancelBoard:
+			cancel()
+			return
 		case <-ticker.C:
 			if !s.config.Enabled.Load() {
 				cancel()
@@ -102,7 +105,7 @@ PLAYERS:
 		)
 
 		if s.config.ScrollMode.Load() && canvas.Scrollable() {
-			if err := s.doScroll(ctx, canvas, p); err != nil {
+			if err := s.doScroll(boardCtx, canvas, p); err != nil {
 				return err
 			}
 			continue PLAYERS

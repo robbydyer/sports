@@ -6,10 +6,11 @@ import (
 	"image/color"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
-	"go.uber.org/zap"
 )
 
 func (s *StatBoard) doScroll(ctx context.Context, canvas board.Canvas, players []Player) error {
