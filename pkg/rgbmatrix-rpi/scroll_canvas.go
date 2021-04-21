@@ -205,11 +205,9 @@ func (c *ScrollCanvas) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 	//thisX := c.actual.Bounds().Min.X * -1
 	thisX := firstNonBlankX(c.actual)
+	thisX -= c.w
 	if thisX < 0 {
-		thisX -= c.w
 		thisX = thisX * -1
-	} else {
-		thisX += c.w
 	}
 	finish := (lastNonBlankX(c.actual) + 1) * -1
 	c.log.Debug("scrolling right to left",
