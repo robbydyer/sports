@@ -132,7 +132,7 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvasBounds image.Rect
 		}
 	}
 
-	return nil, fmt.Errorf("no logo")
+	return nil, fmt.Errorf("no logo %s", logoKey)
 }
 
 // RenderAwayLogo ...
@@ -188,5 +188,5 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvasBounds image.Rect
 		}
 	}
 
-	return nil, fmt.Errorf("no logo")
+	return nil, fmt.Errorf("no logo %s", logoKey)
 }

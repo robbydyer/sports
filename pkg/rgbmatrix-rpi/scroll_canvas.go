@@ -203,13 +203,21 @@ func (c *ScrollCanvas) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 }
 
 func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
+	//thisX := c.actual.Bounds().Min.X * -1
+	thisX := firstNonBlankX(c.actual)
+	thisX -= c.w
+	if thisX < 0 {
+		thisX = thisX * -1
+	}
+	finish := (lastNonBlankX(c.actual) + 1) * -1
 	c.log.Debug("scrolling right to left",
 		zap.Int("min X", c.actual.Bounds().Min.X),
 		zap.Int("min Y", c.actual.Bounds().Min.Y),
 		zap.Int("max X", c.actual.Bounds().Max.X),
 		zap.Int("max Y", c.actual.Bounds().Max.Y),
+		zap.Int("startX", thisX),
+		zap.Int("finish", finish),
 	)
-	thisX := c.actual.Bounds().Min.X * -1
 	for {
 		select {
 		case <-ctx.Done():
@@ -219,7 +227,7 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 		c.log.Debug("scrolling",
 			zap.Int("thisX", thisX),
 		)
-		if thisX == c.actual.Bounds().Min.X {
+		if thisX == finish {
 			return nil
 		}
 
@@ -271,8 +279,8 @@ func (c *ScrollCanvas) topToBottom(ctx context.Context) error {
 }
 
 func (c *ScrollCanvas) bottomToTop(ctx context.Context) error {
-	thisY := firstNonBlankY(c.actual, black) + c.h
-	finish := (lastNonBlankY(c.actual, black) + 1) * -1
+	thisY := firstNonBlankY(c.actual) + c.h
+	finish := (lastNonBlankY(c.actual) + 1) * -1
 	c.log.Debug("scrolling until line",
 		zap.Int("finish line", finish),
 		zap.Int("last Y index", c.actual.Bounds().Max.Y),
@@ -306,10 +314,10 @@ func (c *ScrollCanvas) bottomToTop(ctx context.Context) error {
 	}
 }
 
-func firstNonBlankY(img image.Image, black color.Color) int {
+func firstNonBlankY(img image.Image) int {
 	for y := img.Bounds().Min.Y; y <= img.Bounds().Max.Y; y++ {
 		for x := img.Bounds().Min.X; x <= img.Bounds().Max.X; x++ {
-			if img.At(x, y) != black {
+			if !isBlack(img.At(x, y)) {
 				return y
 			}
 		}
@@ -317,16 +325,43 @@ func firstNonBlankY(img image.Image, black color.Color) int {
 
 	return img.Bounds().Min.Y
 }
-func lastNonBlankY(img image.Image, black color.Color) int {
+func firstNonBlankX(img image.Image) int {
+	for x := img.Bounds().Min.X; x <= img.Bounds().Max.X; x++ {
+		for y := img.Bounds().Min.Y; y <= img.Bounds().Max.Y; y++ {
+			if !isBlack(img.At(x, y)) {
+				return x
+			}
+		}
+	}
+
+	return img.Bounds().Min.X
+}
+func lastNonBlankY(img image.Image) int {
 	for y := img.Bounds().Max.Y; y >= img.Bounds().Min.Y; y-- {
 		for x := img.Bounds().Min.X; x <= img.Bounds().Max.X; x++ {
-			if img.At(x, y) != black {
+			if !isBlack(img.At(x, y)) {
 				return y
 			}
 		}
 	}
 
 	return img.Bounds().Max.Y
+}
+func lastNonBlankX(img image.Image) int {
+	for x := img.Bounds().Max.X; x >= img.Bounds().Min.X; x-- {
+		for y := img.Bounds().Max.Y; y >= img.Bounds().Min.Y; y-- {
+			if !isBlack(img.At(x, y)) {
+				return x
+			}
+		}
+	}
+
+	return img.Bounds().Max.X
+}
+
+func isBlack(c color.Color) bool {
+	r, g, b, _ := c.RGBA()
+	return r == 0 && b == 0 && g == 0
 }
 
 // WithScrollSpeed ...
