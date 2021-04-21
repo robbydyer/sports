@@ -68,16 +68,22 @@ func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger) (*ESPNBoard, 
 	}
 
 	if _, err := e.GetTeams(ctx); err != nil {
-		return nil, err
+		e.log.Error("failed to get teams",
+			zap.Error(err),
+			zap.String("league", leaguer.League()),
+		)
 	}
 
 	if err := e.UpdateGames(ctx, util.Today().Format(DateFormat)); err != nil {
-		return nil, err
+		e.log.Error("failed to get games",
+			zap.Error(err),
+			zap.String("league", leaguer.League()),
+		)
 	}
 
 	c := cron.New()
 	if _, err := c.AddFunc("0 5 * * *", func() { e.CacheClear(context.Background()) }); err != nil {
-		return nil, fmt.Errorf("failed to set cron job for cacheClear: %w", err)
+		return e, fmt.Errorf("failed to set cron job for cacheClear: %w", err)
 	}
 	c.Start()
 
