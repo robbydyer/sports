@@ -48,16 +48,16 @@ func New(ctx context.Context, logger *zap.Logger) (*NHL, error) {
 	}
 
 	if err := n.UpdateTeams(ctx); err != nil {
-		return nil, err
+		n.log.Error("failed to get NHL teams", zap.Error(err))
 	}
 
 	if err := n.UpdateGames(ctx, util.Today().Format(DateFormat)); err != nil {
-		return nil, fmt.Errorf("failed to get today's games: %w", err)
+		n.log.Error("failed to get games for NHL", zap.Error(err))
 	}
 
 	c := cron.New()
 	if _, err := c.AddFunc("0 5 * * *", func() { n.CacheClear(context.Background()) }); err != nil {
-		return nil, fmt.Errorf("failed to set cron job for cacheClear: %w", err)
+		return n, fmt.Errorf("failed to set cron job for cacheClear: %w", err)
 	}
 	c.Start()
 

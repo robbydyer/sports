@@ -272,7 +272,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 	}
 	mlbAPI, err := mlb.New(ctx, logger)
 	if err != nil {
-		return boards, err
+		logger.Error("mlb setup failed", zap.Error(err))
 	}
 
 	if r.config.NHLConfig != nil && nhlAPI != nil {
