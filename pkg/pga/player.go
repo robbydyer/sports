@@ -15,22 +15,22 @@ import (
 // Player ...
 type Player struct {
 	ID      string `json:"id"`
-	Athlete *struct {
+	Athlete struct {
 		DisplayName string `json:"displayName"`
 		Flag        struct {
 			Href string `json:"href"`
 		} `json:"flag"`
 	}
-	Status *struct {
+	Status struct {
 		TeeTime  string `json:"teeTime"`
 		Hole     int    `json:"hole"`
 		Thru     int    `json:"thru"`
-		Position *struct {
+		Position struct {
 			DisplayName string `json:"displayName"`
 			ID          string `json:"id"`
 		}
 	} `json:"status"`
-	Score *struct {
+	Score struct {
 		DisplayValue string `json:"displayValue"`
 	} `json:"score"`
 	SortOrder  int `json:"sortOrder"`
@@ -77,9 +77,6 @@ func (p *Player) LastName() string {
 func (p *Player) GetStat(stat string) string {
 	switch strings.ToLower(stat) {
 	case "teetime":
-		if p.Status == nil {
-			return ""
-		}
 		t, err := time.Parse("2006-01-02T15:04Z", p.Status.TeeTime)
 		if err != nil {
 			return p.Status.TeeTime
@@ -110,9 +107,6 @@ func (p *Player) GetStat(stat string) string {
 
 // PrefixCol returns the col before the player's name, leaderboard position
 func (p *Player) PrefixCol() string {
-	if p.Status == nil || p.Status.Position == nil {
-		return ""
-	}
 	return strings.TrimLeft(p.Status.Position.DisplayName, "T")
 }
 

@@ -385,7 +385,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 	}
 
 	if r.config.PGA != nil {
-		api, err := pga.New()
+		api, err := pga.New(logger)
 		if err != nil {
 			return nil, err
 		}
