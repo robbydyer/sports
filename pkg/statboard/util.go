@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
@@ -51,11 +52,10 @@ func (s *StatBoard) getWriter(bounds image.Rectangle) (*rgbrender.TextWriter, er
 }
 
 func getReadableFontSize(bounds image.Rectangle) float64 {
-	if bounds.Dx() > 128 {
-		return 0.05 * float64(bounds.Dx())
+	if bounds.Dy() > 128 && bounds.Dx() > 128 {
+		return 0.08 * float64(bounds.Dy())
 	}
-
-	return 0.125 * float64(bounds.Dx())
+	return 8.0
 }
 
 func getGridRatios(writer StringMeasurer, canvas draw.Image, strs []string) ([]float64, error) {
@@ -79,7 +79,7 @@ func getGridRatios(writer StringMeasurer, canvas draw.Image, strs []string) ([]f
 	}
 
 	ratios := []float64{
-		float64(float64(widths[0]) / float64(bounds.Dx())),
+		float64(widths[0]) / float64(bounds.Dx()),
 	}
 
 	total := widths[0]
@@ -108,7 +108,7 @@ func getGridRatios(writer StringMeasurer, canvas draw.Image, strs []string) ([]f
 	}
 
 	for _, w := range statCols {
-		ratios = append(ratios, float64(float64(w)/float64(bounds.Dx())))
+		ratios = append(ratios, float64(w)/float64(bounds.Dx()))
 		total += w
 	}
 
@@ -172,10 +172,6 @@ func (s *StatBoard) getStatPlaceholders(ctx context.Context, bounds image.Rectan
 	return strs, nil
 }
 
-func rowHeightRatio(bounds image.Rectangle, numRows int) float64 {
-	return (float64(bounds.Dy()) / float64(numRows)) / float64(bounds.Dy())
-}
-
 func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, players []Player, writer *rgbrender.TextWriter, stats []string) (*rgbrender.Grid, error) {
 	strs, err := s.getStatPlaceholders(ctx, rgbrender.ZeroedBounds(canvas.Bounds()), players, stats)
 	if err != nil {
@@ -193,14 +189,35 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 		return nil, err
 	}
 
-	numRows := int(math.Floor((float64(canvas.Bounds().Dy()) / writer.FontSize)))
+	numRows := int(math.Floor((float64(rgbrender.ZeroedBounds(canvas.Bounds()).Dy()) / writer.FontSize)))
+
+	var pad int
+	if canvas.Scrollable() && s.config.ScrollMode.Load() {
+		numRows = len(players)
+		if s.withTitleRow {
+			numRows++
+		}
+		pad = int(math.Ceil((writer.FontSize) * float64(numRows)))
+		pad -= rgbrender.ZeroedBounds(canvas.Bounds()).Dy()
+		// pad = pad / 2
+		scroller, ok := canvas.(*rgbmatrix.ScrollCanvas)
+		if ok {
+			scroller.SetPadding(pad)
+		}
+	}
+
+	heightRatio := float64(1.0) / float64(numRows)
+
+	s.log.Debug("statboard rows",
+		zap.Int("num rows", numRows),
+		zap.Float64("row height ratio", heightRatio),
+		zap.Float64("font size", writer.FontSize),
+		zap.Int("pad", pad),
+	)
 
 	cellYRatios := make([]float64, numRows)
-
-	rowHeight := rowHeightRatio(rgbrender.ZeroedBounds(canvas.Bounds()), numRows)
-
 	for i := range cellYRatios {
-		cellYRatios[i] = rowHeight
+		cellYRatios[i] = heightRatio
 	}
 
 	return rgbrender.NewGrid(
@@ -209,7 +226,8 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 		numRows,
 		s.log,
 		rgbrender.WithPadding(padSize),
-		rgbrender.WithCellRatios(cellXRatios, cellYRatios),
+		rgbrender.WithCellColRatios(cellXRatios),
+		rgbrender.WithUniformRows(),
 	)
 }
 
@@ -222,7 +240,7 @@ func maxedStr(str string, max int) string {
 		return str
 	}
 
-	start := float64(float64(max) / 2)
+	start := float64(max) / 2.0
 	i := int(start)
 	j := int(start) - 1
 	if math.Trunc(start) != start {

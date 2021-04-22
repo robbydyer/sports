@@ -130,7 +130,7 @@ func (t *TextWriter) WriteAligned(align Align, canvas draw.Image, bounds image.R
 
 	var maxXWidth fixed.Int26_6
 	for _, s := range str {
-		if width := drawer.MeasureString(s); width > fixed.Int26_6(maxXWidth) {
+		if width := drawer.MeasureString(s); width > maxXWidth {
 			maxXWidth = width
 		}
 	}
@@ -182,7 +182,7 @@ func (t *TextWriter) WriteAlignedBoxed(align Align, canvas draw.Image, bounds im
 
 	var maxXWidth fixed.Int26_6
 	for _, s := range str {
-		if width := drawer.MeasureString(s); width > fixed.Int26_6(maxXWidth) {
+		if width := drawer.MeasureString(s); width > maxXWidth {
 			maxXWidth = width
 		}
 	}

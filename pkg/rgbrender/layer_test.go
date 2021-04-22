@@ -15,6 +15,7 @@ import (
 )
 
 func TestSetForegroundPriority(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		layers   []*Layer
@@ -78,6 +79,7 @@ func TestSetForegroundPriority(t *testing.T) {
 }
 
 func TestPriorities(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		layers   []*Layer

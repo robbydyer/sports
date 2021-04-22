@@ -8,19 +8,27 @@ run:
 linters:
   disable-all: true
   enable:
+  - asciicheck
+  - bodyclose
   - deadcode
+  - durationcheck
   - errcheck
+  - exportloopref
   - goconst
   - gofumpt
   - goimports
   - golint
   - gosimple
   - govet
+  - importas
   - ineffassign
   - misspell
+  - nilerr
   - nakedret
   - staticcheck
   - structcheck
+  - tparallel
+  - unconvert
   - unused
   - unparam
   - varcheck
@@ -31,7 +39,6 @@ linters-settings:
   goimports:
     local-prefixes: github.com/robbydyer/sports
 issues:
-  #new-from-rev: origin/master
   exclude-use-default: false
   exclude:
   - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv). is not checked

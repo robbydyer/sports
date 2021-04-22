@@ -17,17 +17,18 @@ type GridOption func(grid *Grid) error
 
 // Grid manages sub-canvas "cells" of a larger canvas
 type Grid struct {
-	baseCanvas   board.Canvas
-	log          *zap.Logger
-	cells        []*Cell
-	cols         int
-	rows         int
-	cellX        []int
-	cellY        []int
-	padRatio     float64
-	padding      int
-	paddedPix    map[string]image.Point
-	cellStyleSet bool
+	baseCanvas  board.Canvas
+	log         *zap.Logger
+	cells       []*Cell
+	cols        int
+	rows        int
+	cellX       []int
+	cellY       []int
+	padRatio    float64
+	padding     int
+	paddedPix   map[string]image.Point
+	colStyleSet bool
+	rowStyleSet bool
 }
 
 // Cell contains a canvas and it's bounds related to it's parent canvas
@@ -64,8 +65,14 @@ func NewGrid(canvas board.Canvas, numCols int, numRows int, log *zap.Logger, opt
 		}
 	}
 
-	if !grid.cellStyleSet {
-		f := WithUniformCells()
+	if !grid.colStyleSet {
+		f := WithUniformCols()
+		if err := f(grid); err != nil {
+			return nil, err
+		}
+	}
+	if !grid.rowStyleSet {
+		f := WithUniformRows()
 		if err := f(grid); err != nil {
 			return nil, err
 		}
@@ -144,15 +151,13 @@ func (g *Grid) generateCells() error {
 			if newC == nil {
 				return fmt.Errorf("cell canvas was nil")
 			}
-			/*
-				g.log.Debug("new cell",
-					zap.Int("index", cellIndex),
-					zap.Int("start X", startX),
-					zap.Int("start Y", startY),
-					zap.Int("end X", endX),
-					zap.Int("end Y", endY),
-				)
-			*/
+			g.log.Debug("new cell",
+				zap.Int("index", cellIndex),
+				zap.Int("start X", startX),
+				zap.Int("start Y", startY),
+				zap.Int("end X", endX),
+				zap.Int("end Y", endY),
+			)
 			g.cells[cellIndex] = &Cell{
 				Canvas: newC,
 				Row:    r,
@@ -260,7 +265,50 @@ func WithUniformCells() GridOption {
 			g.cellY[i] = cellY
 		}
 
-		g.cellStyleSet = true
+		g.colStyleSet = true
+		g.rowStyleSet = true
+
+		return nil
+	}
+}
+
+// WithUniformRows sets all cell sizes to a uniform size
+func WithUniformRows() GridOption {
+	return func(g *Grid) error {
+		if g.baseCanvas == nil {
+			return fmt.Errorf("base canvas not set")
+		}
+		g.log.Debug("uniform grid rows")
+		pad := 0
+		if g.baseCanvas.Bounds().Min.X < 0 {
+			pad = g.baseCanvas.Bounds().Min.X * -1
+		}
+		cellY := (g.baseCanvas.Bounds().Dy() - pad) / g.rows
+
+		for i := 0; i < g.rows; i++ {
+			g.cellY[i] = cellY
+		}
+
+		g.rowStyleSet = true
+
+		return nil
+	}
+}
+
+// WithUniformCols sets all cell sizes to a uniform size
+func WithUniformCols() GridOption {
+	return func(g *Grid) error {
+		if g.baseCanvas == nil {
+			return fmt.Errorf("base canvas not set")
+		}
+		g.log.Debug("uniform grid cols")
+		cellX := g.baseCanvas.Bounds().Dx() / g.cols
+
+		for i := 0; i < g.cols; i++ {
+			g.cellX[i] = cellX
+		}
+
+		g.colStyleSet = true
 
 		return nil
 	}
@@ -297,7 +345,56 @@ func WithCellRatios(colRatios []float64, rowRatios []float64) GridOption {
 			)
 		}
 
-		g.cellStyleSet = true
+		g.colStyleSet = true
+		g.rowStyleSet = true
+
+		return nil
+	}
+}
+
+// WithCellRowRatios sets col/row sizes with ratios
+func WithCellRowRatios(rowRatios []float64) GridOption {
+	return func(g *Grid) error {
+		g.log.Debug("grid with col/row ratios")
+		if len(rowRatios) != g.rows {
+			return fmt.Errorf("invalid number of row ratios, must match number of rows")
+		}
+
+		for i, r := range rowRatios {
+			g.cellY[i] = int(math.Floor(r * float64(g.baseCanvas.Bounds().Dy())))
+			g.log.Debug("cellY",
+				zap.Int("index", i),
+				zap.Float64("ratio", r),
+				zap.Int("size", g.cellY[i]),
+			)
+		}
+
+		g.rowStyleSet = true
+
+		return nil
+	}
+}
+
+// WithCellColRatios sets col/row sizes with ratios
+func WithCellColRatios(colRatios []float64) GridOption {
+	return func(g *Grid) error {
+		g.log.Debug("grid with col/row ratios")
+		if len(colRatios) != g.cols {
+			return fmt.Errorf("invalid number of col ratios, must match number of cols")
+		}
+
+		bounds := ZeroedBounds(g.baseCanvas.Bounds())
+
+		for i, r := range colRatios {
+			g.cellX[i] = int(math.Floor(r * float64(bounds.Dx())))
+			g.log.Debug("cellX",
+				zap.Int("index", i),
+				zap.Float64("ratio", r),
+				zap.Int("size", g.cellX[i]),
+			)
+		}
+
+		g.colStyleSet = true
 
 		return nil
 	}
