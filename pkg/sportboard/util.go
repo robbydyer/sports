@@ -86,7 +86,7 @@ func (s *SportBoard) getScoreWriter(canvasBounds image.Rectangle) (*rgbrender.Te
 		if err != nil {
 			return nil, fmt.Errorf("failed to load font for score: %w", err)
 		}
-		size := 0.25 * float64(bounds.Dx())
+		size := 0.5 * float64(bounds.Dy())
 		scoreWriter = rgbrender.NewTextWriter(fnt, size)
 		yCorrect := math.Ceil(float64(3.0/32.0) * float64(bounds.Dy()))
 		scoreWriter.YStartCorrection = int(yCorrect * -1)
