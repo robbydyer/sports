@@ -8,6 +8,7 @@ import (
 )
 
 func TestShiftedSize(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		x        int

@@ -79,7 +79,7 @@ func getGridRatios(writer StringMeasurer, canvas draw.Image, strs []string) ([]f
 	}
 
 	ratios := []float64{
-		float64(float64(widths[0]) / float64(bounds.Dx())),
+		float64(widths[0]) / float64(bounds.Dx()),
 	}
 
 	total := widths[0]
@@ -108,7 +108,7 @@ func getGridRatios(writer StringMeasurer, canvas draw.Image, strs []string) ([]f
 	}
 
 	for _, w := range statCols {
-		ratios = append(ratios, float64(float64(w)/float64(bounds.Dx())))
+		ratios = append(ratios, float64(w)/float64(bounds.Dx()))
 		total += w
 	}
 
@@ -199,7 +199,7 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 		}
 		pad = int(math.Ceil((writer.FontSize) * float64(numRows)))
 		pad -= rgbrender.ZeroedBounds(canvas.Bounds()).Dy()
-		//pad = pad / 2
+		// pad = pad / 2
 		scroller, ok := canvas.(*rgbmatrix.ScrollCanvas)
 		if ok {
 			scroller.SetPadding(pad)
@@ -240,7 +240,7 @@ func maxedStr(str string, max int) string {
 		return str
 	}
 
-	start := float64(float64(max) / 2)
+	start := float64(max) / 2.0
 	i := int(start)
 	j := int(start) - 1
 	if math.Trunc(start) != start {

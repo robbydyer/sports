@@ -14,6 +14,7 @@ import (
 )
 
 func TestGridLayout(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		canvasWidth  int

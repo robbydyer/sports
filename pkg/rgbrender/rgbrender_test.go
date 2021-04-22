@@ -9,6 +9,7 @@ import (
 )
 
 func TestAlignPosition(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		bounds   image.Rectangle
@@ -500,6 +501,7 @@ func TestAlignPosition(t *testing.T) {
 }
 
 func TestZoomImageSize(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		img       image.Image
@@ -595,6 +597,7 @@ func TestNegativeImagePoint(t *testing.T) {
 }
 
 func TestZeroedBounds(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		in       image.Rectangle

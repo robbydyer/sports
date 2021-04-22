@@ -171,7 +171,12 @@ func PlayGIF(ctx context.Context, canvas board.Canvas, gif *gif.GIF) error {
 	images := make([]image.Image, len(gif.Image))
 	for i, image := range gif.Image {
 		images[i] = image
-		delay[i] = time.Millisecond * time.Duration(gif.Delay[i]) * 10
+		d := gif.Delay[i] * 10
+		var err error
+		delay[i], err = time.ParseDuration(fmt.Sprintf("%dms", d))
+		if err != nil {
+			return err
+		}
 	}
 
 	return PlayImages(ctx, canvas, images, delay, 0)
