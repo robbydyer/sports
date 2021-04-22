@@ -6,27 +6,40 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
+
+	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/statboard"
 )
 
 const leaderboardURL = "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
 
+var rawDatReg = regexp.MustCompile(`\s*([0-9]{1,2})\.{0,1}\s+([a-zA-Z]{1}[a-zA-Z\.\s/]+[a-zA-Z]{1})\s+(-{0,1}[0-9]{1,2})\s+([0-9F]{1,2})`)
+
 // PGA ...
-type PGA struct{}
+type PGA struct {
+	log *zap.Logger
+}
 
 type eventDat struct {
 	Events []struct {
 		ShortName    string `json:"shortName"`
 		Competitions []struct {
+			DataFormat  string    `json:"dataFormat"`
+			RawData     string    `json:"rawData"`
 			Competitors []*Player `json:"competitors"`
 		} `json:"competitions"`
 	}
 }
 
 // New ...
-func New() (*PGA, error) {
-	return &PGA{}, nil
+func New(logger *zap.Logger) (*PGA, error) {
+	return &PGA{
+		log: logger,
+	}, nil
 }
 
 // FindPlayer ...
@@ -108,11 +121,64 @@ func (p *PGA) updatePlayers(ctx context.Context) ([]*Player, error) {
 		return nil, err
 	}
 
-	for _, event := range dat.Events {
-		for _, comp := range event.Competitions {
-			return comp.Competitors, nil
-		}
+	if len(dat.Events) < 1 || len(dat.Events[0].Competitions) < 1 {
+		return nil, fmt.Errorf("could not find players")
+	}
+
+	comp := dat.Events[0].Competitions[0]
+	if len(comp.Competitors) > 1 {
+		return comp.Competitors, nil
+	}
+
+	if strings.Contains(comp.DataFormat, "RAW") && comp.RawData != "" {
+		return p.parseRaw(comp.RawData)
 	}
 
 	return nil, fmt.Errorf("could not find players")
+}
+
+func (p *PGA) parseRaw(data string) ([]*Player, error) {
+	fields := strings.Split(data, "\n")
+
+	players := []*Player{}
+
+	for _, f := range fields {
+		f = strings.TrimSpace(f)
+		p.log.Debug("parsing raw PGA data", zap.String("data", f))
+		matches := rawDatReg.FindSubmatch([]byte(f))
+
+		if len(matches) < 5 {
+			p.log.Debug("not enough matches for PGA raw", zap.ByteStrings("matches", matches))
+			continue
+		}
+		pos := string(matches[1])
+
+		name := string(matches[2])
+
+		score := string(matches[3])
+
+		thru, err := strconv.Atoi(string(matches[4]))
+		if err != nil {
+			thru = 18
+		}
+
+		p.log.Debug("PGA raw data",
+			zap.ByteStrings("matches", matches),
+			zap.String("pos", pos),
+			zap.String("name", name),
+			zap.String("score", score),
+			zap.Int("thru", thru),
+		)
+
+		newP := &Player{}
+		newP.Status.Thru = thru
+		newP.Status.Position.DisplayName = pos
+		newP.Status.Position.ID = pos
+		newP.Score.DisplayValue = score
+		newP.Athlete.DisplayName = "X " + name
+
+		players = append(players, newP)
+	}
+
+	return players, nil
 }

@@ -74,13 +74,14 @@ func (s *StatBoard) doScroll(ctx context.Context, canvas board.Canvas, players [
 		return err
 	}
 
+	row := 0
 	if s.withTitleRow {
-		if err := s.renderTitleRow(ctx, grid.GetRow(0), writer, stats); err != nil {
+		if err := s.renderTitleRow(ctx, grid.GetRow(row), writer, stats); err != nil {
 			return err
 		}
+		row++
 	}
 
-	row := 1
 	for _, player := range players {
 		if err := s.renderPlayer(ctx, player, grid.GetRow(row), writer, stats, maxNameLength(rgbrender.ZeroedBounds(canvas.Bounds()))); err != nil {
 			return err
