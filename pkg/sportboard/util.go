@@ -46,8 +46,13 @@ func (s *SportBoard) getTimeWriter(canvasBounds image.Rectangle) (*rgbrender.Tex
 		return nil, err
 	}
 
-	timeWriter.FontSize = 0.25 * float64(bounds.Dy())
-	timeWriter.YStartCorrection = -1 * ((bounds.Dy() / 32) + 1)
+	if bounds.Dy() <= 128 {
+		timeWriter.FontSize = 8.0
+		timeWriter.YStartCorrection = -2
+	} else {
+		timeWriter.FontSize = 0.25 * float64(bounds.Dy())
+		timeWriter.YStartCorrection = -1 * ((bounds.Dy() / 32) + 1)
+	}
 
 	s.log.Debug("time writer font",
 		zap.Float64("size", timeWriter.FontSize),
@@ -73,7 +78,7 @@ func (s *SportBoard) getScoreWriter(canvasBounds image.Rectangle) (*rgbrender.Te
 
 	var scoreWriter *rgbrender.TextWriter
 
-	if bounds.Dx() == bounds.Dy() {
+	if (bounds.Dx() == bounds.Dy()) && bounds.Dx() <= 32 {
 		var err error
 		scoreWriter, err = rgbrender.DefaultTextWriter()
 		if err != nil {
