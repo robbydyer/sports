@@ -125,7 +125,7 @@ class Sport extends React.Component {
                 </Row>
                 <Row className="text-center">
                     <Col>
-                        <Form.Switch id="favscore" label="Stick Favorite Live Games" checked={this.state.stickyFavorite}
+                        <Form.Switch id="favstick" label="Stick Favorite Live Games" checked={this.state.stickyFavorite}
                             onChange={() => this.handleSwitch(`${this.props.sport}/favoritesticky`, `${this.props.sport}/favoriteunstick`, "stickyFavorite")} />
                     </Col>
                 </Row>
