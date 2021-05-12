@@ -69,6 +69,11 @@ sportsMatrixConfig:
     # Change this if your panel swaps color sequence
     #ledRgbSequence: rgb
 
+    # A string describing a sequence of pixel mappers that should be applied
+    # to this matrix. A semicolon-separated list of pixel-mappers with optional
+    # parameter. See https://github.com/hzeller/rpi-rgb-led-matrix#panel-arrangement
+    #pixelMapperConfig: U-mapper
+
     #Disable the PWM hardware subsystem to create pulses. Typically, you don't
     #want to disable hardware pulsing, this is mostly for debugging and figuring
     #out if there is interference with the sound system.
