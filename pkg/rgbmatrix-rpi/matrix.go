@@ -113,6 +113,11 @@ type HardwareConfig struct {
 	// Limit refresh rate of LED panel. This will help on a loaded system
 	// to keep a constant refresh rate. <= 0 for no limit.
 	LimitRefreshRateHz int `json:"limitRefreshRateHz"`
+
+	// A string describing a sequence of pixel mappers that should be applied
+	// to this matrix. A semicolon-separated list of pixel-mappers with optional
+	// parameter. See https://github.com/hzeller/rpi-rgb-led-matrix#panel-arrangement
+	PixelMapperConfig string `json:"pixelMapperConfig"`
 }
 
 func (c *HardwareConfig) geometry() (width, height int) {
@@ -131,6 +136,10 @@ func (c *HardwareConfig) toC() *C.struct_RGBLedMatrixOptions {
 	o.scan_mode = C.int(c.ScanMode)
 	o.hardware_mapping = C.CString(c.HardwareMapping)
 	o.limit_refresh_rate_hz = C.int(c.LimitRefreshRateHz)
+
+	if c.PixelMapperConfig != "" {
+		o.pixel_mapper_config = C.CString(c.PixelMapperConfig)
+	}
 
 	if c.LedRGBSequence != "" {
 		o.led_rgb_sequence = C.CString(c.LedRGBSequence)
