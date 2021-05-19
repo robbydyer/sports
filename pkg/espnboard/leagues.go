@@ -153,3 +153,31 @@ func (n *mlb) HTTPPathPrefix() string {
 func NewMLB(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &mlb{}, logger)
 }
+
+type ncaaf struct{}
+
+func (n *ncaaf) League() string {
+	return "NCAAF"
+}
+
+func (n *ncaaf) APIPath() string {
+	return "football/college-football"
+}
+
+func (n *ncaaf) TeamEndpoints() []string {
+	return []string{
+		filepath.Join(n.APIPath(), "teams"),
+		// TODO: Group endpoint is different for NCAAF. It does not
+		// contain conference data
+		// filepath.Join(n.APIPath(), "groups"),
+	}
+}
+
+func (n *ncaaf) HTTPPathPrefix() string {
+	return "ncaaf"
+}
+
+// NewNCAAF ...
+func NewNCAAF(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
+	return New(ctx, &ncaaf{}, logger)
+}

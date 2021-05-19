@@ -62,6 +62,11 @@ func (t *Team) GetName() string {
 	return t.Name
 }
 
+// GetDisplayName ...
+func (t *Team) GetDisplayName() string {
+	return t.Name
+}
+
 // GetAbbreviation ...
 func (t *Team) GetAbbreviation() string {
 	return t.Abbreviation
