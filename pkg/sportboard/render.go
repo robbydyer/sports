@@ -14,8 +14,10 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
+const mls = "MLS"
+
 func (s *SportBoard) homeSide() string {
-	if s.api.League() == "MLS" {
+	if s.api.League() == mls {
 		return "left"
 	}
 	return "right"
@@ -392,7 +394,7 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 		return nil, err
 	}
 
-	if s.api.League() == "MLS" {
+	if s.api.League() == mls {
 		// MLS does Home team on left
 		leftTeam, rightTeam = rightTeam, leftTeam
 	}
@@ -444,7 +446,7 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 	if err != nil {
 		return nil, err
 	}
-	if s.api.League() == "MLS" {
+	if s.api.League() == mls {
 		// MLS does Home team on left
 		leftTeam, rightTeam = rightTeam, leftTeam
 	}
