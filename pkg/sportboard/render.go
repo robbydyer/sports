@@ -14,6 +14,15 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
+const mls = "MLS"
+
+func (s *SportBoard) homeSide() string {
+	if s.api.League() == mls {
+		return "left"
+	}
+	return "right"
+}
+
 func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
 	s.logCanvas(canvas, "render live canvas size")
 
@@ -90,7 +99,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 						s.log.Warn("hiding score for favorite team")
 						score = []string{}
 					} else {
-						str, err := scoreStr(liveGame)
+						str, err := scoreStr(liveGame, s.homeSide())
 						if err != nil {
 							return nil, nil, err
 						}
@@ -320,7 +329,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 					s.log.Warn("hiding score for favorite team")
 					score = []string{}
 				} else {
-					str, err := scoreStr(liveGame)
+					str, err := scoreStr(liveGame, s.homeSide())
 					if err != nil {
 						return nil, nil, err
 					}
@@ -376,24 +385,29 @@ func counterLayer(counter image.Image) *rgbrender.Layer {
 }
 
 func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbrender.Layer, error) {
-	homeTeam, err := liveGame.HomeTeam()
+	rightTeam, err := liveGame.HomeTeam()
 	if err != nil {
 		return nil, err
 	}
-	awayTeam, err := liveGame.AwayTeam()
+	leftTeam, err := liveGame.AwayTeam()
 	if err != nil {
 		return nil, err
+	}
+
+	if s.api.League() == mls {
+		// MLS does Home team on left
+		leftTeam, rightTeam = rightTeam, leftTeam
 	}
 
 	return []*rgbrender.Layer{
 		rgbrender.NewLayer(
 			func(ctx context.Context) (image.Image, error) {
-				return s.RenderHomeLogo(ctx, bounds, homeTeam.GetAbbreviation())
+				return s.RenderHomeLogo(ctx, bounds, leftTeam.GetAbbreviation())
 			},
 			func(canvas board.Canvas, img image.Image) error {
 				pt := image.Pt(img.Bounds().Min.X, img.Bounds().Min.Y)
 				b := canvas.Bounds()
-				s.log.Debug("draw home logo",
+				s.log.Debug("draw left team logo",
 					zap.Int("pt X", pt.X),
 					zap.Int("pt Y", pt.Y),
 					zap.Int("canvas min X", b.Bounds().Min.X),
@@ -412,7 +426,7 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 
 		rgbrender.NewLayer(
 			func(ctx context.Context) (image.Image, error) {
-				return s.RenderAwayLogo(ctx, bounds, awayTeam.GetAbbreviation())
+				return s.RenderAwayLogo(ctx, bounds, rightTeam.GetAbbreviation())
 			},
 			func(canvas board.Canvas, img image.Image) error {
 				pt := image.Pt(img.Bounds().Min.X, img.Bounds().Min.Y)
@@ -424,18 +438,22 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 }
 
 func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbrender.TextLayer, error) {
-	homeTeam, err := liveGame.HomeTeam()
+	rightTeam, err := liveGame.HomeTeam()
 	if err != nil {
 		return nil, err
 	}
-	awayTeam, err := liveGame.AwayTeam()
+	leftTeam, err := liveGame.AwayTeam()
 	if err != nil {
 		return nil, err
+	}
+	if s.api.League() == mls {
+		// MLS does Home team on left
+		leftTeam, rightTeam = rightTeam, leftTeam
 	}
 
 	s.log.Debug("showing team records",
-		zap.String("home", homeTeam.GetAbbreviation()),
-		zap.String("away", awayTeam.GetAbbreviation()),
+		zap.String("left", leftTeam.GetAbbreviation()),
+		zap.String("right", rightTeam.GetAbbreviation()),
 	)
 
 	bounds = rgbrender.ZeroedBounds(bounds)
@@ -449,8 +467,8 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 	return []*rgbrender.TextLayer{
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
-				rank := s.api.TeamRank(ctx, homeTeam)
-				record := s.api.TeamRecord(ctx, homeTeam)
+				rank := s.api.TeamRank(ctx, leftTeam)
+				record := s.api.TeamRecord(ctx, leftTeam)
 
 				writer, err := s.getTimeWriter(bounds)
 				if err != nil {
@@ -490,8 +508,8 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 		),
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
-				rank := s.api.TeamRank(ctx, awayTeam)
-				record := s.api.TeamRecord(ctx, awayTeam)
+				rank := s.api.TeamRank(ctx, rightTeam)
+				record := s.api.TeamRecord(ctx, rightTeam)
 
 				writer, err := s.getTimeWriter(bounds)
 				if err != nil {

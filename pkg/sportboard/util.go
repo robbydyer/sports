@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"math"
+	"strings"
 
 	"go.uber.org/zap"
 
@@ -139,7 +140,7 @@ func (s *SportBoard) textAreaWidth(bounds image.Rectangle) int {
 	return bounds.Dx() / 4
 }
 
-func scoreStr(g Game) (string, error) {
+func scoreStr(g Game, homeSide string) (string, error) {
 	a, err := g.AwayTeam()
 	if err != nil {
 		return "", err
@@ -149,5 +150,8 @@ func scoreStr(g Game) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%d-%d", h.Score(), a.Score()), nil
+	if strings.ToLower(homeSide) == "left" {
+		return fmt.Sprintf("%d-%d", h.Score(), a.Score()), nil
+	}
+	return fmt.Sprintf("%d-%d", a.Score(), h.Score()), nil
 }
