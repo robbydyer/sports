@@ -335,6 +335,9 @@ func (c *RGBLedMatrix) At(position int) color.Color {
 
 // Set set LED at position x,y to the provided 24-bit color value.
 func (c *RGBLedMatrix) Set(position int, color color.Color) {
+	if position > len(c.leds)-1 || position < 0 {
+		return
+	}
 	c.leds[position] = C.uint32_t(colorToUint32(color))
 }
 

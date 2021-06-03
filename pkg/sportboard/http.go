@@ -136,5 +136,43 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				_, _ = w.Write([]byte("false"))
 			},
 		},
+		{
+			Path: fmt.Sprintf("/%s/tightscrollon", s.api.HTTPPathPrefix()),
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.log.Info("enabling tight scroll mode", zap.String("board", s.api.League()))
+				select {
+				case s.cancelBoard <- struct{}{}:
+				default:
+				}
+				s.config.TightScroll.Store(true)
+				s.cacheClear()
+				s.api.CacheClear(context.Background())
+			},
+		},
+		{
+			Path: fmt.Sprintf("/%s/tightscrolloff", s.api.HTTPPathPrefix()),
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.log.Info("disabling scroll mode", zap.String("board", s.api.League()))
+				select {
+				case s.cancelBoard <- struct{}{}:
+				default:
+				}
+				s.config.TightScroll.Store(false)
+				s.cacheClear()
+				s.api.CacheClear(context.Background())
+			},
+		},
+		{
+			Path: fmt.Sprintf("/%s/tightscrollstatus", s.api.HTTPPathPrefix()),
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.log.Debug("get board tight scroll status", zap.String("board", s.Name()))
+				w.Header().Set("Content-Type", "text/plain")
+				if s.config.TightScroll.Load() {
+					_, _ = w.Write([]byte("true"))
+					return
+				}
+				_, _ = w.Write([]byte("false"))
+			},
+		},
 	}, nil
 }

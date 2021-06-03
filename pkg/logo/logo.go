@@ -203,3 +203,54 @@ func (l *Logo) RenderRightAligned(ctx context.Context, bounds image.Rectangle, s
 
 	return i, nil
 }
+
+// RenderRightAlignedWithEnd renders the logo on the right side of the matrix
+func (l *Logo) RenderRightAlignedWithEnd(ctx context.Context, bounds image.Rectangle, endX int) (image.Image, error) {
+	thumb, err := l.GetThumbnail(ctx, l.bounds)
+	if err != nil {
+		return nil, err
+	}
+
+	startX := 0
+
+	if thumb.Bounds().Dx() > endX {
+		startX = endX - thumb.Bounds().Dx()
+	}
+
+	startX += l.config.Pt.X
+
+	startY := 0 + l.config.Pt.Y
+	newBounds := image.Rect(startX, startY, endX, bounds.Dy()-1)
+	align, err := rgbrender.AlignPosition(rgbrender.RightCenter, newBounds, thumb.Bounds().Dx(), thumb.Bounds().Dy())
+	if err != nil {
+		return nil, err
+	}
+
+	i := image.NewRGBA(newBounds)
+	draw.Draw(i, align, thumb, image.Point{}, draw.Over)
+
+	return i, nil
+}
+
+// RenderLeftAlignedWithStart renders the logo on the right side of the matrix
+func (l *Logo) RenderLeftAlignedWithStart(ctx context.Context, bounds image.Rectangle, startX int) (image.Image, error) {
+	thumb, err := l.GetThumbnail(ctx, l.bounds)
+	if err != nil {
+		return nil, err
+	}
+
+	startX = startX + l.config.Pt.X
+	startY := 0 + l.config.Pt.Y
+
+	newBounds := image.Rect(startX, startY, thumb.Bounds().Dx()+startX, thumb.Bounds().Dy()+startY)
+
+	align, err := rgbrender.AlignPosition(rgbrender.LeftCenter, newBounds, thumb.Bounds().Dx(), thumb.Bounds().Dy())
+	if err != nil {
+		return nil, err
+	}
+
+	i := image.NewRGBA(newBounds)
+	draw.Draw(i, align, thumb, image.Point{}, draw.Over)
+
+	return i, nil
+}

@@ -8,6 +8,7 @@ import Clock from './Clock.js';
 import Board from './Board.js';
 import Sys from './Sys.js';
 import TopNav from './Nav.js';
+import All from './All.js';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
 var BACKEND = "http://" + window.location.host
@@ -33,7 +34,7 @@ class App extends React.Component {
       <>
         <Router>
           <TopNav />
-          <Route path="/" exact component={Home} />
+          <Route path="/" exact component={All} />
           <Route path="/nhl" render={() => <Sport sport="nhl" />} />
           <Route path="/mlb" render={() => <Sport sport="mlb" />} />
           <Route path="/pga" render={() => <Pga />} />
@@ -46,6 +47,7 @@ class App extends React.Component {
           <Route path="/sys" exact component={Sys} />
           <Route path="/board" exact component={Board} />
         </Router>
+        <hr />
       </>
     );
   }

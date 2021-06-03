@@ -402,7 +402,7 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 	return []*rgbrender.Layer{
 		rgbrender.NewLayer(
 			func(ctx context.Context) (image.Image, error) {
-				return s.RenderHomeLogo(ctx, bounds, leftTeam.GetAbbreviation())
+				return s.RenderLeftLogo(ctx, bounds, leftTeam.GetAbbreviation())
 			},
 			func(canvas board.Canvas, img image.Image) error {
 				pt := image.Pt(img.Bounds().Min.X, img.Bounds().Min.Y)
@@ -426,7 +426,7 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 
 		rgbrender.NewLayer(
 			func(ctx context.Context) (image.Image, error) {
-				return s.RenderAwayLogo(ctx, bounds, rightTeam.GetAbbreviation())
+				return s.RenderRightLogo(ctx, bounds, rightTeam.GetAbbreviation())
 			},
 			func(canvas board.Canvas, img image.Image) error {
 				pt := image.Pt(img.Bounds().Min.X, img.Bounds().Min.Y)

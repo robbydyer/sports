@@ -54,13 +54,13 @@ class Pga extends React.Component {
                 <Row className="text-center"><Col><Image src={this.logosrc()} style={{ height: '100px', width: 'auto' }} fluid /></Col></Row>
                 <Row className="text-center">
                     <Col>
-                        <Form.Switch id="stats" label="Enable/Disable" checked={this.state.stats}
+                        <Form.Switch id="pgastats" label="Enable/Disable" checked={this.state.stats}
                             onChange={() => this.handleSwitch(`pga/stats/enable`, `pga/stats/disable`, "stats")} />
                     </Col>
                 </Row>
                 <Row className="text-center">
                     <Col>
-                        <Form.Switch id="scroll" label="Scroll Mode" checked={this.state.scroll}
+                        <Form.Switch id="pgascroll" label="Scroll Mode" checked={this.state.scroll}
                             onChange={() => this.handleSwitch(`pga/stats/scrollon`, `pga/stats/scrolloff`, "scroll")} />
                     </Col>
                 </Row>

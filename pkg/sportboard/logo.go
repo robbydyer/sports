@@ -11,7 +11,7 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
-const scrollLogoBufferRatio = 0.10
+const scrollLogoBufferRatio = float64(0.10)
 
 func (s *SportBoard) logoConfig(logoKey string, bounds image.Rectangle) *logo.Config {
 	for _, conf := range s.config.LogoConfigs {
@@ -77,8 +77,8 @@ func (s *SportBoard) getLogoCache(logoKey string) (*logo.Logo, error) {
 	return nil, fmt.Errorf("no cache for %s", logoKey)
 }
 
-// RenderHomeLogo ...
-func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvasBounds image.Rectangle, abbreviation string) (image.Image, error) {
+// RenderLeftLogo ...
+func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rectangle, abbreviation string) (image.Image, error) {
 	select {
 	case <-ctx.Done():
 		return nil, context.Canceled
@@ -117,13 +117,21 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvasBounds image.Rect
 	logoEndX := (bounds.Dx() - textWidth) / 2
 
 	if s.config.ScrollMode.Load() {
-		logoEndX -= int(float64(bounds.Dx()) * scrollLogoBufferRatio)
+		if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
+			if bounds.Dx() < 64 {
+				logoEndX -= 3
+			} else {
+				logoEndX -= 6
+			}
+		} else {
+			logoEndX -= int(float64(bounds.Dx()) * scrollLogoBufferRatio)
+		}
 	}
 
 	var renderErr error
 	if l != nil {
 		var renderedLogo image.Image
-		renderedLogo, renderErr = l.RenderLeftAligned(ctx, bounds, logoEndX)
+		renderedLogo, renderErr = l.RenderRightAlignedWithEnd(ctx, bounds, logoEndX)
 		if renderErr != nil {
 			s.log.Error("failed to render home logo", zap.Error(renderErr))
 		} else {
@@ -135,8 +143,8 @@ func (s *SportBoard) RenderHomeLogo(ctx context.Context, canvasBounds image.Rect
 	return nil, fmt.Errorf("no logo %s", logoKey)
 }
 
-// RenderAwayLogo ...
-func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvasBounds image.Rectangle, abbreviation string) (image.Image, error) {
+// RenderRightLogo ...
+func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rectangle, abbreviation string) (image.Image, error) {
 	select {
 	case <-ctx.Done():
 		return nil, context.Canceled
@@ -173,13 +181,21 @@ func (s *SportBoard) RenderAwayLogo(ctx context.Context, canvasBounds image.Rect
 	logoWidth := (bounds.Dx() - textWidth) / 2
 
 	if s.config.ScrollMode.Load() {
-		logoWidth += int(float64(bounds.Dx()) * scrollLogoBufferRatio)
+		if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
+			if bounds.Dx() < 64 {
+				logoWidth += 3
+			} else {
+				logoWidth += 6
+			}
+		} else {
+			logoWidth += int(float64(bounds.Dx()) * scrollLogoBufferRatio)
+		}
 	}
 
 	var renderErr error
 	if l != nil {
 		var renderedLogo image.Image
-		renderedLogo, renderErr = l.RenderRightAligned(ctx, bounds, logoWidth+textWidth)
+		renderedLogo, renderErr = l.RenderLeftAlignedWithStart(ctx, bounds, logoWidth+textWidth)
 		if renderErr != nil {
 			s.log.Error("failed to render away logo", zap.Error(renderErr))
 		} else {
