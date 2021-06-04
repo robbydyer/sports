@@ -32,17 +32,15 @@ const (
 )
 
 type ScrollCanvas struct {
-	w, h          int
-	Matrix        Matrix
-	enabled       *atomic.Bool
-	actual        *image.RGBA
-	direction     ScrollDirection
-	interval      time.Duration
-	log           *zap.Logger
-	pad           int
-	addedCanvases int
-	maxAdded      int
-	actuals       []*image.RGBA
+	w, h      int
+	Matrix    Matrix
+	enabled   *atomic.Bool
+	actual    *image.RGBA
+	direction ScrollDirection
+	interval  time.Duration
+	log       *zap.Logger
+	pad       int
+	actuals   []*image.RGBA
 }
 
 type ScrollCanvasOption func(*ScrollCanvas) error
@@ -57,7 +55,6 @@ func NewScrollCanvas(m Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (
 		interval:  50 * time.Millisecond,
 		log:       logger,
 		direction: RightToLeft,
-		maxAdded:  1,
 	}
 
 	for _, f := range opts {
@@ -80,10 +77,6 @@ func (s *ScrollCanvas) Width() int {
 func (s *ScrollCanvas) SetWidth(w int) {
 	s.w = w
 	s.SetPadding(s.pad)
-}
-
-func (s *ScrollCanvas) SetAddMax(max int) {
-	s.maxAdded = max
 }
 
 func (s *ScrollCanvas) AddCanvas(add draw.Image) {

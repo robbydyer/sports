@@ -432,7 +432,6 @@ OUTER:
 		}
 
 		tightCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
-		tightCanvas.SetAddMax(len(games))
 	}
 
 GAMES:
