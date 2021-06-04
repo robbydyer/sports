@@ -13,6 +13,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const tightPad = 10
+
 var black = color.RGBA{R: 0x0, G: 0x0, B: 0x0, A: 0x0}
 
 // ScrollDirection represents the direction the canvas scrolls
@@ -31,13 +33,14 @@ const (
 
 type ScrollCanvas struct {
 	w, h      int
-	m         Matrix
+	Matrix    Matrix
 	enabled   *atomic.Bool
 	actual    *image.RGBA
 	direction ScrollDirection
 	interval  time.Duration
 	log       *zap.Logger
 	pad       int
+	actuals   []*image.RGBA
 }
 
 type ScrollCanvasOption func(*ScrollCanvas) error
@@ -47,7 +50,7 @@ func NewScrollCanvas(m Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (
 	c := &ScrollCanvas{
 		w:         w,
 		h:         h,
-		m:         m,
+		Matrix:    m,
 		enabled:   atomic.NewBool(true),
 		interval:  50 * time.Millisecond,
 		log:       logger,
@@ -64,15 +67,70 @@ func NewScrollCanvas(m Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (
 		c.SetPadding(w + int(float64(w)*0.25))
 	}
 
-	c.log.Debug("creating scroll canvas",
-		zap.Int("padding", c.pad),
-		zap.Int("min X", c.Bounds().Min.X),
-		zap.Int("min Y", c.Bounds().Min.Y),
-		zap.Int("max X", c.Bounds().Max.X),
-		zap.Int("max Y", c.Bounds().Max.Y),
+	return c, nil
+}
+
+func (s *ScrollCanvas) Width() int {
+	return s.w
+}
+
+func (s *ScrollCanvas) SetWidth(w int) {
+	s.w = w
+	s.SetPadding(s.pad)
+}
+
+func (s *ScrollCanvas) AddCanvas(add draw.Image) {
+	if s.direction != RightToLeft && s.direction != LeftToRight {
+		return
+	}
+
+	img := image.NewRGBA(add.Bounds())
+	draw.Draw(img, add.Bounds(), add, add.Bounds().Min, draw.Over)
+
+	s.actuals = append(s.actuals, img)
+}
+
+func (s *ScrollCanvas) Merge() {
+	maxX := 0
+	maxY := 0
+	for _, img := range s.actuals {
+		maxX += img.Bounds().Dx()
+		maxY = img.Bounds().Dy()
+	}
+
+	merged := image.NewRGBA(image.Rect(0, 0, maxX, maxY))
+
+	s.log.Debug("merging tight scroll canvas",
+		zap.Int("width", maxX),
+		zap.Int("height", maxY),
 	)
 
-	return c, nil
+	lastX := 0
+	for _, img := range s.actuals {
+		startX := firstNonBlankX(img)
+		endX := lastNonBlankX(img)
+		negStart := 0
+		if startX < 0 {
+			negStart = startX * -1
+		}
+
+		buffered := false
+		x := 0
+		for x = startX; x < endX; x++ {
+			if !buffered {
+				if (x+lastX+negStart)-lastX < tightPad {
+					lastX += tightPad
+				}
+			}
+			buffered = true
+			for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
+				merged.Set(x+lastX+negStart, y, img.At(x, y))
+			}
+		}
+		lastX += x + negStart
+	}
+
+	s.actual = merged
 }
 
 func (c *ScrollCanvas) position(x, y int) int {
@@ -116,6 +174,17 @@ func (c *ScrollCanvas) SetPadding(pad int) {
 	c.pad = pad
 
 	c.actual = image.NewRGBA(image.Rect(0-c.pad, 0-c.pad, c.w+c.pad, c.h+c.pad))
+	draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
+
+	c.log.Debug("creating scroll canvas",
+		zap.Int("padding", c.pad),
+		zap.Int("width", c.w),
+		zap.Int("height", c.h),
+		zap.Int("min X", c.Bounds().Min.X),
+		zap.Int("min Y", c.Bounds().Min.Y),
+		zap.Int("max X", c.Bounds().Max.X),
+		zap.Int("max Y", c.Bounds().Max.Y),
+	)
 }
 
 // GetPadding
@@ -125,19 +194,19 @@ func (c *ScrollCanvas) GetPadding() int {
 
 // Clear set all the leds on the matrix with color.Black
 func (c *ScrollCanvas) Clear() error {
-	draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Src)
+	draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
 	for x := 0; x < c.w-1; x++ {
 		for y := 0; y < c.h-1; y++ {
-			c.m.Set(c.position(x, y), color.Black)
+			c.Matrix.Set(c.position(x, y), color.Black)
 		}
 	}
-	return c.m.Render()
+	return c.Matrix.Render()
 }
 
 // Close clears the matrix and close the matrix
 func (c *ScrollCanvas) Close() error {
 	c.Clear()
-	return c.m.Close()
+	return c.Matrix.Close()
 }
 
 // Render update the display with the data from the LED buffer
@@ -235,12 +304,12 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 			for y := c.actual.Bounds().Min.Y; y <= c.actual.Bounds().Max.Y; y++ {
 				shiftX := x + thisX
 				if shiftX > 0 && shiftX < c.w && y > 0 && y < c.h {
-					c.m.Set(c.position(shiftX, y), c.actual.At(x, y))
+					c.Matrix.Set(c.position(shiftX, y), c.actual.At(x, y))
 				}
 			}
 		}
 
-		if err := c.m.Render(); err != nil {
+		if err := c.Matrix.Render(); err != nil {
 			return err
 		}
 		thisX--
@@ -266,12 +335,12 @@ func (c *ScrollCanvas) topToBottom(ctx context.Context) error {
 			for y := c.actual.Bounds().Min.Y; y <= c.actual.Bounds().Max.Y; y++ {
 				shiftY := y + thisY
 				if shiftY > 0 && shiftY < c.h && x > 0 && x < c.w {
-					c.m.Set(c.position(x, shiftY), c.actual.At(x, y))
+					c.Matrix.Set(c.position(x, shiftY), c.actual.At(x, y))
 				}
 			}
 		}
 
-		if err := c.m.Render(); err != nil {
+		if err := c.Matrix.Render(); err != nil {
 			return err
 		}
 		thisY++
@@ -302,12 +371,12 @@ func (c *ScrollCanvas) bottomToTop(ctx context.Context) error {
 			for y := c.actual.Bounds().Min.Y; y <= c.actual.Bounds().Max.Y; y++ {
 				shiftY := y + thisY
 				if shiftY > 0 && shiftY < c.h && x > 0 && x < c.w {
-					c.m.Set(c.position(x, shiftY), c.actual.At(x, y))
+					c.Matrix.Set(c.position(x, shiftY), c.actual.At(x, y))
 				}
 			}
 		}
 
-		if err := c.m.Render(); err != nil {
+		if err := c.Matrix.Render(); err != nil {
 			return err
 		}
 		thisY--

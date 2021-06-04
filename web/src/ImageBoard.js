@@ -50,19 +50,19 @@ class ImageBoard extends React.Component {
                 <Row className="text-center"><Col><Image src={imgimg} style={{ height: '100px', width: 'auto' }} fluid /></Col></Row>
                 <Row className="text-center">
                     <Col>
-                        <Form.Switch id="enabler" label="Enable/Disable" checked={this.state.enabled}
+                        <Form.Switch id="imgenabler" label="Enable/Disable" checked={this.state.enabled}
                             onChange={() => this.handleSwitch("img/enable", "img/disable", "enabled")} />
                     </Col>
                 </Row>
                 <Row className="text-center">
                     <Col>
-                        <Form.Switch id="mem" label="Enable Memory Cache" checked={this.state.memcache}
+                        <Form.Switch id="imgmem" label="Enable Memory Cache" checked={this.state.memcache}
                             onChange={() => this.handleSwitch("img/enablememcache", "img/disablememcache", "memcache")} />
                     </Col>
                 </Row>
                 <Row className="text-center">
                     <Col>
-                        <Form.Switch id="disk" label="Enable Disk Cache" checked={this.state.diskcache}
+                        <Form.Switch id="imgdisk" label="Enable Disk Cache" checked={this.state.diskcache}
                             onChange={() => this.handleSwitch("img/enablediskcache", "img/disablediskcache", "diskcache")} />
                     </Col>
                 </Row>

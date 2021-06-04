@@ -201,6 +201,8 @@ func (n *NHL) UpdateTeams(ctx context.Context) error {
 
 // UpdateGames ...
 func (n *NHL) UpdateGames(ctx context.Context, dateStr string) error {
+	n.Lock()
+	defer n.Unlock()
 	games, err := getGames(ctx, dateStr)
 	if err != nil {
 		return err

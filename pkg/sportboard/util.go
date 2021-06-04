@@ -137,6 +137,10 @@ func (s *SportBoard) textAreaWidth(bounds image.Rectangle) int {
 	if bounds.Dx() == bounds.Dy() {
 		return bounds.Dx() / 8
 	}
+
+	if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
+		return 16
+	}
 	return bounds.Dx() / 4
 }
 

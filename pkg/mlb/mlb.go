@@ -206,6 +206,8 @@ func (m *MLB) UpdateTeams(ctx context.Context) error {
 
 // UpdateGames updates scheduled games
 func (m *MLB) UpdateGames(ctx context.Context, dateStr string) error {
+	m.Lock()
+	defer m.Unlock()
 	games, err := getGames(ctx, dateStr)
 	if err != nil {
 		return err

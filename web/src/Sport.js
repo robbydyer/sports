@@ -24,6 +24,7 @@ class Sport extends React.Component {
             "stats": false,
             "scroll": false,
             "statscroll": false,
+            "tightscroll": false,
         };
     }
     async componentDidMount() {
@@ -35,6 +36,11 @@ class Sport extends React.Component {
         await GetStatus(`${this.props.sport}/scrollstatus`, (val) => {
             this.setState({
                 "scroll": val,
+            })
+        })
+        await GetStatus(`${this.props.sport}/tightscrollstatus`, (val) => {
+            this.setState({
+                "tightscroll": val,
             })
         })
         await GetStatus(`${this.props.sport}/stats/status`, (val) => {
@@ -95,37 +101,43 @@ class Sport extends React.Component {
                 <Row className="text-center"><Col><Image src={this.logosrc()} style={{ height: '100px', width: 'auto' }} fluid /></Col></Row>
                 <Row className="text-center">
                     <Col>
-                        <Form.Switch id="enabler" label="Enable/Disable" checked={this.state.enabled}
+                        <Form.Switch id={this.props.sport + "enabler"} label="Enable/Disable" checked={this.state.enabled}
                             onChange={() => this.handleSwitch(`${this.props.sport}/enable`, `${this.props.sport}/disable`, "enabled")} />
                     </Col>
                 </Row>
                 <Row className="text-center">
                     <Col>
-                        <Form.Switch id="scroller" label="Scroll Mode" checked={this.state.scroll}
+                        <Form.Switch id={this.props.sport + "scroller"} label="Scroll Mode" checked={this.state.scroll}
                             onChange={() => this.handleSwitch(`${this.props.sport}/scrollon`, `${this.props.sport}/scrolloff`, "scroll")} />
                     </Col>
                 </Row>
                 <Row className="text-center">
                     <Col>
-                        <Form.Switch id="stats" label="Stats" checked={this.state.stats}
+                        <Form.Switch id={this.props.sport + "tightscroller"} label="Back-to-back Scroll Mode" checked={this.state.tightscroll}
+                            onChange={() => this.handleSwitch(`${this.props.sport}/tightscrollon`, `${this.props.sport}/tightscrolloff`, "tightscroll")} />
+                    </Col>
+                </Row>
+                <Row className="text-center">
+                    <Col>
+                        <Form.Switch id={this.props.sport + "stats"} label="Stats" checked={this.state.stats}
                             onChange={() => this.handleSwitch(`${this.props.sport}/stats/enable`, `${this.props.sport}/stats/disable`, "stats")} />
                     </Col>
                 </Row>
                 <Row className="text-center">
                     <Col>
-                        <Form.Switch id="statscroll" label="Stats Scroll Mode" checked={this.state.statscroll}
+                        <Form.Switch id={this.props.sports + "statscroll"} label="Stats Scroll Mode" checked={this.state.statscroll}
                             onChange={() => this.handleSwitch(`${this.props.sport}/stats/scrollon`, `${this.props.sport}/stats/scrolloff`, "statscroll")} />
                     </Col>
                 </Row>
                 <Row className="text-center">
                     <Col>
-                        <Form.Switch id="favscore" label="Hide Favorite Scores" checked={this.state.hideFavorite}
+                        <Form.Switch id={this.props.sport + "favscore"} label="Hide Favorite Scores" checked={this.state.hideFavorite}
                             onChange={() => this.handleSwitch(`${this.props.sport}/hidefavoritescore`, `${this.props.sport}/showfavoritescore`, "hideFavorite")} />
                     </Col>
                 </Row>
                 <Row className="text-center">
                     <Col>
-                        <Form.Switch id="favstick" label="Stick Favorite Live Games" checked={this.state.stickyFavorite}
+                        <Form.Switch id={this.props.sport + "favstick"} label="Stick Favorite Live Games" checked={this.state.stickyFavorite}
                             onChange={() => this.handleSwitch(`${this.props.sport}/favoritesticky`, `${this.props.sport}/favoriteunstick`, "stickyFavorite")} />
                     </Col>
                 </Row>

@@ -83,9 +83,9 @@ sportsMatrixConfig:
 
   # Hardware runtime options. Pi 4's and possibly 3's might need to set gpioSlowdown to something
   # higher than the default of 0.
-  #runtimeOptions:
+  runtimeOptions:
     # GPIO slowdown for faster pi's. Range 0..4. Defaults to 0
-    #gpioSlowdown: 3
+    gpioSlowdown: 0
 
 # Clock Board
 clockConfig:
@@ -103,6 +103,10 @@ nhlConfig:
 
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
+
+  # Makes the games within this league scroll back-to-back instead of clearing
+  # the screen between each
+  tightScroll: true
 
   # Config for stats board. Either enter a list of teams, players, or both. Goalies and Skaters
   # will display separate stats.
@@ -149,6 +153,10 @@ mlbConfig:
 
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
+
+  # Makes the games within this league scroll back-to-back instead of clearing
+  # the screen between each
+  tightScroll: true
 
   boardDelay: "10s"
 
@@ -199,6 +207,10 @@ ncaamConfig:
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
 
+  # Makes the games within this league scroll back-to-back instead of clearing
+  # the screen between each
+  tightScroll: true
+
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -239,6 +251,10 @@ nbaConfig:
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
 
+  # Makes the games within this league scroll back-to-back instead of clearing
+  # the screen between each
+  tightScroll: true
+
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -276,6 +292,10 @@ nflConfig:
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
 
+  # Makes the games within this league scroll back-to-back instead of clearing
+  # the screen between each
+  tightScroll: true
+
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -312,6 +332,10 @@ mlsConfig:
 
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
+
+  # Makes the games within this league scroll back-to-back instead of clearing
+  # the screen between each
+  tightScroll: true
 
   boardDelay: "10s"
 

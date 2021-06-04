@@ -16,6 +16,7 @@ import (
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/logo"
+	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 	"github.com/robbydyer/sports/pkg/statboard"
 	"github.com/robbydyer/sports/pkg/util"
@@ -69,6 +70,7 @@ type Config struct {
 	MinimumGridHeight int               `json:"minimumGridHeight"`
 	Stats             *statboard.Config `json:"stats"`
 	ScrollMode        *atomic.Bool      `json:"scrollMode"`
+	TightScroll       *atomic.Bool      `json:"tightScroll"`
 }
 
 // FontConfig ...
@@ -148,6 +150,9 @@ func (c *Config) SetDefaults() {
 	}
 	if c.ScrollMode == nil {
 		c.ScrollMode = atomic.NewBool(false)
+	}
+	if c.TightScroll == nil {
+		c.TightScroll = atomic.NewBool(false)
 	}
 	if c.MinimumGridWidth == 0 {
 		c.MinimumGridWidth = 64
@@ -413,6 +418,22 @@ OUTER:
 
 	defer func() { _ = canvas.Clear() }()
 
+	var tightCanvas *rgbmatrix.ScrollCanvas
+	if canvas.Scrollable() && s.config.TightScroll.Load() {
+		base, ok := canvas.(*rgbmatrix.ScrollCanvas)
+		if !ok {
+			return fmt.Errorf("wat")
+		}
+
+		var err error
+		tightCanvas, err = rgbmatrix.NewScrollCanvas(base.Matrix, s.log)
+		if err != nil {
+			return fmt.Errorf("failed to get tight scroll canvas: %w", err)
+		}
+
+		tightCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
+	}
+
 GAMES:
 	for gameIndex, game := range games {
 		select {
@@ -473,6 +494,16 @@ GAMES:
 			continue GAMES
 		}
 
+		if canvas.Scrollable() && tightCanvas != nil {
+			s.log.Debug("adding to tight scroll canvas",
+				zap.Int("total width", tightCanvas.Width()),
+			)
+			tightCanvas.AddCanvas(canvas)
+
+			draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
+			continue GAMES
+		}
+
 		if err := canvas.Render(boardCtx); err != nil {
 			s.log.Error("failed to render", zap.Error(err))
 			continue GAMES
@@ -485,6 +516,12 @@ GAMES:
 			case <-time.After(s.config.boardDelay):
 			}
 		}
+	}
+
+	if canvas.Scrollable() && tightCanvas != nil {
+		tightCanvas.Merge()
+		s.log.Debug("rendering tight scroll canvas")
+		return tightCanvas.Render(boardCtx)
 	}
 
 	return nil
