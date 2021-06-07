@@ -13,8 +13,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const tightPad = 10
-
 var black = color.RGBA{R: 0x0, G: 0x0, B: 0x0, A: 0x0}
 
 // ScrollDirection represents the direction the canvas scrolls
@@ -90,7 +88,7 @@ func (s *ScrollCanvas) AddCanvas(add draw.Image) {
 	s.actuals = append(s.actuals, img)
 }
 
-func (s *ScrollCanvas) Merge() {
+func (s *ScrollCanvas) Merge(padding int) {
 	maxX := 0
 	maxY := 0
 	for _, img := range s.actuals {
@@ -118,9 +116,7 @@ func (s *ScrollCanvas) Merge() {
 		x := 0
 		for x = startX; x < endX; x++ {
 			if !buffered {
-				if (x+lastX+negStart)-lastX < tightPad {
-					lastX += tightPad
-				}
+				lastX += padding
 			}
 			buffered = true
 			for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
