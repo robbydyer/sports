@@ -108,6 +108,9 @@ nhlConfig:
   # the screen between each
   tightScroll: true
 
+  # Sets the spacing between games when tightScroll is enabled
+  tightScrollPadding: 10
+
   # Config for stats board. Either enter a list of teams, players, or both. Goalies and Skaters
   # will display separate stats.
   stats:
@@ -157,6 +160,9 @@ mlbConfig:
   # Makes the games within this league scroll back-to-back instead of clearing
   # the screen between each
   tightScroll: true
+
+  # Sets the spacing between games when tightScroll is enabled
+  tightScrollPadding: 10
 
   boardDelay: "10s"
 
@@ -211,6 +217,9 @@ ncaamConfig:
   # the screen between each
   tightScroll: true
 
+  # Sets the spacing between games when tightScroll is enabled
+  tightScrollPadding: 10
+
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -255,6 +264,9 @@ nbaConfig:
   # the screen between each
   tightScroll: true
 
+  # Sets the spacing between games when tightScroll is enabled
+  tightScrollPadding: 10
+
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -296,6 +308,9 @@ nflConfig:
   # the screen between each
   tightScroll: true
 
+  # Sets the spacing between games when tightScroll is enabled
+  tightScrollPadding: 10
+
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -336,6 +351,9 @@ mlsConfig:
   # Makes the games within this league scroll back-to-back instead of clearing
   # the screen between each
   tightScroll: true
+
+  # Sets the spacing between games when tightScroll is enabled
+  tightScrollPadding: 10
 
   boardDelay: "10s"
 
