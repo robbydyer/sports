@@ -14,6 +14,7 @@ import (
 )
 
 var black = color.RGBA{R: 0x0, G: 0x0, B: 0x0, A: 0x0}
+var DefaultScrollDelay = 50 * time.Millisecond
 
 // ScrollDirection represents the direction the canvas scrolls
 type ScrollDirection int
@@ -50,7 +51,7 @@ func NewScrollCanvas(m Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (
 		h:         h,
 		Matrix:    m,
 		enabled:   atomic.NewBool(true),
-		interval:  50 * time.Millisecond,
+		interval:  DefaultScrollDelay,
 		log:       logger,
 		direction: RightToLeft,
 	}
@@ -282,6 +283,7 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 		zap.Int("max Y", c.actual.Bounds().Max.Y),
 		zap.Int("startX", thisX),
 		zap.Int("finish", finish),
+		zap.String("delay", c.interval.String()),
 	)
 	for {
 		select {
