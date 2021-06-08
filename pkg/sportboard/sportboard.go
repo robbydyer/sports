@@ -51,6 +51,7 @@ type Todayer func() time.Time
 type Config struct {
 	TodayFunc          Todayer
 	boardDelay         time.Duration
+	scrollDelay        time.Duration
 	TimeColor          color.Color
 	ScoreColor         color.Color
 	Enabled            *atomic.Bool      `json:"enabled"`
@@ -72,6 +73,7 @@ type Config struct {
 	ScrollMode         *atomic.Bool      `json:"scrollMode"`
 	TightScroll        *atomic.Bool      `json:"tightScroll"`
 	TightScrollPadding int               `json:"tightScrollPadding"`
+	ScrollDelay        string            `json:"scrollDelay"`
 }
 
 // FontConfig ...
@@ -160,6 +162,15 @@ func (c *Config) SetDefaults() {
 	}
 	if c.MinimumGridHeight == 0 {
 		c.MinimumGridHeight = 64
+	}
+	if c.ScrollDelay != "" {
+		d, err := time.ParseDuration(c.ScrollDelay)
+		if err != nil {
+			c.scrollDelay = rgbmatrix.DefaultScrollDelay
+		}
+		c.scrollDelay = d
+	} else {
+		c.scrollDelay = rgbmatrix.DefaultScrollDelay
 	}
 }
 
@@ -433,6 +444,18 @@ OUTER:
 		}
 
 		tightCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
+		tightCanvas.SetScrollSpeed(s.config.scrollDelay)
+	} else if canvas.Scrollable() && s.config.ScrollMode.Load() {
+		scroll, ok := canvas.(*rgbmatrix.ScrollCanvas)
+		if ok {
+			orig := scroll.GetScrollSpeed()
+			defer func() { scroll.SetScrollSpeed(orig) }()
+			s.log.Debug("setting scroll delay",
+				zap.String("league", s.api.League()),
+				zap.String("delay", s.config.scrollDelay.String()),
+			)
+			scroll.SetScrollSpeed(s.config.scrollDelay)
+		}
 	}
 
 GAMES:
