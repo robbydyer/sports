@@ -8,6 +8,7 @@ This is a Go project for displaying various types of "Boards" on a Raspberry Pi 
 I run this on a Pi zero and a Pi 4. If you want to use the "Web Board" feature (see [Web UI](#web-ui)), I recommend at least a Pi 3.
 
 #### Table of Contents
+- [Getting Help](#getting-help)<br>
 - [Board Types](#current-board-types)<br>
 - [Roadmap](#roadmap)<br>
 - [Installation](#installation)<br>
@@ -17,6 +18,9 @@ I run this on a Pi zero and a Pi 4. If you want to use the "Web Board" feature (
 - [API Endpoint](#api-endpoints)<br>
 - [Contributing/Development](#contributing)<br>
 - [Examples](#examples)<br>
+
+## Getting Help
+There's a public Discord channel, "RGB Sportsmatrix Help" https://discord.gg/UUkr4DvG
 
 ## Current Board Types
 
