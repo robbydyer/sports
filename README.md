@@ -9,6 +9,7 @@ I run this on a Pi zero and a Pi 4. If you want to use the "Web Board" feature (
 
 #### Table of Contents
 - [Getting Help](#getting-help)<br>
+- [Donations/Beer Money](#donations-and-beer-money)<br>
 - [Board Types](#current-board-types)<br>
 - [Roadmap](#roadmap)<br>
 - [Installation](#installation)<br>
@@ -21,6 +22,9 @@ I run this on a Pi zero and a Pi 4. If you want to use the "Web Board" feature (
 
 ## Getting Help
 There's a public Discord channel, "RGB Sportsmatrix Help" https://discord.gg/UUkr4DvG
+
+## Donations and Beer Money
+If you feel so inclined, beer money can be sent to my Venmo (@Robby-Dyer). Never required, always appreciated.
 
 ## Current Board Types
 
