@@ -126,6 +126,10 @@ func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rect
 		} else {
 			logoEndX -= int(float64(bounds.Dx()) * scrollLogoBufferRatio)
 		}
+
+		if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
+			logoEndX -= teamInfoArea
+		}
 	}
 
 	var renderErr error
@@ -179,6 +183,7 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 
 	textWidth := s.textAreaWidth(bounds)
 	logoWidth := (bounds.Dx() - textWidth) / 2
+	recordAdder := 0
 
 	if s.config.ScrollMode.Load() {
 		if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
@@ -190,12 +195,18 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 		} else {
 			logoWidth += int(float64(bounds.Dx()) * scrollLogoBufferRatio)
 		}
+		if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
+			recordAdder = teamInfoArea
+		}
 	}
+
+	startX := textWidth + logoWidth + recordAdder
 
 	var renderErr error
 	if l != nil {
 		var renderedLogo image.Image
-		renderedLogo, renderErr = l.RenderLeftAlignedWithStart(ctx, bounds, logoWidth+textWidth)
+
+		renderedLogo, renderErr = l.RenderLeftAlignedWithStart(ctx, bounds, startX)
 		if renderErr != nil {
 			s.log.Error("failed to render away logo", zap.Error(renderErr))
 		} else {

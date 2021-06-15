@@ -74,6 +74,7 @@ type Config struct {
 	TightScroll        *atomic.Bool      `json:"tightScroll"`
 	TightScrollPadding int               `json:"tightScrollPadding"`
 	ScrollDelay        string            `json:"scrollDelay"`
+	GamblingSpread     *atomic.Bool      `json:"showOdds"`
 }
 
 // FontConfig ...
@@ -119,6 +120,7 @@ type Game interface {
 	GetClock() (string, error)
 	GetUpdate(ctx context.Context) (Game, error)
 	GetStartTime(ctx context.Context) (time.Time, error)
+	GetOdds() (string, string, error)
 }
 
 // SetDefaults sets config defaults
@@ -156,6 +158,9 @@ func (c *Config) SetDefaults() {
 	}
 	if c.TightScroll == nil {
 		c.TightScroll = atomic.NewBool(false)
+	}
+	if c.GamblingSpread == nil {
+		c.GamblingSpread = atomic.NewBool(false)
 	}
 	if c.MinimumGridWidth == 0 {
 		c.MinimumGridWidth = 64
@@ -518,7 +523,7 @@ GAMES:
 			continue GAMES
 		}
 
-		if canvas.Scrollable() && tightCanvas != nil {
+		if canvas.Scrollable() && s.config.TightScroll.Load() && tightCanvas != nil {
 			s.log.Debug("adding to tight scroll canvas",
 				zap.Int("total width", tightCanvas.Width()),
 			)

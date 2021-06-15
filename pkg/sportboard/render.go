@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -15,6 +16,10 @@ import (
 )
 
 const mls = "MLS"
+const scrollModeBuffer = 10
+const teamInfoArea = 22
+
+var red = color.RGBA{255, 0, 0, 255}
 
 func (s *SportBoard) homeSide() string {
 	if s.api.League() == mls {
@@ -37,7 +42,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 	}
 
 	var infos []*rgbrender.TextLayer
-	if s.config.ShowRecord.Load() {
+	if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
 		var err error
 		infos, err = s.teamInfoLayers(liveGame, canvas.Bounds())
 		if err != nil {
@@ -189,7 +194,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 		return err
 	}
 
-	if s.config.ShowRecord.Load() {
+	if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
 		infos, err := s.teamInfoLayers(liveGame, canvas.Bounds())
 		if err != nil {
 			return err
@@ -276,12 +281,13 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 		return err
 	}
 
+	// Give the logoLayers the real bounds, as it already accounts for scroll mode itself
 	logos, err := s.logoLayers(liveGame, canvas.Bounds())
 	if err != nil {
 		return err
 	}
 
-	if s.config.ShowRecord.Load() {
+	if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
 		infos, err := s.teamInfoLayers(liveGame, canvas.Bounds())
 		if err != nil {
 			return err
@@ -437,6 +443,29 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 	}, nil
 }
 
+/*
+func (s *SportBoard) GamblingLayers(liveGame Game, bounds image.Rectangle) ([]*rgbrender.TextLayer, error) {
+	rightTeam, err := liveGame.HomeTeam()
+	if err != nil {
+		return nil, err
+	}
+	leftTeam, err := liveGame.AwayTeam()
+	if err != nil {
+		return nil, err
+	}
+
+	if s.api.League() == mls {
+		// MLS does Home team on left
+		leftTeam, rightTeam = rightTeam, leftTeam
+	}
+
+	underAbbrev, odds, err := liveGame.GetOdds()
+	if err != nil {
+		return nil, err
+	}
+}
+*/
+
 func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbrender.TextLayer, error) {
 	rightTeam, err := liveGame.HomeTeam()
 	if err != nil {
@@ -456,12 +485,40 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 		zap.String("right", rightTeam.GetAbbreviation()),
 	)
 
-	bounds = rgbrender.ZeroedBounds(bounds)
-
-	// Add some padding to the bounds in scroll mode to get less overlap
-	// of the record/rank on the score
+	z := rgbrender.ZeroedBounds(bounds)
+	textWidth := s.textAreaWidth(z)
+	rightBounds := bounds
 	if s.config.ScrollMode.Load() {
-		bounds = image.Rect(-10, 0, bounds.Max.X+10, bounds.Max.Y)
+		logoWidth := (z.Dx() - textWidth) / 2
+		startX := textWidth + logoWidth
+		rightBounds = image.Rect(startX, z.Min.Y, startX+teamInfoArea, z.Max.Y)
+	}
+
+	leftBounds := bounds
+	if s.config.ScrollMode.Load() {
+		endX := (z.Dx() - textWidth) / 2
+		leftBounds = image.Rect(endX-teamInfoArea, z.Min.Y, endX, z.Max.Y)
+	}
+
+	oddStr := ""
+	underDog := ""
+
+	if s.config.GamblingSpread.Load() {
+		var err error
+		underDog, oddStr, err = liveGame.GetOdds()
+		if err != nil {
+			s.log.Error("failed to get gambling odds for game",
+				zap.Error(err),
+				zap.String("left team", leftTeam.GetAbbreviation()),
+				zap.String("right team", rightTeam.GetAbbreviation()),
+			)
+		} else {
+			underDog = strings.ToUpper(underDog)
+			s.log.Info("gambling odds",
+				zap.String("underdog", underDog),
+				zap.String("odds", oddStr),
+			)
+		}
 	}
 
 	return []*rgbrender.TextLayer{
@@ -487,7 +544,7 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 					_ = writer.WriteAlignedBoxed(
 						rgbrender.LeftTop,
 						canvas,
-						bounds,
+						leftBounds,
 						[]string{rank},
 						color.White,
 						color.Black,
@@ -497,9 +554,19 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 					_ = writer.WriteAlignedBoxed(
 						rgbrender.LeftBottom,
 						canvas,
-						bounds,
+						leftBounds,
 						[]string{record},
 						color.White,
+						color.Black,
+					)
+				}
+				if oddStr != "" && strings.ToUpper(leftTeam.GetAbbreviation()) == underDog {
+					_ = writer.WriteAlignedBoxed(
+						rgbrender.LeftCenter,
+						canvas,
+						leftBounds,
+						[]string{oddStr},
+						red,
 						color.Black,
 					)
 				}
@@ -528,18 +595,29 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 					_ = writer.WriteAlignedBoxed(
 						rgbrender.RightTop,
 						canvas,
-						bounds,
+						rightBounds,
 						[]string{rank},
 						color.White,
 						color.Black,
 					)
 				}
 				if record != "" {
-					_ = writer.WriteAlignedBoxed(rgbrender.RightBottom,
+					_ = writer.WriteAlignedBoxed(
+						rgbrender.RightBottom,
 						canvas,
-						bounds,
+						rightBounds,
 						[]string{record},
 						color.White,
+						color.Black,
+					)
+				}
+				if oddStr != "" && strings.ToUpper(rightTeam.GetAbbreviation()) == underDog {
+					_ = writer.WriteAlignedBoxed(
+						rgbrender.RightCenter,
+						canvas,
+						rightBounds,
+						[]string{oddStr},
+						red,
 						color.Black,
 					)
 				}

@@ -206,6 +206,11 @@ func (g *Game) GetStartTime(ctx context.Context) (time.Time, error) {
 	return g.GameTime, nil
 }
 
+// GetOdds ...
+func (g *Game) GetOdds() (string, string, error) {
+	return "", "", fmt.Errorf("not implemented")
+}
+
 // GetLiveGame ...
 func GetLiveGame(ctx context.Context, link string) (sportboard.Game, error) {
 	uri := fmt.Sprintf("%s/%s", linkBase, link)
