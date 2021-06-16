@@ -15,8 +15,10 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
-const mls = "MLS"
-const teamInfoArea = 22
+const (
+	mls          = "MLS"
+	teamInfoArea = 22
+)
 
 var red = color.RGBA{255, 0, 0, 255}
 

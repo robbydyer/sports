@@ -7,6 +7,8 @@ import (
 )
 
 func TestExtractOverUnder(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		in          string

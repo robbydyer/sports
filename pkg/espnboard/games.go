@@ -37,9 +37,10 @@ type event struct {
 	} `json:"competitions"`
 }
 
+// Odds represents a game's betting odds
 type Odds struct {
 	Provider *struct {
-		Id       string `json:"id"`
+		ID       string `json:"id"`
 		Name     string `json:"name"`
 		Priority int    `json:"priority"`
 	} `json:"provider"`
