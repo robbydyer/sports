@@ -34,7 +34,9 @@ type SportBoard struct {
 	logoDrawCache   map[string]image.Image
 	scoreWriters    map[string]*rgbrender.TextWriter
 	timeWriters     map[string]*rgbrender.TextWriter
+	teamInfoWidths  map[string]map[string]int
 	watchTeams      []string
+	teamInfoLock    sync.RWMutex
 	drawLock        sync.RWMutex
 	logoLock        sync.RWMutex
 	enablerLock     sync.Mutex
@@ -191,6 +193,7 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		timeWriters:     make(map[string]*rgbrender.TextWriter),
 		scoreWriters:    make(map[string]*rgbrender.TextWriter),
 		cancelBoard:     make(chan struct{}),
+		teamInfoWidths:  make(map[string]map[string]int),
 	}
 
 	if s.config.boardDelay < 10*time.Second {
@@ -230,6 +233,8 @@ func (s *SportBoard) cacheClear() {
 	defer s.drawLock.Unlock()
 	s.logoLock.Lock()
 	defer s.logoLock.Unlock()
+	s.teamInfoLock.Lock()
+	defer s.teamInfoLock.Unlock()
 
 	s.log.Warn("Clearing cache")
 	for k := range s.cachedLiveGames {
@@ -240,6 +245,9 @@ func (s *SportBoard) cacheClear() {
 	}
 	for k := range s.logos {
 		delete(s.logos, k)
+	}
+	for k := range s.teamInfoWidths {
+		delete(s.teamInfoWidths, k)
 	}
 }
 

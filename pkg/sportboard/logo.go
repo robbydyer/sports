@@ -116,6 +116,8 @@ func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rect
 	textWidth := s.textAreaWidth(bounds)
 	logoEndX := (bounds.Dx() - textWidth) / 2
 
+	setCache := true
+
 	if s.config.ScrollMode.Load() {
 		if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
 			if bounds.Dx() < 64 {
@@ -128,7 +130,15 @@ func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rect
 		}
 
 		if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
-			logoEndX -= teamInfoArea
+			w, err := s.getTeamInfoWidth(s.api.League(), abbreviation)
+			if err != nil {
+				w = defaultTeamInfoArea
+				setCache = false
+				s.log.Error("failed to get team info width",
+					zap.Error(err),
+				)
+			}
+			logoEndX -= w
 		}
 	}
 
@@ -139,7 +149,9 @@ func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rect
 		if renderErr != nil {
 			s.log.Error("failed to render home logo", zap.Error(renderErr))
 		} else {
-			s.setLogoDrawCache(logoKey, renderedLogo)
+			if setCache {
+				s.setLogoDrawCache(logoKey, renderedLogo)
+			}
 			return renderedLogo, nil
 		}
 	}
@@ -185,6 +197,8 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 	logoWidth := (bounds.Dx() - textWidth) / 2
 	recordAdder := 0
 
+	setCache := true
+
 	if s.config.ScrollMode.Load() {
 		if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
 			if bounds.Dx() < 64 {
@@ -196,7 +210,14 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 			logoWidth += int(float64(bounds.Dx()) * scrollLogoBufferRatio)
 		}
 		if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
-			recordAdder = teamInfoArea
+			recordAdder, err = s.getTeamInfoWidth(s.api.League(), abbreviation)
+			if err != nil {
+				s.log.Error("failed to get team info width",
+					zap.Error(err),
+				)
+				recordAdder = defaultTeamInfoArea
+				setCache = false
+			}
 		}
 	}
 
@@ -210,7 +231,9 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 		if renderErr != nil {
 			s.log.Error("failed to render away logo", zap.Error(renderErr))
 		} else {
-			s.setLogoDrawCache(logoKey, renderedLogo)
+			if setCache {
+				s.setLogoDrawCache(logoKey, renderedLogo)
+			}
 			return renderedLogo, nil
 		}
 	}

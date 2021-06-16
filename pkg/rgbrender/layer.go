@@ -169,8 +169,40 @@ func (l *LayerDrawer) priorities() []int {
 
 // Prepare runs the prepare func of each layer concurrently
 func (l *LayerDrawer) Prepare(ctx context.Context) error {
+	textWg := sync.WaitGroup{}
 	prepareWg := sync.WaitGroup{}
 	prepErrs := make(chan error, len(l.layers)+len(l.textLayers))
+
+	// Text layers are done first, because in some weird cases (like team info + logo relationship),
+	// the text layers are used to determine the layout of image layers
+	for _, layer := range l.textLayers {
+		if layer.prepare == nil {
+			continue
+		}
+		textWg.Add(1)
+		go func(layer *TextLayer) {
+			defer textWg.Done()
+			var err error
+			layer.prepared, layer.preparedText, err = layer.prepare(ctx)
+			if err != nil {
+				prepErrs <- err
+			}
+		}(layer)
+	}
+
+	textDone := make(chan struct{})
+	go func() {
+		defer close(textDone)
+		textWg.Wait()
+	}()
+
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	case <-textDone:
+	case <-time.After(l.drawTimeout):
+		return fmt.Errorf("timed out LayerDrawer")
+	}
 
 	for _, layer := range l.layers {
 		if layer.prepare == nil {
@@ -181,20 +213,6 @@ func (l *LayerDrawer) Prepare(ctx context.Context) error {
 			defer prepareWg.Done()
 			var err error
 			layer.prepared, err = layer.prepare(ctx)
-			if err != nil {
-				prepErrs <- err
-			}
-		}(layer)
-	}
-	for _, layer := range l.textLayers {
-		if layer.prepare == nil {
-			continue
-		}
-		prepareWg.Add(1)
-		go func(layer *TextLayer) {
-			defer prepareWg.Done()
-			var err error
-			layer.prepared, layer.preparedText, err = layer.prepare(ctx)
 			if err != nil {
 				prepErrs <- err
 			}

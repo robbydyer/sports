@@ -3,6 +3,7 @@ package sportboard
 import (
 	"fmt"
 	"image"
+	"image/draw"
 	"math"
 	"strings"
 
@@ -11,6 +12,34 @@ import (
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
+
+func (s *SportBoard) getTeamInfoWidth(league string, teamAbbrev string) (int, error) {
+	s.teamInfoLock.RLock()
+	defer s.teamInfoLock.RUnlock()
+
+	_, lOk := s.teamInfoWidths[league]
+	if !lOk {
+		return 0, fmt.Errorf("no info for league %s", league)
+	}
+	i, ok := s.teamInfoWidths[league][teamAbbrev]
+	if !ok {
+		return 0, fmt.Errorf("no info for %s %s", league, teamAbbrev)
+	}
+
+	return i, nil
+}
+
+func (s *SportBoard) setTeamInfoWidth(league string, teamAbbrev string, width int) {
+	s.teamInfoLock.Lock()
+	defer s.teamInfoLock.Unlock()
+
+	_, ok := s.teamInfoWidths[league]
+	if !ok {
+		s.teamInfoWidths[league] = make(map[string]int)
+	}
+
+	s.teamInfoWidths[league][teamAbbrev] = width
+}
 
 func (s *SportBoard) logCanvas(canvas board.Canvas, msg string) {
 	s.log.Debug(msg,
@@ -142,6 +171,22 @@ func (s *SportBoard) textAreaWidth(bounds image.Rectangle) int {
 		return 16
 	}
 	return bounds.Dx() / 4
+}
+
+func (s *SportBoard) calculateTeamInfoWidth(canvas draw.Image, writer *rgbrender.TextWriter, strs []string) (int, error) {
+	lengths, err := writer.MeasureStrings(canvas, strs)
+	if err != nil {
+		return defaultTeamInfoArea, err
+	}
+
+	max := 0
+	for _, l := range lengths {
+		if l > max {
+			max = l
+		}
+	}
+
+	return max, nil
 }
 
 func scoreStr(g Game, homeSide string) (string, error) {

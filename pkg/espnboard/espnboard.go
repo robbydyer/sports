@@ -202,6 +202,7 @@ func (e *ESPNBoard) GetWatchTeams(teams []string) []string {
 	e.log.Debug("getting watch teams",
 		zap.String("league", e.leaguer.League()),
 		zap.Strings("conferences", confs),
+		zap.Strings("input", teams),
 	)
 
 	watch := make(map[string]struct{})
@@ -212,10 +213,15 @@ OUTER:
 			e.log.Info("setting ESPNBoard watch teams to ALL teams")
 			return e.AllTeamAbbreviations()
 		}
+		for _, a := range e.AllTeamAbbreviations() {
+			if t == a {
+				watch[t] = struct{}{}
+				continue OUTER
+			}
+		}
 		for _, team := range e.TeamsInConference(t) {
 			watch[team] = struct{}{}
 		}
-		continue OUTER
 	}
 
 	ret := make([]string, len(watch))
@@ -243,11 +249,12 @@ func (e *ESPNBoard) TeamsInConference(conference string) []string {
 	}
 	e.log.Debug("checking conference for teams", zap.String("conference", conference))
 	ret := []string{}
+
 	for _, team := range e.teams {
 		if team.Conference == nil {
 			continue
 		}
-		if strings.Contains(strings.ToLower(team.Conference.Abbreviation), conference) {
+		if strings.Contains(conference, strings.ToLower(team.Conference.Abbreviation)) || strings.Contains(strings.ToLower(team.Conference.Abbreviation), conference) {
 			ret = append(ret, team.Abbreviation)
 		}
 	}
