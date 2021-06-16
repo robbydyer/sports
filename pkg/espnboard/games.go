@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -15,6 +16,8 @@ import (
 
 	"github.com/robbydyer/sports/pkg/sportboard"
 )
+
+var overUnderRegex = regexp.MustCompile(`^([A-Z]+)\s+([-]{0,1}[0-9]+[\.0-9]*)`)
 
 type schedule struct {
 	Events []*event `json:"events"`
@@ -30,7 +33,19 @@ type event struct {
 			Team     *Team  `json:"team"`
 			Score    string `json:"score"`
 		}
+		Odds []*Odds `json:"odds"`
 	} `json:"competitions"`
+}
+
+// Odds represents a game's betting odds
+type Odds struct {
+	Provider *struct {
+		ID       string `json:"id"`
+		Name     string `json:"name"`
+		Priority int    `json:"priority"`
+	} `json:"provider"`
+	Details   string  `json:"details"`
+	OverUnder float64 `json:"overUnder"`
 }
 
 // Game ...
@@ -41,6 +56,7 @@ type Game struct {
 	GameTime time.Time
 	status   *status
 	leaguer  Leaguer
+	odds     []*Odds
 }
 
 type status struct {
@@ -167,6 +183,30 @@ func (g *Game) GetStartTime(ctx context.Context) (time.Time, error) {
 	return g.GameTime, nil
 }
 
+// GetOdds ...
+func (g *Game) GetOdds() (string, string, error) {
+	if len(g.odds) == 0 {
+		return "", "", fmt.Errorf("no odds for game %d", g.GetID())
+	}
+
+	for _, odd := range g.odds {
+		if odd.Provider.Priority == 1 || odd.Provider.Priority == 0 {
+			return extractOverUnder(odd.Details)
+		}
+	}
+
+	return extractOverUnder(g.odds[0].Details)
+}
+
+func extractOverUnder(details string) (string, string, error) {
+	match := overUnderRegex.FindStringSubmatch(details)
+	if len(match) < 3 {
+		return "", "", fmt.Errorf("no match found")
+	}
+
+	return match[1], match[2], nil
+}
+
 // GetGames gets the games for a given date
 func (e *ESPNBoard) GetGames(ctx context.Context, dateStr string) ([]*Game, error) {
 	// http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?lang=en&region=us&limit=500&dates=20191121&groups=50
@@ -244,6 +284,7 @@ func gameFromEvent(event *event) (*Game, error) {
 		status:   event.Status,
 	}
 	for _, comp := range event.Competitions {
+		game.odds = append(game.odds, comp.Odds...)
 		for _, team := range comp.Competitors {
 			if strings.ToLower(team.HomeAway) == "home" {
 				game.Home = team.Team

@@ -232,7 +232,7 @@ func (l *Logo) RenderRightAlignedWithEnd(ctx context.Context, bounds image.Recta
 	return i, nil
 }
 
-// RenderLeftAlignedWithStart renders the logo on the right side of the matrix
+// RenderLeftAlignedWithStart renders the logo on the left side of the matrix with a starting X point
 func (l *Logo) RenderLeftAlignedWithStart(ctx context.Context, bounds image.Rectangle, startX int) (image.Image, error) {
 	thumb, err := l.GetThumbnail(ctx, l.bounds)
 	if err != nil {

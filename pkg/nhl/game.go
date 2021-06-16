@@ -188,6 +188,11 @@ func (g *Game) GetUpdate(ctx context.Context) (sportboard.Game, error) {
 	return g.GameGetter(ctx, g.Link)
 }
 
+// GetOdds ...
+func (g *Game) GetOdds() (string, string, error) {
+	return "", "", fmt.Errorf("not implemented")
+}
+
 func timeFromGameTime(gameTime string) (time.Time, error) {
 	t, err := time.Parse("2006-01-02T15:04:05Z", gameTime)
 	if err != nil {

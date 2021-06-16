@@ -150,8 +150,13 @@ nhlConfig:
   # Tells the matrix to lock onto a live game that a favorite team is playing in
   favoriteSticky: false
 
+  # WARNING: This setting is currently unsupported for NHL
   # Set to true to show a team's record on the scoreboard
   showRecord: false
+
+  # WARNING: This setting is currently unsupported for NHL
+  # Set to true to show gambling odds for a game
+  showOdds: false
 
 ## MLB Config
 mlbConfig:
@@ -209,8 +214,13 @@ mlbConfig:
   # Tells the matrix to lock onto a live game that a favorite team is playing in
   favoriteSticky: false
 
+  # WARNING: This setting is currently unsupported for MLB
   # Set to true to show a team's record on the scoreboard
   showRecord: false
+
+  # WARNING: This setting is currently unsupported for MLB
+  # Set to true to show gambling odds for a game
+  showOdds: false
 
 ## NCAA Mens Basketball Config
 ncaamConfig:
@@ -262,6 +272,9 @@ ncaamConfig:
   # Set to true to show a team's record on the scoreboard
   showRecord: false
 
+  # Set to true to show gambling odds for a game
+  showOdds: false
+
 ## NBA Config
 nbaConfig:
   enabled: true
@@ -308,6 +321,9 @@ nbaConfig:
 
   # Set to true to show a team's record on the scoreboard
   showRecord: false
+
+  # Set to true to show gambling odds for a game
+  showOdds: false
 
 ## NFL Config
 nflConfig:
@@ -356,6 +372,9 @@ nflConfig:
   # Set to true to show a team's record on the scoreboard
   showRecord: false
 
+  # Set to true to show gambling odds for a game
+  showOdds: false
+
 ## MLS Config
 mlsConfig:
   enabled: true
@@ -402,6 +421,9 @@ mlsConfig:
 
   # Set to true to show a team's record on the scoreboard
   showRecord: false
+
+  # Set to true to show gambling odds for a game
+  showOdds: false
 
 # Image Board. Rotates showing all the images in a list of directories
 # All images in the directory will be automatically scaled to fit the matrix

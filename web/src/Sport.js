@@ -25,6 +25,8 @@ class Sport extends React.Component {
             "scroll": false,
             "statscroll": false,
             "tightscroll": false,
+            "record": false,
+            "odds": false,
         };
     }
     async componentDidMount() {
@@ -61,6 +63,16 @@ class Sport extends React.Component {
         await GetStatus(`${this.props.sport}/favoritestickystatus`, (val) => {
             this.setState({
                 "stickyFavorite": val,
+            })
+        })
+        await GetStatus(`${this.props.sport}/oddsstatus`, (val) => {
+            this.setState({
+                "odds": val,
+            })
+        })
+        await GetStatus(`${this.props.sport}/recordrankstatus`, (val) => {
+            this.setState({
+                "record": val,
             })
         })
     }
@@ -133,6 +145,18 @@ class Sport extends React.Component {
                     <Col>
                         <Form.Switch id={this.props.sport + "favscore"} label="Hide Favorite Scores" checked={this.state.hideFavorite}
                             onChange={() => this.handleSwitch(`${this.props.sport}/hidefavoritescore`, `${this.props.sport}/showfavoritescore`, "hideFavorite")} />
+                    </Col>
+                </Row>
+                <Row className="text-center">
+                    <Col>
+                        <Form.Switch id={this.props.sport + "odds"} label="Show Odds" checked={this.state.odds}
+                            onChange={() => this.handleSwitch(`${this.props.sport}/oddson`, `${this.props.sport}/oddsoff`, "odds")} />
+                    </Col>
+                </Row>
+                <Row className="text-center">
+                    <Col>
+                        <Form.Switch id={this.props.sport + "record"} label="Record + Rank" checked={this.state.record}
+                            onChange={() => this.handleSwitch(`${this.props.sport}/recordrankon`, `${this.props.sport}/recordrankoff`, "record")} />
                     </Col>
                 </Row>
                 <Row className="text-center">

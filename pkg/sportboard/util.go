@@ -47,7 +47,7 @@ func (s *SportBoard) getTimeWriter(canvasBounds image.Rectangle) (*rgbrender.Tex
 		return nil, err
 	}
 
-	if bounds.Dy() <= 128 {
+	if bounds.Dy() <= 256 {
 		timeWriter.FontSize = 8.0
 		timeWriter.YStartCorrection = -2
 	} else {

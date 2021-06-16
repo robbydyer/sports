@@ -44,7 +44,7 @@ func (s *SportBoard) RenderGameCounter(canvas board.Canvas, numGames int, active
 			for x := 0; x < pixSize; x++ {
 				firstY := yPix
 				for y := 0; y < pixSize; y++ {
-					img.Set(xPix, yPix, color.RGBA{255, 0, 0, 255})
+					img.Set(xPix, yPix, red)
 					yPix--
 				}
 				yPix = firstY

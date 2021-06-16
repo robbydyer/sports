@@ -174,5 +174,81 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				_, _ = w.Write([]byte("false"))
 			},
 		},
+		{
+			Path: fmt.Sprintf("/%s/recordrankon", s.api.HTTPPathPrefix()),
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.log.Info("enabling team record/rank mode", zap.String("board", s.api.League()))
+				select {
+				case s.cancelBoard <- struct{}{}:
+				default:
+				}
+				s.config.ShowRecord.Store(true)
+				s.cacheClear()
+				s.api.CacheClear(context.Background())
+			},
+		},
+		{
+			Path: fmt.Sprintf("/%s/recordrankoff", s.api.HTTPPathPrefix()),
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.log.Info("disabling team record/rank mode", zap.String("board", s.api.League()))
+				select {
+				case s.cancelBoard <- struct{}{}:
+				default:
+				}
+				s.config.ShowRecord.Store(false)
+				s.cacheClear()
+				s.api.CacheClear(context.Background())
+			},
+		},
+		{
+			Path: fmt.Sprintf("/%s/recordrankstatus", s.api.HTTPPathPrefix()),
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.log.Debug("get team record/rank status", zap.String("board", s.Name()))
+				w.Header().Set("Content-Type", "text/plain")
+				if s.config.ShowRecord.Load() {
+					_, _ = w.Write([]byte("true"))
+					return
+				}
+				_, _ = w.Write([]byte("false"))
+			},
+		},
+		{
+			Path: fmt.Sprintf("/%s/oddson", s.api.HTTPPathPrefix()),
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.log.Info("enabling odds mode", zap.String("board", s.api.League()))
+				select {
+				case s.cancelBoard <- struct{}{}:
+				default:
+				}
+				s.config.GamblingSpread.Store(true)
+				s.cacheClear()
+				s.api.CacheClear(context.Background())
+			},
+		},
+		{
+			Path: fmt.Sprintf("/%s/oddsoff", s.api.HTTPPathPrefix()),
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.log.Info("disabling odds mode", zap.String("board", s.api.League()))
+				select {
+				case s.cancelBoard <- struct{}{}:
+				default:
+				}
+				s.config.GamblingSpread.Store(false)
+				s.cacheClear()
+				s.api.CacheClear(context.Background())
+			},
+		},
+		{
+			Path: fmt.Sprintf("/%s/oddsstatus", s.api.HTTPPathPrefix()),
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.log.Debug("get odds status", zap.String("board", s.Name()))
+				w.Header().Set("Content-Type", "text/plain")
+				if s.config.GamblingSpread.Load() {
+					_, _ = w.Write([]byte("true"))
+					return
+				}
+				_, _ = w.Write([]byte("false"))
+			},
+		},
 	}, nil
 }
