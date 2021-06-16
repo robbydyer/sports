@@ -16,7 +16,6 @@ import (
 )
 
 const mls = "MLS"
-const scrollModeBuffer = 10
 const teamInfoArea = 22
 
 var red = color.RGBA{255, 0, 0, 255}
@@ -540,7 +539,7 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 				}
 				rank := text[0]
 				record := text[1]
-				if rank != "" {
+				if rank != "" && s.config.ShowRecord.Load() {
 					_ = writer.WriteAlignedBoxed(
 						rgbrender.LeftTop,
 						canvas,
@@ -550,7 +549,7 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 						color.Black,
 					)
 				}
-				if record != "" {
+				if record != "" && s.config.ShowRecord.Load() {
 					_ = writer.WriteAlignedBoxed(
 						rgbrender.LeftBottom,
 						canvas,
@@ -560,7 +559,7 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 						color.Black,
 					)
 				}
-				if oddStr != "" && strings.ToUpper(leftTeam.GetAbbreviation()) == underDog {
+				if s.config.GamblingSpread.Load() && oddStr != "" && strings.ToUpper(leftTeam.GetAbbreviation()) == underDog {
 					_ = writer.WriteAlignedBoxed(
 						rgbrender.LeftCenter,
 						canvas,
@@ -591,7 +590,7 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 				}
 				rank := text[0]
 				record := text[1]
-				if rank != "" {
+				if rank != "" && s.config.ShowRecord.Load() {
 					_ = writer.WriteAlignedBoxed(
 						rgbrender.RightTop,
 						canvas,
@@ -601,7 +600,7 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 						color.Black,
 					)
 				}
-				if record != "" {
+				if record != "" && s.config.ShowRecord.Load() {
 					_ = writer.WriteAlignedBoxed(
 						rgbrender.RightBottom,
 						canvas,
@@ -611,7 +610,7 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 						color.Black,
 					)
 				}
-				if oddStr != "" && strings.ToUpper(rightTeam.GetAbbreviation()) == underDog {
+				if s.config.GamblingSpread.Load() && oddStr != "" && strings.ToUpper(rightTeam.GetAbbreviation()) == underDog {
 					_ = writer.WriteAlignedBoxed(
 						rgbrender.RightCenter,
 						canvas,
