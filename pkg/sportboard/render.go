@@ -444,29 +444,6 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 	}, nil
 }
 
-/*
-func (s *SportBoard) GamblingLayers(liveGame Game, bounds image.Rectangle) ([]*rgbrender.TextLayer, error) {
-	rightTeam, err := liveGame.HomeTeam()
-	if err != nil {
-		return nil, err
-	}
-	leftTeam, err := liveGame.AwayTeam()
-	if err != nil {
-		return nil, err
-	}
-
-	if s.api.League() == mls {
-		// MLS does Home team on left
-		leftTeam, rightTeam = rightTeam, leftTeam
-	}
-
-	underAbbrev, odds, err := liveGame.GetOdds()
-	if err != nil {
-		return nil, err
-	}
-}
-*/
-
 func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbrender.TextLayer, error) {
 	rightTeam, err := liveGame.HomeTeam()
 	if err != nil {
