@@ -17,7 +17,10 @@ import (
 	"github.com/robbydyer/sports/pkg/sportboard"
 )
 
-var overUnderRegex = regexp.MustCompile(`^([A-Z]+)\s+([-]{0,1}[0-9]+[\.0-9]*)`)
+var (
+	overUnderRegex = regexp.MustCompile(`^([A-Z]+)\s+([-]{0,1}[0-9]+[\.0-9]*)`)
+	mLB            = "MLB"
+)
 
 type schedule struct {
 	Events []*event `json:"events"`
@@ -67,6 +70,7 @@ type status struct {
 		Completed   *bool  `json:"completed"`
 		Description string `json:"description"`
 		State       string `json:"state"`
+		ShortDetail string `json:"shortDetail"`
 	} `json:"type"`
 }
 
@@ -87,7 +91,13 @@ func (g *Game) IsLive() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if g.status.Period > 0 && !complete {
+	if complete {
+		return false, nil
+	}
+	if time.Until(g.GameTime).Minutes() > 0 {
+		return false, nil
+	}
+	if g.status.Period > 0 {
 		return true, nil
 	}
 
@@ -127,11 +137,27 @@ func (g *Game) AwayTeam() (sportboard.Team, error) {
 
 // GetQuarter ...
 func (g *Game) GetQuarter() (string, error) {
+	if g.leaguer != nil && g.leaguer.League() == mLB {
+		if g.status.Type.ShortDetail != "" {
+			parts := strings.Fields(g.status.Type.ShortDetail)
+			if len(parts) > 1 {
+				return parts[1], nil
+			}
+		}
+	}
 	return strconv.Itoa(g.status.Period), nil
 }
 
 // GetClock ...
 func (g *Game) GetClock() (string, error) {
+	if g.leaguer != nil && g.leaguer.League() == mLB {
+		if g.status.Type.ShortDetail != "" {
+			parts := strings.Fields(g.status.Type.ShortDetail)
+			if len(parts) > 0 {
+				return parts[0], nil
+			}
+		}
+	}
 	return g.status.DisplayClock, nil
 }
 
@@ -175,7 +201,17 @@ func (g *Game) GetUpdate(ctx context.Context) (sportboard.Game, error) {
 		return nil, fmt.Errorf("failed to unmarshal game JSON: %w", err)
 	}
 
-	return gameFromEvent(event)
+	newG, err := gameFromEvent(event)
+	if err != nil {
+		return nil, err
+	}
+	newG.leaguer = g.leaguer
+
+	if len(newG.odds) < 1 {
+		newG.odds = append(newG.odds, g.odds...)
+	}
+
+	return newG, nil
 }
 
 // GetStartTime ...
