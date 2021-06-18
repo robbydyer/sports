@@ -207,6 +207,10 @@ func (g *Game) GetUpdate(ctx context.Context) (sportboard.Game, error) {
 	}
 	newG.leaguer = g.leaguer
 
+	if len(newG.odds) < 1 {
+		newG.odds = append(newG.odds, g.odds...)
+	}
+
 	return newG, nil
 }
 

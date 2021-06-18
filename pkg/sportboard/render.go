@@ -40,7 +40,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 
 	if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
 		var err error
-		infos, err := s.teamInfoLayers(liveGame, canvas.Bounds())
+		infos, err := s.teamInfoLayers(canvas, liveGame, canvas.Bounds())
 		if err != nil {
 			return err
 		}
@@ -190,7 +190,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 	}
 
 	if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
-		infos, err := s.teamInfoLayers(liveGame, canvas.Bounds())
+		infos, err := s.teamInfoLayers(canvas, liveGame, canvas.Bounds())
 		if err != nil {
 			return err
 		}
@@ -282,7 +282,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 	}
 
 	if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
-		infos, err := s.teamInfoLayers(liveGame, canvas.Bounds())
+		infos, err := s.teamInfoLayers(canvas, liveGame, canvas.Bounds())
 		if err != nil {
 			return err
 		}
@@ -433,7 +433,7 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 	}, nil
 }
 
-func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbrender.TextLayer, error) {
+func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds image.Rectangle) ([]*rgbrender.TextLayer, error) {
 	rightTeam, err := liveGame.HomeTeam()
 	if err != nil {
 		return nil, err
@@ -476,6 +476,8 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 		}
 	}
 
+	leftBounds := bounds
+	rightBounds := bounds
 	return []*rgbrender.TextLayer{
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
@@ -487,7 +489,34 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 					return nil, nil, err
 				}
 
-				if s.hasNoInfo(rank, record, oddStr) {
+				if s.config.ScrollMode.Load() && !s.hasNoInfo(rank, record, oddStr, underDog, leftTeam.GetAbbreviation()) {
+					widthStrs := []string{}
+					if s.config.ShowRecord.Load() {
+						widthStrs = append(widthStrs, rank, record)
+					}
+					if s.config.GamblingSpread.Load() {
+						widthStrs = append(widthStrs, oddStr)
+					}
+					infoWidth, err := s.getTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation())
+					if err != nil || infoWidth == 0 {
+						var err error
+						infoWidth, err = s.calculateTeamInfoWidth(canvas, writer, widthStrs)
+						if err != nil {
+							s.log.Error("failed to calculate team info width, using default",
+								zap.Error(err),
+							)
+						}
+						infoWidth += teamInfoPad
+						s.log.Debug("setting team info width",
+							zap.String("league", s.api.League()),
+							zap.String("team", leftTeam.GetAbbreviation()),
+							zap.Int("width", infoWidth),
+						)
+						s.setTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation(), infoWidth)
+					}
+					endX := ((z.Dx() - textWidth) / 2) - teamInfoPad
+					leftBounds = image.Rect(endX-infoWidth, z.Min.Y, endX, z.Max.Y)
+				} else {
 					s.log.Debug("set team info width 0",
 						zap.String("league", s.api.League()),
 						zap.String("team", leftTeam.GetAbbreviation()),
@@ -504,31 +533,8 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 				rank := text[0]
 				record := text[1]
 
-				if s.hasNoInfo(rank, record, oddStr) {
+				if s.hasNoInfo(rank, record, oddStr, underDog, leftTeam.GetAbbreviation()) {
 					return nil
-				}
-
-				leftBounds := bounds
-				if s.config.ScrollMode.Load() {
-					infoWidth, err := s.getTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation())
-					if err != nil || infoWidth == 0 {
-						var err error
-						infoWidth, err = s.calculateTeamInfoWidth(canvas, writer, []string{record, rank, oddStr})
-						if err != nil {
-							s.log.Error("failed to calculate team info width, using default",
-								zap.Error(err),
-							)
-						}
-						infoWidth += teamInfoPad
-						s.log.Debug("setting team info width",
-							zap.String("league", s.api.League()),
-							zap.String("team", leftTeam.GetAbbreviation()),
-							zap.Int("width", infoWidth),
-						)
-						s.setTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation(), infoWidth)
-					}
-					endX := ((z.Dx() - textWidth) / 2) - teamInfoPad
-					leftBounds = image.Rect(endX-infoWidth, z.Min.Y, endX, z.Max.Y)
 				}
 
 				if rank != "" && s.config.ShowRecord.Load() {
@@ -574,29 +580,18 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 					return nil, nil, err
 				}
 
-				if s.hasNoInfo(rank, record, oddStr) {
-					s.setTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation(), 0)
-				}
-
-				return writer, []string{rank, record}, nil
-			},
-			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
-				if len(text) != 2 {
-					return fmt.Errorf("invalid rank/record input")
-				}
-				rank := text[0]
-				record := text[1]
-
-				if s.hasNoInfo(rank, record, oddStr) {
-					return nil
-				}
-
-				rightBounds := bounds
-				if s.config.ScrollMode.Load() {
+				if s.config.ScrollMode.Load() && !s.hasNoInfo(rank, record, oddStr, underDog, rightTeam.GetAbbreviation()) {
+					widthStrs := []string{}
+					if s.config.ShowRecord.Load() {
+						widthStrs = append(widthStrs, rank, record)
+					}
+					if s.config.GamblingSpread.Load() {
+						widthStrs = append(widthStrs, oddStr)
+					}
 					infoWidth, err := s.getTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation())
 					if err != nil || infoWidth == 0 {
 						var err error
-						infoWidth, err = s.calculateTeamInfoWidth(canvas, writer, []string{record, rank, oddStr})
+						infoWidth, err = s.calculateTeamInfoWidth(canvas, writer, widthStrs)
 						if err != nil {
 							s.log.Error("failed to calculate team info width, using default",
 								zap.Error(err),
@@ -612,6 +607,21 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 					logoWidth := (z.Dx() - textWidth) / 2
 					startX := textWidth + logoWidth + teamInfoPad
 					rightBounds = image.Rect(startX, z.Min.Y, startX+infoWidth, z.Max.Y)
+				} else {
+					s.setTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation(), 0)
+				}
+
+				return writer, []string{rank, record}, nil
+			},
+			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
+				if len(text) != 2 {
+					return fmt.Errorf("invalid rank/record input")
+				}
+				rank := text[0]
+				record := text[1]
+
+				if s.hasNoInfo(rank, record, oddStr, underDog, rightTeam.GetAbbreviation()) {
+					return nil
 				}
 
 				if rank != "" && s.config.ShowRecord.Load() {
@@ -650,7 +660,7 @@ func (s *SportBoard) teamInfoLayers(liveGame Game, bounds image.Rectangle) ([]*r
 	}, nil
 }
 
-func (s *SportBoard) hasNoInfo(rank string, record string, odds string) bool {
+func (s *SportBoard) hasNoInfo(rank string, record string, odds string, underDog string, thisTeam string) bool {
 	if (s.config.ShowRecord.Load() && rank == "" && record == "") && (s.config.GamblingSpread.Load() && odds == "") {
 		return true
 	}
@@ -658,6 +668,9 @@ func (s *SportBoard) hasNoInfo(rank string, record string, odds string) bool {
 		return true
 	}
 	if !s.config.GamblingSpread.Load() && s.config.ShowRecord.Load() && rank == "" && record == "" {
+		return true
+	}
+	if !s.config.ShowRecord.Load() && s.config.GamblingSpread.Load() && strings.EqualFold(underDog, thisTeam) {
 		return true
 	}
 
