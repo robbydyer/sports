@@ -707,11 +707,7 @@ func (s *SportBoard) doGrid(ctx context.Context, grid *rgbrender.Grid, canvas bo
 
 	draw.Draw(canvas, canvas.Bounds(), counter, image.Point{}, draw.Over)
 
-	if err := canvas.Render(ctx); err != nil {
-		return err
-	}
-
-	return nil
+	return canvas.Render(ctx)
 }
 
 func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {

@@ -151,11 +151,7 @@ func (n *NHL) GetPlayer(ctx context.Context, id string) (statboard.Player, error
 
 // UpdateStats ...
 func (p *Player) UpdateStats(ctx context.Context) error {
-	if err := p.setStats(ctx); err != nil {
-		return err
-	}
-
-	return nil
+	return p.setStats(ctx)
 }
 
 // GetCategory returns the player's catgeory: skater or goalie

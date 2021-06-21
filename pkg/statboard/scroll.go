@@ -95,9 +95,5 @@ func (s *StatBoard) doScroll(ctx context.Context, canvas board.Canvas, players [
 		return err
 	}
 
-	if err := scrollCanvas.Render(ctx); err != nil {
-		return err
-	}
-
-	return nil
+	return scrollCanvas.Render(ctx)
 }
