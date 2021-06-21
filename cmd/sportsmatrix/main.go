@@ -99,11 +99,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 
 			args.setConfigDefaults()
 
-			if err := args.setTodayFuncs(viper.GetString("date-str")); err != nil {
-				return err
-			}
-
-			return nil
+			return args.setTodayFuncs(viper.GetString("date-str"))
 		},
 	}
 
