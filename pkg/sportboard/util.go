@@ -208,7 +208,6 @@ func scoreStr(g Game, homeSide string) (string, error) {
 func numDigits(i int) int {
 	count := 0
 	for i != 0 {
-
 		i /= 10
 		count = count + 1
 	}
