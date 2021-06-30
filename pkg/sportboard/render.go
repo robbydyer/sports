@@ -442,6 +442,12 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 	if err != nil {
 		return nil, err
 	}
+
+	longestScore := numDigits(leftTeam.Score())
+	if numDigits(rightTeam.Score()) > longestScore {
+		longestScore = numDigits(rightTeam.Score())
+	}
+
 	if s.api.League() == mls {
 		// MLS does Home team on left
 		leftTeam, rightTeam = rightTeam, leftTeam
@@ -515,6 +521,11 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 						s.setTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation(), infoWidth)
 					}
 					endX := ((z.Dx() - textWidth) / 2) - teamInfoPad
+					if longestScore == 2 {
+						endX -= 5
+					} else if longestScore == 3 {
+						endX -= 9
+					}
 					leftBounds = image.Rect(endX-infoWidth, z.Min.Y, endX, z.Max.Y)
 				} else {
 					s.log.Debug("set team info width 0",
@@ -606,6 +617,11 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 					}
 					logoWidth := (z.Dx() - textWidth) / 2
 					startX := textWidth + logoWidth + teamInfoPad
+					if longestScore == 2 {
+						startX += 5
+					} else if longestScore == 3 {
+						startX += 9
+					}
 					rightBounds = image.Rect(startX, z.Min.Y, startX+infoWidth, z.Max.Y)
 				} else {
 					s.setTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation(), 0)
