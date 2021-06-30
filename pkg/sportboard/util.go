@@ -204,3 +204,12 @@ func scoreStr(g Game, homeSide string) (string, error) {
 	}
 	return fmt.Sprintf("%d-%d", a.Score(), h.Score()), nil
 }
+
+func numDigits(i int) int {
+	count := 0
+	for i != 0 {
+		i /= 10
+		count = count + 1
+	}
+	return count
+}
