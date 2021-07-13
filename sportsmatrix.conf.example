@@ -158,6 +158,10 @@ nhlConfig:
   # Set to true to show gambling odds for a game
   showOdds: false
 
+  # If set to true and this sport is enabled, a message will
+  # appear if there are no scheduled games for the day
+  showNotScheduled: false
+
 ## MLB Config
 mlbConfig:
   enabled: true
@@ -222,6 +226,10 @@ mlbConfig:
   # Set to true to show gambling odds for a game
   showOdds: false
 
+  # If set to true and this sport is enabled, a message will
+  # appear if there are no scheduled games for the day
+  showNotScheduled: false
+
 ## NCAA Mens Basketball Config
 ncaamConfig:
   enabled: true
@@ -275,6 +283,10 @@ ncaamConfig:
   # Set to true to show gambling odds for a game
   showOdds: false
 
+  # If set to true and this sport is enabled, a message will
+  # appear if there are no scheduled games for the day
+  showNotScheduled: false
+
 ## NBA Config
 nbaConfig:
   enabled: true
@@ -324,6 +336,10 @@ nbaConfig:
 
   # Set to true to show gambling odds for a game
   showOdds: false
+
+  # If set to true and this sport is enabled, a message will
+  # appear if there are no scheduled games for the day
+  showNotScheduled: false
 
 ## NFL Config
 nflConfig:
@@ -375,6 +391,10 @@ nflConfig:
   # Set to true to show gambling odds for a game
   showOdds: false
 
+  # If set to true and this sport is enabled, a message will
+  # appear if there are no scheduled games for the day
+  showNotScheduled: false
+
 ## MLS Config
 mlsConfig:
   enabled: true
@@ -424,6 +444,10 @@ mlsConfig:
 
   # Set to true to show gambling odds for a game
   showOdds: false
+
+  # If set to true and this sport is enabled, a message will
+  # appear if there are no scheduled games for the day
+  showNotScheduled: false
 
 # Image Board. Rotates showing all the images in a list of directories
 # All images in the directory will be automatically scaled to fit the matrix

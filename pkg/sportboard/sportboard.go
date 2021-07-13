@@ -51,32 +51,33 @@ type Todayer func() time.Time
 
 // Config ...
 type Config struct {
-	TodayFunc          Todayer
-	boardDelay         time.Duration
-	scrollDelay        time.Duration
-	TimeColor          color.Color
-	ScoreColor         color.Color
-	Enabled            *atomic.Bool      `json:"enabled"`
-	BoardDelay         string            `json:"boardDelay"`
-	FavoriteSticky     *atomic.Bool      `json:"favoriteSticky"`
-	ScoreFont          *FontConfig       `json:"scoreFont"`
-	TimeFont           *FontConfig       `json:"timeFont"`
-	LogoConfigs        []*logo.Config    `json:"logoConfigs"`
-	WatchTeams         []string          `json:"watchTeams"`
-	FavoriteTeams      []string          `json:"favoriteTeams"`
-	HideFavoriteScore  *atomic.Bool      `json:"hideFavoriteScore"`
-	ShowRecord         *atomic.Bool      `json:"showRecord"`
-	GridCols           int               `json:"gridCols"`
-	GridRows           int               `json:"gridRows"`
-	GridPadRatio       float64           `json:"gridPadRatio"`
-	MinimumGridWidth   int               `json:"minimumGridWidth"`
-	MinimumGridHeight  int               `json:"minimumGridHeight"`
-	Stats              *statboard.Config `json:"stats"`
-	ScrollMode         *atomic.Bool      `json:"scrollMode"`
-	TightScroll        *atomic.Bool      `json:"tightScroll"`
-	TightScrollPadding int               `json:"tightScrollPadding"`
-	ScrollDelay        string            `json:"scrollDelay"`
-	GamblingSpread     *atomic.Bool      `json:"showOdds"`
+	TodayFunc           Todayer
+	boardDelay          time.Duration
+	scrollDelay         time.Duration
+	TimeColor           color.Color
+	ScoreColor          color.Color
+	Enabled             *atomic.Bool      `json:"enabled"`
+	BoardDelay          string            `json:"boardDelay"`
+	FavoriteSticky      *atomic.Bool      `json:"favoriteSticky"`
+	ScoreFont           *FontConfig       `json:"scoreFont"`
+	TimeFont            *FontConfig       `json:"timeFont"`
+	LogoConfigs         []*logo.Config    `json:"logoConfigs"`
+	WatchTeams          []string          `json:"watchTeams"`
+	FavoriteTeams       []string          `json:"favoriteTeams"`
+	HideFavoriteScore   *atomic.Bool      `json:"hideFavoriteScore"`
+	ShowRecord          *atomic.Bool      `json:"showRecord"`
+	GridCols            int               `json:"gridCols"`
+	GridRows            int               `json:"gridRows"`
+	GridPadRatio        float64           `json:"gridPadRatio"`
+	MinimumGridWidth    int               `json:"minimumGridWidth"`
+	MinimumGridHeight   int               `json:"minimumGridHeight"`
+	Stats               *statboard.Config `json:"stats"`
+	ScrollMode          *atomic.Bool      `json:"scrollMode"`
+	TightScroll         *atomic.Bool      `json:"tightScroll"`
+	TightScrollPadding  int               `json:"tightScrollPadding"`
+	ScrollDelay         string            `json:"scrollDelay"`
+	GamblingSpread      *atomic.Bool      `json:"showOdds"`
+	ShowNoScheduledLogo *atomic.Bool      `json:"showNotScheduled"`
 }
 
 // FontConfig ...
@@ -99,6 +100,7 @@ type API interface {
 	TeamRecord(ctx context.Context, team Team) string
 	TeamRank(ctx context.Context, team Team) string
 	CacheClear(ctx context.Context)
+	//LeagueLogo(ctx context.Context) (*logo.Logo, error)
 }
 
 // Team ...
@@ -163,6 +165,9 @@ func (c *Config) SetDefaults() {
 	}
 	if c.GamblingSpread == nil {
 		c.GamblingSpread = atomic.NewBool(false)
+	}
+	if c.ShowNoScheduledLogo == nil {
+		c.ShowNoScheduledLogo = atomic.NewBool(false)
 	}
 	if c.MinimumGridWidth == 0 {
 		c.MinimumGridWidth = 64
@@ -397,11 +402,6 @@ OUTER:
 		zap.String("league", s.api.League()),
 	)
 
-	if len(games) == 0 {
-		s.log.Debug("no scheduled games, not rendering", zap.String("league", s.api.League()))
-		return nil
-	}
-
 	select {
 	case <-boardCtx.Done():
 		return context.Canceled
@@ -433,10 +433,12 @@ OUTER:
 	s.logCanvas(canvas, "sportboard Render() called canvas after grid")
 
 	preloader := make(map[int]chan struct{})
-	preloader[games[0].GetID()] = make(chan struct{}, 1)
+	if len(games) > 1 {
+		preloader[games[0].GetID()] = make(chan struct{}, 1)
 
-	if err := s.preloadLiveGame(ctx, games[0], preloader[games[0].GetID()]); err != nil {
-		s.log.Error("error while loading live game data for first game", zap.Error(err))
+		if err := s.preloadLiveGame(ctx, games[0], preloader[games[0].GetID()]); err != nil {
+			s.log.Error("error while loading live game data for first game", zap.Error(err))
+		}
 	}
 
 	preloaderTimeout := s.config.boardDelay + (10 * time.Second)
@@ -469,6 +471,15 @@ OUTER:
 			)
 			scroll.SetScrollSpeed(s.config.scrollDelay)
 		}
+	}
+
+	if len(games) < 1 {
+		s.log.Debug("no scheduled games, not rendering", zap.String("league", s.api.League()))
+		if !s.config.ShowNoScheduledLogo.Load() {
+			return nil
+		}
+
+		return s.renderNoScheduled(boardCtx, canvas)
 	}
 
 GAMES:

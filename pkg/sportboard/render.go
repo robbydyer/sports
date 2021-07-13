@@ -692,3 +692,58 @@ func (s *SportBoard) hasNoInfo(rank string, record string, odds string, underDog
 
 	return false
 }
+
+func (s *SportBoard) renderNoScheduled(ctx context.Context, canvas board.Canvas) error {
+	s.log.Debug("no scheduled games", zap.String("league", s.api.League()))
+	if !s.config.ShowNoScheduledLogo.Load() {
+		return nil
+	}
+
+	writer, err := s.getTimeWriter(canvas.Bounds())
+	if err != nil {
+		return fmt.Errorf("failed to get writer for no scheduled game output: %w", err)
+	}
+
+	b := rgbrender.ZeroedBounds(canvas.Bounds())
+	writeBox := image.Rect((b.Max.X/2)+2, 0, b.Max.X, b.Max.Y)
+	logoBox := image.Rect(0, 0, (b.Max.X/2)-2, b.Max.Y)
+
+	writer.WriteAlignedBoxed(
+		rgbrender.CenterCenter,
+		canvas,
+		logoBox,
+		[]string{
+			s.api.League(),
+		},
+		color.White,
+		color.Black,
+	)
+
+	writer.WriteAlignedBoxed(
+		rgbrender.RightCenter,
+		canvas,
+		writeBox,
+		[]string{
+			"No",
+			"Games",
+			"Today",
+		},
+		color.White,
+		color.Black,
+	)
+
+	if err := canvas.Render(ctx); err != nil {
+		return err
+	}
+
+	if s.config.ScrollMode.Load() && canvas.Scrollable() {
+		return nil
+	}
+
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	case <-time.After(s.config.boardDelay / 2):
+		return nil
+	}
+}
