@@ -708,7 +708,7 @@ func (s *SportBoard) renderNoScheduled(ctx context.Context, canvas board.Canvas)
 	writeBox := image.Rect((b.Max.X/2)+2, 0, b.Max.X, b.Max.Y)
 	logoBox := image.Rect(0, 0, (b.Max.X/2)-2, b.Max.Y)
 
-	writer.WriteAlignedBoxed(
+	_ = writer.WriteAlignedBoxed(
 		rgbrender.CenterCenter,
 		canvas,
 		logoBox,
@@ -719,7 +719,7 @@ func (s *SportBoard) renderNoScheduled(ctx context.Context, canvas board.Canvas)
 		color.Black,
 	)
 
-	writer.WriteAlignedBoxed(
+	_ = writer.WriteAlignedBoxed(
 		rgbrender.RightCenter,
 		canvas,
 		writeBox,

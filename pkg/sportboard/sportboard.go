@@ -100,7 +100,7 @@ type API interface {
 	TeamRecord(ctx context.Context, team Team) string
 	TeamRank(ctx context.Context, team Team) string
 	CacheClear(ctx context.Context)
-	//LeagueLogo(ctx context.Context) (*logo.Logo, error)
+	// LeagueLogo(ctx context.Context) (*logo.Logo, error)
 }
 
 // Team ...
