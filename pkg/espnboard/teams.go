@@ -268,6 +268,7 @@ func (t *Team) GetAbbreviation() string {
 	return t.Abbreviation
 }
 
+// ConferenceName ...
 func (t *Team) ConferenceName() string {
 	if t.Conference != nil {
 		return t.Conference.Abbreviation

@@ -132,7 +132,6 @@ TEAM:
 }
 
 func printESPNConf(ctx context.Context, e *espnboard.ESPNBoard) error {
-
 	teams, err := e.GetTeams(ctx)
 	if err != nil {
 		return err
@@ -173,5 +172,4 @@ TEAM:
 	}
 
 	return nil
-
 }
