@@ -268,6 +268,14 @@ func (t *Team) GetAbbreviation() string {
 	return t.Abbreviation
 }
 
+func (t *Team) ConferenceName() string {
+	if t.Conference != nil {
+		return t.Conference.Abbreviation
+	}
+
+	return ""
+}
+
 // Score ...
 func (t *Team) Score() int {
 	p, _ := strconv.Atoi(t.Points)

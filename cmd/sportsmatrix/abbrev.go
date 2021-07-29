@@ -8,10 +8,12 @@ import (
 	"sort"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/robbydyer/sports/pkg/espnboard"
+	"github.com/robbydyer/sports/pkg/sportboard"
 )
 
 type abbrevCmd struct {
@@ -33,7 +35,7 @@ func newAbbrevCmd(args *rootArgs) *cobra.Command {
 }
 
 func (s *abbrevCmd) run(cmd *cobra.Command, args []string) error {
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	ch := make(chan os.Signal, 1)
@@ -92,6 +94,12 @@ func (s *abbrevCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	for _, e := range sports {
+		if err := printESPNConf(ctx, e); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -113,12 +121,57 @@ TEAM:
 		}
 		seent[t.GetAbbreviation()] = struct{}{}
 		if t.GetDisplayName() != "" {
-			fmt.Printf("%s => %s\n", t.GetAbbreviation(), t.GetDisplayName())
+			fmt.Printf("  %s => %s\n", t.GetAbbreviation(), t.GetDisplayName())
 		} else {
-			fmt.Printf("%s => %s\n", t.GetAbbreviation(), t.GetName())
+			fmt.Printf("  %s => %s\n", t.GetAbbreviation(), t.GetName())
 		}
 	}
 	fmt.Println("")
 
 	return nil
+}
+
+func printESPNConf(ctx context.Context, e *espnboard.ESPNBoard) error {
+
+	teams, err := e.GetTeams(ctx)
+	if err != nil {
+		return err
+	}
+	sort.SliceStable(teams, func(i, j int) bool {
+		return strings.ToLower(teams[i].GetAbbreviation()) < strings.ToLower(teams[j].GetAbbreviation())
+	})
+	seent := make(map[string]struct{})
+	confs := make(map[string][]sportboard.Team)
+
+TEAM:
+	for _, t := range teams {
+		if _, ok := seent[t.GetAbbreviation()]; ok {
+			continue TEAM
+		}
+		seent[t.GetAbbreviation()] = struct{}{}
+		if t.ConferenceName() == "" {
+			continue TEAM
+		}
+		confs[t.ConferenceName()] = append(confs[t.ConferenceName()], t)
+	}
+
+	fmt.Printf("%s Conferences/Divisions\n", e.League())
+	if len(confs) < 1 {
+		fmt.Printf("  Conferences currently unsupported\n\n")
+		return nil
+	}
+
+	for conf, teams := range confs {
+		fmt.Printf("  %s\n", conf)
+		for _, t := range teams {
+			if t.GetDisplayName() != "" {
+				fmt.Printf("    %s => %s\n", t.GetAbbreviation(), t.GetDisplayName())
+			} else {
+				fmt.Printf("    %s => %s\n", t.GetAbbreviation(), t.GetName())
+			}
+		}
+	}
+
+	return nil
+
 }

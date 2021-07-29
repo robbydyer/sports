@@ -110,6 +110,7 @@ type Team interface {
 	GetAbbreviation() string
 	GetDisplayName() string
 	Score() int
+	ConferenceName() string
 }
 
 // Game ...
