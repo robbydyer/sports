@@ -12,6 +12,7 @@ import ncaamlogo from './ncaam.png';
 import nbalogo from './nba.png';
 import nfllogo from './nfl.png';
 import mlslogo from './mls.png';
+import ncaaflogo from './ncaaf.png'
 import { GetStatus, CallMatrix } from './util';
 
 class Sport extends React.Component {
@@ -97,6 +98,8 @@ class Sport extends React.Component {
             return nhllogo
         } else if (this.props.sport == "ncaam") {
             return ncaamlogo
+        } else if (this.props.sport == "ncaaf") {
+            return ncaaflogo
         } else if (this.props.sport == "nba") {
             return nbalogo
         } else if (this.props.sport == "nfl") {

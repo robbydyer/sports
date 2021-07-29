@@ -34,6 +34,7 @@ type Team struct {
 	hasDetail    *atomic.Bool
 	ID           string  `json:"id"`
 	Name         string  `json:"name"`
+	DisplayName  string  `json:"displayName"`
 	Abbreviation string  `json:"abbreviation"`
 	Color        string  `json:"color"`
 	Logos        []*Logo `json:"logos"`
@@ -257,9 +258,23 @@ func (t *Team) GetName() string {
 	return t.Name
 }
 
+// GetDisplayName ...
+func (t *Team) GetDisplayName() string {
+	return t.DisplayName
+}
+
 // GetAbbreviation ...
 func (t *Team) GetAbbreviation() string {
 	return t.Abbreviation
+}
+
+// ConferenceName ...
+func (t *Team) ConferenceName() string {
+	if t.Conference != nil {
+		return t.Conference.Abbreviation
+	}
+
+	return ""
 }
 
 // Score ...

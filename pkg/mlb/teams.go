@@ -66,6 +66,19 @@ func (t *Team) GetAbbreviation() string {
 	return t.Abbreviation
 }
 
+// GetDisplayName ...
+func (t *Team) GetDisplayName() string {
+	return t.Name
+}
+
+// ConferenceName ...
+func (t *Team) ConferenceName() string {
+	if t.Division != nil {
+		return t.Division.Abbreviation
+	}
+	return ""
+}
+
 // Score ...
 func (t *Team) Score() int {
 	return t.Runs

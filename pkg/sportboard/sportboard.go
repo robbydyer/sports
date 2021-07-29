@@ -108,7 +108,9 @@ type Team interface {
 	GetID() int
 	GetName() string
 	GetAbbreviation() string
+	GetDisplayName() string
 	Score() int
+	ConferenceName() string
 }
 
 // Game ...
@@ -518,6 +520,7 @@ GAMES:
 			s.log.Warn("timed out waiting for preload",
 				zap.Duration("timeout", preloaderTimeout),
 				zap.Int("game ID", game.GetID()),
+				zap.String("League", s.api.League()),
 			)
 		}
 

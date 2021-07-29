@@ -97,6 +97,60 @@ sysConfig:
   enabled: false
   boardDelay: "10s"
 
+## NCAA Football Config
+ncaafConfig:
+  enabled: true
+
+  # Displays the scoreboard in a scrolling style instead of statically
+  scrollMode: false
+
+  # Makes the games within this league scroll back-to-back instead of clearing
+  # the screen between each
+  tightScroll: true
+
+  # Sets the spacing between games when tightScroll is enabled
+  tightScrollPadding: 10
+
+  # Delay between screen draws in scroll mode. Default is 50ms.
+  scrollDelay: "50ms"
+
+  boardDelay: "10s"
+
+  # Number of columns in a grid layout. Default 1
+  #gridCols: 3
+
+  # Number of rows in a grid layout. Default 1
+  #gridRows: 2
+
+  # This will draw lines between each cell in a grid. The ratio is a percentage of the
+  # total width of the canvas, so this should be a pretty small number. Defaults to 0,
+  # which has no lines separating cells.
+  #gridPadRatio: 0.015
+
+  # watchTeams are teams we show games for. ALL shows all teams in the league
+  watchTeams:
+  - ALL
+
+  # favoriteTeams are teams that we can hide scores for, and set to "Sticky" on live games
+  #favoriteTeams:
+  #- ATL
+
+  # Hides scores for your favoriteTeams games. DVR is a father's life saver
+  hideFavoriteScore: true
+
+  # Tells the matrix to lock onto a live game that a favorite team is playing in
+  favoriteSticky: false
+
+  # Set to true to show a team's record on the scoreboard
+  showRecord: false
+
+  # Set to true to show gambling odds for a game
+  showOdds: false
+
+  # If set to true and this sport is enabled, a message will
+  # appear if there are no scheduled games for the day
+  showNotScheduled: false
+
 ## NHL config
 nhlConfig:
   enabled: true

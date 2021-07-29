@@ -34,6 +34,7 @@ class TopNav extends React.Component {
                         <Nav className="mr-auto">
                             <Nav.Link as={Link} to="/">Home</Nav.Link>
                             <Nav.Link as={Link} to="/nhl">NHL</Nav.Link>
+                            <Nav.Link as={Link} to="/ncaaf">NCAA Football</Nav.Link>
                             <Nav.Link as={Link} to="/mlb">MLB</Nav.Link>
                             <Nav.Link as={Link} to="/pga">PGA</Nav.Link>
                             <Nav.Link as={Link} to="/ncaam">NCAA Men Basketball</Nav.Link>
