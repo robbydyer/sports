@@ -1,20 +1,21 @@
 {
   "files": {
-    "main.js": "/static/js/main.cf01807c.chunk.js",
-    "main.js.map": "/static/js/main.cf01807c.chunk.js.map",
+    "main.js": "/static/js/main.64696b91.chunk.js",
+    "main.js.map": "/static/js/main.64696b91.chunk.js.map",
     "runtime-main.js": "/static/js/runtime-main.84480640.js",
     "runtime-main.js.map": "/static/js/runtime-main.84480640.js.map",
     "static/css/2.4c97ca4f.chunk.css": "/static/css/2.4c97ca4f.chunk.css",
-    "static/js/2.d65905f3.chunk.js": "/static/js/2.d65905f3.chunk.js",
-    "static/js/2.d65905f3.chunk.js.map": "/static/js/2.d65905f3.chunk.js.map",
+    "static/js/2.1dfbd5ba.chunk.js": "/static/js/2.1dfbd5ba.chunk.js",
+    "static/js/2.1dfbd5ba.chunk.js.map": "/static/js/2.1dfbd5ba.chunk.js.map",
     "static/js/3.66b8d73a.chunk.js": "/static/js/3.66b8d73a.chunk.js",
     "static/js/3.66b8d73a.chunk.js.map": "/static/js/3.66b8d73a.chunk.js.map",
     "index.html": "/index.html",
     "static/css/2.4c97ca4f.chunk.css.map": "/static/css/2.4c97ca4f.chunk.css.map",
-    "static/js/2.d65905f3.chunk.js.LICENSE.txt": "/static/js/2.d65905f3.chunk.js.LICENSE.txt",
+    "static/js/2.1dfbd5ba.chunk.js.LICENSE.txt": "/static/js/2.1dfbd5ba.chunk.js.LICENSE.txt",
     "static/media/mlb.c8036288.png": "/static/media/mlb.c8036288.png",
     "static/media/mls.9317ef90.png": "/static/media/mls.9317ef90.png",
     "static/media/nba.5e388b8b.png": "/static/media/nba.5e388b8b.png",
+    "static/media/ncaaf.903eccc0.png": "/static/media/ncaaf.903eccc0.png",
     "static/media/ncaam.2b001451.png": "/static/media/ncaam.2b001451.png",
     "static/media/nfl.6d694f80.png": "/static/media/nfl.6d694f80.png",
     "static/media/nhllogo.ba9e188b.jpeg": "/static/media/nhllogo.ba9e188b.jpeg",
@@ -24,7 +25,7 @@
   "entrypoints": [
     "static/js/runtime-main.84480640.js",
     "static/css/2.4c97ca4f.chunk.css",
-    "static/js/2.d65905f3.chunk.js",
-    "static/js/main.cf01807c.chunk.js"
+    "static/js/2.1dfbd5ba.chunk.js",
+    "static/js/main.64696b91.chunk.js"
   ]
 }

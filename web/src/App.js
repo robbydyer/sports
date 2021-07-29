@@ -39,6 +39,7 @@ class App extends React.Component {
           <Route path="/mlb" render={() => <Sport sport="mlb" />} />
           <Route path="/pga" render={() => <Pga />} />
           <Route path="/ncaam" render={() => <Sport sport="ncaam" />} />
+          <Route path="/ncaaf" render={() => <Sport sport="ncaaf" />} />
           <Route path="/nba" render={() => <Sport sport="nba" />} />
           <Route path="/nfl" render={() => <Sport sport="nfl" />} />
           <Route path="/mls" render={() => <Sport sport="mls" />} />
