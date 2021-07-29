@@ -61,6 +61,8 @@ You can run the app without passing any configuration, it will just use some san
 
 See the [Full Example Configuration](sportsmatrix.conf.example)<br>
 
+For a list of all possible team abbreviations (including conference/divisions when available), see [this list](all_team_abbreviations.txt)<br>
+
 ## Running the Board
 If you installed the app with the installer script or a .deb package directly, then the service will run automatically. You can start/stop/restart the service with systemctl commands:
 ```shell
