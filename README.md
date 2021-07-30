@@ -21,7 +21,7 @@ I run this on a Pi zero and a Pi 4. If you want to use the "Web Board" feature (
 - [Examples](#examples)<br>
 
 ## Getting Help
-There's a public Discord channel, "RGB Sportsmatrix Help" https://discord.gg/UUkr4DvG
+There's a public Discord channel, "RGB Sportsmatrix Help" https://discord.gg/8vPp4xfdtV
 
 ## Donations and Beer Money
 If you feel so inclined, beer money can be sent to my Venmo (www.venmo.com/u/Robby-Dyer). Never required, always appreciated.
