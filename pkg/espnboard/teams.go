@@ -117,7 +117,7 @@ func (e *ESPNBoard) getTeams(ctx context.Context) ([]*Team, error) {
 			zap.String("league", e.leaguer.League()),
 			zap.String("file", assetFile),
 		)
-		t, err := parseTeamData(dat)
+		t, err := e.parseTeamData(ctx, dat)
 		if err != nil {
 			return nil, err
 		}
@@ -137,7 +137,7 @@ func (e *ESPNBoard) getTeams(ctx context.Context) ([]*Team, error) {
 		if err != nil {
 			return nil, err
 		}
-		t, err := parseTeamData(dat)
+		t, err := e.parseTeamData(ctx, dat)
 		if err != nil {
 			return nil, err
 		}
@@ -147,7 +147,8 @@ func (e *ESPNBoard) getTeams(ctx context.Context) ([]*Team, error) {
 	return teams, nil
 }
 
-func parseTeamData(dat []byte) ([]*Team, error) {
+func (e *ESPNBoard) parseTeamData(ctx context.Context, dat []byte) ([]*Team, error) {
+
 	teamSet := make(map[string]*Team)
 	var d *teamData
 
@@ -182,6 +183,12 @@ func parseTeamData(dat []byte) ([]*Team, error) {
 	for _, team := range teamSet {
 		team.hasDetail = atomic.NewBool(false)
 		teams = append(teams, team)
+	}
+
+	if strings.ToLower(e.leaguer.League()) == "ncaaf" {
+		if err := e.setNcaafRankings(ctx, teams); err != nil {
+			return teams, err
+		}
 	}
 
 	return teams, nil
