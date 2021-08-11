@@ -22,7 +22,7 @@ const styles = {
 
 const card_border = "18rem"
 
-const sports = ["ncaaf", "nhl", "mlb", "ncaam", "nfl", "nba", "mls"].map((sport) =>
+const sports = ["ncaaf", "nhl", "mlb", "ncaam", "nfl", "nba", "mls", "epl"].map((sport) =>
     <Col lg="auto" style={styles.col}>
         <Card style={{ width: { card_border } }}>
             <Sport sport={sport} id={sport} key={sport} />

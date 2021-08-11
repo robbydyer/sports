@@ -220,6 +220,13 @@ func (r *rootArgs) setConfigDefaults() {
 	}
 	r.config.MLSConfig.SetDefaults()
 
+	if r.config.EPLConfig == nil {
+		r.config.EPLConfig = &sportboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
+	r.config.EPLConfig.SetDefaults()
+
 	if r.config.SysConfig == nil {
 		r.config.SysConfig = &sysboard.Config{
 			Enabled: atomic.NewBool(false),
@@ -384,6 +391,19 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 
 		boards = append(boards, b)
 	}
+	if r.config.EPLConfig != nil {
+		api, err := espnboard.NewEPL(ctx, logger)
+		if err != nil {
+			return nil, err
+		}
+
+		b, err := sportboard.New(ctx, api, bounds, logger, r.config.EPLConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		boards = append(boards, b)
+	}
 
 	if r.config.ImageConfig != nil {
 		b, err := imageboard.New(afero.NewOsFs(), r.config.ImageConfig, logger)
@@ -449,6 +469,7 @@ func (r *rootArgs) setTodayFuncs(today string) error {
 	r.config.NBAConfig.TodayFunc = f
 	r.config.NFLConfig.TodayFunc = f
 	r.config.MLSConfig.TodayFunc = f
+	r.config.EPLConfig.TodayFunc = f
 
 	return nil
 }
