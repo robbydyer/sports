@@ -3,47 +3,51 @@ package espnboard
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
-	"time"
+	"strings"
 
+	multierror "github.com/hashicorp/go-multierror"
 	"go.uber.org/zap"
 )
 
-var preferedPolls = []string{"cfp", "ap", "usa"}
-
-type rankingsData struct {
-	Rankings []*struct {
-		Type   string `json:"type"`
-		Season *struct {
-			Year int `json:"year"`
-		} `json:"season"`
-		Ranks []*ranks `json:"ranks"`
+// defaultRankSetter implements rankSetter
+func defaultRankSetter(ctx context.Context, e *ESPNBoard, teams []*Team) error {
+	errs := &multierror.Error{}
+	for _, t := range teams {
+		if err := t.setDetails(ctx, e.leaguer.APIPath(), e.log); err != nil {
+			multierror.Append(errs, err)
+			e.log.Error("failed to set team record/rank",
+				zap.Error(err),
+			)
+		}
 	}
+
+	return errs.ErrorOrNil()
 }
 
-type ranks struct {
-	Current  int    `json:"current"`
-	Previous int    `json:"previous"`
-	Record   string `json:"recordSummary"`
-	Team     *struct {
-		Abbreviation string `json:"abbreviation"`
-	} `json:"team"`
-}
+// setDetails sets info about a team's record, rank, etc
+func (t *Team) setDetails(ctx context.Context, apiPath string, log *zap.Logger) error {
+	t.Lock()
+	defer t.Unlock()
 
-func (e *ESPNBoard) setNcaafRankings(ctx context.Context, teams []*Team) error {
-	uri := "https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings"
+	if t.hasDetail.Load() {
+		return nil
+	}
 
-	e.log.Info("getting NCAAF rankings")
+	uri := fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s/teams/%s", apiPath, t.ID)
 
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return err
 	}
+
 	client := http.DefaultClient
 
 	req = req.WithContext(ctx)
 
+	log.Info("fetching team data", zap.String("team", t.Abbreviation))
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
@@ -55,61 +59,26 @@ func (e *ESPNBoard) setNcaafRankings(ctx context.Context, teams []*Team) error {
 		return err
 	}
 
-	var data *rankingsData
+	var details *teamDetails
 
-	if err := json.Unmarshal(body, &data); err != nil {
+	if err := json.Unmarshal(body, &details); err != nil {
 		return err
 	}
 
-	ranks := getRanks(data)
+	t.rank = details.Team.Rank
 
-RANK:
-	for _, rank := range ranks {
-		for _, t := range teams {
-			if t.Abbreviation == rank.Team.Abbreviation {
-				e.log.Debug("setting NCAAF rank",
-					zap.String("team", t.Abbreviation),
-					zap.Int("rank", rank.Current),
-					zap.String("record", rank.Record),
-				)
-				t.rank = rank.Current
-				t.record = rank.Record
-				continue RANK
-			}
+	defer t.hasDetail.Store(true)
+
+	for _, i := range details.Team.Record.Items {
+		if strings.ToLower(i.Type) != "total" {
+			continue
 		}
+
+		log.Debug("setting team record", zap.String("team", t.Abbreviation), zap.String("record", i.Summary))
+		t.record = i.Summary
+		return nil
 	}
+	log.Error("did not find record for team", zap.String("team", t.Abbreviation))
 
 	return nil
-}
-
-func getRanks(data *rankingsData) []*ranks {
-	prefIndex := 0
-	thisYear := latestRankingsYear(data)
-
-	for {
-		if prefIndex > len(preferedPolls) {
-			return nil
-		}
-	INNER:
-		for _, ranking := range data.Rankings {
-			if ranking.Type != preferedPolls[prefIndex] || ranking.Season.Year != thisYear {
-				continue INNER
-			}
-			return ranking.Ranks
-		}
-		prefIndex++
-	}
-}
-
-func latestRankingsYear(data *rankingsData) int {
-	year := 0
-	for _, r := range data.Rankings {
-		if r.Season.Year > year {
-			year = r.Season.Year
-		}
-	}
-	if year == 0 {
-		return time.Now().Year()
-	}
-	return year
 }

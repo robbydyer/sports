@@ -20,6 +20,8 @@ import (
 // DateFormat for getting games
 const DateFormat = "20060102"
 
+type rankSetter func(ctx context.Context, e *ESPNBoard, teams []*Team) error
+
 // Leaguer ...
 type Leaguer interface {
 	League() string
@@ -31,6 +33,7 @@ type Leaguer interface {
 // ESPNBoard ...
 type ESPNBoard struct {
 	leaguer         Leaguer
+	rankSetter      rankSetter
 	log             *zap.Logger
 	teams           []*Team
 	games           map[string][]*Game
@@ -55,7 +58,7 @@ func (e *ESPNBoard) logoCacheDir() (string, error) {
 }
 
 // New ...
-func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger) (*ESPNBoard, error) {
+func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger, r rankSetter) (*ESPNBoard, error) {
 	e := &ESPNBoard{
 		leaguer:         leaguer,
 		log:             logger,
@@ -65,6 +68,7 @@ func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger) (*ESPNBoard, 
 		defaultLogoConf: &[]*logo.Config{},
 		logoLockers:     make(map[string]*sync.Mutex),
 		conferenceNames: make(map[string]struct{}),
+		rankSetter:      r,
 	}
 
 	if _, err := e.GetTeams(ctx); err != nil {
@@ -295,7 +299,7 @@ func (e *ESPNBoard) TeamRank(ctx context.Context, team sportboard.Team) string {
 		return ""
 	}
 
-	if err := realTeam.setDetails(ctx, e.leaguer.APIPath(), e.log); err != nil {
+	if err := e.rankSetter(ctx, e, []*Team{realTeam}); err != nil {
 		e.log.Error("failed to set team details", zap.Error(err))
 	}
 
@@ -316,7 +320,7 @@ func (e *ESPNBoard) TeamRecord(ctx context.Context, team sportboard.Team) string
 		return ""
 	}
 
-	if err := realTeam.setDetails(ctx, e.leaguer.APIPath(), e.log); err != nil {
+	if err := e.rankSetter(ctx, e, []*Team{realTeam}); err != nil {
 		e.log.Error("failed to set team details", zap.Error(err))
 	}
 
