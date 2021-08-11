@@ -27,7 +27,7 @@ func (n *nfl) HTTPPathPrefix() string {
 
 // NewNFL ...
 func NewNFL(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
-	return New(ctx, &nfl{}, logger)
+	return New(ctx, &nfl{}, logger, defaultRankSetter)
 }
 
 type ncaam struct{}
@@ -53,7 +53,7 @@ func (n *ncaam) HTTPPathPrefix() string {
 
 // NewNCAAMensBasketball ...
 func NewNCAAMensBasketball(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
-	return New(ctx, &ncaam{}, logger)
+	return New(ctx, &ncaam{}, logger, defaultRankSetter)
 }
 
 type nba struct{}
@@ -76,7 +76,7 @@ func (n *nba) HTTPPathPrefix() string {
 
 // NewNBA ...
 func NewNBA(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
-	return New(ctx, &nba{}, logger)
+	return New(ctx, &nba{}, logger, defaultRankSetter)
 }
 
 type mls struct{}
@@ -99,7 +99,7 @@ func (n *mls) HTTPPathPrefix() string {
 
 // NewMLS ...
 func NewMLS(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
-	return New(ctx, &mls{}, logger)
+	return New(ctx, &mls{}, logger, defaultRankSetter)
 }
 
 type nhl struct{}
@@ -125,7 +125,7 @@ func (n *nhl) HTTPPathPrefix() string {
 
 // NewNHL ...
 func NewNHL(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
-	return New(ctx, &nhl{}, logger)
+	return New(ctx, &nhl{}, logger, defaultRankSetter)
 }
 
 type mlb struct{}
@@ -151,7 +151,7 @@ func (n *mlb) HTTPPathPrefix() string {
 
 // NewMLB ...
 func NewMLB(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
-	return New(ctx, &mlb{}, logger)
+	return New(ctx, &mlb{}, logger, defaultRankSetter)
 }
 
 type ncaaf struct{}
@@ -179,5 +179,6 @@ func (n *ncaaf) HTTPPathPrefix() string {
 
 // NewNCAAF ...
 func NewNCAAF(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
-	return New(ctx, &ncaaf{}, logger)
+	n := &ncaaf{}
+	return New(ctx, n, logger, n.setRankings)
 }
