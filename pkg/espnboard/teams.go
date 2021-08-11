@@ -116,7 +116,7 @@ func (e *ESPNBoard) getTeams(ctx context.Context) ([]*Team, error) {
 			zap.String("league", e.leaguer.League()),
 			zap.String("file", assetFile),
 		)
-		t, err := e.parseTeamData(ctx, dat)
+		t, err := parseTeamData(dat)
 		if err != nil {
 			return nil, err
 		}
@@ -136,7 +136,7 @@ func (e *ESPNBoard) getTeams(ctx context.Context) ([]*Team, error) {
 		if err != nil {
 			return nil, err
 		}
-		t, err := e.parseTeamData(ctx, dat)
+		t, err := parseTeamData(dat)
 		if err != nil {
 			return nil, err
 		}
@@ -146,8 +146,7 @@ func (e *ESPNBoard) getTeams(ctx context.Context) ([]*Team, error) {
 	return teams, nil
 }
 
-func (e *ESPNBoard) parseTeamData(ctx context.Context, dat []byte) ([]*Team, error) {
-
+func parseTeamData(dat []byte) ([]*Team, error) {
 	teamSet := make(map[string]*Team)
 	var d *teamData
 
