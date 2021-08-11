@@ -17,7 +17,7 @@ func defaultRankSetter(ctx context.Context, e *ESPNBoard, teams []*Team) error {
 	errs := &multierror.Error{}
 	for _, t := range teams {
 		if err := t.setDetails(ctx, e.leaguer.APIPath(), e.log); err != nil {
-			multierror.Append(errs, err)
+			errs = multierror.Append(errs, err)
 			e.log.Error("failed to set team record/rank",
 				zap.Error(err),
 			)
