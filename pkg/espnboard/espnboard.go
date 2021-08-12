@@ -101,6 +101,7 @@ func (e *ESPNBoard) CacheClear(ctx context.Context) {
 	}
 	e.allTeams = []string{}
 	e.teams = nil
+	e.rankSorted.Store(false)
 	if _, err := e.GetTeams(ctx); err != nil {
 		e.log.Error("failed to get teams after cache clear", zap.Error(err))
 	}
