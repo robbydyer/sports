@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/robfig/cron/v3"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/logo"
@@ -43,6 +45,7 @@ type ESPNBoard struct {
 	logoLock        sync.RWMutex
 	logoLockers     map[string]*sync.Mutex
 	conferenceNames map[string]struct{}
+	rankSorted      *atomic.Bool
 	sync.Mutex
 }
 
@@ -68,6 +71,7 @@ func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger, r rankSetter)
 		logoLockers:     make(map[string]*sync.Mutex),
 		conferenceNames: make(map[string]struct{}),
 		rankSetter:      r,
+		rankSorted:      atomic.NewBool(false),
 	}
 
 	if _, err := e.GetTeams(ctx); err != nil {
@@ -208,6 +212,22 @@ OUTER:
 			e.log.Info("setting ESPNBoard watch teams to ALL teams")
 			return e.AllTeamAbbreviations()
 		}
+		if strings.HasPrefix(t, "TOP") {
+			fields := strings.Split(t, "TOP")
+			if len(fields) < 2 {
+				continue OUTER
+			}
+			top, err := strconv.Atoi(fields[1])
+			if err != nil {
+				e.log.Error("failed to convert TOP rank",
+					zap.Error(err),
+				)
+			}
+			for _, a := range e.TeamsInRank(top) {
+				watch[a] = struct{}{}
+			}
+			continue OUTER
+		}
 		for _, a := range e.AllTeamAbbreviations() {
 			if t == a {
 				watch[t] = struct{}{}
@@ -257,6 +277,45 @@ func (e *ESPNBoard) TeamsInConference(conference string) []string {
 	return ret
 }
 
+// TeamsInRank grabs all teams within the top X number of rankings
+func (e *ESPNBoard) TeamsInRank(top int) []string {
+	if top < 1 {
+		return []string{}
+	}
+	e.log.Debug("fetching teams in rank",
+		zap.Int("top", top),
+		zap.String("league", e.League()),
+	)
+	teams := []string{}
+	if !e.rankSorted.Load() {
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		if err := e.rankSetter(ctx, e, e.teams); err != nil {
+			e.log.Error("failed to set team rankings",
+				zap.Error(err),
+				zap.String("league", e.League()),
+			)
+		}
+		sort.SliceStable(e.teams, func(i, j int) bool {
+			return e.teams[i].rank < e.teams[j].rank
+		})
+		e.rankSorted.Store(true)
+	}
+
+	index := 1
+	for _, t := range e.teams {
+		if index > top {
+			break
+		}
+		if t.rank != 0 {
+			teams = append(teams, t.GetAbbreviation())
+			index++
+		}
+	}
+
+	return teams
+}
+
 // UpdateGames ...
 func (e *ESPNBoard) UpdateGames(ctx context.Context, dateStr string) error {
 	games, err := e.GetGames(ctx, dateStr)
@@ -286,8 +345,8 @@ func (e *ESPNBoard) TeamRank(ctx context.Context, team sportboard.Team) string {
 		return ""
 	}
 
-	if realTeam.rank < 1 {
-		return ""
+	if realTeam.rank > 0 {
+		return strconv.Itoa(realTeam.rank)
 	}
 
 	if err := e.rankSetter(ctx, e, []*Team{realTeam}); err != nil {

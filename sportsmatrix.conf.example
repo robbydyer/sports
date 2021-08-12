@@ -129,11 +129,11 @@ ncaafConfig:
 
   # watchTeams are teams we show games for. ALL shows all teams in the league
   watchTeams:
-  - ALL
+  - TOP25
 
-  # favoriteTeams are teams that we can hide scores for, and set to "Sticky" on live games
+  # favoriteTeams are teams that we can hide scores for, and set to "Sticky" on live games. Roll Tide.
   #favoriteTeams:
-  #- ATL
+  #- ALA
 
   # Hides scores for your favoriteTeams games. DVR is a father's life saver
   hideFavoriteScore: true
