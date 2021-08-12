@@ -495,45 +495,54 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 					return nil, nil, err
 				}
 
-				if s.config.ScrollMode.Load() && !s.hasNoInfo(rank, record, oddStr, underDog, leftTeam.GetAbbreviation()) {
-					widthStrs := []string{}
-					if s.config.ShowRecord.Load() {
-						widthStrs = append(widthStrs, rank, record)
-					}
-					if s.config.GamblingSpread.Load() {
-						widthStrs = append(widthStrs, oddStr)
-					}
-					infoWidth, err := s.getTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation())
-					if err != nil || infoWidth == 0 {
-						var err error
-						infoWidth, err = s.calculateTeamInfoWidth(canvas, writer, widthStrs)
-						if err != nil {
-							s.log.Error("failed to calculate team info width, using default",
-								zap.Error(err),
-							)
-						}
-						infoWidth += teamInfoPad
-						s.log.Debug("setting team info width",
-							zap.String("league", s.api.League()),
-							zap.String("team", leftTeam.GetAbbreviation()),
-							zap.Int("width", infoWidth),
-						)
-						s.setTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation(), infoWidth)
-					}
-					endX := ((z.Dx() - textWidth) / 2) - teamInfoPad
-					if longestScore == 2 {
-						endX -= 5
-					} else if longestScore == 3 {
-						endX -= 9
-					}
-					leftBounds = image.Rect(endX-infoWidth, z.Min.Y, endX, z.Max.Y)
-				} else {
+				if s.hasNoInfo(rank, record, oddStr, underDog, leftTeam.GetAbbreviation()) {
+					return writer, []string{rank, record}, nil
+				}
+
+				if !s.config.ScrollMode.Load() {
 					s.log.Debug("set team info width 0",
 						zap.String("league", s.api.League()),
 						zap.String("team", leftTeam.GetAbbreviation()),
 					)
 					s.setTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation(), 0)
+					maxX := (leftBounds.Bounds().Dx() - s.textAreaWidth(leftBounds)) / 2
+					leftBounds = image.Rect(leftBounds.Min.X, leftBounds.Min.Y, maxX, leftBounds.Max.Y)
+
+					return writer, []string{rank, record}, nil
 				}
+
+				// Scroll mode
+				widthStrs := []string{}
+				if s.config.ShowRecord.Load() {
+					widthStrs = append(widthStrs, rank, record)
+				}
+				if s.config.GamblingSpread.Load() {
+					widthStrs = append(widthStrs, oddStr)
+				}
+				infoWidth, err := s.getTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation())
+				if err != nil || infoWidth == 0 {
+					var err error
+					infoWidth, err = s.calculateTeamInfoWidth(canvas, writer, widthStrs)
+					if err != nil {
+						s.log.Error("failed to calculate team info width, using default",
+							zap.Error(err),
+						)
+					}
+					infoWidth += teamInfoPad
+					s.log.Debug("setting team info width",
+						zap.String("league", s.api.League()),
+						zap.String("team", leftTeam.GetAbbreviation()),
+						zap.Int("width", infoWidth),
+					)
+					s.setTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation(), infoWidth)
+				}
+				endX := ((z.Dx() - textWidth) / 2) - teamInfoPad
+				if longestScore == 2 {
+					endX -= 5
+				} else if longestScore == 3 {
+					endX -= 9
+				}
+				leftBounds = image.Rect(endX-infoWidth, z.Min.Y, endX, z.Max.Y)
 
 				return writer, []string{rank, record}, nil
 			},
@@ -591,41 +600,50 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 					return nil, nil, err
 				}
 
-				if s.config.ScrollMode.Load() && !s.hasNoInfo(rank, record, oddStr, underDog, rightTeam.GetAbbreviation()) {
-					widthStrs := []string{}
-					if s.config.ShowRecord.Load() {
-						widthStrs = append(widthStrs, rank, record)
-					}
-					if s.config.GamblingSpread.Load() {
-						widthStrs = append(widthStrs, oddStr)
-					}
-					infoWidth, err := s.getTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation())
-					if err != nil || infoWidth == 0 {
-						var err error
-						infoWidth, err = s.calculateTeamInfoWidth(canvas, writer, widthStrs)
-						if err != nil {
-							s.log.Error("failed to calculate team info width, using default",
-								zap.Error(err),
-							)
-						}
-						s.log.Debug("setting team info width",
-							zap.String("league", s.api.League()),
-							zap.String("team", rightTeam.GetAbbreviation()),
-							zap.Int("width", infoWidth),
-						)
-						s.setTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation(), infoWidth)
-					}
-					logoWidth := (z.Dx() - textWidth) / 2
-					startX := textWidth + logoWidth + teamInfoPad
-					if longestScore == 2 {
-						startX += 5
-					} else if longestScore == 3 {
-						startX += 9
-					}
-					rightBounds = image.Rect(startX, z.Min.Y, startX+infoWidth, z.Max.Y)
-				} else {
-					s.setTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation(), 0)
+				if s.hasNoInfo(rank, record, oddStr, underDog, rightTeam.GetAbbreviation()) {
+					return writer, []string{rank, record}, nil
 				}
+
+				if !s.config.ScrollMode.Load() {
+					s.setTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation(), 0)
+					minX := ((rightBounds.Bounds().Dx() - s.textAreaWidth(rightBounds)) / 2) + s.textAreaWidth(rightBounds)
+					rightBounds = image.Rect(minX, rightBounds.Min.Y, rightBounds.Max.X, rightBounds.Max.Y)
+
+					return writer, []string{rank, record}, nil
+				}
+
+				// Scroll mode
+				widthStrs := []string{}
+				if s.config.ShowRecord.Load() {
+					widthStrs = append(widthStrs, rank, record)
+				}
+				if s.config.GamblingSpread.Load() {
+					widthStrs = append(widthStrs, oddStr)
+				}
+				infoWidth, err := s.getTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation())
+				if err != nil || infoWidth == 0 {
+					var err error
+					infoWidth, err = s.calculateTeamInfoWidth(canvas, writer, widthStrs)
+					if err != nil {
+						s.log.Error("failed to calculate team info width, using default",
+							zap.Error(err),
+						)
+					}
+					s.log.Debug("setting team info width",
+						zap.String("league", s.api.League()),
+						zap.String("team", rightTeam.GetAbbreviation()),
+						zap.Int("width", infoWidth),
+					)
+					s.setTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation(), infoWidth)
+				}
+				logoWidth := (z.Dx() - textWidth) / 2
+				startX := textWidth + logoWidth + teamInfoPad
+				if longestScore == 2 {
+					startX += 5
+				} else if longestScore == 3 {
+					startX += 9
+				}
+				rightBounds = image.Rect(startX, z.Min.Y, startX+infoWidth, z.Max.Y)
 
 				return writer, []string{rank, record}, nil
 			},
