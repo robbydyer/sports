@@ -182,3 +182,29 @@ func NewNCAAF(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	n := &ncaaf{}
 	return New(ctx, n, logger, n.setRankings)
 }
+
+// NewEPL ...
+func NewEPL(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
+	return New(ctx, &epl{}, logger, defaultRankSetter)
+}
+
+type epl struct{}
+
+func (n *epl) League() string {
+	return "EPL"
+}
+
+func (n *epl) APIPath() string {
+	return "soccer/eng.1"
+}
+
+func (n *epl) TeamEndpoints() []string {
+	return []string{
+		filepath.Join(n.APIPath(), "groups"),
+		filepath.Join(n.APIPath(), "teams"),
+	}
+}
+
+func (n *epl) HTTPPathPrefix() string {
+	return "epl"
+}

@@ -41,6 +41,7 @@ class TopNav extends React.Component {
                             <Nav.Link as={Link} to="/nfl">NFL</Nav.Link>
                             <Nav.Link as={Link} to="/nba">NBA</Nav.Link>
                             <Nav.Link as={Link} to="/mls">MLS</Nav.Link>
+                            <Nav.Link as={Link} to="/epl">EPL</Nav.Link>
                             <Nav.Link as={Link} to="/img">Image Board</Nav.Link>
                             <Nav.Link as={Link} to="/clock">Clock</Nav.Link>
                             <Nav.Link as={Link} to="/sys">System Info</Nav.Link>
