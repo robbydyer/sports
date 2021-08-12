@@ -17,6 +17,7 @@
     "is-svg": ">=4.2.2",
     "lodash": ">=4.17.21",
     "normalize-url": ">=4.5.1",
+    "path-parse": ">=1.0.7",
     "postcss": ">=8.2.10",
     "react": "^17.0.1",
     "react-bootstrap": "^1.4.3",
