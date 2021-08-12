@@ -12,7 +12,6 @@ import (
 	"github.com/robbydyer/sports/pkg/espn"
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/sportboard"
-	"github.com/robbydyer/sports/pkg/util"
 )
 
 const (
@@ -51,10 +50,6 @@ func New(ctx context.Context, logger *zap.Logger) (*NHL, error) {
 		n.log.Error("failed to get NHL teams", zap.Error(err))
 	}
 
-	if err := n.UpdateGames(ctx, util.Today().Format(DateFormat)); err != nil {
-		n.log.Error("failed to get games for NHL", zap.Error(err))
-	}
-
 	c := cron.New()
 	if _, err := c.AddFunc("0 5 * * *", func() { n.CacheClear(context.Background()) }); err != nil {
 		return n, fmt.Errorf("failed to set cron job for cacheClear: %w", err)
@@ -72,9 +67,6 @@ func (n *NHL) CacheClear(ctx context.Context) {
 	}
 	if err := n.UpdateTeams(ctx); err != nil {
 		n.log.Error("failed to update teams", zap.Error(err))
-	}
-	if err := n.UpdateGames(context.Background(), util.Today().Format(DateFormat)); err != nil {
-		n.log.Error("failed to get today's games", zap.Error(err))
 	}
 	for k := range n.logos {
 		delete(n.logos, k)
@@ -154,19 +146,21 @@ func (n *NHL) TeamFromAbbreviation(ctx context.Context, abbreviation string) (sp
 }
 
 // GetScheduledGames ...
-func (n *NHL) GetScheduledGames(ctx context.Context, date time.Time) ([]sportboard.Game, error) {
-	dateStr := n.DateStr(date)
-	games, ok := n.games[dateStr]
-	if !ok || len(games) == 0 {
-		if err := n.UpdateGames(ctx, dateStr); err != nil {
-			return nil, err
-		}
-	}
-
+func (n *NHL) GetScheduledGames(ctx context.Context, dates []time.Time) ([]sportboard.Game, error) {
 	var gList []sportboard.Game
 
-	for _, g := range games {
-		gList = append(gList, g)
+	for _, date := range dates {
+		dateStr := n.DateStr(date)
+		games, ok := n.games[dateStr]
+		if !ok || len(games) == 0 {
+			if err := n.UpdateGames(ctx, dateStr); err != nil {
+				return nil, err
+			}
+		}
+
+		for _, g := range games {
+			gList = append(gList, g)
+		}
 	}
 
 	return gList, nil

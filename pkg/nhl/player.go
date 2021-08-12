@@ -172,7 +172,10 @@ func (p *Player) setStats(ctx context.Context) error {
 
 	v := uri.Query()
 	v.Set("stats", "statsSingleSeason")
-	v.Set("season", GetSeason(util.Today()))
+
+	if len(util.Today()) > 0 {
+		v.Set("season", GetSeason(util.Today()[0]))
+	}
 
 	uri.RawQuery = v.Encode()
 

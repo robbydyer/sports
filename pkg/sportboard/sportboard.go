@@ -7,6 +7,7 @@ import (
 	"image/color"
 	"image/draw"
 	"math"
+	"strings"
 	"sync"
 	"time"
 
@@ -47,7 +48,7 @@ type SportBoard struct {
 // Todayer is a func that returns a string representing a date
 // that will be used for determining "Today's" games.
 // This is useful in testing what past days looked like
-type Todayer func() time.Time
+type Todayer func() []time.Time
 
 // Config ...
 type Config struct {
@@ -90,7 +91,7 @@ type FontConfig struct {
 type API interface {
 	GetTeams(ctx context.Context) ([]Team, error)
 	TeamFromAbbreviation(ctx context.Context, abbreviation string) (Team, error)
-	GetScheduledGames(ctx context.Context, date time.Time) ([]Game, error)
+	GetScheduledGames(ctx context.Context, date []time.Time) ([]Game, error)
 	DateStr(d time.Time) string
 	League() string
 	HTTPPathPrefix() string
@@ -210,6 +211,18 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 
 	if s.config.TodayFunc == nil {
 		s.config.TodayFunc = util.Today
+		if strings.ToLower(s.api.League()) == "ncaaf" {
+			f := func() []time.Time {
+				return util.NCAAFToday(util.Today()[0])
+			}
+			s.config.TodayFunc = f
+		}
+		if strings.ToLower(s.api.League()) == "nfl" {
+			f := func() []time.Time {
+				return util.NFLToday(util.Today()[0])
+			}
+			s.config.TodayFunc = f
+		}
 	}
 
 	if len(config.WatchTeams) == 0 {
@@ -397,10 +410,14 @@ OUTER:
 		}
 	}
 
+	var todays []string
+	for _, t := range s.config.TodayFunc() {
+		todays = append(todays, t.String())
+	}
 	s.log.Debug("scheduled games today",
 		zap.Int("watched games", len(games)),
 		zap.Int("num games", len(allGames)),
-		zap.String("today", s.config.TodayFunc().String()),
+		zap.Strings("todays", todays),
 		zap.String("league", s.api.League()),
 	)
 
