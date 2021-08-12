@@ -29,6 +29,7 @@ import (
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 	"github.com/robbydyer/sports/pkg/statboard"
 	"github.com/robbydyer/sports/pkg/sysboard"
+	"github.com/robbydyer/sports/pkg/util"
 )
 
 const defaultConfigFile = "/etc/sportsmatrix.conf"
@@ -453,23 +454,31 @@ func (r *rootArgs) setTodayFuncs(today string) error {
 		return nil
 	}
 
-	t, err := time.Parse("2006-01-02", today)
+	t, err := time.Parse("2006-01-02T15:04:05", fmt.Sprintf("%sT12:00:00", today))
 	if err != nil {
 		return err
 	}
 
-	f := func() time.Time {
-		return t
+	f := func() []time.Time {
+		return []time.Time{t}
 	}
 
 	r.config.NHLConfig.TodayFunc = f
 	r.config.MLBConfig.TodayFunc = f
 	r.config.NCAAMConfig.TodayFunc = f
-	r.config.NCAAFConfig.TodayFunc = f
 	r.config.NBAConfig.TodayFunc = f
-	r.config.NFLConfig.TodayFunc = f
 	r.config.MLSConfig.TodayFunc = f
 	r.config.EPLConfig.TodayFunc = f
+
+	ncaafF := func() []time.Time {
+		return util.NCAAFToday(t)
+	}
+	r.config.NCAAFConfig.TodayFunc = ncaafF
+
+	nflF := func() []time.Time {
+		return util.NFLToday(t)
+	}
+	r.config.NFLConfig.TodayFunc = nflF
 
 	return nil
 }

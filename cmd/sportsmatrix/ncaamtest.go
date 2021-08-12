@@ -47,7 +47,7 @@ func (c *ncaamCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	games, err := n.GetScheduledGames(ctx, time.Now().Local())
+	games, err := n.GetScheduledGames(ctx, []time.Time{time.Now().Local()})
 	if err != nil {
 		return err
 	}

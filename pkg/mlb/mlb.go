@@ -13,7 +13,6 @@ import (
 	"github.com/robbydyer/sports/pkg/espn"
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/sportboard"
-	"github.com/robbydyer/sports/pkg/util"
 )
 
 const (
@@ -53,10 +52,6 @@ func New(ctx context.Context, logger *zap.Logger) (*MLB, error) {
 		m.log.Error("failed to get teams for MLB", zap.Error(err))
 	}
 
-	if err := m.UpdateGames(ctx, util.Today().Format(DateFormat)); err != nil {
-		m.log.Error("failed to get games for MLB", zap.Error(err))
-	}
-
 	c := cron.New()
 	if _, err := c.AddFunc("0 5 * * *", func() { m.CacheClear(context.Background()) }); err != nil {
 		return m, fmt.Errorf("failed to set cron job for cacheClear: %w", err)
@@ -71,9 +66,6 @@ func (m *MLB) CacheClear(ctx context.Context) {
 	m.log.Warn("clearing MLB cache")
 	for k := range m.games {
 		delete(m.games, k)
-	}
-	if err := m.UpdateGames(ctx, util.Today().Format(DateFormat)); err != nil {
-		m.log.Error("failed to get today's games", zap.Error(err))
 	}
 	for k := range m.logos {
 		delete(m.logos, k)
@@ -116,24 +108,26 @@ func (m *MLB) TeamFromAbbreviation(ctx context.Context, abbreviation string) (sp
 }
 
 // GetScheduledGames ...
-func (m *MLB) GetScheduledGames(ctx context.Context, date time.Time) ([]sportboard.Game, error) {
-	dateStr := m.DateStr(date)
-	games, ok := m.games[dateStr]
-	if !ok || len(games) == 0 {
-		if err := m.UpdateGames(ctx, dateStr); err != nil {
-			return nil, err
-		}
-	}
-
-	games, ok = m.games[dateStr]
-	if !ok {
-		return nil, fmt.Errorf("failed to update games")
-	}
-
+func (m *MLB) GetScheduledGames(ctx context.Context, dates []time.Time) ([]sportboard.Game, error) {
 	var gList []sportboard.Game
 
-	for _, g := range games {
-		gList = append(gList, g)
+	for _, date := range dates {
+		dateStr := m.DateStr(date)
+		games, ok := m.games[dateStr]
+		if !ok || len(games) == 0 {
+			if err := m.UpdateGames(ctx, dateStr); err != nil {
+				return nil, err
+			}
+		}
+
+		games, ok = m.games[dateStr]
+		if !ok {
+			return nil, fmt.Errorf("failed to update games")
+		}
+
+		for _, g := range games {
+			gList = append(gList, g)
+		}
 	}
 
 	return gList, nil
