@@ -97,9 +97,9 @@ type API interface {
 	HTTPPathPrefix() string
 	GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error)
 	AllTeamAbbreviations() []string
-	GetWatchTeams(teams []string) []string
-	TeamRecord(ctx context.Context, team Team) string
-	TeamRank(ctx context.Context, team Team) string
+	GetWatchTeams(teams []string, season string) []string
+	TeamRecord(ctx context.Context, team Team, season string) string
+	TeamRank(ctx context.Context, team Team, season string) string
 	CacheClear(ctx context.Context)
 	// LeagueLogo(ctx context.Context) (*logo.Logo, error)
 }
@@ -372,7 +372,7 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 
 	// Determine which games are watched so that the game counter is accurate
 	if len(s.watchTeams) < 1 {
-		s.watchTeams = s.api.GetWatchTeams(s.config.WatchTeams)
+		s.watchTeams = s.api.GetWatchTeams(s.config.WatchTeams, s.season())
 		s.log.Debug("watch teams",
 			zap.String("league", s.api.League()),
 			zap.Strings("teeams", s.watchTeams),
@@ -403,8 +403,8 @@ OUTER:
 				games = append(games, game)
 
 				// Ensures the daily data for this team has been fetched
-				_ = s.api.TeamRecord(boardCtx, home)
-				_ = s.api.TeamRecord(boardCtx, away)
+				_ = s.api.TeamRecord(boardCtx, home, s.season())
+				_ = s.api.TeamRecord(boardCtx, away, s.season())
 				continue OUTER
 			}
 		}

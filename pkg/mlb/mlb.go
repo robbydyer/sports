@@ -154,7 +154,7 @@ func (m *MLB) AllTeamAbbreviations() []string {
 }
 
 // GetWatchTeams parses 'ALL' or divisions and adds teams accordingly
-func (m *MLB) GetWatchTeams(teams []string) []string {
+func (m *MLB) GetWatchTeams(teams []string, season string) []string {
 	watch := make(map[string]struct{})
 	for _, t := range teams {
 		if t == "ALL" {
@@ -213,12 +213,12 @@ func (m *MLB) UpdateGames(ctx context.Context, dateStr string) error {
 }
 
 // TeamRecord ...
-func (m *MLB) TeamRecord(ctx context.Context, team sportboard.Team) string {
+func (m *MLB) TeamRecord(ctx context.Context, team sportboard.Team, season string) string {
 	return ""
 }
 
 // TeamRank ...
-func (m *MLB) TeamRank(ctx context.Context, team sportboard.Team) string {
+func (m *MLB) TeamRank(ctx context.Context, team sportboard.Team, season string) string {
 	return ""
 }
 

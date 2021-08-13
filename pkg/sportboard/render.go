@@ -487,8 +487,8 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 	return []*rgbrender.TextLayer{
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
-				rank := s.api.TeamRank(ctx, leftTeam)
-				record := s.api.TeamRecord(ctx, leftTeam)
+				rank := s.api.TeamRank(ctx, leftTeam, s.season())
+				record := s.api.TeamRecord(ctx, leftTeam, s.season())
 
 				writer, err := s.getTimeWriter(bounds)
 				if err != nil {
@@ -592,8 +592,8 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 		),
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
-				rank := s.api.TeamRank(ctx, rightTeam)
-				record := s.api.TeamRecord(ctx, rightTeam)
+				rank := s.api.TeamRank(ctx, rightTeam, s.season())
+				record := s.api.TeamRecord(ctx, rightTeam, s.season())
 
 				writer, err := s.getTimeWriter(bounds)
 				if err != nil {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"time"
 
 	"go.uber.org/zap"
@@ -31,12 +32,32 @@ type ncaafRanks struct {
 	} `json:"team"`
 }
 
-func (n *ncaaf) setRankings(ctx context.Context, e *ESPNBoard, teams []*Team) error {
-	uri := "https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings"
+func (n *ncaaf) setRankings(ctx context.Context, e *ESPNBoard, season string, teams []*Team) error {
+	// For NCAAF we set rankings for all teams at once, so we don't need to run this more
+	// than once per day
+	if e.ranksSet.Load() {
+		return nil
+	}
+	e.Lock()
+	defer e.Unlock()
 
-	e.log.Info("getting NCAAF rankings")
+	uri, err := url.Parse("https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings")
+	if err != nil {
+		return err
+	}
 
-	req, err := http.NewRequest("GET", uri, nil)
+	if season != "" {
+		v := uri.Query()
+		v.Set("season", season)
+		uri.RawQuery = v.Encode()
+	}
+
+	e.log.Info("getting NCAAF rankings",
+		zap.String("season", season),
+		zap.String("url", uri.String()),
+	)
+
+	req, err := http.NewRequest("GET", uri.String(), nil)
 	if err != nil {
 		return err
 	}
@@ -65,19 +86,28 @@ func (n *ncaaf) setRankings(ctx context.Context, e *ESPNBoard, teams []*Team) er
 
 RANK:
 	for _, rank := range ranks {
-		for _, t := range teams {
+		for _, t := range e.teams {
+			if err := t.setDetails(ctx, season, e.leaguer.APIPath(), e.log); err != nil {
+				e.log.Error("failed to set NCAAF team details",
+					zap.Error(err),
+				)
+			}
 			if t.Abbreviation == rank.Team.Abbreviation {
 				e.log.Debug("setting NCAAF rank",
 					zap.String("team", t.Abbreviation),
 					zap.Int("rank", rank.Current),
 					zap.String("record", rank.Record),
 				)
+				t.Lock()
 				t.rank = rank.Current
 				t.record = rank.Record
+				t.Unlock()
 				continue RANK
 			}
 		}
 	}
+
+	e.ranksSet.Store(true)
 
 	return nil
 }
