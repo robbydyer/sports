@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -30,6 +31,40 @@ type ncaafRanks struct {
 	Team     *struct {
 		Abbreviation string `json:"abbreviation"`
 	} `json:"team"`
+}
+
+func (n *ncaaf) setRecords(ctx context.Context, e *ESPNBoard, season string, teams []*Team) error {
+	workers := 10
+	wg := &sync.WaitGroup{}
+	doLoad := func(ch chan *Team) {
+		for t := range ch {
+			if err := t.setDetails(ctx, season, n.APIPath(), e.log); err != nil {
+				e.log.Error("failed to set team details",
+					zap.Error(err),
+					zap.String("league", n.League()),
+					zap.String("team", t.GetAbbreviation()),
+				)
+			}
+		}
+		wg.Done()
+	}
+	ch := make(chan *Team)
+	for w := 0; w < workers; w++ {
+		wg.Add(1)
+		go doLoad(ch)
+	}
+	for _, t := range teams {
+		if t.record != "" {
+			return nil
+		}
+		ch <- t
+	}
+
+	close(ch)
+
+	wg.Wait()
+
+	return nil
 }
 
 func (n *ncaaf) setRankings(ctx context.Context, e *ESPNBoard, season string, teams []*Team) error {
@@ -86,12 +121,8 @@ func (n *ncaaf) setRankings(ctx context.Context, e *ESPNBoard, season string, te
 
 RANK:
 	for _, rank := range ranks {
+		// Set rank for ALL teams, not just ones passed to this func
 		for _, t := range e.teams {
-			if err := t.setDetails(ctx, season, e.leaguer.APIPath(), e.log); err != nil {
-				e.log.Error("failed to set NCAAF team details",
-					zap.Error(err),
-				)
-			}
 			if t.Abbreviation == rank.Team.Abbreviation {
 				e.log.Debug("setting NCAAF rank",
 					zap.String("team", t.Abbreviation),
@@ -105,6 +136,10 @@ RANK:
 				continue RANK
 			}
 		}
+	}
+
+	if err := n.setRecords(ctx, e, season, e.teams); err != nil {
+		return err
 	}
 
 	e.ranksSet.Store(true)

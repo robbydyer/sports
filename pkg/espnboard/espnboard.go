@@ -35,6 +35,7 @@ type Leaguer interface {
 type ESPNBoard struct {
 	leaguer         Leaguer
 	rankSetter      rankSetter
+	recordSetter    rankSetter
 	log             *zap.Logger
 	teams           []*Team
 	games           map[string][]*Game
@@ -61,7 +62,7 @@ func (e *ESPNBoard) logoCacheDir() (string, error) {
 }
 
 // New ...
-func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger, r rankSetter) (*ESPNBoard, error) {
+func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger, r rankSetter, rec rankSetter) (*ESPNBoard, error) {
 	e := &ESPNBoard{
 		leaguer:         leaguer,
 		log:             logger,
@@ -72,6 +73,7 @@ func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger, r rankSetter)
 		logoLockers:     make(map[string]*sync.Mutex),
 		conferenceNames: make(map[string]struct{}),
 		rankSetter:      r,
+		recordSetter:    rec,
 		rankSorted:      atomic.NewBool(false),
 		ranksSet:        atomic.NewBool(false),
 	}
@@ -292,7 +294,7 @@ func (e *ESPNBoard) teamsInRank(top int, season string) []string {
 	)
 	teams := []string{}
 	if !e.rankSorted.Load() {
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
 		if err := e.rankSetter(ctx, e, season, e.teams); err != nil {
 			e.log.Error("failed to set team rankings",
@@ -378,7 +380,7 @@ func (e *ESPNBoard) TeamRecord(ctx context.Context, team sportboard.Team, season
 		return ""
 	}
 
-	if err := e.rankSetter(ctx, e, season, []*Team{realTeam}); err != nil {
+	if err := e.recordSetter(ctx, e, season, []*Team{realTeam}); err != nil {
 		e.log.Error("failed to set team details", zap.Error(err))
 	}
 

@@ -27,7 +27,7 @@ func (n *nfl) HTTPPathPrefix() string {
 
 // NewNFL ...
 func NewNFL(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
-	return New(ctx, &nfl{}, logger, defaultRankSetter)
+	return New(ctx, &nfl{}, logger, defaultRankSetter, defaultRankSetter)
 }
 
 type ncaam struct{}
@@ -53,7 +53,7 @@ func (n *ncaam) HTTPPathPrefix() string {
 
 // NewNCAAMensBasketball ...
 func NewNCAAMensBasketball(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
-	return New(ctx, &ncaam{}, logger, defaultRankSetter)
+	return New(ctx, &ncaam{}, logger, defaultRankSetter, defaultRankSetter)
 }
 
 type nba struct{}
@@ -76,7 +76,7 @@ func (n *nba) HTTPPathPrefix() string {
 
 // NewNBA ...
 func NewNBA(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
-	return New(ctx, &nba{}, logger, defaultRankSetter)
+	return New(ctx, &nba{}, logger, defaultRankSetter, defaultRankSetter)
 }
 
 type mls struct{}
@@ -99,7 +99,7 @@ func (n *mls) HTTPPathPrefix() string {
 
 // NewMLS ...
 func NewMLS(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
-	return New(ctx, &mls{}, logger, defaultRankSetter)
+	return New(ctx, &mls{}, logger, defaultRankSetter, defaultRankSetter)
 }
 
 type nhl struct{}
@@ -125,7 +125,7 @@ func (n *nhl) HTTPPathPrefix() string {
 
 // NewNHL ...
 func NewNHL(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
-	return New(ctx, &nhl{}, logger, defaultRankSetter)
+	return New(ctx, &nhl{}, logger, defaultRankSetter, defaultRankSetter)
 }
 
 type mlb struct{}
@@ -151,7 +151,7 @@ func (n *mlb) HTTPPathPrefix() string {
 
 // NewMLB ...
 func NewMLB(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
-	return New(ctx, &mlb{}, logger, defaultRankSetter)
+	return New(ctx, &mlb{}, logger, defaultRankSetter, defaultRankSetter)
 }
 
 type ncaaf struct{}
@@ -180,12 +180,12 @@ func (n *ncaaf) HTTPPathPrefix() string {
 // NewNCAAF ...
 func NewNCAAF(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	n := &ncaaf{}
-	return New(ctx, n, logger, n.setRankings)
+	return New(ctx, n, logger, n.setRankings, n.setRecords)
 }
 
 // NewEPL ...
 func NewEPL(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
-	return New(ctx, &epl{}, logger, defaultRankSetter)
+	return New(ctx, &epl{}, logger, defaultRankSetter, defaultRankSetter)
 }
 
 type epl struct{}

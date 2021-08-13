@@ -30,6 +30,51 @@ func (s *SportBoard) homeSide() string {
 	return "right"
 }
 
+func (s *SportBoard) renderLoading(ctx context.Context, canvas board.Canvas) {
+	writer, err := s.getTimeWriter(canvas.Bounds())
+	if err != nil {
+		s.log.Error("failed to get writer for loading screen",
+			zap.Error(err),
+		)
+		return
+	}
+
+	select {
+	case <-ctx.Done():
+		return
+	case <-time.After(5 * time.Second):
+	}
+	s.log.Info("rendering loading screen",
+		zap.String("league", s.api.League()),
+	)
+
+LOOP:
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		_ = writer.WriteAlignedBoxed(
+			rgbrender.CenterCenter,
+			canvas,
+			rgbrender.ZeroedBounds(canvas.Bounds()),
+			[]string{
+				s.api.League(),
+				"Loading...",
+			},
+			color.White,
+			color.Black,
+		)
+		if err := canvas.Render(ctx); err != nil {
+			return
+		}
+		if !canvas.Scrollable() {
+			break LOOP
+		}
+	}
+}
+
 func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
 	s.logCanvas(canvas, "render live canvas size")
 
