@@ -117,55 +117,55 @@ class Sport extends React.Component {
         return (
             <Container fluid>
                 <Row className="text-center"><Col><Image src={this.logosrc()} style={{ height: '100px', width: 'auto' }} fluid /></Col></Row>
-                <Row className="text-center">
+                <Row className="text-left">
                     <Col>
                         <Form.Switch id={this.props.sport + "enabler"} label="Enable/Disable" checked={this.state.enabled}
                             onChange={() => this.handleSwitch(`${this.props.sport}/enable`, `${this.props.sport}/disable`, "enabled")} />
                     </Col>
                 </Row>
-                <Row className="text-center">
+                <Row className="text-left">
                     <Col>
                         <Form.Switch id={this.props.sport + "scroller"} label="Scroll Mode" checked={this.state.scroll}
                             onChange={() => this.handleSwitch(`${this.props.sport}/scrollon`, `${this.props.sport}/scrolloff`, "scroll")} />
                     </Col>
                 </Row>
-                <Row className="text-center">
+                <Row className="text-left">
                     <Col>
                         <Form.Switch id={this.props.sport + "tightscroller"} label="Back-to-back Scroll Mode" checked={this.state.tightscroll}
                             onChange={() => this.handleSwitch(`${this.props.sport}/tightscrollon`, `${this.props.sport}/tightscrolloff`, "tightscroll")} />
                     </Col>
                 </Row>
-                <Row className="text-center">
+                <Row className="text-left">
                     <Col>
                         <Form.Switch id={this.props.sport + "stats"} label="Stats" checked={this.state.stats}
                             onChange={() => this.handleSwitch(`${this.props.sport}/stats/enable`, `${this.props.sport}/stats/disable`, "stats")} />
                     </Col>
                 </Row>
-                <Row className="text-center">
+                <Row className="text-left">
                     <Col>
                         <Form.Switch id={this.props.sports + "statscroll"} label="Stats Scroll Mode" checked={this.state.statscroll}
                             onChange={() => this.handleSwitch(`${this.props.sport}/stats/scrollon`, `${this.props.sport}/stats/scrolloff`, "statscroll")} />
                     </Col>
                 </Row>
-                <Row className="text-center">
+                <Row className="text-left">
                     <Col>
                         <Form.Switch id={this.props.sport + "favscore"} label="Hide Favorite Scores" checked={this.state.hideFavorite}
                             onChange={() => this.handleSwitch(`${this.props.sport}/hidefavoritescore`, `${this.props.sport}/showfavoritescore`, "hideFavorite")} />
                     </Col>
                 </Row>
-                <Row className="text-center">
+                <Row className="text-left">
                     <Col>
                         <Form.Switch id={this.props.sport + "odds"} label="Show Odds" checked={this.state.odds}
                             onChange={() => this.handleSwitch(`${this.props.sport}/oddson`, `${this.props.sport}/oddsoff`, "odds")} />
                     </Col>
                 </Row>
-                <Row className="text-center">
+                <Row className="text-left">
                     <Col>
                         <Form.Switch id={this.props.sport + "record"} label="Record + Rank" checked={this.state.record}
                             onChange={() => this.handleSwitch(`${this.props.sport}/recordrankon`, `${this.props.sport}/recordrankoff`, "record")} />
                     </Col>
                 </Row>
-                <Row className="text-center">
+                <Row className="text-left">
                     <Col>
                         <Form.Switch id={this.props.sport + "favstick"} label="Stick Favorite Live Games" checked={this.state.stickyFavorite}
                             onChange={() => this.handleSwitch(`${this.props.sport}/favoritesticky`, `${this.props.sport}/favoriteunstick`, "stickyFavorite")} />

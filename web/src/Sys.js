@@ -56,7 +56,7 @@ class Sys extends React.Component {
         return (
             <Container fluid>
                 <Row className="text-center"><Col><Image src={server} style={{ height: '100px', width: 'auto' }} fluid /></Col></Row>
-                <Row className="text-center">
+                <Row className="text-left">
                     <Col>
                         <Form.Switch id="sysenabler" label="Enable/Disable" checked={this.state.disablerChecked} onChange={this.handleSwitch} />
                     </Col>
