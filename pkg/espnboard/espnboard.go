@@ -354,6 +354,10 @@ func (e *ESPNBoard) TeamRank(ctx context.Context, team sportboard.Team) string {
 		e.log.Error("failed to set team details", zap.Error(err))
 	}
 
+	if realTeam.rank == 0 {
+		return ""
+	}
+
 	return strconv.Itoa(realTeam.rank)
 }
 
