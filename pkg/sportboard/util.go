@@ -213,3 +213,11 @@ func numDigits(i int) int {
 	}
 	return count
 }
+
+func (s *SportBoard) season() string {
+	todays := s.config.TodayFunc()
+	if len(todays) < 1 {
+		return ""
+	}
+	return fmt.Sprintf("%d", todays[0].Year())
+}

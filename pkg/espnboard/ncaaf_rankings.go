@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -31,12 +33,66 @@ type ncaafRanks struct {
 	} `json:"team"`
 }
 
-func (n *ncaaf) setRankings(ctx context.Context, e *ESPNBoard, teams []*Team) error {
-	uri := "https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings"
+func (n *ncaaf) setRecords(ctx context.Context, e *ESPNBoard, season string, teams []*Team) error {
+	workers := 10
+	wg := &sync.WaitGroup{}
+	doLoad := func(ch chan *Team) {
+		for t := range ch {
+			if err := t.setDetails(ctx, season, n.APIPath(), e.log); err != nil {
+				e.log.Error("failed to set team details",
+					zap.Error(err),
+					zap.String("league", n.League()),
+					zap.String("team", t.GetAbbreviation()),
+				)
+			}
+		}
+		wg.Done()
+	}
+	ch := make(chan *Team)
+	for w := 0; w < workers; w++ {
+		wg.Add(1)
+		go doLoad(ch)
+	}
+	for _, t := range teams {
+		if t.record != "" {
+			return nil
+		}
+		ch <- t
+	}
 
-	e.log.Info("getting NCAAF rankings")
+	close(ch)
 
-	req, err := http.NewRequest("GET", uri, nil)
+	wg.Wait()
+
+	return nil
+}
+
+func (n *ncaaf) setRankings(ctx context.Context, e *ESPNBoard, season string, teams []*Team) error {
+	// For NCAAF we set rankings for all teams at once, so we don't need to run this more
+	// than once per day
+	if e.ranksSet.Load() {
+		return nil
+	}
+	e.Lock()
+	defer e.Unlock()
+
+	uri, err := url.Parse("https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings")
+	if err != nil {
+		return err
+	}
+
+	if season != "" {
+		v := uri.Query()
+		v.Set("season", season)
+		uri.RawQuery = v.Encode()
+	}
+
+	e.log.Info("getting NCAAF rankings",
+		zap.String("season", season),
+		zap.String("url", uri.String()),
+	)
+
+	req, err := http.NewRequest("GET", uri.String(), nil)
 	if err != nil {
 		return err
 	}
@@ -65,19 +121,28 @@ func (n *ncaaf) setRankings(ctx context.Context, e *ESPNBoard, teams []*Team) er
 
 RANK:
 	for _, rank := range ranks {
-		for _, t := range teams {
+		// Set rank for ALL teams, not just ones passed to this func
+		for _, t := range e.teams {
 			if t.Abbreviation == rank.Team.Abbreviation {
 				e.log.Debug("setting NCAAF rank",
 					zap.String("team", t.Abbreviation),
 					zap.Int("rank", rank.Current),
 					zap.String("record", rank.Record),
 				)
+				t.Lock()
 				t.rank = rank.Current
 				t.record = rank.Record
+				t.Unlock()
 				continue RANK
 			}
 		}
 	}
+
+	if err := n.setRecords(ctx, e, season, e.teams); err != nil {
+		return err
+	}
+
+	e.ranksSet.Store(true)
 
 	return nil
 }

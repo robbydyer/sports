@@ -21,7 +21,7 @@ import (
 // DateFormat for getting games
 const DateFormat = "20060102"
 
-type rankSetter func(ctx context.Context, e *ESPNBoard, teams []*Team) error
+type rankSetter func(ctx context.Context, e *ESPNBoard, season string, teams []*Team) error
 
 // Leaguer ...
 type Leaguer interface {
@@ -35,6 +35,7 @@ type Leaguer interface {
 type ESPNBoard struct {
 	leaguer         Leaguer
 	rankSetter      rankSetter
+	recordSetter    rankSetter
 	log             *zap.Logger
 	teams           []*Team
 	games           map[string][]*Game
@@ -45,6 +46,7 @@ type ESPNBoard struct {
 	logoLock        sync.RWMutex
 	logoLockers     map[string]*sync.Mutex
 	conferenceNames map[string]struct{}
+	ranksSet        *atomic.Bool
 	rankSorted      *atomic.Bool
 	sync.Mutex
 }
@@ -60,7 +62,7 @@ func (e *ESPNBoard) logoCacheDir() (string, error) {
 }
 
 // New ...
-func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger, r rankSetter) (*ESPNBoard, error) {
+func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger, r rankSetter, rec rankSetter) (*ESPNBoard, error) {
 	e := &ESPNBoard{
 		leaguer:         leaguer,
 		log:             logger,
@@ -71,7 +73,9 @@ func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger, r rankSetter)
 		logoLockers:     make(map[string]*sync.Mutex),
 		conferenceNames: make(map[string]struct{}),
 		rankSetter:      r,
+		recordSetter:    rec,
 		rankSorted:      atomic.NewBool(false),
+		ranksSet:        atomic.NewBool(false),
 	}
 
 	if _, err := e.GetTeams(ctx); err != nil {
@@ -102,6 +106,7 @@ func (e *ESPNBoard) CacheClear(ctx context.Context) {
 	e.allTeams = []string{}
 	e.teams = nil
 	e.rankSorted.Store(false)
+	e.ranksSet.Store(false)
 	if _, err := e.GetTeams(ctx); err != nil {
 		e.log.Error("failed to get teams after cache clear", zap.Error(err))
 	}
@@ -187,7 +192,7 @@ func (e *ESPNBoard) AllTeamAbbreviations() []string {
 }
 
 // GetWatchTeams ...
-func (e *ESPNBoard) GetWatchTeams(teams []string) []string {
+func (e *ESPNBoard) GetWatchTeams(teams []string, season string) []string {
 	if len(teams) == 0 {
 		e.log.Info("setting ESPNBoard watch teams to ALL teams")
 		return e.AllTeamAbbreviations()
@@ -224,7 +229,7 @@ OUTER:
 					zap.Error(err),
 				)
 			}
-			for _, a := range e.TeamsInRank(top) {
+			for _, a := range e.teamsInRank(top, season) {
 				watch[a] = struct{}{}
 			}
 			continue OUTER
@@ -278,8 +283,8 @@ func (e *ESPNBoard) TeamsInConference(conference string) []string {
 	return ret
 }
 
-// TeamsInRank grabs all teams within the top X number of rankings
-func (e *ESPNBoard) TeamsInRank(top int) []string {
+// teamsInRank grabs all teams within the top X number of rankings
+func (e *ESPNBoard) teamsInRank(top int, season string) []string {
 	if top < 1 {
 		return []string{}
 	}
@@ -289,9 +294,9 @@ func (e *ESPNBoard) TeamsInRank(top int) []string {
 	)
 	teams := []string{}
 	if !e.rankSorted.Load() {
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
-		if err := e.rankSetter(ctx, e, e.teams); err != nil {
+		if err := e.rankSetter(ctx, e, season, e.teams); err != nil {
 			e.log.Error("failed to set team rankings",
 				zap.Error(err),
 				zap.String("league", e.League()),
@@ -333,7 +338,7 @@ func (e *ESPNBoard) UpdateGames(ctx context.Context, dateStr string) error {
 }
 
 // TeamRank ...
-func (e *ESPNBoard) TeamRank(ctx context.Context, team sportboard.Team) string {
+func (e *ESPNBoard) TeamRank(ctx context.Context, team sportboard.Team, season string) string {
 	var realTeam *Team
 	for _, t := range e.teams {
 		if t.Abbreviation == team.GetAbbreviation() {
@@ -350,7 +355,7 @@ func (e *ESPNBoard) TeamRank(ctx context.Context, team sportboard.Team) string {
 		return strconv.Itoa(realTeam.rank)
 	}
 
-	if err := e.rankSetter(ctx, e, []*Team{realTeam}); err != nil {
+	if err := e.rankSetter(ctx, e, season, []*Team{realTeam}); err != nil {
 		e.log.Error("failed to set team details", zap.Error(err))
 	}
 
@@ -362,7 +367,7 @@ func (e *ESPNBoard) TeamRank(ctx context.Context, team sportboard.Team) string {
 }
 
 // TeamRecord ...
-func (e *ESPNBoard) TeamRecord(ctx context.Context, team sportboard.Team) string {
+func (e *ESPNBoard) TeamRecord(ctx context.Context, team sportboard.Team, season string) string {
 	var realTeam *Team
 	for _, t := range e.teams {
 		if t.Abbreviation == team.GetAbbreviation() {
@@ -375,7 +380,7 @@ func (e *ESPNBoard) TeamRecord(ctx context.Context, team sportboard.Team) string
 		return ""
 	}
 
-	if err := e.rankSetter(ctx, e, []*Team{realTeam}); err != nil {
+	if err := e.recordSetter(ctx, e, season, []*Team{realTeam}); err != nil {
 		e.log.Error("failed to set team details", zap.Error(err))
 	}
 

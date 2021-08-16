@@ -85,7 +85,7 @@ func (n *NHL) AllTeamAbbreviations() []string {
 }
 
 // GetWatchTeams ...
-func (n *NHL) GetWatchTeams(teams []string) []string {
+func (n *NHL) GetWatchTeams(teams []string, season string) []string {
 	watch := make(map[string]struct{})
 	for _, t := range teams {
 		if t == "ALL" {
@@ -208,12 +208,12 @@ func (n *NHL) UpdateGames(ctx context.Context, dateStr string) error {
 }
 
 // TeamRecord ...
-func (n *NHL) TeamRecord(ctx context.Context, team sportboard.Team) string {
+func (n *NHL) TeamRecord(ctx context.Context, team sportboard.Team, season string) string {
 	return ""
 }
 
 // TeamRank ...
-func (n *NHL) TeamRank(ctx context.Context, team sportboard.Team) string {
+func (n *NHL) TeamRank(ctx context.Context, team sportboard.Team, season string) string {
 	return ""
 }
 

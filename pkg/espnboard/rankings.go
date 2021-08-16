@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 
 	multierror "github.com/hashicorp/go-multierror"
@@ -13,10 +14,10 @@ import (
 )
 
 // defaultRankSetter implements rankSetter
-func defaultRankSetter(ctx context.Context, e *ESPNBoard, teams []*Team) error {
+func defaultRankSetter(ctx context.Context, e *ESPNBoard, season string, teams []*Team) error {
 	errs := &multierror.Error{}
 	for _, t := range teams {
-		if err := t.setDetails(ctx, e.leaguer.APIPath(), e.log); err != nil {
+		if err := t.setDetails(ctx, season, e.leaguer.APIPath(), e.log); err != nil {
 			errs = multierror.Append(errs, err)
 			e.log.Error("failed to set team record/rank",
 				zap.Error(err),
@@ -28,7 +29,7 @@ func defaultRankSetter(ctx context.Context, e *ESPNBoard, teams []*Team) error {
 }
 
 // setDetails sets info about a team's record, rank, etc
-func (t *Team) setDetails(ctx context.Context, apiPath string, log *zap.Logger) error {
+func (t *Team) setDetails(ctx context.Context, season string, apiPath string, log *zap.Logger) error {
 	t.Lock()
 	defer t.Unlock()
 
@@ -36,9 +37,18 @@ func (t *Team) setDetails(ctx context.Context, apiPath string, log *zap.Logger) 
 		return nil
 	}
 
-	uri := fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s/teams/%s", apiPath, t.ID)
+	uri, err := url.Parse(fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s/teams/%s", apiPath, t.ID))
+	if err != nil {
+		return err
+	}
 
-	req, err := http.NewRequest("GET", uri, nil)
+	if season != "" {
+		v := uri.Query()
+		v.Set("dates", season)
+		uri.RawQuery = v.Encode()
+	}
+
+	req, err := http.NewRequest("GET", uri.String(), nil)
 	if err != nil {
 		return err
 	}

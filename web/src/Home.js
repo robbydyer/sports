@@ -38,7 +38,7 @@ class Home extends React.Component {
     render() {
         return (
             <Container fluid>
-                <Row className="text-center">
+                <Row className="text-left">
                     <Col>
                         <Form.Switch id="screen" label="Screen On/Off" checked={this.state["screen"]} onChange={() => this.handleSwitch("screenon", "screenoff", "screen")} />
                         <Form.Switch id="webboard" label="Web Board On/Off" checked={this.state["webboard"]} onChange={() => this.handleSwitch("webboardon", "webboardoff", "webboard")} />
