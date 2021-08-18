@@ -42,6 +42,18 @@ type TextWriter struct {
 	LineSpace        float64
 }
 
+// ColorChar is used to define text for writing in different colors
+type ColorChar struct {
+	Lines  []*ColorCharLine
+	BoxClr color.Color
+}
+
+// ColorCharLine is a line in a multicolored text
+type ColorCharLine struct {
+	Chars []string
+	Clrs  []color.Color
+}
+
 // DefaultTextWriter ...
 func DefaultTextWriter() (*TextWriter, error) {
 	fnt, err := GetFont(defaultFont)
@@ -211,6 +223,86 @@ func (t *TextWriter) WriteAlignedBoxed(align Align, canvas draw.Image, bounds im
 		drawer.DrawString(s)
 		y += lineY + t.YStartCorrection
 		drawer.Dot = fixed.P(startX, y)
+	}
+
+	return nil
+}
+
+// WriteAlignedColorCodes writes text aligned within a given bounds and draws a box sized to the text width
+func (t *TextWriter) WriteAlignedColorCodes(align Align, canvas draw.Image, bounds image.Rectangle, colorChars *ColorChar) error {
+	if err := colorChars.validate(); err != nil {
+		return err
+	}
+
+	drawer, err := t.getDrawer(canvas, color.White)
+	if err != nil {
+		return err
+	}
+	maxXWidth := t.maxWidth(colorChars, drawer)
+
+	yHeight := len(colorChars.Lines) * int(math.Floor(t.FontSize+t.LineSpace))
+
+	if colorChars.BoxClr != nil {
+		boxAlign, err := AlignPosition(align, bounds, maxXWidth.Ceil(), yHeight)
+		if err != nil {
+			return err
+		}
+		draw.Draw(canvas, boxAlign, image.NewUniform(colorChars.BoxClr), image.Point{}, draw.Over)
+	}
+
+	writeBox, err := AlignPosition(align, bounds, maxXWidth.Floor(), yHeight)
+	if err != nil {
+		return err
+	}
+
+	// lineY represents how much space to add for the newline
+	lineY := int(math.Floor(t.FontSize + t.LineSpace))
+
+	startX := writeBox.Min.X + t.XStartCorrection
+	y := int(math.Floor(t.FontSize)) + writeBox.Min.Y + t.YStartCorrection
+
+	pt := fixed.P(startX, y)
+	prev := []string{}
+	for _, line := range colorChars.Lines {
+		for i, char := range line.Chars {
+			clr := line.Clrs[i]
+			drawer, err := t.getDrawer(canvas, clr)
+			if err != nil {
+				return err
+			}
+			str := strings.Join(prev, "")
+			prevWidth := drawer.MeasureString(str)
+			drawer.Dot = pt
+			drawer.Dot.X = prevWidth + drawer.Dot.X
+			drawer.DrawString(char)
+			prev = append(prev, char)
+		}
+		y += lineY + t.YStartCorrection
+		pt = fixed.P(startX, y)
+		prev = []string{}
+	}
+
+	return nil
+}
+
+// maxWidth finds the max width of a slice of ColoChar
+func (t *TextWriter) maxWidth(clrChars *ColorChar, drawer *font.Drawer) fixed.Int26_6 {
+	var m fixed.Int26_6
+	for _, line := range clrChars.Lines {
+		str := strings.Join(line.Chars, "")
+		if width := drawer.MeasureString(str); width > m {
+			m = width
+		}
+	}
+
+	return m
+}
+
+func (c *ColorChar) validate() error {
+	for _, line := range c.Lines {
+		if len(line.Chars) != len(line.Clrs) {
+			return fmt.Errorf("number of chars and colors must match")
+		}
 	}
 
 	return nil

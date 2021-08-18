@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/draw"
 	"math"
-	"strings"
 
 	"go.uber.org/zap"
 
@@ -189,7 +188,7 @@ func (s *SportBoard) calculateTeamInfoWidth(canvas draw.Image, writer *rgbrender
 	return max, nil
 }
 
-func scoreStr(g Game, homeSide string) (string, error) {
+func scoreStr(g Game, homeSide side) (string, error) {
 	a, err := g.AwayTeam()
 	if err != nil {
 		return "", err
@@ -199,7 +198,7 @@ func scoreStr(g Game, homeSide string) (string, error) {
 		return "", err
 	}
 
-	if strings.ToLower(homeSide) == "left" {
+	if homeSide == left {
 		return fmt.Sprintf("%d-%d", h.Score(), a.Score()), nil
 	}
 	return fmt.Sprintf("%d-%d", a.Score(), h.Score()), nil

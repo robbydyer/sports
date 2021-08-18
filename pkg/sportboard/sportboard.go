@@ -23,7 +23,13 @@ import (
 	"github.com/robbydyer/sports/pkg/util"
 )
 
-const maxAPITries = 3
+type side int
+
+const (
+	maxAPITries      = 3
+	left        side = iota
+	right
+)
 
 // SportBoard implements board.Board
 type SportBoard struct {
@@ -42,6 +48,8 @@ type SportBoard struct {
 	logoLock        sync.RWMutex
 	enablerLock     sync.Mutex
 	cancelBoard     chan struct{}
+	previousScores  []*previousScore
+	prevScoreLock   sync.Mutex
 	sync.Mutex
 }
 
@@ -79,6 +87,7 @@ type Config struct {
 	ScrollDelay         string            `json:"scrollDelay"`
 	GamblingSpread      *atomic.Bool      `json:"showOdds"`
 	ShowNoScheduledLogo *atomic.Bool      `json:"showNotScheduled"`
+	TestScoreChange     bool              `json:"testScoreChange"`
 }
 
 // FontConfig ...
@@ -255,6 +264,8 @@ func (s *SportBoard) cacheClear() {
 	defer s.logoLock.Unlock()
 	s.teamInfoLock.Lock()
 	defer s.teamInfoLock.Unlock()
+	s.prevScoreLock.Lock()
+	defer s.prevScoreLock.Unlock()
 
 	s.log.Warn("Clearing cache")
 	for k := range s.cachedLiveGames {
@@ -269,6 +280,7 @@ func (s *SportBoard) cacheClear() {
 	for k := range s.teamInfoWidths {
 		delete(s.teamInfoWidths, k)
 	}
+	s.previousScores = []*previousScore{}
 }
 
 // Name ...
