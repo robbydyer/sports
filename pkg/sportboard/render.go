@@ -23,11 +23,11 @@ const (
 
 var red = color.RGBA{255, 0, 0, 255}
 
-func (s *SportBoard) homeSide() string {
+func (s *SportBoard) homeSide() side {
 	if s.api.League() == mls {
-		return "left"
+		return left
 	}
-	return "right"
+	return right
 }
 
 func (s *SportBoard) renderLoading(ctx context.Context, canvas board.Canvas) {
@@ -144,36 +144,97 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 		layers.AddTextLayer(rgbrender.BackgroundPriority+1,
 			rgbrender.NewTextLayer(
 				func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
-					isFavorite, err := s.isFavoriteGame(liveGame)
-					if err != nil {
-						return nil, nil, err
-					}
-					score := []string{}
-					if s.config.HideFavoriteScore.Load() && isFavorite {
-						s.log.Warn("hiding score for favorite team")
-						score = []string{}
-					} else {
-						str, err := scoreStr(liveGame, s.homeSide())
-						if err != nil {
-							return nil, nil, err
-						}
-						score = append(score, str)
-					}
 					writer, err := s.getScoreWriter(canvas.Bounds())
 					if err != nil {
 						return nil, nil, err
 					}
-					return writer, score, nil
+					return writer, []string{}, nil
 				},
 				func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
-					return writer.WriteAlignedBoxed(
+					isFavorite, err := s.isFavoriteGame(liveGame)
+					if err != nil {
+						return err
+					}
+					if s.config.HideFavoriteScore.Load() && isFavorite {
+						s.log.Warn("hiding score for favorite team")
+						return nil
+					}
+					a, err := liveGame.AwayTeam()
+					if err != nil {
+						return err
+					}
+					h, err := liveGame.HomeTeam()
+					if err != nil {
+						return err
+					}
+					aScore := a.Score()
+					hScore := h.Score()
+					s.log.Debug("writing scores",
+						zap.Int("home", hScore),
+						zap.Int("away", aScore),
+					)
+					prev := s.storeOrGetPreviousScore(liveGame.GetID(), a.Score(), h.Score())
+					var chars []string
+					var clrs []color.Color
+					if s.homeSide() == left {
+						chars = []string{
+							fmt.Sprintf("%d", hScore),
+							"-",
+							fmt.Sprintf("%d", aScore),
+						}
+						if prev.homeScored(hScore) {
+							clrs = append(clrs, red)
+							s.log.Debug("home team scored")
+						} else {
+							clrs = append(clrs, color.White)
+						}
+						clrs = append(clrs, color.White)
+						if prev.awayScored(aScore) {
+							clrs = append(clrs, red)
+							s.log.Debug("away team scored")
+						} else {
+							clrs = append(clrs, color.White)
+						}
+					} else {
+						chars = []string{
+							fmt.Sprintf("%d", aScore),
+							"-",
+							fmt.Sprintf("%d", hScore),
+						}
+						if prev.awayScored(aScore) {
+							clrs = append(clrs, red)
+							s.log.Debug("away team scored")
+						} else {
+							clrs = append(clrs, color.White)
+						}
+						clrs = append(clrs, color.White)
+						if prev.homeScored(hScore) {
+							clrs = append(clrs, red)
+							s.log.Debug("home team scored")
+						} else {
+							clrs = append(clrs, color.White)
+						}
+					}
+					clrCodes := &rgbrender.ColorChar{
+						BoxClr: color.Black,
+						Lines: []*rgbrender.ColorCharLine{
+							{
+								Chars: chars,
+								Clrs:  clrs,
+							},
+						},
+					}
+					if err := writer.WriteAlignedColorCodes(
 						rgbrender.CenterBottom,
 						canvas,
 						rgbrender.ZeroedBounds(canvas.Bounds()),
-						text,
-						s.config.ScoreColor,
-						color.Black,
-					)
+						clrCodes,
+					); err != nil {
+						s.log.Error("failed to write multicolored str", zap.Error(err))
+						return err
+					}
+
+					return nil
 				},
 			),
 		)
