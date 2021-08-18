@@ -382,7 +382,7 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		s.watchTeams = s.api.GetWatchTeams(s.config.WatchTeams, s.season())
 		s.log.Debug("watch teams",
 			zap.String("league", s.api.League()),
-			zap.Strings("teeams", s.watchTeams),
+			zap.Strings("teams", s.watchTeams),
 		)
 	}
 
@@ -458,14 +458,22 @@ OUTER:
 	}
 
 	s.logCanvas(canvas, "sportboard Render() called canvas after grid")
+	if len(games) < 1 {
+		s.log.Debug("no scheduled games, not rendering", zap.String("league", s.api.League()))
+		if !s.config.ShowNoScheduledLogo.Load() {
+			loadCancel()
+			return nil
+		}
+
+		loadCancel()
+		return s.renderNoScheduled(boardCtx, canvas)
+	}
 
 	preloader := make(map[int]chan struct{})
-	if len(games) > 1 {
-		preloader[games[0].GetID()] = make(chan struct{}, 1)
+	preloader[games[0].GetID()] = make(chan struct{}, 1)
 
-		if err := s.preloadLiveGame(ctx, games[0], preloader[games[0].GetID()]); err != nil {
-			s.log.Error("error while loading live game data for first game", zap.Error(err))
-		}
+	if err := s.preloadLiveGame(ctx, games[0], preloader[games[0].GetID()]); err != nil {
+		s.log.Error("error while loading live game data for first game", zap.Error(err))
 	}
 
 	preloaderTimeout := s.config.boardDelay + (10 * time.Second)
@@ -498,17 +506,6 @@ OUTER:
 			)
 			scroll.SetScrollSpeed(s.config.scrollDelay)
 		}
-	}
-
-	if len(games) < 1 {
-		s.log.Debug("no scheduled games, not rendering", zap.String("league", s.api.League()))
-		if !s.config.ShowNoScheduledLogo.Load() {
-			loadCancel()
-			return nil
-		}
-
-		loadCancel()
-		return s.renderNoScheduled(boardCtx, canvas)
 	}
 
 GAMES:
