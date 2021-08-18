@@ -57,6 +57,7 @@ func (p *previousScore) homeScored(currentScore int) bool {
 
 	return false
 }
+
 func (p *previousScore) awayScored(currentScore int) bool {
 	p.Lock()
 	defer p.Unlock()

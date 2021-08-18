@@ -265,7 +265,7 @@ func (s *SportBoard) cacheClear() {
 	s.teamInfoLock.Lock()
 	defer s.teamInfoLock.Unlock()
 	s.prevScoreLock.Lock()
-	s.prevScoreLock.Unlock()
+	defer s.prevScoreLock.Unlock()
 
 	s.log.Warn("Clearing cache")
 	for k := range s.cachedLiveGames {

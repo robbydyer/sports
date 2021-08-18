@@ -228,7 +228,7 @@ func (t *TextWriter) WriteAlignedBoxed(align Align, canvas draw.Image, bounds im
 	return nil
 }
 
-// WriteAlignedBoxedColorCodes writes text aligned within a given bounds and draws a box sized to the text width
+// WriteAlignedColorCodes writes text aligned within a given bounds and draws a box sized to the text width
 func (t *TextWriter) WriteAlignedColorCodes(align Align, canvas draw.Image, bounds image.Rectangle, colorChars *ColorChar) error {
 	if err := colorChars.validate(); err != nil {
 		return err
