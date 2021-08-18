@@ -382,7 +382,7 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		s.watchTeams = s.api.GetWatchTeams(s.config.WatchTeams, s.season())
 		s.log.Debug("watch teams",
 			zap.String("league", s.api.League()),
-			zap.Strings("teeams", s.watchTeams),
+			zap.Strings("teams", s.watchTeams),
 		)
 	}
 
@@ -460,7 +460,7 @@ OUTER:
 	s.logCanvas(canvas, "sportboard Render() called canvas after grid")
 
 	preloader := make(map[int]chan struct{})
-	if len(games) > 1 {
+	if len(games) > 0 {
 		preloader[games[0].GetID()] = make(chan struct{}, 1)
 
 		if err := s.preloadLiveGame(ctx, games[0], preloader[games[0].GetID()]); err != nil {
