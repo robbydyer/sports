@@ -182,14 +182,14 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 							"-",
 							fmt.Sprintf("%d", aScore),
 						}
-						if prev.homeScored(hScore) {
+						if prev.home.hasScored(hScore) {
 							clrs = append(clrs, red)
 							s.log.Debug("home team scored")
 						} else {
 							clrs = append(clrs, color.White)
 						}
 						clrs = append(clrs, color.White)
-						if prev.awayScored(aScore) {
+						if prev.away.hasScored(aScore) {
 							clrs = append(clrs, red)
 							s.log.Debug("away team scored")
 						} else {
@@ -201,14 +201,14 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 							"-",
 							fmt.Sprintf("%d", hScore),
 						}
-						if prev.awayScored(aScore) {
+						if prev.away.hasScored(aScore) {
 							clrs = append(clrs, red)
 							s.log.Debug("away team scored")
 						} else {
 							clrs = append(clrs, color.White)
 						}
 						clrs = append(clrs, color.White)
-						if prev.homeScored(hScore) {
+						if prev.home.hasScored(hScore) {
 							clrs = append(clrs, red)
 							s.log.Debug("home team scored")
 						} else {
