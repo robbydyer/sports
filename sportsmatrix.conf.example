@@ -151,6 +151,9 @@ ncaafConfig:
   # appear if there are no scheduled games for the day
   showNotScheduled: false
 
+  # This sets the number of runs through the scoreboard that a score change will be highlighted in red
+  scoreHighlightRepeat: 3
+
 ## NHL config
 nhlConfig:
   enabled: true
@@ -215,6 +218,9 @@ nhlConfig:
   # If set to true and this sport is enabled, a message will
   # appear if there are no scheduled games for the day
   showNotScheduled: false
+
+  # This sets the number of runs through the scoreboard that a score change will be highlighted in red
+  scoreHighlightRepeat: 3
 
 ## MLB Config
 mlbConfig:
@@ -284,6 +290,9 @@ mlbConfig:
   # appear if there are no scheduled games for the day
   showNotScheduled: false
 
+  # This sets the number of runs through the scoreboard that a score change will be highlighted in red
+  scoreHighlightRepeat: 3
+
 ## NCAA Mens Basketball Config
 ncaamConfig:
   enabled: true
@@ -341,6 +350,9 @@ ncaamConfig:
   # appear if there are no scheduled games for the day
   showNotScheduled: false
 
+  # This sets the number of runs through the scoreboard that a score change will be highlighted in red
+  scoreHighlightRepeat: 3
+
 ## NBA Config
 nbaConfig:
   enabled: true
@@ -394,6 +406,9 @@ nbaConfig:
   # If set to true and this sport is enabled, a message will
   # appear if there are no scheduled games for the day
   showNotScheduled: false
+
+  # This sets the number of runs through the scoreboard that a score change will be highlighted in red
+  scoreHighlightRepeat: 3
 
 ## NFL Config
 nflConfig:
@@ -449,6 +464,9 @@ nflConfig:
   # appear if there are no scheduled games for the day
   showNotScheduled: false
 
+  # This sets the number of runs through the scoreboard that a score change will be highlighted in red
+  scoreHighlightRepeat: 3
+
 ## MLS Config
 mlsConfig:
   enabled: true
@@ -503,6 +521,9 @@ mlsConfig:
   # appear if there are no scheduled games for the day
   showNotScheduled: false
 
+  # This sets the number of runs through the scoreboard that a score change will be highlighted in red
+  scoreHighlightRepeat: 3
+
 ## English Premiere League Config
 eplConfig:
   enabled: true
@@ -556,6 +577,9 @@ eplConfig:
   # If set to true and this sport is enabled, a message will
   # appear if there are no scheduled games for the day
   showNotScheduled: false
+
+  # This sets the number of runs through the scoreboard that a score change will be highlighted in red
+  scoreHighlightRepeat: 3
 
 # Image Board. Rotates showing all the images in a list of directories
 # All images in the directory will be automatically scaled to fit the matrix

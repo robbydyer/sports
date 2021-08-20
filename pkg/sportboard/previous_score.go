@@ -10,6 +10,7 @@ type previousScore struct {
 	home *previousTeam
 	away *previousTeam
 }
+
 type previousTeam struct {
 	previous   *atomic.Int32
 	repeats    *atomic.Int32
@@ -46,7 +47,7 @@ func (s *SportBoard) storeOrGetPreviousScore(id int, away int, home int) *previo
 	s.log.Debug("storing game previous score",
 		zap.Int("id", id),
 		zap.Int32("home repeat", p.home.maxRepeats),
-		zap.Int32("away repeat", p.home.maxRepeats),
+		zap.Int32("away repeat", p.away.maxRepeats),
 	)
 
 	return p

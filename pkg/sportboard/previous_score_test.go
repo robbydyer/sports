@@ -45,8 +45,7 @@ func TestPreviousScore(t *testing.T) {
 
 			require.True(t, team.hasScored(2))
 
-			var count int32
-			count = 0
+			count := int32(0)
 			for i := 0; i < int(test.max)+1; i++ {
 				if i < int(test.max) {
 					require.True(t, team.hasScored(2))
