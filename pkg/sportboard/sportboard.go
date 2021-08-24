@@ -60,34 +60,34 @@ type Todayer func() []time.Time
 
 // Config ...
 type Config struct {
-	TodayFunc           Todayer
-	boardDelay          time.Duration
-	scrollDelay         time.Duration
-	TimeColor           color.Color
-	ScoreColor          color.Color
-	Enabled             *atomic.Bool      `json:"enabled"`
-	BoardDelay          string            `json:"boardDelay"`
-	FavoriteSticky      *atomic.Bool      `json:"favoriteSticky"`
-	ScoreFont           *FontConfig       `json:"scoreFont"`
-	TimeFont            *FontConfig       `json:"timeFont"`
-	LogoConfigs         []*logo.Config    `json:"logoConfigs"`
-	WatchTeams          []string          `json:"watchTeams"`
-	FavoriteTeams       []string          `json:"favoriteTeams"`
-	HideFavoriteScore   *atomic.Bool      `json:"hideFavoriteScore"`
-	ShowRecord          *atomic.Bool      `json:"showRecord"`
-	GridCols            int               `json:"gridCols"`
-	GridRows            int               `json:"gridRows"`
-	GridPadRatio        float64           `json:"gridPadRatio"`
-	MinimumGridWidth    int               `json:"minimumGridWidth"`
-	MinimumGridHeight   int               `json:"minimumGridHeight"`
-	Stats               *statboard.Config `json:"stats"`
-	ScrollMode          *atomic.Bool      `json:"scrollMode"`
-	TightScroll         *atomic.Bool      `json:"tightScroll"`
-	TightScrollPadding  int               `json:"tightScrollPadding"`
-	ScrollDelay         string            `json:"scrollDelay"`
-	GamblingSpread      *atomic.Bool      `json:"showOdds"`
-	ShowNoScheduledLogo *atomic.Bool      `json:"showNotScheduled"`
-	TestScoreChange     bool              `json:"testScoreChange"`
+	TodayFunc            Todayer
+	boardDelay           time.Duration
+	scrollDelay          time.Duration
+	TimeColor            color.Color
+	ScoreColor           color.Color
+	Enabled              *atomic.Bool      `json:"enabled"`
+	BoardDelay           string            `json:"boardDelay"`
+	FavoriteSticky       *atomic.Bool      `json:"favoriteSticky"`
+	ScoreFont            *FontConfig       `json:"scoreFont"`
+	TimeFont             *FontConfig       `json:"timeFont"`
+	LogoConfigs          []*logo.Config    `json:"logoConfigs"`
+	WatchTeams           []string          `json:"watchTeams"`
+	FavoriteTeams        []string          `json:"favoriteTeams"`
+	HideFavoriteScore    *atomic.Bool      `json:"hideFavoriteScore"`
+	ShowRecord           *atomic.Bool      `json:"showRecord"`
+	GridCols             int               `json:"gridCols"`
+	GridRows             int               `json:"gridRows"`
+	GridPadRatio         float64           `json:"gridPadRatio"`
+	MinimumGridWidth     int               `json:"minimumGridWidth"`
+	MinimumGridHeight    int               `json:"minimumGridHeight"`
+	Stats                *statboard.Config `json:"stats"`
+	ScrollMode           *atomic.Bool      `json:"scrollMode"`
+	TightScroll          *atomic.Bool      `json:"tightScroll"`
+	TightScrollPadding   int               `json:"tightScrollPadding"`
+	ScrollDelay          string            `json:"scrollDelay"`
+	GamblingSpread       *atomic.Bool      `json:"showOdds"`
+	ShowNoScheduledLogo  *atomic.Bool      `json:"showNotScheduled"`
+	ScoreHighlightRepeat *int              `json:"scoreHighlightRepeat"`
 }
 
 // FontConfig ...
@@ -195,6 +195,11 @@ func (c *Config) SetDefaults() {
 		c.scrollDelay = d
 	} else {
 		c.scrollDelay = rgbmatrix.DefaultScrollDelay
+	}
+
+	if c.ScoreHighlightRepeat == nil {
+		p := 3
+		c.ScoreHighlightRepeat = &p
 	}
 }
 
