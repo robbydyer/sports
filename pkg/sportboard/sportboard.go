@@ -622,6 +622,9 @@ GAMES:
 }
 
 func (s *SportBoard) renderGrid(ctx context.Context, canvas board.Canvas, games []Game, cols int, rows int) error {
+	if len(games) < 1 {
+		return nil
+	}
 	var opts []rgbrender.GridOption
 	if s.config.GridPadRatio > 0 {
 		opts = append(opts, rgbrender.WithPadding(s.config.GridPadRatio))
@@ -642,6 +645,9 @@ func (s *SportBoard) renderGrid(ctx context.Context, canvas board.Canvas, games 
 	numGrids := int(math.Ceil(float64(len(games)) / float64(numCells)))
 	totalDelay := int(s.config.boardDelay.Seconds()) * len(games)
 
+	if numGrids == 0 {
+		numGrids = 1
+	}
 	gridDelay := time.Duration(totalDelay/numGrids) * time.Second
 
 	s.log.Debug("setting grid delay", zap.Float64("seconds", gridDelay.Seconds()))
