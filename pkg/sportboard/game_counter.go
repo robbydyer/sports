@@ -26,6 +26,7 @@ func (s *SportBoard) RenderGameCounter(canvas board.Canvas, numGames int, active
 
 	s.log.Debug("Rendering counter",
 		zap.Int("active index", activeIndex),
+		zap.Int("num games", numGames),
 		zap.Int("real active", realActive),
 		zap.Int("start x", aligned.Min.X),
 		zap.Int("start y", aligned.Min.Y),

@@ -11,7 +11,7 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
-const scrollLogoBufferRatio = float64(0.10)
+const scrollLogoBufferRatio = float64(0.05)
 
 func (s *SportBoard) logoConfig(logoKey string, bounds image.Rectangle) *logo.Config {
 	for _, conf := range s.config.LogoConfigs {
@@ -118,7 +118,9 @@ func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rect
 
 	setCache := true
 
-	logoEndX -= int(float64(bounds.Dx()) * scrollLogoBufferRatio)
+	if s.config.ScrollMode.Load() {
+		logoEndX -= int(float64(bounds.Dx()) * scrollLogoBufferRatio)
+	}
 
 	if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
 		w, err := s.getTeamInfoWidth(s.api.League(), abbreviation)
@@ -189,7 +191,10 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 
 	setCache := true
 
-	logoWidth += int(float64(bounds.Dx()) * scrollLogoBufferRatio)
+	if s.config.ScrollMode.Load() {
+		logoWidth += int(float64(bounds.Dx()) * scrollLogoBufferRatio)
+	}
+
 	if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
 		recordAdder, err = s.getTeamInfoWidth(s.api.League(), abbreviation)
 		if err != nil {

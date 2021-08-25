@@ -21,7 +21,13 @@ const (
 	teamInfoPad         = 2
 )
 
-var red = color.RGBA{255, 0, 0, 255}
+var (
+	red                  = color.RGBA{255, 0, 0, 255}
+	infoLayerPriority    = rgbrender.BackgroundPriority + 1
+	counterLayerPriority = rgbrender.ForegroundPriority
+	scoreLayerPriority   = rgbrender.BackgroundPriority + 2
+	logoLayerPriority    = rgbrender.BackgroundPriority
+)
 
 func (s *SportBoard) homeSide() side {
 	if s.api.League() == mls {
@@ -90,7 +96,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 			return err
 		}
 		for _, i := range infos {
-			layers.AddTextLayer(rgbrender.ForegroundPriority, i)
+			layers.AddTextLayer(infoLayerPriority, i)
 		}
 	}
 
@@ -107,10 +113,10 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 		}
 
 		for _, l := range logos {
-			layers.AddLayer(rgbrender.BackgroundPriority, l)
+			layers.AddLayer(logoLayerPriority, l)
 		}
 
-		layers.AddTextLayer(rgbrender.BackgroundPriority+1,
+		layers.AddTextLayer(scoreLayerPriority,
 			rgbrender.NewTextLayer(
 				func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
 					quarter, err := liveGame.GetQuarter()
@@ -141,7 +147,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 			),
 		)
 
-		layers.AddTextLayer(rgbrender.BackgroundPriority+1,
+		layers.AddTextLayer(scoreLayerPriority,
 			rgbrender.NewTextLayer(
 				func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
 					writer, err := s.getScoreWriter(canvas.Bounds())
@@ -240,7 +246,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 		)
 
 		if counter != nil {
-			layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
+			layers.AddLayer(counterLayerPriority, counterLayer(counter))
 		}
 
 		if err := layers.Draw(ctx, canvas); err != nil {
@@ -295,13 +301,17 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 		return err
 	}
 
+	if counter != nil {
+		layers.AddLayer(counterLayerPriority, counterLayer(counter))
+	}
+
 	if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
 		infos, err := s.teamInfoLayers(canvas, liveGame, canvas.Bounds())
 		if err != nil {
 			return err
 		}
 		for _, i := range infos {
-			layers.AddTextLayer(rgbrender.ForegroundPriority, i)
+			layers.AddTextLayer(infoLayerPriority, i)
 		}
 	}
 
@@ -311,10 +321,10 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 	}
 
 	for _, l := range logos {
-		layers.AddLayer(rgbrender.BackgroundPriority, l)
+		layers.AddLayer(logoLayerPriority, l)
 	}
 
-	layers.AddTextLayer(rgbrender.BackgroundPriority+1,
+	layers.AddTextLayer(scoreLayerPriority,
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
 				timeWriter, err := s.getTimeWriter(canvas.Bounds())
@@ -346,7 +356,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 			},
 		),
 	)
-	layers.AddTextLayer(rgbrender.BackgroundPriority+1,
+	layers.AddTextLayer(scoreLayerPriority,
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
 				scoreWriter, err := s.getScoreWriter(canvas.Bounds())
@@ -367,10 +377,6 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 			},
 		),
 	)
-
-	if counter != nil {
-		layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
-	}
 
 	select {
 	case <-ctx.Done():
@@ -393,7 +399,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 			return err
 		}
 		for _, i := range infos {
-			layers.AddTextLayer(rgbrender.ForegroundPriority, i)
+			layers.AddTextLayer(infoLayerPriority, i)
 		}
 	}
 
@@ -404,10 +410,10 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 	}
 
 	for _, l := range logos {
-		layers.AddLayer(rgbrender.BackgroundPriority, l)
+		layers.AddLayer(logoLayerPriority, l)
 	}
 
-	layers.AddTextLayer(rgbrender.BackgroundPriority+1,
+	layers.AddTextLayer(scoreLayerPriority,
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
 				writer, err := s.getTimeWriter(canvas.Bounds())
@@ -429,7 +435,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 		),
 	)
 
-	layers.AddTextLayer(rgbrender.BackgroundPriority+1,
+	layers.AddTextLayer(scoreLayerPriority,
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
 				isFavorite, err := s.isFavoriteGame(liveGame)
@@ -467,7 +473,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 	)
 
 	if counter != nil {
-		layers.AddLayer(rgbrender.ForegroundPriority, counterLayer(counter))
+		layers.AddLayer(counterLayerPriority, counterLayer(counter))
 	}
 
 	return layers.Draw(ctx, canvas)
