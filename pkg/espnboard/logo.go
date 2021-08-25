@@ -58,6 +58,7 @@ func (e *ESPNBoard) GetLogo(ctx context.Context, logoKey string, logoConf *logo.
 	teamAbbrev := p[1]
 	dimKey := p[3]
 
+	e.logoLock.Lock()
 	_, ok := e.logoConfOnce[dimKey]
 	if !ok {
 		e.log.Debug("loading default logo configs",
@@ -70,6 +71,7 @@ func (e *ESPNBoard) GetLogo(ctx context.Context, logoKey string, logoConf *logo.
 		}
 		e.logoConfOnce[dimKey] = struct{}{}
 	}
+	e.logoLock.Unlock()
 
 	var l *logo.Logo
 	defer e.setLogoCache(logoKey, l)

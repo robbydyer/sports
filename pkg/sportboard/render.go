@@ -673,10 +673,6 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 				rank := text[0]
 				record := text[1]
 
-				if s.hasNoInfo(rank, record, oddStr, underDog, leftTeam.GetAbbreviation()) {
-					return nil
-				}
-
 				if rank != "" && s.config.ShowRecord.Load() {
 					_ = writer.WriteAlignedBoxed(
 						rgbrender.RightTop,
@@ -719,12 +715,6 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 				if err != nil {
 					return nil, nil, err
 				}
-
-				/*
-					if s.hasNoInfo(rank, record, oddStr, underDog, rightTeam.GetAbbreviation()) {
-						return writer, []string{rank, record}, nil
-					}
-				*/
 
 				widthStrs := []string{}
 				if s.config.ShowRecord.Load() {
@@ -792,10 +782,6 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 				rank := text[0]
 				record := text[1]
 
-				if s.hasNoInfo(rank, record, oddStr, underDog, rightTeam.GetAbbreviation()) {
-					return nil
-				}
-
 				if rank != "" && s.config.ShowRecord.Load() {
 					_ = writer.WriteAlignedBoxed(
 						rgbrender.LeftTop,
@@ -830,23 +816,6 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 			},
 		),
 	}, nil
-}
-
-func (s *SportBoard) hasNoInfo(rank string, record string, odds string, underDog string, thisTeam string) bool {
-	if (s.config.ShowRecord.Load() && rank == "" && record == "") && (s.config.GamblingSpread.Load() && odds == "") {
-		return true
-	}
-	if !s.config.ShowRecord.Load() && (s.config.GamblingSpread.Load() && odds == "") {
-		return true
-	}
-	if !s.config.GamblingSpread.Load() && s.config.ShowRecord.Load() && rank == "" && record == "" {
-		return true
-	}
-	if !s.config.ShowRecord.Load() && s.config.GamblingSpread.Load() && strings.EqualFold(underDog, thisTeam) {
-		return true
-	}
-
-	return false
 }
 
 func (s *SportBoard) renderNoScheduled(ctx context.Context, canvas board.Canvas) error {
