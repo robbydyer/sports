@@ -23,6 +23,7 @@ const (
 
 var (
 	red                  = color.RGBA{255, 0, 0, 255}
+	green                = color.RGBA{0, 255, 0, 255}
 	infoLayerPriority    = rgbrender.BackgroundPriority + 1
 	counterLayerPriority = rgbrender.ForegroundPriority
 	scoreLayerPriority   = rgbrender.BackgroundPriority + 2
@@ -602,6 +603,12 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 		}
 	}
 
+	shiftMyRank := rankShift(canvas.Bounds())
+	s.log.Debug("rank shift",
+		zap.Int("shift", shiftMyRank),
+		zap.Int("canvas X", canvas.Bounds().Dx()),
+	)
+
 	leftBounds := bounds
 	rightBounds := bounds
 	return []*rgbrender.TextLayer{
@@ -683,12 +690,13 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 				record := text[1]
 
 				if rank != "" && s.config.ShowRecord.Load() {
+					rankBounds := image.Rect(leftBounds.Min.X, leftBounds.Min.Y, leftBounds.Max.X-shiftMyRank, leftBounds.Max.Y)
 					_ = writer.WriteAlignedBoxed(
 						rgbrender.RightTop,
 						canvas,
-						leftBounds,
+						rankBounds,
 						[]string{rank},
-						color.White,
+						green,
 						color.Black,
 					)
 				}
@@ -793,12 +801,13 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 				record := text[1]
 
 				if rank != "" && s.config.ShowRecord.Load() {
+					rankBounds := image.Rect(rightBounds.Min.X+shiftMyRank, rightBounds.Min.Y, rightBounds.Max.X, rightBounds.Max.Y)
 					_ = writer.WriteAlignedBoxed(
 						rgbrender.LeftTop,
 						canvas,
-						rightBounds,
+						rankBounds,
 						[]string{rank},
-						color.White,
+						green,
 						color.Black,
 					)
 				}
