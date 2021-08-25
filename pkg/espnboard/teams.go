@@ -100,13 +100,12 @@ func (e *ESPNBoard) getTeams(ctx context.Context) ([]*Team, error) {
 	}
 
 	assetFiles := []string{
-		fmt.Sprintf("%s_teams.json", e.leaguer.HTTPPathPrefix()),
 		fmt.Sprintf("%s_groups.json", e.leaguer.HTTPPathPrefix()),
+		fmt.Sprintf("%s_teams.json", e.leaguer.HTTPPathPrefix()),
 	}
 
 	teams := []*Team{}
 
-	foundAsset := false
 	for _, assetFile := range assetFiles {
 		dat, err := assets.ReadFile(filepath.Join("assets", assetFile))
 		if err != nil {
@@ -120,12 +119,10 @@ func (e *ESPNBoard) getTeams(ctx context.Context) ([]*Team, error) {
 		if err != nil {
 			return nil, err
 		}
-		teams = append(teams, t...)
-		foundAsset = true
-	}
-
-	if foundAsset {
-		return teams, nil
+		if len(t) > 0 {
+			teams = append(teams, t...)
+			return teams, nil
+		}
 	}
 
 	e.log.Info("pulling team info from API",
