@@ -200,7 +200,6 @@ func (n *epl) APIPath() string {
 
 func (n *epl) TeamEndpoints() []string {
 	return []string{
-		filepath.Join(n.APIPath(), "groups"),
 		filepath.Join(n.APIPath(), "teams"),
 	}
 }
