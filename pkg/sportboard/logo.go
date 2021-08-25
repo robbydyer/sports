@@ -11,7 +11,7 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
-const scrollLogoBufferRatio = float64(0.10)
+const scrollLogoBufferRatio = float64(0.05)
 
 func (s *SportBoard) logoConfig(logoKey string, bounds image.Rectangle) *logo.Config {
 	for _, conf := range s.config.LogoConfigs {
@@ -119,27 +119,19 @@ func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rect
 	setCache := true
 
 	if s.config.ScrollMode.Load() {
-		if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
-			if bounds.Dx() < 64 {
-				logoEndX -= 3
-			} else {
-				logoEndX -= 6
-			}
-		} else {
-			logoEndX -= int(float64(bounds.Dx()) * scrollLogoBufferRatio)
-		}
+		logoEndX -= int(float64(bounds.Dx()) * scrollLogoBufferRatio)
+	}
 
-		if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
-			w, err := s.getTeamInfoWidth(s.api.League(), abbreviation)
-			if err != nil {
-				w = defaultTeamInfoArea
-				setCache = false
-				s.log.Error("failed to get team info width",
-					zap.Error(err),
-				)
-			}
-			logoEndX -= w
+	if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
+		w, err := s.getTeamInfoWidth(s.api.League(), abbreviation)
+		if err != nil {
+			w = defaultTeamInfoArea
+			setCache = false
+			s.log.Error("failed to get team info width",
+				zap.Error(err),
+			)
 		}
+		logoEndX -= w
 	}
 
 	var renderErr error
@@ -200,24 +192,17 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 	setCache := true
 
 	if s.config.ScrollMode.Load() {
-		if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
-			if bounds.Dx() < 64 {
-				logoWidth += 3
-			} else {
-				logoWidth += 6
-			}
-		} else {
-			logoWidth += int(float64(bounds.Dx()) * scrollLogoBufferRatio)
-		}
-		if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
-			recordAdder, err = s.getTeamInfoWidth(s.api.League(), abbreviation)
-			if err != nil {
-				s.log.Error("failed to get team info width",
-					zap.Error(err),
-				)
-				recordAdder = defaultTeamInfoArea
-				setCache = false
-			}
+		logoWidth += int(float64(bounds.Dx()) * scrollLogoBufferRatio)
+	}
+
+	if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
+		recordAdder, err = s.getTeamInfoWidth(s.api.League(), abbreviation)
+		if err != nil {
+			s.log.Error("failed to get team info width",
+				zap.Error(err),
+			)
+			recordAdder = defaultTeamInfoArea
+			setCache = false
 		}
 	}
 
