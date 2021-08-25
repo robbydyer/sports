@@ -607,12 +607,6 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 					return nil, nil, err
 				}
 
-				/*
-					if s.hasNoInfo(rank, record, oddStr, underDog, leftTeam.GetAbbreviation()) {
-						return writer, []string{rank, record}, nil
-					}
-				*/
-
 				widthStrs := []string{}
 				if s.config.ShowRecord.Load() {
 					widthStrs = append(widthStrs, rank, record)
