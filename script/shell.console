@@ -17,6 +17,7 @@ if [ "${IN_DOCKER}" = "no" ]; then
     -e IN_DOCKER=yes \
     -v "${ROOT}":/src \
     -v /tmp:/tmp \
+    -v "${ROOT}/matrix.conf":/etc/sportsmatrix.conf \
     -w /src \
     -p 8080:8080 \
     ${pibuilder} \

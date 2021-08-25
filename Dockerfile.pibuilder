@@ -55,8 +55,8 @@ RUN apt-get update && \
 
 RUN GOIMG= && a="$(dpkg --print-architecture)" && \
     case "${a##*-}" in \
-      arm64) GOIMG="go1.16.7.linux-arm64.tar.gz";; \
-      amd64) GOIMG="go1.16.7.linux-amd64.tar.gz";;\
+      arm64) GOIMG="go1.17.linux-arm64.tar.gz";; \
+      amd64) GOIMG="go1.17.linux-amd64.tar.gz";;\
       *) echo "unsupported arch ${a}"; exit1 ;;\
     esac && \
     curl -L https://golang.org/dl/${GOIMG} -o /tmp/${GOIMG} && \

@@ -601,23 +601,12 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 					return nil, nil, err
 				}
 
-				if s.hasNoInfo(rank, record, oddStr, underDog, leftTeam.GetAbbreviation()) {
-					return writer, []string{rank, record}, nil
-				}
+				/*
+					if s.hasNoInfo(rank, record, oddStr, underDog, leftTeam.GetAbbreviation()) {
+						return writer, []string{rank, record}, nil
+					}
+				*/
 
-				if !s.config.ScrollMode.Load() {
-					s.log.Debug("set team info width 0",
-						zap.String("league", s.api.League()),
-						zap.String("team", leftTeam.GetAbbreviation()),
-					)
-					s.setTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation(), 0)
-					maxX := (leftBounds.Bounds().Dx() - s.textAreaWidth(leftBounds)) / 2
-					leftBounds = image.Rect(leftBounds.Min.X, leftBounds.Min.Y, maxX, leftBounds.Max.Y)
-
-					return writer, []string{rank, record}, nil
-				}
-
-				// Scroll mode
 				widthStrs := []string{}
 				if s.config.ShowRecord.Load() {
 					widthStrs = append(widthStrs, rank, record)
@@ -625,6 +614,31 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 				if s.config.GamblingSpread.Load() {
 					widthStrs = append(widthStrs, oddStr)
 				}
+
+				if !s.config.ScrollMode.Load() {
+					w := 0
+					if float32(z.Dx())/float32(z.Dy()) > 2.0 {
+						var err error
+						w, err = s.calculateTeamInfoWidth(canvas, writer, widthStrs)
+						if err != nil {
+							s.log.Error("failed to calculate team info width, using default",
+								zap.Error(err),
+							)
+						}
+					}
+					s.log.Debug("set team info width",
+						zap.Int("width", w),
+						zap.String("league", s.api.League()),
+						zap.String("team", leftTeam.GetAbbreviation()),
+					)
+					s.setTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation(), w)
+					maxX := (leftBounds.Bounds().Dx() - s.textAreaWidth(leftBounds)) / 2
+					leftBounds = image.Rect(leftBounds.Min.X, leftBounds.Min.Y, maxX, leftBounds.Max.Y)
+
+					return writer, []string{rank, record}, nil
+				}
+
+				// Scroll mode
 				infoWidth, err := s.getTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation())
 				if err != nil || infoWidth == 0 {
 					var err error
@@ -706,19 +720,12 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 					return nil, nil, err
 				}
 
-				if s.hasNoInfo(rank, record, oddStr, underDog, rightTeam.GetAbbreviation()) {
-					return writer, []string{rank, record}, nil
-				}
+				/*
+					if s.hasNoInfo(rank, record, oddStr, underDog, rightTeam.GetAbbreviation()) {
+						return writer, []string{rank, record}, nil
+					}
+				*/
 
-				if !s.config.ScrollMode.Load() {
-					s.setTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation(), 0)
-					minX := ((rightBounds.Bounds().Dx() - s.textAreaWidth(rightBounds)) / 2) + s.textAreaWidth(rightBounds)
-					rightBounds = image.Rect(minX, rightBounds.Min.Y, rightBounds.Max.X, rightBounds.Max.Y)
-
-					return writer, []string{rank, record}, nil
-				}
-
-				// Scroll mode
 				widthStrs := []string{}
 				if s.config.ShowRecord.Load() {
 					widthStrs = append(widthStrs, rank, record)
@@ -726,6 +733,31 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 				if s.config.GamblingSpread.Load() {
 					widthStrs = append(widthStrs, oddStr)
 				}
+
+				if !s.config.ScrollMode.Load() {
+					w := 0
+					if float32(z.Dx())/float32(z.Dy()) > 2.0 {
+						var err error
+						w, err = s.calculateTeamInfoWidth(canvas, writer, widthStrs)
+						if err != nil {
+							s.log.Error("failed to calculate team info width, using default",
+								zap.Error(err),
+							)
+						}
+					}
+					s.log.Debug("set team info width",
+						zap.Int("width", w),
+						zap.String("league", s.api.League()),
+						zap.String("team", rightTeam.GetAbbreviation()),
+					)
+					s.setTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation(), w)
+					minX := ((rightBounds.Bounds().Dx() - s.textAreaWidth(rightBounds)) / 2) + s.textAreaWidth(rightBounds)
+					rightBounds = image.Rect(minX, rightBounds.Min.Y, rightBounds.Max.X, rightBounds.Max.Y)
+
+					return writer, []string{rank, record}, nil
+				}
+
+				// Scroll mode
 				infoWidth, err := s.getTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation())
 				if err != nil || infoWidth == 0 {
 					var err error
