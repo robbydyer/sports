@@ -143,7 +143,7 @@ class Sport extends React.Component {
                 </Row>
                 <Row className="text-left">
                     <Col>
-                        <Form.Switch id={this.props.sports + "statscroll"} label="Stats Scroll Mode" checked={this.state.statscroll}
+                        <Form.Switch id={this.props.sport + "statscroll"} label="Stats Scroll Mode" checked={this.state.statscroll}
                             onChange={() => this.handleSwitch(`${this.props.sport}/stats/scrollon`, `${this.props.sport}/stats/scrolloff`, "statscroll")} />
                     </Col>
                 </Row>
