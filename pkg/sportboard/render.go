@@ -23,6 +23,7 @@ const (
 
 var (
 	red                  = color.RGBA{255, 0, 0, 255}
+	green                = color.RGBA{0, 255, 0, 255}
 	infoLayerPriority    = rgbrender.BackgroundPriority + 1
 	counterLayerPriority = rgbrender.ForegroundPriority
 	scoreLayerPriority   = rgbrender.BackgroundPriority + 2
@@ -332,6 +333,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 					return nil, nil, err
 				}
 				gameTimeStr := ""
+				dateStr := ""
 				if is, err := liveGame.IsPostponed(); err == nil && is {
 					s.log.Debug("game was postponed", zap.Int("game ID", liveGame.GetID()))
 					gameTimeStr = "PPD"
@@ -341,8 +343,15 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 						return nil, nil, err
 					}
 					gameTimeStr = gameTime.Local().Format("3:04PM")
+					if gameTime.Local().Format("01/02/2006") != time.Now().Local().Format("01/02/2006") {
+						dateStr = gameTime.Local().Format("01/02")
+					}
+					s.log.Debug("game time",
+						zap.String("time", gameTimeStr),
+						zap.String("day", dateStr),
+					)
 				}
-				return timeWriter, []string{gameTimeStr}, nil
+				return timeWriter, []string{gameTimeStr, dateStr}, nil
 			},
 			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
 				return writer.WriteAlignedBoxed(
@@ -367,7 +376,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 			},
 			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
 				return writer.WriteAlignedBoxed(
-					rgbrender.CenterCenter,
+					rgbrender.CenterBottom,
 					canvas,
 					rgbrender.ZeroedBounds(canvas.Bounds()),
 					text,
@@ -594,6 +603,12 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 		}
 	}
 
+	shiftMyRank := rankShift(canvas.Bounds())
+	s.log.Debug("rank shift",
+		zap.Int("shift", shiftMyRank),
+		zap.Int("canvas X", canvas.Bounds().Dx()),
+	)
+
 	leftBounds := bounds
 	rightBounds := bounds
 	return []*rgbrender.TextLayer{
@@ -633,6 +648,7 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 					)
 					s.setTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation(), w)
 					maxX := (leftBounds.Bounds().Dx() - s.textAreaWidth(leftBounds)) / 2
+					maxX -= teamInfoPad
 					leftBounds = image.Rect(leftBounds.Min.X, leftBounds.Min.Y, maxX, leftBounds.Max.Y)
 
 					return writer, []string{rank, record}, nil
@@ -674,12 +690,13 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 				record := text[1]
 
 				if rank != "" && s.config.ShowRecord.Load() {
+					rankBounds := image.Rect(leftBounds.Min.X, leftBounds.Min.Y, leftBounds.Max.X-shiftMyRank, leftBounds.Max.Y)
 					_ = writer.WriteAlignedBoxed(
 						rgbrender.RightTop,
 						canvas,
-						leftBounds,
+						rankBounds,
 						[]string{rank},
-						color.White,
+						green,
 						color.Black,
 					)
 				}
@@ -742,6 +759,7 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 					)
 					s.setTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation(), w)
 					minX := ((rightBounds.Bounds().Dx() - s.textAreaWidth(rightBounds)) / 2) + s.textAreaWidth(rightBounds)
+					minX += teamInfoPad
 					rightBounds = image.Rect(minX, rightBounds.Min.Y, rightBounds.Max.X, rightBounds.Max.Y)
 
 					return writer, []string{rank, record}, nil
@@ -783,12 +801,13 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 				record := text[1]
 
 				if rank != "" && s.config.ShowRecord.Load() {
+					rankBounds := image.Rect(rightBounds.Min.X+shiftMyRank, rightBounds.Min.Y, rightBounds.Max.X, rightBounds.Max.Y)
 					_ = writer.WriteAlignedBoxed(
 						rgbrender.LeftTop,
 						canvas,
-						rightBounds,
+						rankBounds,
 						[]string{rank},
-						color.White,
+						green,
 						color.Black,
 					)
 				}

@@ -119,7 +119,15 @@ func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rect
 	setCache := true
 
 	if s.config.ScrollMode.Load() {
-		logoEndX -= int(float64(bounds.Dx()) * scrollLogoBufferRatio)
+		if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
+			if bounds.Dx() < 64 {
+				logoEndX -= 3
+			} else {
+				logoEndX -= 6
+			}
+		} else {
+			logoEndX -= int(float64(bounds.Dx()) * scrollLogoBufferRatio)
+		}
 	}
 
 	if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
@@ -193,6 +201,15 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 
 	if s.config.ScrollMode.Load() {
 		logoWidth += int(float64(bounds.Dx()) * scrollLogoBufferRatio)
+		if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
+			if bounds.Dx() < 64 {
+				logoWidth += 3
+			} else {
+				logoWidth += 6
+			}
+		} else {
+			logoWidth += int(float64(bounds.Dx()) * scrollLogoBufferRatio)
+		}
 	}
 
 	if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {

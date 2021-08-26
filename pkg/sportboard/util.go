@@ -220,3 +220,7 @@ func (s *SportBoard) season() string {
 	}
 	return fmt.Sprintf("%d", todays[0].Year())
 }
+
+func rankShift(bounds image.Rectangle) int {
+	return int(math.Ceil(float64(bounds.Dy()) * 3.0 / 32.0))
+}

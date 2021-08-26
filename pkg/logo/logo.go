@@ -221,6 +221,14 @@ func (l *Logo) RenderRightAlignedWithEnd(ctx context.Context, bounds image.Recta
 
 	startY := 0 + l.config.Pt.Y
 	newBounds := image.Rect(startX, startY, endX, bounds.Dy()-1)
+	l.ensureLogger()
+	l.log.Debug("render aligned logo",
+		zap.String("func", "RenderRightAlignedWithEnd"),
+		zap.Int("start X", newBounds.Min.X),
+		zap.Int("start Y", newBounds.Min.Y),
+		zap.Int("end X", newBounds.Max.X),
+		zap.Int("end Y", newBounds.Max.Y),
+	)
 	align, err := rgbrender.AlignPosition(rgbrender.RightCenter, newBounds, thumb.Bounds().Dx(), thumb.Bounds().Dy())
 	if err != nil {
 		return nil, err
@@ -242,7 +250,16 @@ func (l *Logo) RenderLeftAlignedWithStart(ctx context.Context, bounds image.Rect
 	startX = startX + l.config.Pt.X
 	startY := 0 + l.config.Pt.Y
 
-	newBounds := image.Rect(startX, startY, thumb.Bounds().Dx()+startX, thumb.Bounds().Dy()+startY)
+	newBounds := image.Rect(startX, startY, bounds.Dx()+startX, bounds.Dy()+startY)
+
+	l.ensureLogger()
+	l.log.Debug("render aligned logo",
+		zap.String("func", "RenderLeftAlignedWithStart"),
+		zap.Int("start X", newBounds.Min.X),
+		zap.Int("start Y", newBounds.Min.Y),
+		zap.Int("end X", newBounds.Max.X),
+		zap.Int("end Y", newBounds.Max.Y),
+	)
 
 	align, err := rgbrender.AlignPosition(rgbrender.LeftCenter, newBounds, thumb.Bounds().Dx(), thumb.Bounds().Dy())
 	if err != nil {
