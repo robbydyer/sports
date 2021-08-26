@@ -117,10 +117,25 @@ func TestPriorities(t *testing.T) {
 					priority: BackgroundPriority,
 				},
 				{
-					priority: 1,
+					priority: BackgroundPriority + 1,
 				},
 				{
-					priority: 3,
+					priority: BackgroundPriority + 3,
+				},
+			},
+		},
+		{
+			name:     "like render without rank",
+			expected: []int{0, 2, 3},
+			layers: []*Layer{
+				{
+					priority: ForegroundPriority,
+				},
+				{
+					priority: BackgroundPriority,
+				},
+				{
+					priority: BackgroundPriority + 2,
 				},
 			},
 		},
