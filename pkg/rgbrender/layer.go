@@ -262,7 +262,11 @@ func (l *LayerDrawer) Draw(ctx context.Context, canvas board.Canvas) error {
 
 	errs := make(chan error, len(l.layers)+len(l.textLayers))
 
-	for priority := range l.priorities() {
+	l.log.Debug("layer priorities",
+		zap.Ints("priorities", l.priorities()),
+	)
+
+	for _, priority := range l.priorities() {
 		wg := &sync.WaitGroup{}
 		l.log.Debug("drawing priority", zap.Int("priority", priority))
 	LAYER:
