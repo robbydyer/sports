@@ -28,8 +28,10 @@ import (
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 	"github.com/robbydyer/sports/pkg/statboard"
+	"github.com/robbydyer/sports/pkg/stockboard"
 	"github.com/robbydyer/sports/pkg/sysboard"
 	"github.com/robbydyer/sports/pkg/util"
+	"github.com/robbydyer/sports/pkg/yahoo"
 )
 
 const defaultConfigFile = "/etc/sportsmatrix.conf"
@@ -119,6 +121,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 	rootCmd.AddCommand(newRunCmd(args))
 	rootCmd.AddCommand(newNcaaMCmd(args))
 	rootCmd.AddCommand(newAbbrevCmd(args))
+	rootCmd.AddCommand(newStockCmd(args))
 
 	return rootCmd
 }
@@ -242,6 +245,13 @@ func (r *rootArgs) setConfigDefaults() {
 	}
 	r.config.PGA.SetDefaults()
 	r.config.PGA.Teams = append(r.config.PGA.Teams, "players")
+
+	if r.config.StocksConfig == nil {
+		r.config.StocksConfig = &stockboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
+	r.config.StocksConfig.SetDefaults()
 }
 
 func (r *rootArgs) getRGBMatrix(logger *zap.Logger) (rgb.Matrix, error) {
@@ -443,6 +453,19 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 		if err != nil {
 			return nil, err
 		}
+		boards = append(boards, b)
+	}
+
+	if r.config.StocksConfig != nil {
+		api, err := yahoo.New(logger)
+		if err != nil {
+			return nil, err
+		}
+		b, err := stockboard.New(api, r.config.StocksConfig, logger)
+		if err != nil {
+			return nil, err
+		}
+
 		boards = append(boards, b)
 	}
 

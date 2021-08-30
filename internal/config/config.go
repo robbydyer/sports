@@ -6,6 +6,7 @@ import (
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 	"github.com/robbydyer/sports/pkg/statboard"
+	"github.com/robbydyer/sports/pkg/stockboard"
 	"github.com/robbydyer/sports/pkg/sysboard"
 )
 
@@ -25,4 +26,5 @@ type Config struct {
 	SysConfig          *sysboard.Config     `json:"sysConfig"`
 	PGA                *statboard.Config    `json:"pga"`
 	SportsMatrixConfig *sportsmatrix.Config `json:"sportsMatrixConfig,omitempty"`
+	StocksConfig       *stockboard.Config   `json:"stocksConfig"`
 }

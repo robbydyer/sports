@@ -10,6 +10,7 @@ import ImageBoard from './ImageBoard.js';
 import Clock from './Clock.js';
 import Sys from './Sys.js';
 import Pga from './Pga.js';
+import Stocks from './Stocks.js';
 
 const styles = {
     row: {
@@ -49,6 +50,11 @@ class All extends React.Component {
                     <Col lg="auto" style={styles.col}>
                         <Card style={{ width: { card_border } }}>
                             <ImageBoard id="imgboard" />
+                        </Card>
+                    </Col>
+                    <Col lg="auto" style={styles.col}>
+                        <Card style={{ width: { card_border } }}>
+                            <Stocks id="stocks" />
                         </Card>
                     </Col>
                     <Col lg="auto" style={styles.col}>

@@ -602,3 +602,28 @@ pga:
   - 00 07 * * 4
   offTimes:
   - 00 23 * * 0
+
+# Stock ticker configuration
+stocksConfig:
+  enabled: false
+
+  # List of tickers to pull
+  symbols:
+  # S&P500
+  - ^GSPC
+  # NASDAQ
+  - ^IXIC
+  # DOW
+  - ^DJI
+
+  # The number of price points to use in rendering the chart.
+  # This number should be between 1 and the width of your matrix (i.e. 64).
+  # Larger numbers *might* improve performance on lower-powered Pi's.
+  chartResolution: 1
+
+  # Delay between each ticker
+  boardDelay: "10s"
+
+  # Interval in which pricing data is pulled from API. Default is 5m
+  updateInterval: "5m"
+
