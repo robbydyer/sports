@@ -1,12 +1,16 @@
 package yahoo
 
 import (
+	"fmt"
 	"regexp"
 	"time"
 )
 
-var inerval = regexp.MustCompile(`[0-9]+[a-z]+`)
+var interval = regexp.MustCompile(`[0-9]+[a-z]+`)
 
 func durationToAPIInterval(d time.Duration) string {
-	return inerval.FindString(d.String())
+	if d.Minutes() >= 90.0 && d.Minutes() < 120.0 {
+		return fmt.Sprintf("%.0fm", d.Minutes())
+	}
+	return interval.FindString(d.String())
 }
