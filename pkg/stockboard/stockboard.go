@@ -2,7 +2,10 @@ package stockboard
 
 import (
 	"context"
+	"fmt"
+	"image"
 	"image/color"
+	"image/draw"
 	"net/http"
 	"sync"
 	"time"
@@ -11,6 +14,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
@@ -27,18 +31,23 @@ type StockBoard struct {
 	symbolWriter *rgbrender.TextWriter
 	priceWriter  *rgbrender.TextWriter
 	enablerLock  sync.Mutex
+	cancelBoard  chan struct{}
 	sync.Mutex
 }
 
 // Config for a StockBoard
 type Config struct {
-	boardDelay      time.Duration
-	updateInterval  time.Duration
-	Enabled         *atomic.Bool `json:"enabled"`
-	Symbols         []string     `json:"symbols"`
-	ChartResolution int          `json:"chartResolution"`
-	BoardDelay      string       `json:"boardDelay"`
-	UpdateInterval  string       `json:"updateInterval"`
+	boardDelay         time.Duration
+	updateInterval     time.Duration
+	scrollDelay        time.Duration
+	Enabled            *atomic.Bool `json:"enabled"`
+	Symbols            []string     `json:"symbols"`
+	ChartResolution    int          `json:"chartResolution"`
+	BoardDelay         string       `json:"boardDelay"`
+	UpdateInterval     string       `json:"updateInterval"`
+	ScrollMode         *atomic.Bool `json:"scrollMode"`
+	TightScrollPadding int          `json:"tightScrollPadding"`
+	ScrollDelay        string       `json:"scrollDelay"`
 }
 
 // Price represents a price of a stock at a particular time
@@ -67,6 +76,9 @@ func (c *Config) SetDefaults() {
 	if c.Enabled == nil {
 		c.Enabled = atomic.NewBool(false)
 	}
+	if c.ScrollMode == nil {
+		c.ScrollMode = atomic.NewBool(false)
+	}
 	if c.ChartResolution <= 0 {
 		c.ChartResolution = 4
 	}
@@ -91,14 +103,25 @@ func (c *Config) SetDefaults() {
 	} else {
 		c.updateInterval = 5 * time.Minute
 	}
+
+	if c.ScrollDelay != "" {
+		d, err := time.ParseDuration(c.ScrollDelay)
+		if err != nil {
+			c.scrollDelay = rgbmatrix.DefaultScrollDelay
+		}
+		c.scrollDelay = d
+	} else {
+		c.scrollDelay = rgbmatrix.DefaultScrollDelay
+	}
 }
 
 // New ...
 func New(api API, cfg *Config, log *zap.Logger) (*StockBoard, error) {
 	s := &StockBoard{
-		config: cfg,
-		api:    api,
-		log:    log,
+		config:      cfg,
+		api:         api,
+		log:         log,
+		cancelBoard: make(chan struct{}),
 	}
 
 	return s, nil
@@ -136,6 +159,9 @@ func (s *StockBoard) enablerCancel(ctx context.Context, cancel context.CancelFun
 		select {
 		case <-ctx.Done():
 			return
+		case <-s.cancelBoard:
+			cancel()
+			return
 		case <-ticker.C:
 			if !s.config.Enabled.Load() {
 				cancel()
@@ -162,17 +188,54 @@ func (s *StockBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		return err
 	}
 
+	var scrollCanvas *rgbmatrix.ScrollCanvas
+	if canvas.Scrollable() && s.config.ScrollMode.Load() {
+		base, ok := canvas.(*rgbmatrix.ScrollCanvas)
+		if !ok {
+			return fmt.Errorf("wat")
+		}
+
+		var err error
+		scrollCanvas, err = rgbmatrix.NewScrollCanvas(base.Matrix, s.log)
+		if err != nil {
+			return fmt.Errorf("failed to get tight scroll canvas: %w", err)
+		}
+		scrollCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
+	}
+
+STOCK:
 	for _, stock := range stocks {
 		if err := s.renderStock(boardCtx, stock, canvas); err != nil {
 			s.log.Error("failed to render stock",
 				zap.Error(err),
 			)
 		}
-		select {
-		case <-boardCtx.Done():
-			return context.Canceled
-		case <-time.After(s.config.boardDelay):
+
+		if scrollCanvas != nil && s.config.ScrollMode.Load() {
+			scrollCanvas.AddCanvas(canvas)
+			draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
+			continue STOCK
 		}
+
+		if err := canvas.Render(boardCtx); err != nil {
+			s.log.Error("failed to render stock board",
+				zap.Error(err),
+			)
+			continue STOCK
+		}
+
+		if !s.config.ScrollMode.Load() {
+			select {
+			case <-boardCtx.Done():
+				return context.Canceled
+			case <-time.After(s.config.boardDelay):
+			}
+		}
+	}
+
+	if canvas.Scrollable() && scrollCanvas != nil {
+		scrollCanvas.Merge(s.config.TightScrollPadding)
+		return scrollCanvas.Render(boardCtx)
 	}
 
 	return nil
@@ -192,6 +255,10 @@ func (s *StockBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: "/stocks/disable",
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				s.log.Info("disabling board", zap.String("board", s.Name()))
+				select {
+				case s.cancelBoard <- struct{}{}:
+				default:
+				}
 				s.Disable()
 				s.cacheClear()
 			},
@@ -208,10 +275,54 @@ func (s *StockBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				_, _ = w.Write([]byte("false"))
 			},
 		},
+		{
+			Path: "/stocks/scrollon",
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				select {
+				case s.cancelBoard <- struct{}{}:
+				default:
+				}
+				s.config.ScrollMode.Store(true)
+				s.cacheClear()
+			},
+		},
+		{
+			Path: "/stocks/scrolloff",
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.config.ScrollMode.Store(false)
+				select {
+				case s.cancelBoard <- struct{}{}:
+				default:
+				}
+				s.cacheClear()
+			},
+		},
+		{
+			Path: "/stocks/scrollstatus",
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				s.log.Debug("get board scroll status", zap.String("board", s.Name()))
+				w.Header().Set("Content-Type", "text/plain")
+				if s.config.ScrollMode.Load() {
+					_, _ = w.Write([]byte("true"))
+					return
+				}
+				_, _ = w.Write([]byte("false"))
+			},
+		},
+		{
+			Path: "/stocks/clearcache",
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				select {
+				case s.cancelBoard <- struct{}{}:
+				default:
+				}
+				s.cacheClear()
+			},
+		},
 	}, nil
 }
 
 // ScrollMode ...
 func (s *StockBoard) ScrollMode() bool {
-	return false
+	return s.config.ScrollMode.Load()
 }

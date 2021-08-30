@@ -15,22 +15,23 @@ import (
 )
 
 func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board.Canvas) error {
-	chartBounds := image.Rect(canvas.Bounds().Min.X, canvas.Bounds().Max.Y/2, canvas.Bounds().Max.X, canvas.Bounds().Max.Y)
-	symbolBounds := image.Rect(canvas.Bounds().Min.X, canvas.Bounds().Min.Y, canvas.Bounds().Max.X/2, canvas.Bounds().Max.Y/2)
-	priceBounds := image.Rect(canvas.Bounds().Max.X/2, canvas.Bounds().Min.Y, canvas.Bounds().Max.X, canvas.Bounds().Max.Y/2)
+	canvasBounds := rgbrender.ZeroedBounds(canvas.Bounds())
+	chartBounds := rgbrender.ZeroedBounds(image.Rect(canvasBounds.Min.X, canvasBounds.Max.Y/2, canvasBounds.Max.X, canvasBounds.Max.Y))
+	symbolBounds := rgbrender.ZeroedBounds(image.Rect(canvasBounds.Min.X, canvasBounds.Min.Y, canvasBounds.Max.X/2, canvasBounds.Max.Y/2))
+	priceBounds := rgbrender.ZeroedBounds(image.Rect(canvasBounds.Max.X/2, canvasBounds.Min.Y, canvasBounds.Max.X, canvasBounds.Max.Y/2))
 
 	chartPrices := s.getChartPrices(chartBounds.Dx()/s.config.ChartResolution, stock)
 
 	chart := s.getChart(chartBounds, stock, chartPrices)
 
-	draw.Draw(canvas, canvas.Bounds(), chart, image.Point{}, draw.Over)
+	draw.Draw(canvas, canvasBounds, chart, image.Point{}, draw.Over)
 
-	priceWriter, err := s.getPriceWriter(canvas.Bounds())
+	priceWriter, err := s.getPriceWriter(canvasBounds)
 	if err != nil {
 		return err
 	}
 
-	symbolWriter, err := s.getSymbolWriter(canvas.Bounds())
+	symbolWriter, err := s.getSymbolWriter(canvasBounds)
 	if err != nil {
 		return err
 	}
@@ -82,7 +83,7 @@ func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board
 		zap.Int("charted prices", len(chartPrices)),
 	)
 
-	return canvas.Render(ctx)
+	return nil
 }
 
 func (s *StockBoard) getChart(bounds image.Rectangle, stock *Stock, prices []*Price) image.Image {
