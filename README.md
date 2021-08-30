@@ -242,6 +242,9 @@ NHL
 MLB
 ![MLB example](assets/images/mlb_board.jpg)
 
+STOCK TICKER
+![Stock Ticker](assets/images/stock_ticker.jpg)
+
 PGA Tour Leaderboard
 ![PGA Board](assets/images/pga.jpeg)
 
