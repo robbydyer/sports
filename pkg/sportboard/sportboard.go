@@ -243,12 +243,14 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		config.WatchTeams = []string{"ALL"}
 	}
 
-	if _, err := s.api.GetTeams(ctx); err != nil {
-		return nil, err
-	}
-	if _, err := s.api.GetScheduledGames(ctx, s.config.TodayFunc()); err != nil {
-		return nil, err
-	}
+	/*
+		if _, err := s.api.GetTeams(ctx); err != nil {
+			return nil, err
+		}
+		if _, err := s.api.GetScheduledGames(ctx, s.config.TodayFunc()); err != nil {
+			return nil, err
+		}
+	*/
 
 	c := cron.New()
 
@@ -388,6 +390,10 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 
 	allGames, err := s.api.GetScheduledGames(boardCtx, s.config.TodayFunc())
 	if err != nil {
+		return err
+	}
+
+	if _, err := s.api.GetTeams(ctx); err != nil {
 		return err
 	}
 

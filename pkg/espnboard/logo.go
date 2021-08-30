@@ -172,21 +172,28 @@ func (e *ESPNBoard) GetLogoSource(ctx context.Context, teamAbbreviation string, 
 	}
 
 	teams, err := e.getTeams(ctx)
-	if err != nil {
+	if err != nil || len(teams) < 1 {
 		return nil, fmt.Errorf("failed to fetch team info for logo: %w", err)
 	}
-
 	e.log.Debug("looking for logo source",
 		zap.String("league", e.leaguer.League()),
 		zap.String("team", teamAbbreviation),
+		zap.Int("num teams", len(teams)),
 	)
 
 	var i image.Image
+	foundSource := false
 OUTER:
 	for _, team := range teams {
 		if team.Abbreviation != teamAbbreviation {
 			continue OUTER
 		}
+
+		e.log.Debug("looking for logo source",
+			zap.String("league", e.leaguer.League()),
+			zap.String("team", teamAbbreviation),
+			zap.Int("num logos", len(team.Logos)),
+		)
 
 		var defaultHref sync.Once
 		href := ""
@@ -195,6 +202,9 @@ OUTER:
 
 		for _, logo := range team.Logos {
 			defaultHref.Do(func() {
+				e.log.Debug("logo default ONCE",
+					zap.String("href", logo.Href),
+				)
 				dHref = logo.Href
 			})
 			href = logo.Href
@@ -223,6 +233,11 @@ OUTER:
 		if err != nil || i == nil {
 			return nil, fmt.Errorf("failed to retrieve logo from API for %s: %w", teamAbbreviation, err)
 		}
+		foundSource = true
+	}
+
+	if !foundSource {
+		return nil, fmt.Errorf("failed to determine source URL for logo %s", teamAbbreviation)
 	}
 
 	e.log.Debug("saving source logo to cache",
