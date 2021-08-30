@@ -231,7 +231,7 @@ func pullTeams(ctx context.Context, endpoint string) ([]byte, error) {
 	}
 
 	v := uri.Query()
-	v.Set("limit", "500")
+	v.Set("limit", "1000")
 
 	uri.RawQuery = v.Encode()
 
