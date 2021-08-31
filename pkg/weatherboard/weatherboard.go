@@ -174,32 +174,6 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		scrollCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
 	}
 
-	/*
-		STOCK:
-			for _, stock := range weather {
-
-				if scrollCanvas != nil && s.config.ScrollMode.Load() {
-					scrollCanvas.AddCanvas(canvas)
-					draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
-					continue STOCK
-				}
-
-				if err := canvas.Render(boardCtx); err != nil {
-					s.log.Error("failed to render stock board",
-						zap.Error(err),
-					)
-					continue STOCK
-				}
-
-				if !s.config.ScrollMode.Load() {
-					select {
-					case <-boardCtx.Done():
-						return context.Canceled
-					case <-time.After(s.config.boardDelay):
-					}
-				}
-			}
-	*/
 	if err := w.drawForecast(boardCtx, canvas); err != nil {
 		return err
 	}
