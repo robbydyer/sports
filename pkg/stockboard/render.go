@@ -63,8 +63,8 @@ func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board
 		canvas,
 		priceBounds,
 		[]string{
-			fmt.Sprintf("%.2f", stock.Price),
-			fmt.Sprintf("%.2f%%", stock.Change),
+			fmt.Sprintf("%.2f ", stock.Price),
+			fmt.Sprintf("%.2f%% ", stock.Change),
 		},
 		clr,
 	); err != nil {

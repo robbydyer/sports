@@ -24,6 +24,31 @@ func (a *API) getCache(symbol string, expire time.Duration) *stockboard.Stock {
 		return nil
 	}
 
+	// Don't expire cache after trading hours
+	end, err := tradingEnd()
+	if err != nil {
+		a.log.Error("failed to get trading day end time",
+			zap.Error(err),
+		)
+	} else {
+		t := time.Now()
+		loc, err := tradingLocation()
+		if err != nil {
+			a.log.Error("failed to get trading day location",
+				zap.Error(err),
+			)
+		} else {
+			t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
+			if t.After(end) {
+				a.log.Info("trading day is over, not expiring cache",
+					zap.Time("end", end),
+					zap.Time("current", t),
+				)
+				return c.stock
+			}
+		}
+	}
+
 	if c.time.Add(expire).Before(time.Now()) {
 		a.log.Debug("cache expired",
 			zap.String("symbol", symbol),
