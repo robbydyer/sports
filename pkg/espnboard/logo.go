@@ -231,7 +231,7 @@ OUTER:
 		)
 		i, err = util.PullPng(ctx, href)
 		if err != nil || i == nil {
-			return nil, fmt.Errorf("failed to retrieve logo from API for %s: %w", teamAbbreviation, err)
+			return nil, fmt.Errorf("failed to retrieve logo from API for %s %s: %w", teamAbbreviation, href, err)
 		}
 		foundSource = true
 	}

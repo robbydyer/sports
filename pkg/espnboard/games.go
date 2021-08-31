@@ -255,9 +255,9 @@ func (e *ESPNBoard) GetGames(ctx context.Context, dateStr string) ([]*Game, erro
 	v.Set("lang", "en")
 	v.Set("region", "us")
 	v.Set("dates", dateStr)
+	v.Set("limit", "500")
 
 	if e.leaguer.League() == "mens-college-basketball" {
-		v.Set("limit", "500")
 		v.Set("groups", "50")
 	}
 
