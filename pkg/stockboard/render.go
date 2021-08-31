@@ -90,7 +90,17 @@ func (s *StockBoard) getChart(bounds image.Rectangle, stock *Stock, prices []*Pr
 	img := image.NewRGBA(bounds)
 
 	maxPrice := stock.maxPrice()
+	if maxPrice == nil {
+		maxPrice = &Price{
+			Price: stock.Price,
+		}
+	}
 	minPrice := stock.minPrice()
+	if minPrice == nil {
+		minPrice = &Price{
+			Price: stock.Price,
+		}
+	}
 
 	// deviator represents the maximum deviation between min/max price and open price
 	var deviator float64
