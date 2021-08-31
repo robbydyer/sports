@@ -497,7 +497,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 	}
 
 	if r.config.WeatherConfig != nil {
-		api, err := openweather.New(r.config.WeatherConfig.APIKey, logger)
+		api, err := openweather.New(r.config.WeatherConfig.APIKey, 30*time.Minute, logger)
 		if err != nil {
 			return nil, err
 		}

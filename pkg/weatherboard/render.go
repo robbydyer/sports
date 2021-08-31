@@ -5,18 +5,20 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/draw"
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
 func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas) error {
-	f, err := w.api.CurrentForecast(ctx, w.config.CityID)
+	canvasBounds := rgbrender.ZeroedBounds(canvas.Bounds())
+
+	f, err := w.api.CurrentForecast(ctx, w.config.CityID, canvasBounds)
 	if err != nil {
 		return err
 	}
 
-	canvasBounds := rgbrender.ZeroedBounds(canvas.Bounds())
 	tempBounds := image.Rect(canvasBounds.Max.X/2, canvasBounds.Min.Y, canvasBounds.Max.X, canvasBounds.Max.Y)
 	smallWriter, err := w.getSmallWriter(canvasBounds)
 	if err != nil {
@@ -34,6 +36,8 @@ func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas) er
 	); err != nil {
 		return err
 	}
+
+	draw.Draw(canvas, canvasBounds, f.Icon, image.Point{}, draw.Over)
 
 	return nil
 }

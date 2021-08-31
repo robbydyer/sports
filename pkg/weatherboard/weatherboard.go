@@ -52,7 +52,8 @@ type Forecast struct {
 
 // API interface for getting stock data
 type API interface {
-	CurrentForecast(ctx context.Context, cityID string) (*Forecast, error)
+	CurrentForecast(ctx context.Context, cityID string, bounds image.Rectangle) (*Forecast, error)
+	CacheClear()
 }
 
 // SetDefaults ...
@@ -109,7 +110,7 @@ func New(api API, cfg *Config, log *zap.Logger) (*WeatherBoard, error) {
 }
 
 func (w *WeatherBoard) cacheClear() {
-	//s.api.CacheClear()
+	w.api.CacheClear()
 }
 
 // Enabled ...
