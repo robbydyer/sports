@@ -14,13 +14,17 @@ class ImageBoard extends React.Component {
         super(props);
         this.state = {
             "enabled": false,
-            "memcache": false,
-            "diskcache": false
+            "scroll": false,
         };
     }
     async componentDidMount() {
         await GetStatus("stocks/status", (val) => {
             this.setState({ "enabled": val })
+        })
+        await GetStatus(`stocks/scrollstatus`, (val) => {
+            this.setState({
+                "scroll": val,
+            })
         })
     }
     handleSwitch = (apiOn, apiOff, stateVar) => {
@@ -46,6 +50,12 @@ class ImageBoard extends React.Component {
                     <Col>
                         <Form.Switch id="stocksenabler" label="Enable/Disable" checked={this.state.enabled}
                             onChange={() => this.handleSwitch("stocks/enable", "stocks/disable", "enabled")} />
+                    </Col>
+                </Row>
+                <Row className="text-left">
+                    <Col>
+                        <Form.Switch id="stocksscroller" label="Scroll Mode" checked={this.state.scroll}
+                            onChange={() => this.handleSwitch(`stocks/scrollon`, `stocks/scrolloff`, "scroll")} />
                     </Col>
                 </Row>
             </Container>

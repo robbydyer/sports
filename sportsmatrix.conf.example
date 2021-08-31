@@ -607,6 +607,15 @@ pga:
 stocksConfig:
   enabled: false
 
+  # Enable scroll mode
+  scrollMode: false
+
+  # Set the spacing between the tickers in scroll mode. Default is 10
+  tightScrollPadding: 10
+
+  # Delay between screen draws in scroll mode. Default is 50ms.
+  scrollDelay: "50ms"
+
   # List of tickers to pull
   symbols:
   # S&P500

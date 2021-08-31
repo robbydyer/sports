@@ -14,3 +14,16 @@ func durationToAPIInterval(d time.Duration) string {
 	}
 	return interval.FindString(d.String())
 }
+
+func tradingLocation() (*time.Location, error) {
+	return time.LoadLocation("America/New_York")
+}
+
+func tradingEnd() (time.Time, error) {
+	t := time.Now()
+	loc, err := tradingLocation()
+	if err != nil {
+		return t, err
+	}
+	return time.Date(t.Year(), t.Month(), t.Day(), 16, 0, 0, 0, loc), nil
+}
