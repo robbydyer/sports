@@ -14,7 +14,7 @@ import (
 func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas) error {
 	canvasBounds := rgbrender.ZeroedBounds(canvas.Bounds())
 
-	f, err := w.api.CurrentForecast(ctx, w.config.CityID, canvasBounds)
+	f, err := w.api.CurrentForecast(ctx, w.config.City, w.config.State, w.config.Country, canvasBounds)
 	if err != nil {
 		return err
 	}

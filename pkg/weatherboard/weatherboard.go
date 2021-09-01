@@ -39,20 +39,25 @@ type Config struct {
 	ScrollMode         *atomic.Bool `json:"scrollMode"`
 	TightScrollPadding int          `json:"tightScrollPadding"`
 	ScrollDelay        string       `json:"scrollDelay"`
-	CityID             string       `json:"cityID"`
+	City               string       `json:"city"`
+	State              string       `json:"state"`
+	Country            string       `json:"country"`
 	APIKey             string       `json:"apiKey"`
 }
 
 // Forecast ...
 type Forecast struct {
+	Time        time.Time
 	Temperature float64
+	Humidity    int
 	TempUnit    string
 	Icon        image.Image
 }
 
 // API interface for getting stock data
 type API interface {
-	CurrentForecast(ctx context.Context, cityID string, bounds image.Rectangle) (*Forecast, error)
+	CurrentForecast(ctx context.Context, city string, state string, country string, bounds image.Rectangle) (*Forecast, error)
+	//DailyForecast(ctx context.Context, city string, state string, bounds image.Rectangle, days int) ([]*Forecast, error)
 	CacheClear()
 }
 

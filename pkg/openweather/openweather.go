@@ -2,12 +2,8 @@ package openweather
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"image"
-	"io/ioutil"
-	"net/http"
-	"net/url"
 	"os"
 	"sync"
 	"time"
@@ -22,24 +18,32 @@ const baseURL = "https://api.openweathermap.org"
 const imgURL = "http://openweathermap.org/img/wn"
 
 type API struct {
-	log       *zap.Logger
-	apiKey    string
-	icons     map[string]image.Image
-	current   *weatherboard.Forecast
-	lastCheck time.Time
-	refresh   time.Duration
+	log          *zap.Logger
+	apiKey       string
+	icons        map[string]image.Image
+	refresh      time.Duration
+	coordinates  map[string]*geo
+	geoLock      sync.RWMutex
+	forecastLock sync.RWMutex
+	cache        map[string]*weather
 	sync.Mutex
 }
 
+type weather struct {
+	lastUpdate time.Time
+	Current    *forecast `json:"current"`
+	Hourly     *forecast `json:"hourly"`
+	Daily      *forecast `json:"daily"`
+}
+
 type forecast struct {
+	Dt      int `json:"dt"`
 	Weather []*struct {
 		ID   int    `json:"id"`
 		Icon string `json:"icon"`
 	} `json:"weather"`
-	Main *struct {
-		Temp     float64 `json:"temp"`
-		Humidity int     `json:"humidity"`
-	} `json:"main"`
+	Temp     float64 `json:"temp"`
+	Humidity int     `json:"humidity"`
 }
 
 func New(apiKey string, refresh time.Duration, log *zap.Logger) (*API, error) {
@@ -47,97 +51,39 @@ func New(apiKey string, refresh time.Duration, log *zap.Logger) (*API, error) {
 		return nil, fmt.Errorf("must pass a valid API key from openweathermap.org")
 	}
 	a := &API{
-		apiKey:  apiKey,
-		log:     log,
-		icons:   make(map[string]image.Image),
-		refresh: refresh,
+		apiKey:      apiKey,
+		log:         log,
+		icons:       make(map[string]image.Image),
+		refresh:     refresh,
+		coordinates: make(map[string]*geo),
 	}
 
 	return a, nil
 }
 
 func (a *API) CacheClear() {
-	a.current = nil
 }
 
-func (a *API) CurrentForecast(ctx context.Context, cityID string, bounds image.Rectangle) (*weatherboard.Forecast, error) {
-	if a.current != nil && !time.Now().Local().Add(a.refresh).Before(time.Now().Local()) {
-		a.log.Debug("using cached weather data")
-		return a.current, nil
+func weatherKey(city string, state string, bounds image.Rectangle) string {
+	return fmt.Sprintf("%s_%s_%dx%d", city, state, bounds.Dx(), bounds.Dy())
+}
+
+func (a *API) CurrentForecast(ctx context.Context, city string, state string, country string, bounds image.Rectangle) (*weatherboard.Forecast, error) {
+	key := weatherKey(city, state, bounds)
+	w := a.weatherFromCache(key)
+	if w != nil && w.expired(a.refresh) {
+		w = nil
 	}
 
-	uri, err := url.Parse(fmt.Sprintf("%s/data/2.5/weather", baseURL))
-	if err != nil {
-		return nil, err
-	}
-
-	v := uri.Query()
-	v.Set("appid", a.apiKey)
-	v.Set("id", cityID)
-	v.Set("units", "imperial")
-
-	uri.RawQuery = v.Encode()
-
-	a.log.Debug("fetching weather from API",
-		zap.String("url", uri.String()),
-	)
-
-	req, err := http.NewRequest("GET", uri.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-	client := http.DefaultClient
-
-	req = req.WithContext(ctx)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var w *forecast
-
-	if err := json.Unmarshal(body, &w); err != nil {
-		return nil, err
-	}
-
-	weather := &weatherboard.Forecast{
-		TempUnit: "F",
-	}
-
-	if w.Main != nil {
-		weather.Temperature = w.Main.Temp
-	}
-
-	if len(w.Weather) > 0 {
-		weather.Icon, err = a.getIcon(ctx, w.Weather[0].Icon, bounds)
+	if w == nil {
+		var err error
+		w, err = a.getWeather(ctx, city, state, country, bounds)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	a.current = weather
-
-	return weather, nil
-
-}
-
-func (a *API) forecastFromData(f *forecast) (*weatherboard.Forecast, error) {
-	w := &weatherboard.Forecast{
-		TempUnit: "F",
-	}
-
-	if f.Main != nil {
-		w.Temperature = f.Main.Temp
-	}
-
-	return w, nil
+	return a.boardForecast(ctx, w.Current, bounds)
 }
 
 func (a *API) getIcon(ctx context.Context, icon string, bounds image.Rectangle) (image.Image, error) {
