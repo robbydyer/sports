@@ -26,24 +26,41 @@ type API struct {
 	geoLock      sync.RWMutex
 	forecastLock sync.RWMutex
 	cache        map[string]*weather
+	lastAPICall  *time.Time
+	callLimit    time.Duration
 	sync.Mutex
 }
 
 type weather struct {
 	lastUpdate time.Time
-	Current    *forecast `json:"current"`
-	Hourly     *forecast `json:"hourly"`
-	Daily      *forecast `json:"daily"`
+	Current    *forecast   `json:"current"`
+	Hourly     []*forecast `json:"hourly"`
+	Daily      []*daily    `json:"daily"`
 }
 
-type forecast struct {
+type baseForecast struct {
 	Dt      int `json:"dt"`
 	Weather []*struct {
 		ID   int    `json:"id"`
 		Icon string `json:"icon"`
 	} `json:"weather"`
-	Temp     float64 `json:"temp"`
-	Humidity int     `json:"humidity"`
+	Humidity int `json:"humidity"`
+}
+
+type daily struct {
+	baseForecast
+	Temp *struct {
+		Day   float64 `json:"day"`
+		Min   float64 `json:"min"`
+		Max   float64 `json:"max"`
+		Night float64 `json:"night"`
+		Eve   float64 `json:"eve"`
+		Morn  float64 `json:"morn"`
+	} `json:"temp"`
+}
+type forecast struct {
+	baseForecast
+	Temp float64 `json:"temp"`
 }
 
 func New(apiKey string, refresh time.Duration, log *zap.Logger) (*API, error) {
@@ -56,6 +73,8 @@ func New(apiKey string, refresh time.Duration, log *zap.Logger) (*API, error) {
 		icons:       make(map[string]image.Image),
 		refresh:     refresh,
 		coordinates: make(map[string]*geo),
+		callLimit:   30 * time.Minute,
+		cache:       make(map[string]*weather),
 	}
 
 	return a, nil
@@ -64,26 +83,25 @@ func New(apiKey string, refresh time.Duration, log *zap.Logger) (*API, error) {
 func (a *API) CacheClear() {
 }
 
-func weatherKey(city string, state string, bounds image.Rectangle) string {
-	return fmt.Sprintf("%s_%s_%dx%d", city, state, bounds.Dx(), bounds.Dy())
+func weatherKey(zipCode string, country string, bounds image.Rectangle) string {
+	return fmt.Sprintf("%s_%s_%dx%d", zipCode, country, bounds.Dx(), bounds.Dy())
 }
 
-func (a *API) CurrentForecast(ctx context.Context, city string, state string, country string, bounds image.Rectangle) (*weatherboard.Forecast, error) {
-	key := weatherKey(city, state, bounds)
-	w := a.weatherFromCache(key)
-	if w != nil && w.expired(a.refresh) {
-		w = nil
+func (a *API) CurrentForecast(ctx context.Context, zipCode string, country string, bounds image.Rectangle) (*weatherboard.Forecast, error) {
+	w, err := a.getWeather(ctx, zipCode, country, bounds)
+	if err != nil {
+		return nil, err
 	}
 
-	if w == nil {
-		var err error
-		w, err = a.getWeather(ctx, city, state, country, bounds)
-		if err != nil {
-			return nil, err
-		}
+	return a.boardForecastFromForecast(ctx, w.Current, bounds)
+}
+func (a *API) DailyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
+	w, err := a.getWeather(ctx, zipCode, country, bounds)
+	if err != nil {
+		return nil, err
 	}
 
-	return a.boardForecast(ctx, w.Current, bounds)
+	return a.boardForecastFromDaily(ctx, w.Daily, bounds)
 }
 
 func (a *API) getIcon(ctx context.Context, icon string, bounds image.Rectangle) (image.Image, error) {

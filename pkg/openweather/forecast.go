@@ -15,27 +15,54 @@ import (
 )
 
 func (w *weather) expired(refresh time.Duration) bool {
-	if w.lastUpdate.Add(refresh).Before(w.lastUpdate) {
-		return false
+	if w.lastUpdate.Add(refresh).Before(time.Now().Local()) {
+		return true
 	}
 
-	return true
+	return false
 }
 
-func (a *API) boardForecast(ctx context.Context, f *forecast, bounds image.Rectangle) (*weatherboard.Forecast, error) {
+func (a *API) boardForecastFromForecast(ctx context.Context, f *forecast, bounds image.Rectangle) (*weatherboard.Forecast, error) {
+	if f == nil || len(f.Weather) < 1 {
+		return nil, fmt.Errorf("no weather found in forecast")
+	}
 	icon, err := a.getIcon(ctx, f.Weather[0].Icon, bounds)
 	if err != nil {
 		return nil, err
 	}
 	w := &weatherboard.Forecast{
 		Time:        time.Unix(int64(f.Dt), 0),
-		Temperature: f.Temp,
+		Temperature: &f.Temp,
 		Humidity:    f.Humidity,
 		TempUnit:    "F",
 		Icon:        icon,
 	}
 
 	return w, nil
+}
+func (a *API) boardForecastFromDaily(ctx context.Context, forecasts []*daily, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
+	var ws []*weatherboard.Forecast
+
+	for _, f := range forecasts {
+		if f.Weather == nil || len(f.Weather) < 1 {
+			continue
+		}
+		icon, err := a.getIcon(ctx, f.Weather[0].Icon, bounds)
+		if err != nil {
+			return nil, err
+		}
+		w := &weatherboard.Forecast{
+			Time:     time.Unix(int64(f.Dt), 0),
+			HighTemp: &f.Temp.Max,
+			LowTemp:  &f.Temp.Min,
+			Humidity: f.Humidity,
+			TempUnit: "F",
+			Icon:     icon,
+		}
+		ws = append(ws, w)
+	}
+
+	return ws, nil
 }
 
 func (a *API) weatherFromCache(key string) *weather {
@@ -47,6 +74,10 @@ func (a *API) weatherFromCache(key string) *weather {
 		return w
 	}
 
+	a.log.Error("cache miss on weather",
+		zap.String("key", key),
+	)
+
 	return nil
 }
 
@@ -57,10 +88,46 @@ func (a *API) setWeatherCache(key string, w *weather) {
 	a.cache[key] = w
 }
 
-func (a *API) getWeather(ctx context.Context, city string, state string, country string, bounds image.Rectangle) (*weather, error) {
-	g, err := a.getLocation(ctx, city, state, country)
+func (a *API) getWeather(ctx context.Context, zipCode string, country string, bounds image.Rectangle) (*weather, error) {
+	var w *weather
+	key := weatherKey(zipCode, country, bounds)
+	w = a.weatherFromCache(key)
+	if w != nil {
+		// Check if cache expired
+		if w.expired(a.refresh) {
+			a.log.Info("weather cache expired",
+				zap.Float64("minutes", a.refresh.Minutes()),
+				zap.Time("updated", w.lastUpdate),
+			)
+			w = nil
+		} else {
+			a.log.Info("using weather data from cache",
+				zap.String("key", key),
+			)
+			return w, nil
+		}
+	}
+
+	if a.lastAPICall == nil {
+		t := time.Now().Local()
+		a.lastAPICall = &t
+	} else {
+		if a.lastAPICall.Add(a.callLimit).After(time.Now().Local()) {
+			a.log.Info("refusing weather API call",
+				zap.Time("last call", *a.lastAPICall),
+				zap.Duration("timeout", a.callLimit),
+			)
+
+			return nil, fmt.Errorf("refusing weather API call")
+		}
+	}
+
+	g, err := a.getLocation(ctx, zipCode, country)
 	if err != nil {
 		return nil, err
+	}
+	if g == nil {
+		return nil, fmt.Errorf("failed to geolocate")
 	}
 
 	uri, err := url.Parse(fmt.Sprintf("%s/data/2.5/onecall", baseURL))
@@ -101,11 +168,20 @@ func (a *API) getWeather(ctx context.Context, city string, state string, country
 		return nil, err
 	}
 
-	var w *weather
+	a.log.Debug("weather data",
+		zap.ByteString("data", body),
+	)
 
 	if err := json.Unmarshal(body, &w); err != nil {
 		return nil, err
 	}
+
+	t := time.Now().Local()
+	a.lastAPICall = &t
+
+	w.lastUpdate = time.Now().Local()
+
+	a.setWeatherCache(key, w)
 
 	return w, nil
 }

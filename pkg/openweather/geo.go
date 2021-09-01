@@ -7,7 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
+
+	"go.uber.org/zap"
 )
 
 type geo struct {
@@ -15,25 +16,25 @@ type geo struct {
 	Lat     float64 `json:"lat"`
 	Lon     float64 `json:"lon"`
 	Country string  `json:"country"`
-	State   string  `json:"state"`
+	State   string  `json:"state,omitempty"`
 }
 
-func (a *API) getLocation(ctx context.Context, city string, state string, country string) (*geo, error) {
-	gKey := fmt.Sprintf("%s_%s", city, state)
+func (a *API) getLocation(ctx context.Context, zipCode string, country string) (*geo, error) {
+	gKey := fmt.Sprintf("%s_%s", zipCode, country)
 	a.geoLock.RLock()
-	if g, ok := a.coordinates[gKey]; ok {
+	if g, ok := a.coordinates[gKey]; ok && g != nil {
 		a.geoLock.RUnlock()
 		return g, nil
 	}
 	a.geoLock.RUnlock()
 
-	uri, err := url.Parse(fmt.Sprintf("%s/geo/1.0/direct", baseURL))
+	uri, err := url.Parse(fmt.Sprintf("%s/geo/1.0/zip", baseURL))
 	if err != nil {
 		return nil, err
 	}
 
 	v := uri.Query()
-	v.Set("q", fmt.Sprintf("%s,%s,%s", city, state, country))
+	v.Set("zip", fmt.Sprintf("%s,%s", zipCode, country))
 	v.Set("appid", a.apiKey)
 
 	uri.RawQuery = v.Encode()
@@ -46,6 +47,9 @@ func (a *API) getLocation(ctx context.Context, city string, state string, countr
 
 	client := http.DefaultClient
 
+	a.log.Info("querying geolocation",
+		zap.String("url", uri.String()),
+	)
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -57,21 +61,20 @@ func (a *API) getLocation(ctx context.Context, city string, state string, countr
 		return nil, err
 	}
 
-	var geos []*geo
+	var g *geo
 
-	if err := json.Unmarshal(body, &geos); err != nil {
+	if err := json.Unmarshal(body, &g); err != nil {
 		return nil, err
 	}
 
-	if len(geos) < 1 {
-		return nil, fmt.Errorf("failed to get location for %s, %s", city, state)
-	}
+	if g == nil {
+		a.log.Error("failed to get geolocation",
+			zap.String("zip", zipCode),
+			zap.String("country", country),
+			zap.ByteString("geo data", body),
+		)
 
-	var g *geo
-	for _, geo := range geos {
-		if strings.ToLower(geo.Country) == strings.ToLower(country) && strings.ToLower(geo.State) == strings.ToLower(state) {
-			g = geo
-		}
+		return nil, fmt.Errorf("failed to get geolocation")
 	}
 
 	a.geoLock.Lock()

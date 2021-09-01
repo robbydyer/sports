@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"image/color"
+	"image/draw"
 	"net/http"
 	"sync"
 	"time"
@@ -39,16 +41,20 @@ type Config struct {
 	ScrollMode         *atomic.Bool `json:"scrollMode"`
 	TightScrollPadding int          `json:"tightScrollPadding"`
 	ScrollDelay        string       `json:"scrollDelay"`
-	City               string       `json:"city"`
-	State              string       `json:"state"`
+	ZipCode            string       `json:"zipCode"`
 	Country            string       `json:"country"`
 	APIKey             string       `json:"apiKey"`
+	CurrentForecast    *atomic.Bool `json:"currentForecast"`
+	HourlyForecast     *atomic.Bool `json:"hourlyForecast"`
+	DailyForecast      *atomic.Bool `json:"dailyForecast"`
 }
 
 // Forecast ...
 type Forecast struct {
 	Time        time.Time
-	Temperature float64
+	Temperature *float64
+	HighTemp    *float64
+	LowTemp     *float64
 	Humidity    int
 	TempUnit    string
 	Icon        image.Image
@@ -56,10 +62,11 @@ type Forecast struct {
 
 // API interface for getting stock data
 type API interface {
-	CurrentForecast(ctx context.Context, city string, state string, country string, bounds image.Rectangle) (*Forecast, error)
-	//DailyForecast(ctx context.Context, city string, state string, bounds image.Rectangle, days int) ([]*Forecast, error)
+	CurrentForecast(ctx context.Context, zipCode string, country string, bounds image.Rectangle) (*Forecast, error)
+	DailyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*Forecast, error)
 	CacheClear()
 }
+type fetcher func(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*Forecast, error)
 
 // SetDefaults ...
 func (c *Config) SetDefaults() {
@@ -68,6 +75,15 @@ func (c *Config) SetDefaults() {
 	}
 	if c.ScrollMode == nil {
 		c.ScrollMode = atomic.NewBool(false)
+	}
+	if c.CurrentForecast == nil {
+		c.CurrentForecast = atomic.NewBool(false)
+	}
+	if c.HourlyForecast == nil {
+		c.HourlyForecast = atomic.NewBool(false)
+	}
+	if c.DailyForecast == nil {
+		c.DailyForecast = atomic.NewBool(false)
 	}
 	if c.BoardDelay != "" {
 		d, err := time.ParseDuration(c.BoardDelay)
@@ -180,25 +196,75 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		scrollCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
 	}
 
-	if err := w.drawForecast(boardCtx, canvas); err != nil {
-		return err
+	doCanvas := func() error {
+		if canvas.Scrollable() && scrollCanvas != nil {
+			scrollCanvas.Merge(w.config.TightScrollPadding)
+			return scrollCanvas.Render(boardCtx)
+		}
+
+		if err := canvas.Render(boardCtx); err != nil {
+			return err
+		}
+
+		select {
+		case <-boardCtx.Done():
+			return context.Canceled
+		case <-time.After(w.config.boardDelay):
+			return nil
+		}
 	}
 
-	if canvas.Scrollable() && scrollCanvas != nil {
-		scrollCanvas.Merge(w.config.TightScrollPadding)
-		return scrollCanvas.Render(boardCtx)
+	addScroll := func() bool {
+		if scrollCanvas != nil && w.config.ScrollMode.Load() {
+			scrollCanvas.AddCanvas(canvas)
+			draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
+			return true
+		}
+		return false
 	}
 
-	if err := canvas.Render(boardCtx); err != nil {
-		return err
+	if w.config.CurrentForecast.Load() {
+		f, err := w.api.CurrentForecast(ctx, w.config.ZipCode, w.config.Country, canvas.Bounds())
+		if err != nil {
+			return err
+		}
+		if err := w.drawForecast(boardCtx, canvas, f); err != nil {
+			return err
+		}
+		_ = addScroll()
+		if err := doCanvas(); err != nil {
+			return err
+		}
 	}
 
-	select {
-	case <-boardCtx.Done():
-		return context.Canceled
-	case <-time.After(w.config.boardDelay):
-		return nil
+	if w.config.DailyForecast.Load() {
+		forecasts, err := w.api.DailyForecasts(ctx, w.config.ZipCode, w.config.Country, canvas.Bounds())
+		if err != nil {
+			return err
+		}
+	FORECASTS:
+		for _, f := range forecasts {
+			if f.Time.YearDay() == time.Now().Local().YearDay() {
+				continue FORECASTS
+			}
+			if err := w.drawForecast(boardCtx, canvas, f); err != nil {
+				return err
+			}
+			if ok := addScroll(); ok {
+				continue FORECASTS
+			}
+			if err := doCanvas(); err != nil {
+				return err
+			}
+		}
+		if w.config.ScrollMode.Load() && scrollCanvas != nil {
+			if err := doCanvas(); err != nil {
+				return err
+			}
+		}
 	}
+
+	return nil
 }
 
 // GetHTTPHandlers ...
