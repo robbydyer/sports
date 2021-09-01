@@ -27,3 +27,12 @@ func tradingEnd() (time.Time, error) {
 	}
 	return time.Date(t.Year(), t.Month(), t.Day(), 16, 0, 0, 0, loc), nil
 }
+
+func tradingBegin() (time.Time, error) {
+	t := time.Now()
+	loc, err := tradingLocation()
+	if err != nil {
+		return t, err
+	}
+	return time.Date(t.Year(), t.Month(), t.Day(), 9, 30, 0, 0, loc), nil
+}

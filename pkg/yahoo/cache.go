@@ -20,17 +20,25 @@ func (a *API) getCache(symbol string, expire time.Duration) *stockboard.Stock {
 	defer a.cacheLock.RUnlock()
 
 	c, ok := a.cache[symbol]
-	if !ok {
+	if !ok || c == nil || c.stock == nil {
 		return nil
 	}
 
-	// Don't expire cache after trading hours
-	end, err := tradingEnd()
-	if err != nil {
-		a.log.Error("failed to get trading day end time",
-			zap.Error(err),
+	// Don't expire cache before or after trading hours
+	begin, beginErr := tradingBegin()
+	if beginErr != nil {
+		a.log.Error("failed to get trading day begin time",
+			zap.Error(beginErr),
 		)
-	} else {
+	}
+	end, endErr := tradingEnd()
+	if endErr != nil {
+		a.log.Error("failed to get trading day end time",
+			zap.Error(endErr),
+		)
+	}
+
+	if beginErr == nil && endErr == nil {
 		t := time.Now()
 		loc, err := tradingLocation()
 		if err != nil {
@@ -39,8 +47,9 @@ func (a *API) getCache(symbol string, expire time.Duration) *stockboard.Stock {
 			)
 		} else {
 			t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
-			if t.After(end) {
-				a.log.Info("trading day is over, not expiring cache",
+			if t.After(end) || t.Before(begin) {
+				a.log.Info("outside trading hours, not expiring cache",
+					zap.Time("begin", begin),
 					zap.Time("end", end),
 					zap.Time("current", t),
 				)
@@ -50,7 +59,7 @@ func (a *API) getCache(symbol string, expire time.Duration) *stockboard.Stock {
 	}
 
 	if c.time.Add(expire).Before(time.Now()) {
-		a.log.Debug("cache expired",
+		a.log.Info("cache expired",
 			zap.String("symbol", symbol),
 			zap.String("since", time.Since(c.time).String()),
 		)
