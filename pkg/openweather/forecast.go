@@ -16,11 +16,7 @@ import (
 )
 
 func (w *weather) expired(refresh time.Duration) bool {
-	if w.lastUpdate.Add(refresh).Before(time.Now().Local()) {
-		return true
-	}
-
-	return false
+	return w.lastUpdate.Add(refresh).Before(time.Now().Local())
 }
 
 func (a *API) boardForecastFromForecast(ctx context.Context, forecasts []*forecast, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {

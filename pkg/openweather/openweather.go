@@ -95,7 +95,7 @@ func weatherKey(zipCode string, country string, bounds image.Rectangle) string {
 	return fmt.Sprintf("%s_%s_%dx%d", zipCode, country, bounds.Dx(), bounds.Dy())
 }
 
-// CurrentForecast
+// CurrentForecast ...
 func (a *API) CurrentForecast(ctx context.Context, zipCode string, country string, bounds image.Rectangle) (*weatherboard.Forecast, error) {
 	w, err := a.getWeather(ctx, zipCode, country, bounds)
 	if err != nil {

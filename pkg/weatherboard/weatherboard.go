@@ -47,6 +47,8 @@ type Config struct {
 	CurrentForecast    *atomic.Bool `json:"currentForecast"`
 	HourlyForecast     *atomic.Bool `json:"hourlyForecast"`
 	DailyForecast      *atomic.Bool `json:"dailyForecast"`
+	DailyNumber        int          `json:"dailyNumber"`
+	HourlyNumber       int          `json:"hourlyNumber"`
 }
 
 // Forecast ...
@@ -116,6 +118,14 @@ func (c *Config) SetDefaults() {
 		c.scrollDelay = d
 	} else {
 		c.scrollDelay = rgbmatrix.DefaultScrollDelay
+	}
+
+	if c.DailyNumber == 0 {
+		c.DailyNumber = 3
+	}
+
+	if c.HourlyNumber == 0 {
+		c.HourlyNumber = 3
 	}
 }
 
@@ -243,7 +253,9 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		if err != nil {
 			return err
 		}
-		forecasts = append(forecasts, fs...)
+		for i := 0; i < w.config.HourlyNumber; i++ {
+			forecasts = append(forecasts, fs[i])
+		}
 	}
 
 	if w.config.DailyForecast.Load() {
@@ -251,7 +263,9 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		if err != nil {
 			return err
 		}
-		forecasts = append(forecasts, fs...)
+		for i := 0; i < w.config.DailyNumber; i++ {
+			forecasts = append(forecasts, fs[i])
+		}
 	}
 
 	if len(forecasts) > 0 {
