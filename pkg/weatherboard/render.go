@@ -11,6 +11,7 @@ import (
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbrender"
+	"go.uber.org/zap"
 )
 
 var (
@@ -39,6 +40,12 @@ func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas, f 
 	default:
 	}
 
+	w.log.Debug("drawing weather icon",
+		zap.Int("X bound", iconBounds.Dx()),
+		zap.Int("Y bound", iconBounds.Dy()),
+	)
+	draw.Draw(canvas, iconBounds, f.Icon, image.Point{}, draw.Over)
+
 	if f.Temperature != nil {
 		if err := bigWriter.WriteAligned(
 			rgbrender.RightTop,
@@ -58,33 +65,17 @@ func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas, f 
 		Lines:  []*rgbrender.ColorCharLine{},
 	}
 
-	if f.HighTemp != nil && f.LowTemp != nil {
-		line := &rgbrender.ColorCharLine{}
-		high := fmt.Sprintf("%0.f", *f.HighTemp)
-		for i := 0; i < len(high); i++ {
-			line.Chars = append(line.Chars, string(high[i]))
-			line.Clrs = append(line.Clrs, orange)
-		}
-		line.Chars = append(line.Chars, "/")
-		line.Clrs = append(line.Clrs, color.White)
-
-		low := fmt.Sprintf("%0.f", *f.LowTemp)
-		for i := 0; i < len(low); i++ {
-			line.Chars = append(line.Chars, string(low[i]))
-			line.Clrs = append(line.Clrs, blue)
-		}
-		clrCodes.Lines = append(clrCodes.Lines, line)
+	if l := w.tempHighLowLine(f); l != nil {
+		clrCodes.Lines = append(clrCodes.Lines, l)
 	}
 
-	humidity := strings.Split(fmt.Sprintf("%d", f.Humidity), "")
-	line := &rgbrender.ColorCharLine{
-		Chars: humidity,
-	}
-	for i := 0; i < len(humidity); i++ {
-		line.Clrs = append(line.Clrs, color.White)
+	if l := w.rainLine(f); l != nil {
+		clrCodes.Lines = append(clrCodes.Lines, l)
 	}
 
-	clrCodes.Lines = append(clrCodes.Lines, line)
+	if l := w.humidityLine(f); l != nil {
+		clrCodes.Lines = append(clrCodes.Lines, l)
+	}
 
 	select {
 	case <-ctx.Done():
@@ -106,8 +97,6 @@ func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas, f 
 		return context.Canceled
 	default:
 	}
-
-	draw.Draw(canvas, iconBounds, f.Icon, image.Point{}, draw.Over)
 
 	timeStr := "Now"
 
@@ -137,6 +126,60 @@ func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas, f 
 	)
 
 	return err
+}
+
+func (w *WeatherBoard) rainLine(f *Forecast) *rgbrender.ColorCharLine {
+	if f.PrecipChance == nil {
+		return nil
+	}
+	c := strings.Split(fmt.Sprintf("Prcp: %d%%", *f.PrecipChance), "")
+	l := &rgbrender.ColorCharLine{
+		Chars: c,
+		Clrs:  colors(color.White, c),
+	}
+
+	return l
+}
+
+func (w *WeatherBoard) tempHighLowLine(f *Forecast) *rgbrender.ColorCharLine {
+	if f == nil || f.HighTemp == nil && f.LowTemp == nil {
+		return nil
+	}
+
+	line := &rgbrender.ColorCharLine{}
+	high := fmt.Sprintf("%0.fF", *f.HighTemp)
+	for i := 0; i < len(high); i++ {
+		line.Chars = append(line.Chars, string(high[i]))
+		line.Clrs = append(line.Clrs, orange)
+	}
+	line.Chars = append(line.Chars, "/")
+	line.Clrs = append(line.Clrs, color.White)
+
+	low := fmt.Sprintf("%0.fF", *f.LowTemp)
+	for i := 0; i < len(low); i++ {
+		line.Chars = append(line.Chars, string(low[i]))
+		line.Clrs = append(line.Clrs, blue)
+	}
+
+	return line
+}
+
+func (w *WeatherBoard) humidityLine(f *Forecast) *rgbrender.ColorCharLine {
+	humidity := strings.Split(fmt.Sprintf("Hu: %d%%", f.Humidity), "")
+	line := &rgbrender.ColorCharLine{
+		Chars: humidity,
+		Clrs:  colors(color.White, humidity),
+	}
+	return line
+}
+
+func colors(clr color.Color, chars []string) []color.Color {
+	c := []color.Color{}
+	for range chars {
+		c = append(c, clr)
+	}
+
+	return c
 }
 
 func shortWeekday(d time.Weekday) string {

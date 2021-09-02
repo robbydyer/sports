@@ -7,6 +7,7 @@ import (
 	"image/color"
 	"image/draw"
 	"net/http"
+	"sort"
 	"sync"
 	"time"
 
@@ -24,6 +25,8 @@ type WeatherBoard struct {
 	api         API
 	log         *zap.Logger
 	enablerLock sync.Mutex
+	iconLock    sync.Mutex
+	iconCache   map[string]image.Image
 	cancelBoard chan struct{}
 	bigWriter   *rgbrender.TextWriter
 	smallWriter *rgbrender.TextWriter
@@ -53,14 +56,15 @@ type Config struct {
 
 // Forecast ...
 type Forecast struct {
-	Time        time.Time
-	Temperature *float64
-	HighTemp    *float64
-	LowTemp     *float64
-	Humidity    int
-	TempUnit    string
-	Icon        image.Image
-	IsHourly    bool
+	Time         time.Time
+	Temperature  *float64
+	HighTemp     *float64
+	LowTemp      *float64
+	Humidity     int
+	TempUnit     string
+	Icon         image.Image
+	IsHourly     bool
+	PrecipChance *int
 }
 
 // API interface for getting stock data
@@ -187,18 +191,19 @@ func (w *WeatherBoard) enablerCancel(ctx context.Context, cancel context.CancelF
 
 // Render ...
 func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
+	if !w.config.Enabled.Load() {
+		w.log.Warn("skipping disabled board", zap.String("board", "weather"))
+		return nil
+	}
+
 	boardCtx, boardCancel := context.WithCancel(ctx)
 	defer boardCancel()
 
 	go w.enablerCancel(boardCtx, boardCancel)
 
 	var scrollCanvas *rgbmatrix.ScrollCanvas
-	if canvas.Scrollable() && w.config.ScrollMode.Load() {
-		base, ok := canvas.(*rgbmatrix.ScrollCanvas)
-		if !ok {
-			return fmt.Errorf("wat")
-		}
-
+	base, ok := canvas.(*rgbmatrix.ScrollCanvas)
+	if ok && w.config.ScrollMode.Load() {
 		var err error
 		scrollCanvas, err = rgbmatrix.NewScrollCanvas(base.Matrix, w.log)
 		if err != nil {
@@ -207,91 +212,94 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		scrollCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
 	}
 
-	doCanvas := func(ctx context.Context) error {
-		if canvas.Scrollable() && scrollCanvas != nil {
-			scrollCanvas.Merge(w.config.TightScrollPadding)
-			return scrollCanvas.Render(ctx)
-		}
-
-		if err := canvas.Render(ctx); err != nil {
-			return err
-		}
-
-		select {
-		case <-ctx.Done():
-			return context.Canceled
-		case <-time.After(w.config.boardDelay):
-			return nil
-		}
-	}
-
-	addScroll := func() bool {
-		if scrollCanvas != nil && w.config.ScrollMode.Load() {
-			scrollCanvas.AddCanvas(canvas)
-			draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
-			return true
-		}
-		return false
-	}
-
-	if w.config.CurrentForecast.Load() {
-		f, err := w.api.CurrentForecast(ctx, w.config.ZipCode, w.config.Country, canvas.Bounds())
-		if err != nil {
-			return err
-		}
-		if err := w.drawForecast(boardCtx, canvas, f); err != nil {
-			return err
-		}
-		_ = addScroll()
-		if err := doCanvas(boardCtx); err != nil {
-			return err
-		}
-	}
+	zeroed := rgbrender.ZeroedBounds(canvas.Bounds())
 	forecasts := []*Forecast{}
-	if w.config.HourlyForecast.Load() {
-		fs, err := w.api.HourlyForecasts(ctx, w.config.ZipCode, w.config.Country, canvas.Bounds())
+	if w.config.CurrentForecast.Load() {
+		f, err := w.api.CurrentForecast(ctx, w.config.ZipCode, w.config.Country, zeroed)
 		if err != nil {
 			return err
 		}
+		forecasts = append(forecasts, f)
+	}
+	if w.config.HourlyForecast.Load() {
+		fs, err := w.api.HourlyForecasts(ctx, w.config.ZipCode, w.config.Country, zeroed)
+		if err != nil {
+			return err
+		}
+		//sortForecasts(fs)
+		w.log.Debug("found hourly forecasts",
+			zap.Int("num", len(fs)),
+			zap.Int("max show", w.config.HourlyNumber),
+		)
 		for i := 0; i < w.config.HourlyNumber; i++ {
 			forecasts = append(forecasts, fs[i])
 		}
 	}
 
 	if w.config.DailyForecast.Load() {
-		fs, err := w.api.DailyForecasts(ctx, w.config.ZipCode, w.config.Country, canvas.Bounds())
+		fs, err := w.api.DailyForecasts(ctx, w.config.ZipCode, w.config.Country, zeroed)
 		if err != nil {
 			return err
+		}
+		w.log.Debug("found daily forecasts",
+			zap.Int("num", len(fs)),
+			zap.Int("max show", w.config.DailyNumber),
+		)
+
+		// Drop today's forecast, as it's redundant
+	TODAYCHECK:
+		for i := range fs {
+			if fs[i].Time.YearDay() == time.Now().Local().YearDay() {
+				// delete this element
+				fs = append(fs[:i], fs[i+1:]...)
+				break TODAYCHECK
+			}
 		}
 		for i := 0; i < w.config.DailyNumber; i++ {
 			forecasts = append(forecasts, fs[i])
 		}
 	}
 
-	if len(forecasts) > 0 {
-	FORECASTS:
-		for _, f := range forecasts {
-			if f.Time.YearDay() == time.Now().Local().YearDay() {
-				continue FORECASTS
-			}
-			if err := w.drawForecast(boardCtx, canvas, f); err != nil {
-				return err
-			}
-			if ok := addScroll(); ok {
-				continue FORECASTS
-			}
-			if err := doCanvas(boardCtx); err != nil {
-				return err
-			}
+FORECASTS:
+	for _, f := range forecasts {
+		if err := w.drawForecast(boardCtx, canvas, f); err != nil {
+			return err
 		}
-		if w.config.ScrollMode.Load() && scrollCanvas != nil {
-			if err := doCanvas(boardCtx); err != nil {
-				return err
-			}
+		if scrollCanvas != nil {
+			scrollCanvas.AddCanvas(canvas)
+			draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
+			continue FORECASTS
+		}
+		if err := w.doCanvas(boardCtx, canvas, nil); err != nil {
+			return err
+		}
+	}
+
+	if w.config.ScrollMode.Load() && scrollCanvas != nil {
+		if err := w.doCanvas(boardCtx, canvas, scrollCanvas); err != nil {
+			return err
 		}
 	}
 
 	return nil
+}
+
+func (w *WeatherBoard) doCanvas(ctx context.Context, canvas board.Canvas, scrollCanvas *rgbmatrix.ScrollCanvas) error {
+	if canvas.Scrollable() && scrollCanvas != nil {
+		scrollCanvas.Merge(w.config.TightScrollPadding)
+		return scrollCanvas.Render(ctx)
+	}
+
+	if err := canvas.Render(ctx); err != nil {
+		return err
+	}
+
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	case <-time.After(w.config.boardDelay):
+		return nil
+	}
 }
 
 // GetHTTPHandlers ...
@@ -438,4 +446,10 @@ func (w *WeatherBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 // ScrollMode ...
 func (w *WeatherBoard) ScrollMode() bool {
 	return w.config.ScrollMode.Load()
+}
+
+func sortForecasts(f []*Forecast) {
+	sort.SliceStable(f, func(i, j int) bool {
+		return f[i].Time.Unix() > f[j].Time.Unix()
+	})
 }

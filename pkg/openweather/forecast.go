@@ -38,6 +38,11 @@ func (a *API) boardForecastFromForecast(ctx context.Context, forecasts []*foreca
 			Icon:        icon,
 			IsHourly:    f.isHourly,
 		}
+
+		if f.Pop != nil {
+			c := int(*f.Pop * 100)
+			w.PrecipChance = &c
+		}
 		ws = append(ws, w)
 	}
 
@@ -64,6 +69,10 @@ func (a *API) boardForecastFromDaily(ctx context.Context, forecasts []*daily, bo
 			Icon:     icon,
 		}
 		ws = append(ws, w)
+		if f.Pop != nil {
+			c := int(*f.Pop * 100)
+			w.PrecipChance = &c
+		}
 	}
 
 	return ws, nil
@@ -92,9 +101,9 @@ func (a *API) setWeatherCache(key string, w *weather) {
 	a.cache[key] = w
 }
 
-func (a *API) getWeather(ctx context.Context, zipCode string, country string, bounds image.Rectangle) (*weather, error) {
+func (a *API) getWeather(ctx context.Context, zipCode string, country string) (*weather, error) {
 	var w *weather
-	key := weatherKey(zipCode, country, bounds)
+	key := weatherKey(zipCode, country)
 	w = a.weatherFromCache(key)
 	if w != nil {
 		// Check if cache expired

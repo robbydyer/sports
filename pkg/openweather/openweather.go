@@ -48,7 +48,8 @@ type baseForecast struct {
 		ID   int    `json:"id"`
 		Icon string `json:"icon"`
 	} `json:"weather"`
-	Humidity int `json:"humidity"`
+	Humidity int      `json:"humidity"`
+	Pop      *float64 `json:"pop"`
 }
 
 type daily struct {
@@ -91,13 +92,13 @@ func New(apiKey string, refresh time.Duration, log *zap.Logger) (*API, error) {
 func (a *API) CacheClear() {
 }
 
-func weatherKey(zipCode string, country string, bounds image.Rectangle) string {
-	return fmt.Sprintf("%s_%s_%dx%d", zipCode, country, bounds.Dx(), bounds.Dy())
+func weatherKey(zipCode string, country string) string {
+	return fmt.Sprintf("%s_%s", zipCode, country)
 }
 
 // CurrentForecast ...
 func (a *API) CurrentForecast(ctx context.Context, zipCode string, country string, bounds image.Rectangle) (*weatherboard.Forecast, error) {
-	w, err := a.getWeather(ctx, zipCode, country, bounds)
+	w, err := a.getWeather(ctx, zipCode, country)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +117,7 @@ func (a *API) CurrentForecast(ctx context.Context, zipCode string, country strin
 
 // DailyForecasts ...
 func (a *API) DailyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
-	w, err := a.getWeather(ctx, zipCode, country, bounds)
+	w, err := a.getWeather(ctx, zipCode, country)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +127,7 @@ func (a *API) DailyForecasts(ctx context.Context, zipCode string, country string
 
 // HourlyForecasts ...
 func (a *API) HourlyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
-	w, err := a.getWeather(ctx, zipCode, country, bounds)
+	w, err := a.getWeather(ctx, zipCode, country)
 	if err != nil {
 		return nil, err
 	}
