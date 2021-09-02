@@ -58,12 +58,14 @@ type Forecast struct {
 	Humidity    int
 	TempUnit    string
 	Icon        image.Image
+	IsHourly    bool
 }
 
 // API interface for getting stock data
 type API interface {
 	CurrentForecast(ctx context.Context, zipCode string, country string, bounds image.Rectangle) (*Forecast, error)
 	DailyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*Forecast, error)
+	HourlyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*Forecast, error)
 	CacheClear()
 }
 type fetcher func(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*Forecast, error)
@@ -236,12 +238,23 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 			return err
 		}
 	}
-
-	if w.config.DailyForecast.Load() {
-		forecasts, err := w.api.DailyForecasts(ctx, w.config.ZipCode, w.config.Country, canvas.Bounds())
+	forecasts := []*Forecast{}
+	if w.config.HourlyForecast.Load() {
+		fs, err := w.api.HourlyForecasts(ctx, w.config.ZipCode, w.config.Country, canvas.Bounds())
 		if err != nil {
 			return err
 		}
+		forecasts = append(forecasts, fs...)
+	}
+
+	if w.config.DailyForecast.Load() {
+		fs, err := w.api.DailyForecasts(ctx, w.config.ZipCode, w.config.Country, canvas.Bounds())
+		if err != nil {
+			return err
+		}
+		forecasts = append(forecasts, fs...)
+	}
+	if len(forecasts) > 0 {
 	FORECASTS:
 		for _, f := range forecasts {
 			if f.Time.YearDay() == time.Now().Local().YearDay() {
@@ -343,6 +356,66 @@ func (w *WeatherBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				default:
 				}
 				w.cacheClear()
+			},
+		},
+		{
+			Path: "/weather/dailyenable",
+			Handler: func(wrtr http.ResponseWriter, req *http.Request) {
+				w.log.Info("enabling board", zap.String("board", w.Name()))
+				w.config.DailyForecast.Store(true)
+			},
+		},
+		{
+			Path: "/weather/dailydisable",
+			Handler: func(wrtr http.ResponseWriter, req *http.Request) {
+				w.log.Info("disabling board", zap.String("board", w.Name()))
+				select {
+				case w.cancelBoard <- struct{}{}:
+				default:
+				}
+				w.config.DailyForecast.Store(false)
+			},
+		},
+		{
+			Path: "/weather/dailystatus",
+			Handler: func(wrtr http.ResponseWriter, req *http.Request) {
+				w.log.Debug("get board status", zap.String("board", w.Name()))
+				wrtr.Header().Set("Content-Type", "text/plain")
+				if w.config.DailyForecast.Load() {
+					_, _ = wrtr.Write([]byte("true"))
+					return
+				}
+				_, _ = wrtr.Write([]byte("false"))
+			},
+		},
+		{
+			Path: "/weather/hourlyenable",
+			Handler: func(wrtr http.ResponseWriter, req *http.Request) {
+				w.log.Info("enabling board", zap.String("board", w.Name()))
+				w.config.HourlyForecast.Store(true)
+			},
+		},
+		{
+			Path: "/weather/hourlydisable",
+			Handler: func(wrtr http.ResponseWriter, req *http.Request) {
+				w.log.Info("disabling board", zap.String("board", w.Name()))
+				select {
+				case w.cancelBoard <- struct{}{}:
+				default:
+				}
+				w.config.HourlyForecast.Store(false)
+			},
+		},
+		{
+			Path: "/weather/hourlystatus",
+			Handler: func(wrtr http.ResponseWriter, req *http.Request) {
+				w.log.Debug("get board status", zap.String("board", w.Name()))
+				wrtr.Header().Set("Content-Type", "text/plain")
+				if w.config.HourlyForecast.Load() {
+					_, _ = wrtr.Write([]byte("true"))
+					return
+				}
+				_, _ = wrtr.Write([]byte("false"))
 			},
 		},
 	}, nil

@@ -60,7 +60,8 @@ type daily struct {
 }
 type forecast struct {
 	baseForecast
-	Temp float64 `json:"temp"`
+	Temp     float64 `json:"temp"`
+	isHourly bool
 }
 
 func New(apiKey string, refresh time.Duration, log *zap.Logger) (*API, error) {
@@ -93,7 +94,16 @@ func (a *API) CurrentForecast(ctx context.Context, zipCode string, country strin
 		return nil, err
 	}
 
-	return a.boardForecastFromForecast(ctx, w.Current, bounds)
+	forecasts, err := a.boardForecastFromForecast(ctx, []*forecast{w.Current}, bounds)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(forecasts) < 1 {
+		return nil, fmt.Errorf("could not get forecast from data")
+	}
+
+	return forecasts[0], nil
 }
 func (a *API) DailyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
 	w, err := a.getWeather(ctx, zipCode, country, bounds)
@@ -102,6 +112,14 @@ func (a *API) DailyForecasts(ctx context.Context, zipCode string, country string
 	}
 
 	return a.boardForecastFromDaily(ctx, w.Daily, bounds)
+}
+func (a *API) HourlyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
+	w, err := a.getWeather(ctx, zipCode, country, bounds)
+	if err != nil {
+		return nil, err
+	}
+
+	return a.boardForecastFromForecast(ctx, []*forecast{w.Current}, bounds)
 }
 
 func (a *API) getIcon(ctx context.Context, icon string, bounds image.Rectangle) (image.Image, error) {

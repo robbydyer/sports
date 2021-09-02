@@ -11,6 +11,7 @@ import Clock from './Clock.js';
 import Sys from './Sys.js';
 import Pga from './Pga.js';
 import Stocks from './Stocks.js';
+import Weather from './Weather.js';
 
 const styles = {
     row: {
@@ -45,6 +46,11 @@ class All extends React.Component {
                     <Col lg="auto" style={styles.col}>
                         <Card style={{ width: { card_border } }}>
                             <Pga />
+                        </Card>
+                    </Col>
+                    <Col lg="auto" style={styles.col}>
+                        <Card style={{ width: { card_border } }}>
+                            <Weather id="weatherboard" />
                         </Card>
                     </Col>
                     <Col lg="auto" style={styles.col}>

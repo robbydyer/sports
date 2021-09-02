@@ -22,23 +22,29 @@ func (w *weather) expired(refresh time.Duration) bool {
 	return false
 }
 
-func (a *API) boardForecastFromForecast(ctx context.Context, f *forecast, bounds image.Rectangle) (*weatherboard.Forecast, error) {
-	if f == nil || len(f.Weather) < 1 {
-		return nil, fmt.Errorf("no weather found in forecast")
-	}
-	icon, err := a.getIcon(ctx, f.Weather[0].Icon, bounds)
-	if err != nil {
-		return nil, err
-	}
-	w := &weatherboard.Forecast{
-		Time:        time.Unix(int64(f.Dt), 0),
-		Temperature: &f.Temp,
-		Humidity:    f.Humidity,
-		TempUnit:    "F",
-		Icon:        icon,
+func (a *API) boardForecastFromForecast(ctx context.Context, forecasts []*forecast, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
+	var ws []*weatherboard.Forecast
+
+	for _, f := range forecasts {
+		if f == nil || len(f.Weather) < 1 {
+			return nil, fmt.Errorf("no weather found in forecast")
+		}
+		icon, err := a.getIcon(ctx, f.Weather[0].Icon, bounds)
+		if err != nil {
+			return nil, err
+		}
+		w := &weatherboard.Forecast{
+			Time:        time.Unix(int64(f.Dt), 0),
+			Temperature: &f.Temp,
+			Humidity:    f.Humidity,
+			TempUnit:    "F",
+			Icon:        icon,
+			IsHourly:    f.isHourly,
+		}
+		ws = append(ws, w)
 	}
 
-	return w, nil
+	return ws, nil
 }
 func (a *API) boardForecastFromDaily(ctx context.Context, forecasts []*daily, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
 	var ws []*weatherboard.Forecast
@@ -182,6 +188,10 @@ func (a *API) getWeather(ctx context.Context, zipCode string, country string, bo
 	w.lastUpdate = time.Now().Local()
 
 	a.setWeatherCache(key, w)
+
+	for _, f := range w.Hourly {
+		f.isHourly = true
+	}
 
 	return w, nil
 }

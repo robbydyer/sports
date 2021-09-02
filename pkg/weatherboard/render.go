@@ -89,15 +89,22 @@ func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas, f 
 
 	draw.Draw(canvas, iconBounds, f.Icon, image.Point{}, draw.Over)
 
-	_, mo, day := f.Time.Date()
-	wkd := f.Time.Weekday()
+	timeStr := "Now"
+
+	if f.IsHourly {
+		timeStr = f.Time.Format("3:04PM")
+	} else {
+		_, mo, day := f.Time.Date()
+		wkd := f.Time.Weekday()
+		timeStr = fmt.Sprintf("%d/%d %s", mo, day, shortWeekday(wkd))
+	}
 
 	if err := smallWriter.WriteAlignedBoxed(
 		rgbrender.CenterBottom,
 		canvas,
 		iconBounds,
 		[]string{
-			fmt.Sprintf("%d/%d %s", mo, day, shortWeekday(wkd)),
+			timeStr,
 		},
 		color.White,
 		color.Black,

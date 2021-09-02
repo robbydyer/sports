@@ -9,7 +9,7 @@ import stocksstocks from './stock.png';
 import Form from 'react-bootstrap/Form';
 import { GetStatus, CallMatrix } from './util';
 
-class ImageBoard extends React.Component {
+class Stocks extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -63,4 +63,4 @@ class ImageBoard extends React.Component {
     }
 }
 
-export default ImageBoard;
+export default Stocks;
