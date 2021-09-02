@@ -37,14 +37,15 @@ import (
 const defaultConfigFile = "/etc/sportsmatrix.conf"
 
 type rootArgs struct {
-	level      string
-	logLevel   zapcore.Level
-	configFile string
-	config     *config.Config
-	test       bool
-	today      string
-	logFile    string
-	writer     *os.File
+	level        string
+	logLevel     zapcore.Level
+	configFile   string
+	config       *config.Config
+	test         bool
+	today        string
+	logFile      string
+	writer       *os.File
+	alternateAPI bool
 }
 
 func main() {
@@ -113,6 +114,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 	f.BoolVarP(&args.test, "test", "t", false, "uses a test console matrix")
 	f.StringVar(&args.today, "date-str", "", "Set the date of 'Today' for testing past days. Format 2020-01-30")
 	f.StringVarP(&args.logFile, "log-file", "f", "", "Write logs to given file instead of STDOUT")
+	f.BoolVarP(&args.alternateAPI, "alt-api", "a", false, "Use alternative API's where available")
 
 	_ = viper.BindPFlags(f)
 
@@ -298,9 +300,17 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 	}
 
 	if r.config.NHLConfig != nil && nhlAPI != nil {
-		api, err := espnboard.NewNHL(ctx, logger)
-		if err != nil {
-			return boards, err
+		var api sportboard.API
+		if r.alternateAPI {
+			api, err = nhl.New(ctx, logger)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			api, err = espnboard.NewNHL(ctx, logger)
+			if err != nil {
+				return boards, err
+			}
 		}
 		b, err := sportboard.New(ctx, api, bounds, logger, r.config.NHLConfig)
 		if err != nil {
@@ -319,9 +329,17 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 		boards = append(boards, b)
 	}
 	if r.config.MLBConfig != nil {
-		api, err := espnboard.NewMLB(ctx, logger)
-		if err != nil {
-			return boards, err
+		var api sportboard.API
+		if r.alternateAPI {
+			api, err = mlb.New(ctx, logger)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			api, err = espnboard.NewMLB(ctx, logger)
+			if err != nil {
+				return boards, err
+			}
 		}
 		b, err := sportboard.New(ctx, api, bounds, logger, r.config.MLBConfig)
 		if err != nil {

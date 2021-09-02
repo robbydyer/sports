@@ -243,15 +243,6 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		config.WatchTeams = []string{"ALL"}
 	}
 
-	/*
-		if _, err := s.api.GetTeams(ctx); err != nil {
-			return nil, err
-		}
-		if _, err := s.api.GetScheduledGames(ctx, s.config.TodayFunc()); err != nil {
-			return nil, err
-		}
-	*/
-
 	c := cron.New()
 
 	if _, err := c.AddFunc("0 4 * * *", s.cacheClear); err != nil {
@@ -390,6 +381,10 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 
 	allGames, err := s.api.GetScheduledGames(boardCtx, s.config.TodayFunc())
 	if err != nil {
+		s.log.Error("failed to get scheduled games",
+			zap.String("league", s.api.League()),
+			zap.Error(err),
+		)
 		return err
 	}
 

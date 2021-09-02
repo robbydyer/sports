@@ -33,21 +33,23 @@ type Leaguer interface {
 
 // ESPNBoard ...
 type ESPNBoard struct {
-	leaguer         Leaguer
-	rankSetter      rankSetter
-	recordSetter    rankSetter
-	log             *zap.Logger
-	teams           []*Team
-	games           map[string][]*Game
-	logos           map[string]*logo.Logo
-	logoConfOnce    map[string]struct{}
-	defaultLogoConf *[]*logo.Config
-	allTeams        []string
-	logoLock        sync.RWMutex
-	logoLockers     map[string]*sync.Mutex
-	conferenceNames map[string]struct{}
-	ranksSet        *atomic.Bool
-	rankSorted      *atomic.Bool
+	leaguer          Leaguer
+	rankSetter       rankSetter
+	recordSetter     rankSetter
+	log              *zap.Logger
+	teams            []*Team
+	games            map[string][]*Game
+	logos            map[string]*logo.Logo
+	logoConfOnce     map[string]struct{}
+	defaultLogoConf  *[]*logo.Config
+	allTeams         []string
+	logoLock         sync.RWMutex
+	logoLockers      map[string]*sync.Mutex
+	conferenceNames  map[string]struct{}
+	ranksSet         *atomic.Bool
+	rankSorted       *atomic.Bool
+	lastScheduleCall map[string]*time.Time
+	gameLock         sync.Mutex
 	sync.Mutex
 }
 
@@ -64,18 +66,19 @@ func (e *ESPNBoard) logoCacheDir() (string, error) {
 // New ...
 func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger, r rankSetter, rec rankSetter) (*ESPNBoard, error) {
 	e := &ESPNBoard{
-		leaguer:         leaguer,
-		log:             logger,
-		games:           make(map[string][]*Game),
-		logos:           make(map[string]*logo.Logo),
-		logoConfOnce:    make(map[string]struct{}),
-		defaultLogoConf: &[]*logo.Config{},
-		logoLockers:     make(map[string]*sync.Mutex),
-		conferenceNames: make(map[string]struct{}),
-		rankSetter:      r,
-		recordSetter:    rec,
-		rankSorted:      atomic.NewBool(false),
-		ranksSet:        atomic.NewBool(false),
+		leaguer:          leaguer,
+		log:              logger,
+		games:            make(map[string][]*Game),
+		logos:            make(map[string]*logo.Logo),
+		logoConfOnce:     make(map[string]struct{}),
+		defaultLogoConf:  &[]*logo.Config{},
+		logoLockers:      make(map[string]*sync.Mutex),
+		conferenceNames:  make(map[string]struct{}),
+		rankSetter:       r,
+		recordSetter:     rec,
+		rankSorted:       atomic.NewBool(false),
+		ranksSet:         atomic.NewBool(false),
+		lastScheduleCall: make(map[string]*time.Time),
 	}
 
 	if _, err := e.GetTeams(ctx); err != nil {
