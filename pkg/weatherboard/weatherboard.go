@@ -40,7 +40,6 @@ type Config struct {
 	scrollDelay        time.Duration
 	Enabled            *atomic.Bool `json:"enabled"`
 	BoardDelay         string       `json:"boardDelay"`
-	UpdateInterval     string       `json:"updateInterval"`
 	ScrollMode         *atomic.Bool `json:"scrollMode"`
 	TightScrollPadding int          `json:"tightScrollPadding"`
 	ScrollDelay        string       `json:"scrollDelay"`
@@ -101,17 +100,6 @@ func (c *Config) SetDefaults() {
 		}
 	} else {
 		c.boardDelay = 10 * time.Second
-	}
-
-	if c.UpdateInterval != "" {
-		d, err := time.ParseDuration(c.UpdateInterval)
-		if err != nil {
-			c.updateInterval = 5 * time.Minute
-		} else {
-			c.updateInterval = d
-		}
-	} else {
-		c.updateInterval = 5 * time.Minute
 	}
 
 	if c.ScrollDelay != "" {
