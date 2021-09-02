@@ -7,7 +7,6 @@ import (
 	"image/color"
 	"image/draw"
 	"net/http"
-	"sort"
 	"sync"
 	"time"
 
@@ -25,8 +24,8 @@ type WeatherBoard struct {
 	api         API
 	log         *zap.Logger
 	enablerLock sync.Mutex
-	iconLock    sync.Mutex
-	iconCache   map[string]image.Image
+	//iconLock    sync.Mutex
+	//iconCache   map[string]image.Image
 	cancelBoard chan struct{}
 	bigWriter   *rgbrender.TextWriter
 	smallWriter *rgbrender.TextWriter
@@ -36,7 +35,6 @@ type WeatherBoard struct {
 // Config for a WeatherBoard
 type Config struct {
 	boardDelay         time.Duration
-	updateInterval     time.Duration
 	scrollDelay        time.Duration
 	Enabled            *atomic.Bool `json:"enabled"`
 	BoardDelay         string       `json:"boardDelay"`
@@ -214,7 +212,7 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		if err != nil {
 			return err
 		}
-		//sortForecasts(fs)
+		// sortForecasts(fs)
 		w.log.Debug("found hourly forecasts",
 			zap.Int("num", len(fs)),
 			zap.Int("max show", w.config.HourlyNumber),
@@ -436,8 +434,10 @@ func (w *WeatherBoard) ScrollMode() bool {
 	return w.config.ScrollMode.Load()
 }
 
+/*
 func sortForecasts(f []*Forecast) {
 	sort.SliceStable(f, func(i, j int) bool {
 		return f[i].Time.Unix() > f[j].Time.Unix()
 	})
 }
+*/

@@ -184,7 +184,10 @@ func cacheDir() (string, error) {
 	d := "/tmp/sportsmatrix_logos/weather"
 	if _, err := os.Stat(d); err != nil {
 		if os.IsNotExist(err) {
-			return d, os.MkdirAll(d, 0755)
+			if err := os.MkdirAll(d, 0755); err != nil {
+				return "", err
+			}
+			return d, nil
 		}
 	}
 	return d, nil

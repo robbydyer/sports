@@ -9,9 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbrender"
-	"go.uber.org/zap"
 )
 
 var (

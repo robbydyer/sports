@@ -1,15 +1,8 @@
 package weatherboard
 
 import (
-	"bytes"
-	"context"
 	_ "embed"
-	"fmt"
-	"image"
-	"image/png"
 	"os"
-
-	"github.com/robbydyer/sports/pkg/logo"
 )
 
 //go:embed assets/raindrop.png
@@ -19,12 +12,16 @@ func cacheDir() (string, error) {
 	d := "/tmp/sportsmatrix_logos/weathericons"
 	if _, err := os.Stat(d); err != nil {
 		if os.IsNotExist(err) {
-			return d, os.MkdirAll(d, 0755)
+			if err := os.MkdirAll(d, 0755); err != nil {
+				return "", err
+			}
+			return d, nil
 		}
 	}
 	return d, nil
 }
 
+/*
 // raindDropSource implements logo.SourceGetter
 func rainDropSource(ctx context.Context) (image.Image, error) {
 	r := bytes.NewReader(rainDrop)
@@ -66,3 +63,4 @@ func (w *WeatherBoard) rainDropIcon(ctx context.Context, bounds image.Rectangle)
 
 	return i, nil
 }
+*/
