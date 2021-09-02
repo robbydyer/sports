@@ -156,6 +156,9 @@ func (e *ESPNBoard) GetScheduledGames(ctx context.Context, dates []time.Time) ([
 		t := TimeToGameDateStr(date)
 		games, ok := e.games[t]
 		if !ok || len(games) == 0 {
+			e.log.Info("updating games from API",
+				zap.String("league", e.League()),
+			)
 			if err := e.UpdateGames(ctx, t); err != nil {
 				return nil, err
 			}
