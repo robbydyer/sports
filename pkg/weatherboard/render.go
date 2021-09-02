@@ -13,8 +13,10 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
-var orange = color.RGBA{R: 255, G: 165, B: 0}
-var blue = color.RGBA{R: 30, G: 144, B: 255}
+var (
+	orange = color.RGBA{R: 255, G: 165, B: 0}
+	blue   = color.RGBA{R: 30, G: 144, B: 255}
+)
 
 func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas, f *Forecast) error {
 	canvasBounds := rgbrender.ZeroedBounds(canvas.Bounds())
@@ -29,6 +31,12 @@ func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas, f 
 	bigWriter, err := w.getBigWriter(canvasBounds)
 	if err != nil {
 		return err
+	}
+
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	default:
 	}
 
 	if f.Temperature != nil {
@@ -78,6 +86,12 @@ func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas, f 
 
 	clrCodes.Lines = append(clrCodes.Lines, line)
 
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	default:
+	}
+
 	if err := smallWriter.WriteAlignedColorCodes(
 		rgbrender.RightBottom,
 		canvas,
@@ -87,19 +101,31 @@ func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas, f 
 		return err
 	}
 
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	default:
+	}
+
 	draw.Draw(canvas, iconBounds, f.Icon, image.Point{}, draw.Over)
 
 	timeStr := "Now"
 
 	if f.IsHourly {
 		timeStr = f.Time.Format("3:04PM")
-	} else {
+	} else if f.Time.YearDay() != time.Now().Local().YearDay() {
 		_, mo, day := f.Time.Date()
 		wkd := f.Time.Weekday()
 		timeStr = fmt.Sprintf("%d/%d %s", mo, day, shortWeekday(wkd))
 	}
 
-	if err := smallWriter.WriteAlignedBoxed(
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	default:
+	}
+
+	err = smallWriter.WriteAlignedBoxed(
 		rgbrender.CenterBottom,
 		canvas,
 		iconBounds,
@@ -108,11 +134,9 @@ func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas, f 
 		},
 		color.White,
 		color.Black,
-	); err != nil {
-		return err
-	}
+	)
 
-	return nil
+	return err
 }
 
 func shortWeekday(d time.Weekday) string {

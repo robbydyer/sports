@@ -68,7 +68,6 @@ type API interface {
 	HourlyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*Forecast, error)
 	CacheClear()
 }
-type fetcher func(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*Forecast, error)
 
 // SetDefaults ...
 func (c *Config) SetDefaults() {
@@ -198,18 +197,18 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		scrollCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
 	}
 
-	doCanvas := func() error {
+	doCanvas := func(ctx context.Context) error {
 		if canvas.Scrollable() && scrollCanvas != nil {
 			scrollCanvas.Merge(w.config.TightScrollPadding)
-			return scrollCanvas.Render(boardCtx)
+			return scrollCanvas.Render(ctx)
 		}
 
-		if err := canvas.Render(boardCtx); err != nil {
+		if err := canvas.Render(ctx); err != nil {
 			return err
 		}
 
 		select {
-		case <-boardCtx.Done():
+		case <-ctx.Done():
 			return context.Canceled
 		case <-time.After(w.config.boardDelay):
 			return nil
@@ -234,7 +233,7 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 			return err
 		}
 		_ = addScroll()
-		if err := doCanvas(); err != nil {
+		if err := doCanvas(boardCtx); err != nil {
 			return err
 		}
 	}
@@ -254,6 +253,7 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		}
 		forecasts = append(forecasts, fs...)
 	}
+
 	if len(forecasts) > 0 {
 	FORECASTS:
 		for _, f := range forecasts {
@@ -266,12 +266,12 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 			if ok := addScroll(); ok {
 				continue FORECASTS
 			}
-			if err := doCanvas(); err != nil {
+			if err := doCanvas(boardCtx); err != nil {
 				return err
 			}
 		}
 		if w.config.ScrollMode.Load() && scrollCanvas != nil {
-			if err := doCanvas(); err != nil {
+			if err := doCanvas(boardCtx); err != nil {
 				return err
 			}
 		}

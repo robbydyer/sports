@@ -8,15 +8,19 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/util"
 	"github.com/robbydyer/sports/pkg/weatherboard"
-	"go.uber.org/zap"
 )
 
-const baseURL = "https://api.openweathermap.org"
-const imgURL = "http://openweathermap.org/img/wn"
+const (
+	baseURL = "https://api.openweathermap.org"
+	imgURL  = "http://openweathermap.org/img/wn"
+)
 
+// API ...
 type API struct {
 	log          *zap.Logger
 	apiKey       string
@@ -58,12 +62,14 @@ type daily struct {
 		Morn  float64 `json:"morn"`
 	} `json:"temp"`
 }
+
 type forecast struct {
 	baseForecast
 	Temp     float64 `json:"temp"`
 	isHourly bool
 }
 
+// New ...
 func New(apiKey string, refresh time.Duration, log *zap.Logger) (*API, error) {
 	if apiKey == "" {
 		return nil, fmt.Errorf("must pass a valid API key from openweathermap.org")
@@ -81,6 +87,7 @@ func New(apiKey string, refresh time.Duration, log *zap.Logger) (*API, error) {
 	return a, nil
 }
 
+// CacheClear ...
 func (a *API) CacheClear() {
 }
 
@@ -88,6 +95,7 @@ func weatherKey(zipCode string, country string, bounds image.Rectangle) string {
 	return fmt.Sprintf("%s_%s_%dx%d", zipCode, country, bounds.Dx(), bounds.Dy())
 }
 
+// CurrentForecast
 func (a *API) CurrentForecast(ctx context.Context, zipCode string, country string, bounds image.Rectangle) (*weatherboard.Forecast, error) {
 	w, err := a.getWeather(ctx, zipCode, country, bounds)
 	if err != nil {
@@ -105,6 +113,8 @@ func (a *API) CurrentForecast(ctx context.Context, zipCode string, country strin
 
 	return forecasts[0], nil
 }
+
+// DailyForecasts ...
 func (a *API) DailyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
 	w, err := a.getWeather(ctx, zipCode, country, bounds)
 	if err != nil {
@@ -113,13 +123,15 @@ func (a *API) DailyForecasts(ctx context.Context, zipCode string, country string
 
 	return a.boardForecastFromDaily(ctx, w.Daily, bounds)
 }
+
+// HourlyForecasts ...
 func (a *API) HourlyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
 	w, err := a.getWeather(ctx, zipCode, country, bounds)
 	if err != nil {
 		return nil, err
 	}
 
-	return a.boardForecastFromForecast(ctx, []*forecast{w.Current}, bounds)
+	return a.boardForecastFromForecast(ctx, w.Hourly, bounds)
 }
 
 func (a *API) getIcon(ctx context.Context, icon string, bounds image.Rectangle) (image.Image, error) {

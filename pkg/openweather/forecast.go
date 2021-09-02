@@ -10,8 +10,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/robbydyer/sports/pkg/weatherboard"
 	"go.uber.org/zap"
+
+	"github.com/robbydyer/sports/pkg/weatherboard"
 )
 
 func (w *weather) expired(refresh time.Duration) bool {
@@ -46,6 +47,7 @@ func (a *API) boardForecastFromForecast(ctx context.Context, forecasts []*foreca
 
 	return ws, nil
 }
+
 func (a *API) boardForecastFromDaily(ctx context.Context, forecasts []*daily, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
 	var ws []*weatherboard.Forecast
 
@@ -143,7 +145,7 @@ func (a *API) getWeather(ctx context.Context, zipCode string, country string, bo
 
 	v := uri.Query()
 	v.Set("appid", a.apiKey)
-	//v.Set("id", cityID)
+	// v.Set("id", cityID)
 	v.Set("units", "imperial")
 	v.Set("lat", fmt.Sprintf("%f", g.Lat))
 	v.Set("lon", fmt.Sprintf("%f", g.Lon))
