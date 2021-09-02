@@ -245,6 +245,24 @@ func extractOverUnder(details string) (string, string, error) {
 
 // GetGames gets the games for a given date
 func (e *ESPNBoard) GetGames(ctx context.Context, dateStr string) ([]*Game, error) {
+	e.gameLock.Lock()
+	defer e.gameLock.Unlock()
+
+	t, ok := e.lastScheduleCall[dateStr]
+	if !ok || t == nil {
+		t := time.Now().Local()
+		e.lastScheduleCall[dateStr] = &t
+	} else {
+		// Make sure we don't hammer this API if it has failures
+		if time.Now().Local().Before(t.Add(1 * time.Minute)) {
+			e.log.Error("tried calling ESPN scoreboard API too quickly",
+				zap.Time("last call", *t),
+				zap.String("date", dateStr),
+			)
+			return nil, fmt.Errorf("called scoreboard API too quickly")
+		}
+	}
+
 	// http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?lang=en&region=us&limit=500&dates=20191121&groups=50
 	uri, err := url.Parse(fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s/scoreboard", e.leaguer.APIPath()))
 	if err != nil {
@@ -305,6 +323,9 @@ func (e *ESPNBoard) GetGames(ctx context.Context, dateStr string) ([]*Game, erro
 
 		games = append(games, game)
 	}
+
+	now := time.Now().Local()
+	e.lastScheduleCall[dateStr] = &now
 
 	return games, nil
 }

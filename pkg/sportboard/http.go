@@ -68,7 +68,6 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Handler: func(wrter http.ResponseWriter, req *http.Request) {
 				s.log.Info("disabling board", zap.String("board", s.Name()))
 				s.Disable()
-				s.cacheClear()
 			},
 		},
 		{
@@ -107,7 +106,6 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				default:
 				}
 				s.config.ScrollMode.Store(true)
-				s.cacheClear()
 				s.api.CacheClear(context.Background())
 			},
 		},
@@ -120,7 +118,6 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				default:
 				}
 				s.config.ScrollMode.Store(false)
-				s.cacheClear()
 				s.api.CacheClear(context.Background())
 			},
 		},
@@ -145,7 +142,6 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				default:
 				}
 				s.config.TightScroll.Store(true)
-				s.cacheClear()
 				s.api.CacheClear(context.Background())
 			},
 		},
@@ -158,7 +154,6 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				default:
 				}
 				s.config.TightScroll.Store(false)
-				s.cacheClear()
 				s.api.CacheClear(context.Background())
 			},
 		},
@@ -183,7 +178,6 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				default:
 				}
 				s.config.ShowRecord.Store(true)
-				s.cacheClear()
 				s.api.CacheClear(context.Background())
 			},
 		},
@@ -196,7 +190,6 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				default:
 				}
 				s.config.ShowRecord.Store(false)
-				s.cacheClear()
 				s.api.CacheClear(context.Background())
 			},
 		},
@@ -221,7 +214,6 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				default:
 				}
 				s.config.GamblingSpread.Store(true)
-				s.cacheClear()
 				s.api.CacheClear(context.Background())
 			},
 		},
@@ -234,7 +226,6 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				default:
 				}
 				s.config.GamblingSpread.Store(false)
-				s.cacheClear()
 				s.api.CacheClear(context.Background())
 			},
 		},

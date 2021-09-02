@@ -115,16 +115,15 @@ func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rect
 
 	textWidth := s.textAreaWidth(bounds)
 	logoEndX := (bounds.Dx() - textWidth) / 2
+	s.log.Debug("starting logoWidth",
+		zap.Int("logoWidth", logoEndX),
+	)
 
 	setCache := true
 
 	if s.config.ScrollMode.Load() {
 		if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
-			if bounds.Dx() < 64 {
-				logoEndX -= 3
-			} else {
-				logoEndX -= 6
-			}
+			logoEndX -= 6
 		} else {
 			logoEndX -= int(float64(bounds.Dx()) * scrollLogoBufferRatio)
 		}
@@ -141,6 +140,12 @@ func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rect
 		}
 		logoEndX -= w
 	}
+
+	s.log.Debug("scroll mode added width",
+		zap.String("side", "left"),
+		zap.Int("textWidth", textWidth),
+		zap.Int("logoEndX", logoEndX),
+	)
 
 	var renderErr error
 	if l != nil {
@@ -195,19 +200,24 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 
 	textWidth := s.textAreaWidth(bounds)
 	logoWidth := (bounds.Dx() - textWidth) / 2
+	s.log.Debug("starting logoWidth",
+		zap.Int("logoWidth", logoWidth),
+	)
 	recordAdder := 0
 
 	setCache := true
 
 	if s.config.ScrollMode.Load() {
-		logoWidth += int(float64(bounds.Dx()) * scrollLogoBufferRatio)
 		if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
-			if bounds.Dx() < 64 {
-				logoWidth += 3
-			} else {
-				logoWidth += 6
-			}
+			s.log.Debug("logoWidth adder static",
+				zap.Int("logoWidth prior to add", logoWidth),
+				zap.Int("add", 6),
+			)
+			logoWidth += 6
 		} else {
+			s.log.Debug("logoWidth adder calculated",
+				zap.Int("add", int(float64(bounds.Dx())*scrollLogoBufferRatio)),
+			)
 			logoWidth += int(float64(bounds.Dx()) * scrollLogoBufferRatio)
 		}
 	}
@@ -224,6 +234,14 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 	}
 
 	startX := textWidth + logoWidth + recordAdder
+
+	s.log.Debug("scroll mode added width",
+		zap.String("side", "right"),
+		zap.Int("logoWidth", logoWidth),
+		zap.Int("textWidth", textWidth),
+		zap.Int("recordAdder", recordAdder),
+		zap.Int("total", startX),
+	)
 
 	var renderErr error
 	if l != nil {
