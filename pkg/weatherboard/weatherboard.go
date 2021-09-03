@@ -24,8 +24,8 @@ type WeatherBoard struct {
 	api         API
 	log         *zap.Logger
 	enablerLock sync.Mutex
-	//iconLock    sync.Mutex
-	//iconCache   map[string]image.Image
+	// iconLock    sync.Mutex
+	// iconCache   map[string]image.Image
 	cancelBoard chan struct{}
 	bigWriter   *rgbrender.TextWriter
 	smallWriter *rgbrender.TextWriter
