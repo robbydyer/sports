@@ -8,6 +8,7 @@ import (
 	"github.com/robbydyer/sports/pkg/statboard"
 	"github.com/robbydyer/sports/pkg/stockboard"
 	"github.com/robbydyer/sports/pkg/sysboard"
+	"github.com/robbydyer/sports/pkg/weatherboard"
 )
 
 // Config holds configuration for the RGB matrix and all of its supported Boards
@@ -27,4 +28,5 @@ type Config struct {
 	PGA                *statboard.Config    `json:"pga"`
 	SportsMatrixConfig *sportsmatrix.Config `json:"sportsMatrixConfig,omitempty"`
 	StocksConfig       *stockboard.Config   `json:"stocksConfig"`
+	WeatherConfig      *weatherboard.Config `json:"weatherConfig"`
 }

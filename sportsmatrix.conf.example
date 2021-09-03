@@ -636,3 +636,37 @@ stocksConfig:
   # Interval in which pricing data is pulled from API. Default is 5m
   updateInterval: "5m"
 
+weatherConfig:
+  enabled: false
+
+  scrollMode: true
+
+  # Go to openweathermap.org and register an account, then put your API key here
+  apiKey: ""
+
+  # Enter your Zip code here
+  zipCode: 90210
+
+  # Country code
+  country: US
+  # Show the current forecast
+
+  currentForecast: true
+
+  # Show the hourly forecast
+  hourlyForecast: false
+
+  # Show the daily forecast
+  dailyForecast: true
+
+  # Number of days to show in daily forecast
+  dailyNumber: 3
+
+  # Number of days to show in hourly forecast
+  hourlyNumber: 3
+
+  # Set the spacing between the tickers in scroll mode. Default is 10
+  tightScrollPadding: 10
+
+  # Delay between each screen in non-scroll mode
+  boardDelay: "10s"
