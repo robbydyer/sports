@@ -13,7 +13,7 @@
     "elliptic": ">=6.5.4",
     "glob-parent": ">=5.1.2",
     "hosted-git-info": ">=2.8.9",
-    "immer": ">=8.0.1",
+    "immer": ">=9.0.6",
     "is-svg": ">=4.2.2",
     "lodash": ">=4.17.21",
     "normalize-url": ">=4.5.1",
