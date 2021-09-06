@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -32,11 +33,14 @@ type SportsMatrix struct {
 	webBoardOff   chan struct{}
 	serveBlock    chan struct{}
 	log           *zap.Logger
+	serveContext  context.Context
 	boardCtx      context.Context
 	boardCancel   context.CancelFunc
 	server        http.Server
 	close         chan struct{}
 	httpEndpoints []string
+	jumpLock      sync.Mutex
+	jumpTo        chan string
 	sync.Mutex
 }
 
@@ -119,6 +123,7 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 		webBoardOn:   make(chan struct{}),
 		webBoardOff:  make(chan struct{}),
 		isServing:    make(chan struct{}, 1),
+		jumpTo:       make(chan string, 1),
 		canvases:     canvases,
 	}
 
@@ -197,6 +202,22 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 	}()
 
 	return s, nil
+}
+
+func (s *SportsMatrix) resetBoardCtx() {
+	select {
+	case <-s.serveContext.Done():
+		s.log.Error("could not reset board context: serve context was canceled")
+		return
+	default:
+	}
+
+	select {
+	case <-s.boardCtx.Done():
+		s.log.Debug("reset board context")
+		s.boardCtx, s.boardCancel = context.WithCancel(s.serveContext)
+	default:
+	}
 }
 
 func (s *SportsMatrix) screenWatcher(ctx context.Context) {
@@ -360,20 +381,35 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 
 func (s *SportsMatrix) serveLoop(ctx context.Context) {
 	renderDone := make(chan struct{})
+	jumpTo := ""
 
+LOOP:
 	for _, b := range s.boards {
 		select {
 		case <-ctx.Done():
 			s.log.Error("board context was canceled")
 			return
+		case j := <-s.jumpTo:
+			jumpTo = j
 		default:
 		}
+
+		if jumpTo != "" {
+			if strings.ToLower(b.Name()) != strings.ToLower(jumpTo) {
+				continue LOOP
+			}
+			s.log.Info("jumping to board",
+				zap.String("board", b.Name()),
+			)
+		}
+
+		jumpTo = ""
 
 		s.log.Debug("Processing board", zap.String("board", b.Name()))
 
 		if !b.Enabled() {
 			s.log.Warn("skipping disabled board", zap.String("board", b.Name()))
-			continue
+			continue LOOP
 		}
 
 		go func() {
