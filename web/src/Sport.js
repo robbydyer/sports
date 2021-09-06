@@ -14,7 +14,7 @@ import nfllogo from './nfl.png';
 import mlslogo from './mls.png';
 import ncaaflogo from './ncaaf.png'
 import epllogo from './epl.png'
-import { GetStatus, CallMatrix } from './util';
+import { GetStatus, CallMatrix, MatrixPost } from './util';
 
 class Sport extends React.Component {
     constructor(props) {
@@ -94,6 +94,10 @@ class Sport extends React.Component {
         }))
     }
 
+    handleJump = (board) => {
+        MatrixPost("jump", `{"board":"${board}"}`)
+    }
+
     logosrc() {
         if (this.props.sport == "nhl") {
             return nhllogo
@@ -169,6 +173,11 @@ class Sport extends React.Component {
                     <Col>
                         <Form.Switch id={this.props.sport + "favstick"} label="Stick Favorite Live Games" checked={this.state.stickyFavorite}
                             onChange={() => this.handleSwitch(`${this.props.sport}/favoritesticky`, `${this.props.sport}/favoriteunstick`, "stickyFavorite")} />
+                    </Col>
+                </Row>
+                <Row className="text-left">
+                    <Col>
+                        <Button variant="primary" onClick={() => this.handleJump(this.props.sport)}>Jump</Button>
                     </Col>
                 </Row>
             </Container>

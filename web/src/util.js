@@ -26,6 +26,15 @@ export function CallMatrix(path) {
     });
     console.log("Response", resp.ok);
 }
+export function MatrixPost(path, body) {
+    const req = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: body,
+    }
+    console.log(`Matrix POST ${body}`)
+    fetch(`${BACKEND}/api/${path}`, req)
+}
 export async function GetVersion(callback) {
     var resp = await fetch(`${BACKEND}/api/version`, {
         method: "GET",
