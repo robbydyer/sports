@@ -99,7 +99,7 @@ func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
 		return nil
 	}
 
-	writer, err := c.getWriter(canvas.Bounds().Dx())
+	writer, err := c.getWriter(rgbrender.ZeroedBounds(canvas.Bounds()).Dy())
 	if err != nil {
 		return err
 	}
@@ -229,8 +229,8 @@ func (c *Clock) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 	}, nil
 }
 
-func (c *Clock) getWriter(canvasWidth int) (*rgbrender.TextWriter, error) {
-	if w, ok := c.textWriters[canvasWidth]; ok {
+func (c *Clock) getWriter(canvasHeight int) (*rgbrender.TextWriter, error) {
+	if w, ok := c.textWriters[canvasHeight]; ok {
 		return w, nil
 	}
 
@@ -242,11 +242,11 @@ func (c *Clock) getWriter(canvasWidth int) (*rgbrender.TextWriter, error) {
 		}
 	}
 
-	size := 0.25 * float64(canvasWidth)
+	size := 0.5 * float64(canvasHeight)
 
 	c.Lock()
 	defer c.Unlock()
-	c.textWriters[canvasWidth] = rgbrender.NewTextWriter(c.font, size)
+	c.textWriters[canvasHeight] = rgbrender.NewTextWriter(c.font, size)
 
-	return c.textWriters[canvasWidth], nil
+	return c.textWriters[canvasHeight], nil
 }
