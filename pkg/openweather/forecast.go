@@ -20,7 +20,7 @@ func (w *weather) expired(refresh time.Duration) bool {
 	return w.lastUpdate.Add(refresh).Before(time.Now().Local())
 }
 
-func (a *API) boardForecastFromForecast(ctx context.Context, forecasts []*forecast, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
+func (a *API) boardForecastFromForecast(forecasts []*forecast, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
 	var ws []*weatherboard.Forecast
 
 	for _, f := range forecasts {
@@ -50,7 +50,7 @@ func (a *API) boardForecastFromForecast(ctx context.Context, forecasts []*foreca
 	return ws, nil
 }
 
-func (a *API) boardForecastFromDaily(ctx context.Context, forecasts []*daily, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
+func (a *API) boardForecastFromDaily(forecasts []*daily, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
 	var ws []*weatherboard.Forecast
 
 	for _, f := range forecasts {

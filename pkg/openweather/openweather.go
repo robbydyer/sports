@@ -103,7 +103,7 @@ func (a *API) CurrentForecast(ctx context.Context, zipCode string, country strin
 		return nil, err
 	}
 
-	forecasts, err := a.boardForecastFromForecast(ctx, []*forecast{w.Current}, bounds)
+	forecasts, err := a.boardForecastFromForecast([]*forecast{w.Current}, bounds)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func (a *API) DailyForecasts(ctx context.Context, zipCode string, country string
 		return nil, err
 	}
 
-	return a.boardForecastFromDaily(ctx, w.Daily, bounds)
+	return a.boardForecastFromDaily(w.Daily, bounds)
 }
 
 // HourlyForecasts ...
@@ -132,7 +132,7 @@ func (a *API) HourlyForecasts(ctx context.Context, zipCode string, country strin
 		return nil, err
 	}
 
-	return a.boardForecastFromForecast(ctx, w.Hourly, bounds)
+	return a.boardForecastFromForecast(w.Hourly, bounds)
 }
 
 func (a *API) getIcon(icon string, bounds image.Rectangle) (*logo.Logo, error) {
