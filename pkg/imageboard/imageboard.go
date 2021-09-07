@@ -103,7 +103,7 @@ func (i *ImageBoard) cacheClear() {
 
 // Name ...
 func (i *ImageBoard) Name() string {
-	return "Image Board"
+	return "Img"
 }
 
 // Enabled ...

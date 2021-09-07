@@ -7,7 +7,7 @@ import Col from 'react-bootstrap/Col';
 import Image from 'react-bootstrap/Image';
 import imgimg from './image.png';
 import Form from 'react-bootstrap/Form';
-import { GetStatus, CallMatrix } from './util';
+import { GetStatus, CallMatrix, MatrixPost } from './util';
 
 class ImageBoard extends React.Component {
     constructor(props) {
@@ -19,6 +19,10 @@ class ImageBoard extends React.Component {
         };
     }
     async componentDidMount() {
+        this.updateStatus()
+    }
+
+    async updateStatus() {
         await GetStatus("img/status", (val) => {
             this.setState({ "enabled": val })
         })
@@ -43,6 +47,10 @@ class ImageBoard extends React.Component {
             [stateVar]: !prev[stateVar],
         }))
     }
+    handleJump = (board) => {
+        MatrixPost("jump", `{"board":"${board}"}`)
+        this.updateStatus()
+    }
 
     render() {
         return (
@@ -64,6 +72,11 @@ class ImageBoard extends React.Component {
                     <Col>
                         <Form.Switch id="imgdisk" label="Enable Disk Cache" checked={this.state.diskcache}
                             onChange={() => this.handleSwitch("img/enablediskcache", "img/disablediskcache", "diskcache")} />
+                    </Col>
+                </Row>
+                <Row className="text-left">
+                    <Col>
+                        <Button variant="primary" onClick={() => this.handleJump("img")}>Jump</Button>
                     </Col>
                 </Row>
             </Container>

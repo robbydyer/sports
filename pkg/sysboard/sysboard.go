@@ -85,7 +85,7 @@ func (s *SysBoard) textWriter(canvasWidth int) (*rgbrender.TextWriter, error) {
 
 // Name ...
 func (s *SysBoard) Name() string {
-	return "SysBoard"
+	return "Sys"
 }
 
 // Render ...

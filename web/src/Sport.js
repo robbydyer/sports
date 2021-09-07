@@ -32,6 +32,9 @@ class Sport extends React.Component {
         };
     }
     async componentDidMount() {
+        this.updateStatus()
+    }
+    async updateStatus() {
         await GetStatus(`${this.props.sport}/status`, (val) => {
             this.setState({
                 "enabled": val,
@@ -96,6 +99,7 @@ class Sport extends React.Component {
 
     handleJump = (board) => {
         MatrixPost("jump", `{"board":"${board}"}`)
+        this.updateStatus()
     }
 
     logosrc() {

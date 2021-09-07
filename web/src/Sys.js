@@ -1,56 +1,48 @@
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Image from 'react-bootstrap/Image';
 import server from './server.png';
 import Form from 'react-bootstrap/Form';
-
-var BACKEND = "http://" + window.location.host
+import { GetStatus, CallMatrix, MatrixPost } from './util';
 
 class Sys extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { "disablerChecked": false };
-    }
-    callmatrix(path) {
-        console.log(`Calling matrix Sys Board /clock/${path}`)
-        fetch(`${BACKEND}/api/sys/${path}`, {
-            method: "GET",
-            mode: "cors",
-        });
+        this.state = { "enabled": false };
     }
     async componentDidMount() {
-        const resp = await fetch(`${BACKEND}/api/sys/status`,
-            {
-                method: "GET",
-                mode: "cors",
-            }
-        );
-
-        const status = await resp.text();
-
-        if (resp.ok) {
-            if (status === "true") {
-                console.log("board is enabled", status)
-                this.setState({ "disablerChecked": true })
-            } else {
-                console.log("board is disabled", status)
-                this.setState({ "disablerChecked": false })
-            }
-        }
+        this.updateStatus()
     }
 
-    handleSwitch = () => {
-        if (!this.state.disablerChecked) {
-            console.log("enabling board")
-            this.callmatrix("enable")
+    async updateStatus() {
+        await GetStatus(`sys/status`, (val) => {
+            this.setState({
+                "enabled": val,
+            })
+        })
+    }
+
+    handleSwitch = (apiOn, apiOff, stateVar) => {
+        var currentState = this.state[stateVar]
+        console.log("handle switch", currentState)
+        if (currentState) {
+            console.log("Turn off", apiOff)
+            CallMatrix(apiOff);
         } else {
-            console.log("disabling board")
-            this.callmatrix("disable")
+            console.log("Turn on", apiOn)
+            CallMatrix(apiOn);
         }
-        this.setState({ "disablerChecked": !this.state.disablerChecked })
+        this.setState(prev => ({
+            [stateVar]: !prev[stateVar],
+        }))
+    }
+    handleJump = (board) => {
+        MatrixPost("jump", `{"board":"${board}"}`)
+        this.updateStatus()
     }
     render() {
         return (
@@ -58,7 +50,13 @@ class Sys extends React.Component {
                 <Row className="text-center"><Col><Image src={server} style={{ height: '100px', width: 'auto' }} fluid /></Col></Row>
                 <Row className="text-left">
                     <Col>
-                        <Form.Switch id="sysenabler" label="Enable/Disable" checked={this.state.disablerChecked} onChange={this.handleSwitch} />
+                        <Form.Switch id="sysenabler" label="Enable/Disable" checked={this.state.enabled}
+                            onChange={() => this.handleSwitch(`sys/enable`, `sys/disable`, "enabled")} />
+                    </Col>
+                </Row>
+                <Row className="text-left">
+                    <Col>
+                        <Button variant="primary" onClick={() => this.handleJump("sys")}>Jump</Button>
                     </Col>
                 </Row>
             </Container>
