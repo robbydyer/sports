@@ -7,7 +7,7 @@ import Col from 'react-bootstrap/Col';
 import Image from 'react-bootstrap/Image';
 import stocksstocks from './stock.png';
 import Form from 'react-bootstrap/Form';
-import { GetStatus, CallMatrix } from './util';
+import { GetStatus, CallMatrix, MatrixPost } from './util';
 
 class Stocks extends React.Component {
     constructor(props) {
@@ -18,6 +18,9 @@ class Stocks extends React.Component {
         };
     }
     async componentDidMount() {
+        this.updateStatus()
+    }
+    async updateStatus() {
         await GetStatus("stocks/status", (val) => {
             this.setState({ "enabled": val })
         })
@@ -41,11 +44,15 @@ class Stocks extends React.Component {
             [stateVar]: !prev[stateVar],
         }))
     }
+    handleJump = (board) => {
+        MatrixPost("jump", `{"board":"${board}"}`)
+        this.updateStatus()
+    }
 
     render() {
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Image src={stocksstocks} style={{ height: '100px', width: 'auto' }} fluid /></Col></Row>
+                <Row className="text-center"><Col><Image src={stocksstocks} style={{ height: '100px', width: 'auto' }} onClick={() => this.handleJump("stocks")} fluid /></Col></Row>
                 <Row className="text-left">
                     <Col>
                         <Form.Switch id="stocksenabler" label="Enable/Disable" checked={this.state.enabled}
@@ -56,6 +63,11 @@ class Stocks extends React.Component {
                     <Col>
                         <Form.Switch id="stocksscroller" label="Scroll Mode" checked={this.state.scroll}
                             onChange={() => this.handleSwitch(`stocks/scrollon`, `stocks/scrolloff`, "scroll")} />
+                    </Col>
+                </Row>
+                <Row className="text-left">
+                    <Col>
+                        <Button variant="primary" onClick={() => this.handleJump("stocks")}>Jump</Button>
                     </Col>
                 </Row>
             </Container>

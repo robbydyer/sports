@@ -1,12 +1,13 @@
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Image from 'react-bootstrap/Image';
 import weatherimg from './weather.png';
 import Form from 'react-bootstrap/Form';
-import { GetStatus, CallMatrix } from './util';
+import { GetStatus, CallMatrix, MatrixPost } from './util';
 
 class Weather extends React.Component {
     constructor(props) {
@@ -19,6 +20,9 @@ class Weather extends React.Component {
         };
     }
     async componentDidMount() {
+        this.updateStatus()
+    }
+    async updateStatus() {
         await GetStatus("weather/status", (val) => {
             this.setState({ "enabled": val })
         })
@@ -48,11 +52,15 @@ class Weather extends React.Component {
             [stateVar]: !prev[stateVar],
         }))
     }
+    handleJump = (board) => {
+        MatrixPost("jump", `{"board":"${board}"}`)
+        this.updateStatus()
+    }
 
     render() {
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Image src={weatherimg} style={{ height: '100px', width: 'auto' }} fluid /></Col></Row>
+                <Row className="text-center"><Col><Image src={weatherimg} style={{ height: '100px', width: 'auto' }} onClick={() => this.handleJump("weather")} fluid /></Col></Row>
                 <Row className="text-left">
                     <Col>
                         <Form.Switch id="weatherenabler" label="Enable/Disable" checked={this.state.enabled}
@@ -75,6 +83,11 @@ class Weather extends React.Component {
                     <Col>
                         <Form.Switch id="hourlyenabler" label="Hourly Forecast" checked={this.state.hourly}
                             onChange={() => this.handleSwitch("weather/hourlyenable", "weather/hourlydisable", "hourly")} />
+                    </Col>
+                </Row>
+                <Row className="text-left">
+                    <Col>
+                        <Button variant="primary" onClick={() => this.handleJump("weather")}>Jump</Button>
                     </Col>
                 </Row>
             </Container>

@@ -18,6 +18,9 @@ class Pga extends React.Component {
         };
     }
     async componentDidMount() {
+        this.updateStatus()
+    }
+    async updateStatus() {
         await GetStatus(`pga/stats/status`, (val) => {
             this.setState({
                 "stats": val,
