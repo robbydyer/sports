@@ -24,7 +24,7 @@ const (
 type API struct {
 	log          *zap.Logger
 	apiKey       string
-	icons        map[string]image.Image
+	icons        map[string]*logo.Logo
 	refresh      time.Duration
 	coordinates  map[string]*geo
 	geoLock      sync.RWMutex
@@ -78,7 +78,7 @@ func New(apiKey string, refresh time.Duration, log *zap.Logger) (*API, error) {
 	a := &API{
 		apiKey:      apiKey,
 		log:         log,
-		icons:       make(map[string]image.Image),
+		icons:       make(map[string]*logo.Logo),
 		refresh:     refresh,
 		coordinates: make(map[string]*geo),
 		callLimit:   30 * time.Minute,
@@ -103,7 +103,7 @@ func (a *API) CurrentForecast(ctx context.Context, zipCode string, country strin
 		return nil, err
 	}
 
-	forecasts, err := a.boardForecastFromForecast(ctx, []*forecast{w.Current}, bounds)
+	forecasts, err := a.boardForecastFromForecast([]*forecast{w.Current}, bounds)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func (a *API) DailyForecasts(ctx context.Context, zipCode string, country string
 		return nil, err
 	}
 
-	return a.boardForecastFromDaily(ctx, w.Daily, bounds)
+	return a.boardForecastFromDaily(w.Daily, bounds)
 }
 
 // HourlyForecasts ...
@@ -132,10 +132,10 @@ func (a *API) HourlyForecasts(ctx context.Context, zipCode string, country strin
 		return nil, err
 	}
 
-	return a.boardForecastFromForecast(ctx, w.Hourly, bounds)
+	return a.boardForecastFromForecast(w.Hourly, bounds)
 }
 
-func (a *API) getIcon(ctx context.Context, icon string, bounds image.Rectangle) (image.Image, error) {
+func (a *API) getIcon(icon string, bounds image.Rectangle) (*logo.Logo, error) {
 	a.Lock()
 	defer a.Unlock()
 
@@ -145,6 +145,10 @@ func (a *API) getIcon(ctx context.Context, icon string, bounds image.Rectangle) 
 		url = fmt.Sprintf("%s/%s@4x.png", imgURL, icon)
 		key = fmt.Sprintf("%s_%dx%d", icon, bounds.Dx(), bounds.Dy())
 	}
+
+	a.log.Debug("fetching weather icon",
+		zap.String("key", key),
+	)
 
 	if i, ok := a.icons[key]; ok {
 		return i, nil
@@ -170,14 +174,9 @@ func (a *API) getIcon(ctx context.Context, icon string, bounds image.Rectangle) 
 		},
 	})
 
-	i, err := l.GetThumbnail(ctx, bounds)
-	if err != nil {
-		return nil, err
-	}
+	a.icons[key] = l
 
-	a.icons[key] = i
-
-	return i, nil
+	return l, nil
 }
 
 func cacheDir() (string, error) {

@@ -12,6 +12,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/robbydyer/sports/pkg/rgbrender"
 	"github.com/robbydyer/sports/pkg/weatherboard"
 )
 
@@ -19,14 +20,14 @@ func (w *weather) expired(refresh time.Duration) bool {
 	return w.lastUpdate.Add(refresh).Before(time.Now().Local())
 }
 
-func (a *API) boardForecastFromForecast(ctx context.Context, forecasts []*forecast, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
+func (a *API) boardForecastFromForecast(forecasts []*forecast, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
 	var ws []*weatherboard.Forecast
 
 	for _, f := range forecasts {
 		if f == nil || len(f.Weather) < 1 {
 			return nil, fmt.Errorf("no weather found in forecast")
 		}
-		icon, err := a.getIcon(ctx, f.Weather[0].Icon, bounds)
+		icon, err := a.getIcon(f.Weather[0].Icon, rgbrender.ZeroedBounds(bounds))
 		if err != nil {
 			return nil, err
 		}
@@ -49,14 +50,14 @@ func (a *API) boardForecastFromForecast(ctx context.Context, forecasts []*foreca
 	return ws, nil
 }
 
-func (a *API) boardForecastFromDaily(ctx context.Context, forecasts []*daily, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
+func (a *API) boardForecastFromDaily(forecasts []*daily, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
 	var ws []*weatherboard.Forecast
 
 	for _, f := range forecasts {
 		if f.Weather == nil || len(f.Weather) < 1 {
 			continue
 		}
-		icon, err := a.getIcon(ctx, f.Weather[0].Icon, bounds)
+		icon, err := a.getIcon(f.Weather[0].Icon, rgbrender.ZeroedBounds(bounds))
 		if err != nil {
 			return nil, err
 		}

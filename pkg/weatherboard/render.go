@@ -6,14 +6,15 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"math"
 	"strings"
 	"time"
-
-	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
+
+const sectionBufferRatio = 0.0625
 
 var (
 	orange = color.RGBA{R: 255, G: 165, B: 0}
@@ -23,8 +24,10 @@ var (
 func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas, f *Forecast) error {
 	canvasBounds := rgbrender.ZeroedBounds(canvas.Bounds())
 
-	iconBounds := image.Rect(canvasBounds.Min.X, canvasBounds.Min.Y, canvasBounds.Max.X/2, canvasBounds.Max.Y)
-	tempBounds := image.Rect(canvasBounds.Max.X/2, canvasBounds.Min.Y, canvasBounds.Max.X, canvasBounds.Max.Y)
+	spacing := int(math.Ceil(sectionBufferRatio*float64(canvasBounds.Dx()))) / 2
+
+	iconBounds := image.Rect(canvasBounds.Min.X, canvasBounds.Min.Y, (canvasBounds.Max.X/2)-spacing, canvasBounds.Max.Y)
+	tempBounds := image.Rect((canvasBounds.Max.X/2)+spacing, canvasBounds.Min.Y, canvasBounds.Max.X, canvasBounds.Max.Y)
 	smallWriter, err := w.getSmallWriter(canvasBounds)
 	if err != nil {
 		return err
@@ -41,15 +44,18 @@ func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas, f 
 	default:
 	}
 
-	w.log.Debug("drawing weather icon",
-		zap.Int("X bound", iconBounds.Dx()),
-		zap.Int("Y bound", iconBounds.Dy()),
-	)
-	draw.Draw(canvas, iconBounds, f.Icon, image.Point{}, draw.Over)
+	if f.Icon != nil {
+		i, err := f.Icon.RenderRightAlignedWithEnd(ctx, iconBounds, iconBounds.Max.X)
+		if err != nil {
+			return fmt.Errorf("failed to render weather icon: %w", err)
+		}
+
+		draw.Draw(canvas, iconBounds, i, image.Point{}, draw.Over)
+	}
 
 	if f.Temperature != nil {
 		if err := bigWriter.WriteAligned(
-			rgbrender.RightTop,
+			rgbrender.LeftTop,
 			canvas,
 			tempBounds,
 			[]string{
@@ -85,7 +91,7 @@ func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas, f 
 	}
 
 	if err := smallWriter.WriteAlignedColorCodes(
-		rgbrender.RightBottom,
+		rgbrender.LeftBottom,
 		canvas,
 		tempBounds,
 		clrCodes,
@@ -116,7 +122,7 @@ func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas, f 
 	}
 
 	err = smallWriter.WriteAlignedBoxed(
-		rgbrender.CenterBottom,
+		rgbrender.RightBottom,
 		canvas,
 		iconBounds,
 		[]string{
