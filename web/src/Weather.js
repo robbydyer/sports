@@ -60,7 +60,7 @@ class Weather extends React.Component {
     render() {
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Image src={weatherimg} style={{ height: '100px', width: 'auto' }} fluid /></Col></Row>
+                <Row className="text-center"><Col><Image src={weatherimg} style={{ height: '100px', width: 'auto' }} onClick={() => this.handleJump("weather")} fluid /></Col></Row>
                 <Row className="text-left">
                     <Col>
                         <Form.Switch id="weatherenabler" label="Enable/Disable" checked={this.state.enabled}

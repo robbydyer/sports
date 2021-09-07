@@ -33,7 +33,6 @@ type SportsMatrix struct {
 	webBoardOff   chan struct{}
 	serveBlock    chan struct{}
 	log           *zap.Logger
-	serveContext  context.Context
 	boardCtx      context.Context
 	boardCancel   context.CancelFunc
 	server        http.Server
@@ -202,22 +201,6 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 	}()
 
 	return s, nil
-}
-
-func (s *SportsMatrix) resetBoardCtx() {
-	select {
-	case <-s.serveContext.Done():
-		s.log.Error("could not reset board context: serve context was canceled")
-		return
-	default:
-	}
-
-	select {
-	case <-s.boardCtx.Done():
-		s.log.Debug("reset board context")
-		s.boardCtx, s.boardCancel = context.WithCancel(s.serveContext)
-	default:
-	}
 }
 
 func (s *SportsMatrix) screenWatcher(ctx context.Context) {
@@ -395,7 +378,7 @@ LOOP:
 		}
 
 		if jumpTo != "" {
-			if strings.ToLower(b.Name()) != strings.ToLower(jumpTo) {
+			if !strings.EqualFold(b.Name(), jumpTo) {
 				continue LOOP
 			}
 			s.log.Info("jumping to board",

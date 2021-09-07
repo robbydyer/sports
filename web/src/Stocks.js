@@ -52,7 +52,7 @@ class Stocks extends React.Component {
     render() {
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Image src={stocksstocks} style={{ height: '100px', width: 'auto' }} fluid /></Col></Row>
+                <Row className="text-center"><Col><Image src={stocksstocks} style={{ height: '100px', width: 'auto' }} onClick={() => this.handleJump("stocks")} fluid /></Col></Row>
                 <Row className="text-left">
                     <Col>
                         <Form.Switch id="stocksenabler" label="Enable/Disable" checked={this.state.enabled}

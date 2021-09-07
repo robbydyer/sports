@@ -47,7 +47,7 @@ class Clock extends React.Component {
     render() {
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Image src={clock} style={{ height: '100px', width: 'auto' }} fluid /></Col></Row>
+                <Row className="text-center"><Col><Image src={clock} style={{ height: '100px', width: 'auto' }} onClick={() => this.handleJump("clock")} fluid /></Col></Row>
                 <Row className="text-left">
                     <Col>
                         <Form.Switch id="clockenabler" label="Enable/Disable" checked={this.state.enabled}

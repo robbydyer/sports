@@ -124,7 +124,11 @@ class Sport extends React.Component {
     render() {
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Image src={this.logosrc()} style={{ height: '100px', width: 'auto' }} fluid /></Col></Row>
+                <Row className="text-center">
+                    <Col>
+                        <Image src={this.logosrc()} style={{ height: '100px', width: 'auto' }} onClick={() => this.handleJump(this.props.sport)} fluid />
+                    </Col>
+                </Row>
                 <Row className="text-left">
                     <Col>
                         <Form.Switch id={this.props.sport + "enabler"} label="Enable/Disable" checked={this.state.enabled}
