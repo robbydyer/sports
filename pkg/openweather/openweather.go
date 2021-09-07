@@ -135,7 +135,7 @@ func (a *API) HourlyForecasts(ctx context.Context, zipCode string, country strin
 	return a.boardForecastFromForecast(ctx, w.Hourly, bounds)
 }
 
-func (a *API) getIcon(ctx context.Context, icon string, bounds image.Rectangle) (*logo.Logo, error) {
+func (a *API) getIcon(icon string, bounds image.Rectangle) (*logo.Logo, error) {
 	a.Lock()
 	defer a.Unlock()
 
