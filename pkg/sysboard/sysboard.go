@@ -65,22 +65,26 @@ func New(logger *zap.Logger, config *Config) (*SysBoard, error) {
 	}, nil
 }
 
-func (s *SysBoard) textWriter(canvasWidth int) (*rgbrender.TextWriter, error) {
-	if w, ok := s.textWriters[canvasWidth]; ok {
+func (s *SysBoard) textWriter(canvasHeight int) (*rgbrender.TextWriter, error) {
+	if w, ok := s.textWriters[canvasHeight]; ok {
 		return w, nil
 	}
 
 	s.Lock()
 	defer s.Unlock()
 	var err error
-	s.textWriters[canvasWidth], err = rgbrender.DefaultTextWriter()
+	s.textWriters[canvasHeight], err = rgbrender.DefaultTextWriter()
 	if err != nil {
 		return nil, err
 	}
 
-	s.textWriters[canvasWidth].FontSize = 0.125 * float64(canvasWidth)
+	if canvasHeight <= 256 {
+		s.textWriters[canvasHeight].FontSize = 8.0
+	} else {
+		s.textWriters[canvasHeight].FontSize = 0.25 * float64(canvasHeight)
+	}
 
-	return s.textWriters[canvasWidth], nil
+	return s.textWriters[canvasHeight], nil
 }
 
 // Name ...
