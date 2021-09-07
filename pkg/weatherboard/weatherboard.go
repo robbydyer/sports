@@ -14,6 +14,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
@@ -59,7 +60,7 @@ type Forecast struct {
 	LowTemp      *float64
 	Humidity     int
 	TempUnit     string
-	Icon         image.Image
+	Icon         *logo.Logo
 	IsHourly     bool
 	PrecipChance *int
 }

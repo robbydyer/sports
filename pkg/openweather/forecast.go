@@ -12,6 +12,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/robbydyer/sports/pkg/rgbrender"
 	"github.com/robbydyer/sports/pkg/weatherboard"
 )
 
@@ -26,7 +27,7 @@ func (a *API) boardForecastFromForecast(ctx context.Context, forecasts []*foreca
 		if f == nil || len(f.Weather) < 1 {
 			return nil, fmt.Errorf("no weather found in forecast")
 		}
-		icon, err := a.getIcon(ctx, f.Weather[0].Icon, bounds)
+		icon, err := a.getIcon(ctx, f.Weather[0].Icon, rgbrender.ZeroedBounds(bounds))
 		if err != nil {
 			return nil, err
 		}
@@ -56,7 +57,7 @@ func (a *API) boardForecastFromDaily(ctx context.Context, forecasts []*daily, bo
 		if f.Weather == nil || len(f.Weather) < 1 {
 			continue
 		}
-		icon, err := a.getIcon(ctx, f.Weather[0].Icon, bounds)
+		icon, err := a.getIcon(ctx, f.Weather[0].Icon, rgbrender.ZeroedBounds(bounds))
 		if err != nil {
 			return nil, err
 		}

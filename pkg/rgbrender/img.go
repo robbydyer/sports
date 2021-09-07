@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/afero"
 
 	"github.com/robbydyer/sports/pkg/board"
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 )
 
 // ResizeImage ...
@@ -103,7 +102,7 @@ func ShiftedSize(xStart int, yStart int, bounds image.Rectangle) image.Rectangle
 }
 
 // DrawImageAligned draws an image aligned within the given bounds
-func DrawImageAligned(canvas *rgb.Canvas, bounds image.Rectangle, img *image.RGBA, align Align) error {
+func DrawImageAligned(canvas draw.Image, bounds image.Rectangle, img *image.RGBA, align Align) error {
 	aligned, err := AlignPosition(align, bounds, img.Bounds().Dx(), img.Bounds().Dy())
 	if err != nil {
 		return err
