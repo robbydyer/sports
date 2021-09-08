@@ -530,6 +530,17 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 			},
 			func(canvas board.Canvas, img image.Image) error {
 				if img == nil {
+					writer, err := s.getTimeWriter(bounds)
+					if err != nil {
+						return err
+					}
+					writer.WriteAligned(
+						rgbrender.LeftCenter,
+						canvas,
+						rgbrender.ZeroedBounds(bounds),
+						[]string{leftTeam.GetAbbreviation()},
+						color.White,
+					)
 					return nil
 				}
 				pt := image.Pt(img.Bounds().Min.X, img.Bounds().Min.Y)
@@ -564,6 +575,17 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 			},
 			func(canvas board.Canvas, img image.Image) error {
 				if img == nil {
+					writer, err := s.getTimeWriter(bounds)
+					if err != nil {
+						return err
+					}
+					writer.WriteAligned(
+						rgbrender.RightCenter,
+						canvas,
+						rgbrender.ZeroedBounds(bounds),
+						[]string{leftTeam.GetAbbreviation()},
+						color.White,
+					)
 					return nil
 				}
 				pt := image.Pt(img.Bounds().Min.X, img.Bounds().Min.Y)
