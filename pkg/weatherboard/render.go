@@ -44,7 +44,15 @@ func (w *WeatherBoard) drawForecast(ctx context.Context, canvas board.Canvas, f 
 	default:
 	}
 
-	if f.Icon != nil {
+	l, err := w.customIcon(f.IconCode, iconBounds)
+	if err == nil && l != nil {
+		i, err := l.RenderRightAlignedWithEnd(ctx, iconBounds, iconBounds.Max.X)
+		if err != nil {
+			return fmt.Errorf("failed to render weather icon: %w", err)
+		}
+
+		draw.Draw(canvas, iconBounds, i, image.Point{}, draw.Over)
+	} else if f.Icon != nil {
 		i, err := f.Icon.RenderRightAlignedWithEnd(ctx, iconBounds, iconBounds.Max.X)
 		if err != nil {
 			return fmt.Errorf("failed to render weather icon: %w", err)
