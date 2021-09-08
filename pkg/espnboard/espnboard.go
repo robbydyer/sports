@@ -50,6 +50,8 @@ type ESPNBoard struct {
 	rankSorted       *atomic.Bool
 	lastScheduleCall map[string]*time.Time
 	gameLock         sync.Mutex
+	offSeasonLock    sync.Mutex
+	offSeason        map[string]bool
 	sync.Mutex
 }
 
@@ -79,6 +81,7 @@ func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger, r rankSetter,
 		rankSorted:       atomic.NewBool(false),
 		ranksSet:         atomic.NewBool(false),
 		lastScheduleCall: make(map[string]*time.Time),
+		offSeason:        make(map[string]bool),
 	}
 
 	if _, err := e.GetTeams(ctx); err != nil {
@@ -112,6 +115,9 @@ func (e *ESPNBoard) CacheClear(ctx context.Context) {
 	e.ranksSet.Store(false)
 	if _, err := e.GetTeams(ctx); err != nil {
 		e.log.Error("failed to get teams after cache clear", zap.Error(err))
+	}
+	for k := range e.offSeason {
+		delete(e.offSeason, k)
 	}
 }
 
@@ -152,8 +158,22 @@ func (e *ESPNBoard) TeamFromAbbreviation(ctx context.Context, abbreviation strin
 func (e *ESPNBoard) GetScheduledGames(ctx context.Context, dates []time.Time) ([]sportboard.Game, error) {
 	var gList []sportboard.Game
 
+	e.offSeasonLock.Lock()
+	defer e.offSeasonLock.Unlock()
+
+DATES:
 	for _, date := range dates {
 		t := TimeToGameDateStr(date)
+
+		off, ok := e.offSeason[t]
+		if ok && off {
+			e.log.Debug("skipping offseason date",
+				zap.String("date", t),
+				zap.String("league", e.League()),
+			)
+			continue DATES
+		}
+
 		games, ok := e.games[t]
 		if !ok || len(games) == 0 {
 			e.log.Info("updating games from API",
@@ -167,6 +187,12 @@ func (e *ESPNBoard) GetScheduledGames(ctx context.Context, dates []time.Time) ([
 		games, ok = e.games[t]
 		if !ok {
 			return nil, fmt.Errorf("failed to update games")
+		}
+
+		if len(games) < 1 {
+			e.offSeason[t] = true
+		} else {
+			e.offSeason[t] = false
 		}
 
 		for _, g := range games {
