@@ -25,8 +25,8 @@ type WeatherBoard struct {
 	api         API
 	log         *zap.Logger
 	enablerLock sync.Mutex
-	// iconLock    sync.Mutex
-	// iconCache   map[string]image.Image
+	iconLock    sync.Mutex
+	iconCache   map[string]*logo.Logo
 	cancelBoard chan struct{}
 	bigWriter   *rgbrender.TextWriter
 	smallWriter *rgbrender.TextWriter
@@ -61,6 +61,7 @@ type Forecast struct {
 	Humidity     int
 	TempUnit     string
 	Icon         *logo.Logo
+	IconCode     string
 	IsHourly     bool
 	PrecipChance *int
 }
@@ -127,6 +128,7 @@ func New(api API, cfg *Config, log *zap.Logger) (*WeatherBoard, error) {
 		api:         api,
 		log:         log,
 		cancelBoard: make(chan struct{}),
+		iconCache:   make(map[string]*logo.Logo),
 	}
 
 	return s, nil
@@ -218,8 +220,14 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 			zap.Int("num", len(fs)),
 			zap.Int("max show", w.config.HourlyNumber),
 		)
-		for i := 0; i < w.config.HourlyNumber; i++ {
-			forecasts = append(forecasts, fs[i])
+		if len(fs) > 0 {
+		HOURLY:
+			for i := 0; i < w.config.HourlyNumber; i++ {
+				if len(fs) <= i {
+					break HOURLY
+				}
+				forecasts = append(forecasts, fs[i])
+			}
 		}
 	}
 
@@ -242,8 +250,14 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 				break TODAYCHECK
 			}
 		}
-		for i := 0; i < w.config.DailyNumber; i++ {
-			forecasts = append(forecasts, fs[i])
+		if len(fs) > 0 {
+		DAILY:
+			for i := 0; i < w.config.DailyNumber; i++ {
+				if len(fs) <= i {
+					break DAILY
+				}
+				forecasts = append(forecasts, fs[i])
+			}
 		}
 	}
 

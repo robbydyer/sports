@@ -126,6 +126,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 	rootCmd.AddCommand(newNcaaMCmd(args))
 	rootCmd.AddCommand(newAbbrevCmd(args))
 	rootCmd.AddCommand(newStockCmd(args))
+	rootCmd.AddCommand(newWeatherCmd(args))
 
 	return rootCmd
 }

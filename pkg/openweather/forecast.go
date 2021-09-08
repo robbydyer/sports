@@ -37,6 +37,7 @@ func (a *API) boardForecastFromForecast(forecasts []*forecast, bounds image.Rect
 			Humidity:    f.Humidity,
 			TempUnit:    "F",
 			Icon:        icon,
+			IconCode:    f.Weather[0].Icon,
 			IsHourly:    f.isHourly,
 		}
 
@@ -68,6 +69,7 @@ func (a *API) boardForecastFromDaily(forecasts []*daily, bounds image.Rectangle)
 			Humidity: f.Humidity,
 			TempUnit: "F",
 			Icon:     icon,
+			IconCode: f.Weather[0].Icon,
 		}
 		ws = append(ws, w)
 		if f.Pop != nil {
