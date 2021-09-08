@@ -82,7 +82,7 @@ func (w *WeatherBoard) customIcon(iconCode string, bounds image.Rectangle) (*log
 
 	getter, err := customImgSource(iconCode)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	d, err := cacheDir()

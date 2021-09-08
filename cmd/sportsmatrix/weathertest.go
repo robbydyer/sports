@@ -91,12 +91,12 @@ func (s *weatherCmd) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-type fakeWeather struct {
-}
+type fakeWeather struct{}
 
 func fltPtr(f float64) *float64 {
 	return &f
 }
+
 func intPtr(i int) *int {
 	return &i
 }
@@ -111,6 +111,7 @@ func (f *fakeWeather) CurrentForecast(ctx context.Context, zipCode string, count
 		PrecipChance: intPtr(0),
 	}, nil
 }
+
 func (f *fakeWeather) DailyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
 	return []*weatherboard.Forecast{
 		{
@@ -179,6 +180,7 @@ func (f *fakeWeather) DailyForecasts(ctx context.Context, zipCode string, countr
 		},
 	}, nil
 }
+
 func (f *fakeWeather) HourlyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
 	return []*weatherboard.Forecast{}, nil
 }
