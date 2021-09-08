@@ -221,7 +221,11 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 			zap.Int("max show", w.config.HourlyNumber),
 		)
 		if len(fs) > 0 {
+		HOURLY:
 			for i := 0; i < w.config.HourlyNumber; i++ {
+				if len(fs) <= i {
+					break HOURLY
+				}
 				forecasts = append(forecasts, fs[i])
 			}
 		}
