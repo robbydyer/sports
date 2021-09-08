@@ -250,8 +250,14 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 				break TODAYCHECK
 			}
 		}
-		for i := 0; i < w.config.DailyNumber; i++ {
-			forecasts = append(forecasts, fs[i])
+		if len(fs) > 0 {
+		DAILY:
+			for i := 0; i < w.config.DailyNumber; i++ {
+				if len(fs) <= i {
+					break DAILY
+				}
+				forecasts = append(forecasts, fs[i])
+			}
 		}
 	}
 
