@@ -388,6 +388,13 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		return err
 	}
 
+	if len(allGames) < 1 {
+		s.log.Debug("no games scheduled",
+			zap.String("league", s.api.League()),
+		)
+		return nil
+	}
+
 	if _, err := s.api.GetTeams(ctx); err != nil {
 		return err
 	}

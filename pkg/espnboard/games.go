@@ -18,8 +18,9 @@ import (
 )
 
 var (
-	overUnderRegex = regexp.MustCompile(`^([A-Z]+)\s+([-]{0,1}[0-9]+[\.0-9]*)`)
-	mLB            = "MLB"
+	overUnderRegex   = regexp.MustCompile(`^([A-Z]+)\s+([-]{0,1}[0-9]+[\.0-9]*)`)
+	mLB              = "MLB"
+	scheduleAPILimit = 30 * time.Second
 )
 
 type schedule struct {
@@ -254,10 +255,11 @@ func (e *ESPNBoard) GetGames(ctx context.Context, dateStr string) ([]*Game, erro
 		e.lastScheduleCall[dateStr] = &t
 	} else {
 		// Make sure we don't hammer this API if it has failures
-		if time.Now().Local().Before(t.Add(1 * time.Minute)) {
+		if time.Now().Local().Before(t.Add(scheduleAPILimit)) {
 			e.log.Error("tried calling ESPN scoreboard API too quickly",
 				zap.Time("last call", *t),
 				zap.String("date", dateStr),
+				zap.String("league", e.League()),
 			)
 			return nil, fmt.Errorf("called scoreboard API too quickly")
 		}

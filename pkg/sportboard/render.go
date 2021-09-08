@@ -519,9 +519,19 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 	return []*rgbrender.Layer{
 		rgbrender.NewLayer(
 			func(ctx context.Context) (image.Image, error) {
-				return s.RenderLeftLogo(ctx, bounds, leftTeam.GetAbbreviation())
+				l, err := s.RenderLeftLogo(ctx, bounds, leftTeam.GetAbbreviation())
+				if err != nil {
+					s.log.Error("failed to render left logo",
+						zap.Error(err),
+					)
+				}
+
+				return l, nil
 			},
 			func(canvas board.Canvas, img image.Image) error {
+				if img == nil {
+					return nil
+				}
 				pt := image.Pt(img.Bounds().Min.X, img.Bounds().Min.Y)
 				b := canvas.Bounds()
 				s.log.Debug("draw left team logo",
@@ -543,9 +553,19 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 
 		rgbrender.NewLayer(
 			func(ctx context.Context) (image.Image, error) {
-				return s.RenderRightLogo(ctx, bounds, rightTeam.GetAbbreviation())
+				l, err := s.RenderRightLogo(ctx, bounds, rightTeam.GetAbbreviation())
+				if err != nil {
+					s.log.Error("failed to render right logo",
+						zap.Error(err),
+					)
+				}
+
+				return l, nil
 			},
 			func(canvas board.Canvas, img image.Image) error {
+				if img == nil {
+					return nil
+				}
 				pt := image.Pt(img.Bounds().Min.X, img.Bounds().Min.Y)
 				draw.Draw(canvas, img.Bounds(), img, pt, draw.Over)
 				return nil
@@ -565,8 +585,9 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 	}
 
 	longestScore := numDigits(leftTeam.Score())
-	if numDigits(rightTeam.Score()) > longestScore {
-		longestScore = numDigits(rightTeam.Score())
+	rightScore := numDigits(rightTeam.Score())
+	if rightScore > longestScore {
+		longestScore = rightScore
 	}
 
 	if s.api.League() == mls {
@@ -673,10 +694,13 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 					s.setTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation(), infoWidth)
 				}
 				endX := ((z.Dx() - textWidth) / 2) - teamInfoPad
-				if longestScore == 2 {
+				switch longestScore {
+				case 2:
 					endX -= 5
-				} else if longestScore == 3 {
+				case 3:
 					endX -= 9
+				default:
+					endX -= 2
 				}
 				leftBounds = image.Rect(endX-infoWidth, z.Min.Y, endX, z.Max.Y)
 
@@ -784,10 +808,13 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 				}
 				logoWidth := (z.Dx() - textWidth) / 2
 				startX := textWidth + logoWidth + teamInfoPad
-				if longestScore == 2 {
+				switch longestScore {
+				case 2:
 					startX += 5
-				} else if longestScore == 3 {
+				case 3:
 					startX += 9
+				default:
+					startX += 2
 				}
 				rightBounds = image.Rect(startX, z.Min.Y, startX+infoWidth, z.Max.Y)
 
