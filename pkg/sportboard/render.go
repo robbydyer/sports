@@ -534,7 +534,7 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 					if err != nil {
 						return err
 					}
-					writer.WriteAligned(
+					_ = writer.WriteAligned(
 						rgbrender.LeftCenter,
 						canvas,
 						rgbrender.ZeroedBounds(bounds),
@@ -579,7 +579,7 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 					if err != nil {
 						return err
 					}
-					writer.WriteAligned(
+					_ = writer.WriteAligned(
 						rgbrender.RightCenter,
 						canvas,
 						rgbrender.ZeroedBounds(bounds),
