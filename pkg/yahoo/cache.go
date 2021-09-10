@@ -47,7 +47,20 @@ func (a *API) getCache(symbol string, expire time.Duration) *stockboard.Stock {
 			)
 		} else {
 			t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
-			if t.After(end) || t.Before(begin) {
+			if t.After(end) {
+				// Do at least one update after trading hours end
+				if !a.afterHoursUpdated.Load() {
+					a.afterHoursUpdated.Store(true)
+					return nil
+				}
+				a.log.Info("outside trading hours, not expiring cache",
+					zap.Time("begin", begin),
+					zap.Time("end", end),
+					zap.Time("current", t),
+				)
+				return c.stock
+			}
+			if t.Before(begin) {
 				a.log.Info("outside trading hours, not expiring cache",
 					zap.Time("begin", begin),
 					zap.Time("end", end),

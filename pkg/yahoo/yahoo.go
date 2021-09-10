@@ -11,7 +11,10 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
+
+	"github.com/robfig/cron/v3"
 
 	"github.com/robbydyer/sports/pkg/stockboard"
 )
@@ -20,9 +23,10 @@ const baseURL = "https://query2.finance.yahoo.com"
 
 // API is used for accessing the Yahoo Finance API
 type API struct {
-	log       *zap.Logger
-	cache     map[string]*cache
-	cacheLock *sync.RWMutex
+	log               *zap.Logger
+	cache             map[string]*cache
+	cacheLock         *sync.RWMutex
+	afterHoursUpdated *atomic.Bool
 }
 
 type cache struct {
@@ -53,9 +57,18 @@ type chart struct {
 // New ...
 func New(log *zap.Logger) (*API, error) {
 	a := &API{
-		log:       log,
-		cache:     make(map[string]*cache),
-		cacheLock: &sync.RWMutex{},
+		log:               log,
+		cache:             make(map[string]*cache),
+		cacheLock:         &sync.RWMutex{},
+		afterHoursUpdated: atomic.NewBool(false),
+	}
+
+	c := cron.New()
+
+	if _, err := c.AddFunc("00 01 * * *", func() {
+		a.afterHoursUpdated.Store(false)
+	}); err != nil {
+		return nil, fmt.Errorf("failed to set cron for afterHoursUpdated: %w", err)
 	}
 
 	return a, nil
