@@ -583,7 +583,7 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 						rgbrender.RightCenter,
 						canvas,
 						rgbrender.ZeroedBounds(bounds),
-						[]string{leftTeam.GetAbbreviation()},
+						[]string{rightTeam.GetAbbreviation()},
 						color.White,
 					)
 					return nil
