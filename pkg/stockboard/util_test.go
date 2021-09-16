@@ -148,6 +148,7 @@ func TestMaxPrice(t *testing.T) {
 		})
 	}
 }
+
 func TestGetChartPrices(t *testing.T) {
 	t.Parallel()
 	now, err := time.Parse("01-02-2006 15:04:05", "01-02-2006 12:00:00")

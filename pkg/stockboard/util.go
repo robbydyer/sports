@@ -6,8 +6,9 @@ import (
 	"math"
 	"sort"
 
-	"github.com/robbydyer/sports/pkg/rgbrender"
 	"go.uber.org/zap"
+
+	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
 func (s *Stock) minPrice() *Price {
