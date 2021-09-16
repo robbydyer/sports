@@ -1,0 +1,14 @@
+#!/bin/bash
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+b="https://site.api.espn.com/apis/site/v2/sports"
+
+curl "${b}/football/nfl/groups?limit=1000" > "${ROOT}/pkg/espnboard/assets/nfl_groups.json"
+curl "${b}/soccer/eng.1/teams?limit=1000" > "${ROOT}/pkg/espnboard/assets/epl_teams.json"
+curl "${b}/baseball/mlb/groups?limit=1000" > "${ROOT}/pkg/espnboard/assets/mlb_groups.json"
+curl "${b}/soccer/usa.1/teams?limit=1000" > "${ROOT}/pkg/espnboard/assets/mls_teams.json"
+curl "${b}/basketball/nba/groups?limit=1000" > "${ROOT}/pkg/espnboard/assets/nba_groups.json"
+curl "${b}/football/college-football/teams?limit=1000" > "${ROOT}/pkg/espnboard/assets/ncaaf_teams.json"
+curl "${b}/basketball/mens-college-basketball/groups?limit=1000" > "${ROOT}/pkg/espnboard/assets/ncaam_groups.json"
+curl "${b}/basketball/mens-college-basketball/teams?limit=1000" > "${ROOT}/pkg/espnboard/assets/ncaam_teams.json"
+curl "${b}/hockey/nhl/groups?limit=1000" > "${ROOT}/pkg/espnboard/assets/nhl_groups.json"
+curl "${b}/hockey/nhl/teams?limit=1000" > "${ROOT}/pkg/espnboard/assets/nhl_teams.json"
