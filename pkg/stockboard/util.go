@@ -4,17 +4,26 @@ import (
 	"fmt"
 	"image"
 	"math"
+	"sort"
 
 	"github.com/robbydyer/sports/pkg/rgbrender"
+	"go.uber.org/zap"
 )
 
 func (s *Stock) minPrice() *Price {
 	if len(s.Prices) < 1 {
 		return nil
 	}
-	min := s.Prices[0]
+	min := &Price{}
+	for _, p := range s.Prices {
+		if p != nil {
+			min = p
+			break
+		}
+	}
+
 	for _, price := range s.Prices {
-		if price.Price < min.Price && price.Price > 0 {
+		if price != nil && price.Price < min.Price && price.Price > 0 {
 			min = price
 		}
 	}
@@ -26,9 +35,16 @@ func (s *Stock) maxPrice() *Price {
 	if len(s.Prices) < 1 {
 		return nil
 	}
-	max := s.Prices[0]
+	max := &Price{}
+	for _, p := range s.Prices {
+		if p != nil {
+			max = p
+			break
+		}
+	}
+
 	for _, price := range s.Prices {
-		if price.Price > max.Price {
+		if price != nil && price.Price > max.Price {
 			max = price
 		}
 	}
@@ -37,30 +53,107 @@ func (s *Stock) maxPrice() *Price {
 }
 
 func (s *StockBoard) getChartPrices(maxPix int, stock *Stock) []*Price {
-	if len(stock.Prices) < maxPix || maxPix < 1 {
+	if maxPix < 1 {
+		return nil
+	}
+	if len(stock.Prices) < maxPix {
 		return stock.Prices
 	}
 
-	granularity := len(stock.Prices) / maxPix
-	ret := make([]*Price, maxPix)
+	sampled := make(map[int64]*Price)
+
+	latest := stock.Prices[0]
+	for _, p := range stock.Prices {
+		if latest.Time.Before(p.Time) {
+			latest = p
+		}
+	}
+	sampled[latest.Time.Unix()] = latest
+
+	if len(sampled) >= maxPix || len(sampled) == len(stock.Prices) {
+		return getSortedPriceList(sampled)
+	}
+
+	first := stock.Prices[0]
+	for _, p := range stock.Prices {
+		if first.Time.After(p.Time) {
+			first = p
+		}
+	}
+	sampled[first.Time.Unix()] = first
+
+	if len(sampled) >= maxPix || len(sampled) == len(stock.Prices) {
+		return getSortedPriceList(sampled)
+	}
 
 	// For accurate chart, make sure open, min and max are in sample
-	startX := 1
-	ret[0] = stock.Prices[0]
-	if len(stock.Prices) >= 2 {
-		ret[1] = stock.minPrice()
-		ret[2] = stock.maxPrice()
-		startX = 3
-	}
-
-	for i := startX; i < maxPix-1; i++ {
-		if len(stock.Prices) < i+granularity {
-			break
+	sampled[stock.Prices[0].Time.Unix()] = stock.Prices[0]
+	if len(stock.Prices) >= 2 && maxPix >= 2 {
+		min := stock.minPrice()
+		max := stock.maxPrice()
+		s.log.Debug("stock min/max prices",
+			zap.String("symbol", stock.Symbol),
+			zap.Float64("min", min.Price),
+			zap.Float64("max", max.Price),
+		)
+		sampled[max.Time.Unix()] = max
+		if len(sampled) >= maxPix || len(sampled) == len(stock.Prices) {
+			return getSortedPriceList(sampled)
 		}
-		ret[i] = stock.Prices[i+granularity]
+		sampled[min.Time.Unix()] = min
 	}
 
-	ret[maxPix-1] = stock.Prices[len(stock.Prices)-1]
+	if len(sampled) >= maxPix || len(sampled) == len(stock.Prices) {
+		return getSortedPriceList(sampled)
+	}
+
+	granularity := len(stock.Prices) / maxPix
+	s.log.Debug("stock chart granularity",
+		zap.String("symbol", stock.Symbol),
+		zap.Int("granularity", granularity),
+		zap.Int("num prices", len(stock.Prices)),
+	)
+
+	samples := func(start int) {
+		for i := start; i < len(stock.Prices); i++ {
+			if len(stock.Prices) < i+granularity || len(sampled) >= maxPix || len(sampled) == len(stock.Prices) {
+				return
+			}
+			p := stock.Prices[i+granularity]
+			if p == nil {
+				continue
+			}
+			if _, ok := sampled[p.Time.Unix()]; ok {
+				continue
+			}
+			sampled[p.Time.Unix()] = p
+		}
+	}
+
+	for i := 0; i < granularity; i++ {
+		if len(sampled) >= maxPix || len(sampled) == len(stock.Prices) {
+			return getSortedPriceList(sampled)
+		}
+		samples(i * -1)
+	}
+
+	return getSortedPriceList(sampled)
+}
+
+func getSortedPriceList(sampled map[int64]*Price) []*Price {
+	keys := []int64{}
+	for k := range sampled {
+		keys = append(keys, k)
+	}
+
+	sort.SliceStable(keys, func(i, j int) bool {
+		return keys[i] < keys[j]
+	})
+
+	ret := make([]*Price, len(keys))
+	for i := 0; i < len(keys); i++ {
+		ret[i] = sampled[keys[i]]
+	}
 
 	return ret
 }
