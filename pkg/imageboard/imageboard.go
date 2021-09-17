@@ -26,6 +26,11 @@ const (
 	diskCacheDir = "/tmp/sportsmatrix/imageboard"
 )
 
+var preloaderTimeout = (15 * time.Second)
+
+// Jumper is a function that jumps to a board
+type Jumper func(boardName string) error
+
 // ImageBoard is a board for displaying image files
 type ImageBoard struct {
 	config     *Config
@@ -34,6 +39,9 @@ type ImageBoard struct {
 	imageCache map[string]image.Image
 	gifCache   map[string]*gif.GIF
 	lockers    map[string]*sync.Mutex
+	jumpLock   sync.Mutex
+	jumper     Jumper
+	jumpTo     chan string
 	sync.Mutex
 }
 
@@ -83,6 +91,7 @@ func New(fs afero.Fs, cfg *Config, logger *zap.Logger) (*ImageBoard, error) {
 		imageCache: make(map[string]image.Image),
 		gifCache:   make(map[string]*gif.GIF),
 		lockers:    make(map[string]*sync.Mutex),
+		jumpTo:     make(chan string, 1),
 	}
 
 	if err := i.validateDirectories(); err != nil {
@@ -194,18 +203,27 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	sort.Strings(imageList)
 	sort.Strings(gifList)
 
-	if err := i.renderImages(ctx, canvas, imageList); err != nil {
+	jump := ""
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	case j := <-i.jumpTo:
+		jump = j
+	default:
+	}
+
+	if err := i.renderImages(ctx, canvas, imageList, jump); err != nil {
 		i.log.Error("error rendering images", zap.Error(err))
 	}
 
-	if err := i.renderGIFs(ctx, canvas, gifList); err != nil {
+	if err := i.renderGIFs(ctx, canvas, gifList, jump); err != nil {
 		i.log.Error("error rendering GIFs", zap.Error(err))
 	}
 
 	return nil
 }
 
-func (i *ImageBoard) renderGIFs(ctx context.Context, canvas board.Canvas, images []string) error {
+func (i *ImageBoard) renderGIFs(ctx context.Context, canvas board.Canvas, images []string, jump string) error {
 	preloader := make(map[string]chan struct{})
 	preloadImages := make(map[string]*gif.GIF, len(images))
 
@@ -224,7 +242,7 @@ func (i *ImageBoard) renderGIFs(ctx context.Context, canvas board.Canvas, images
 		preload(images[0])
 	}
 
-	preloaderTimeout := i.config.boardDelay + (1 * time.Minute)
+IMAGES:
 	for index, p := range images {
 		if !i.config.Enabled.Load() {
 			i.log.Warn("ImageBoard is disabled, not rendering")
@@ -237,20 +255,35 @@ func (i *ImageBoard) renderGIFs(ctx context.Context, canvas board.Canvas, images
 			go preload(images[nextIndex])
 		}
 
+		if jump != "" && !strings.EqualFold(filepath.Base(p), jump) {
+			i.log.Debug("skipping image",
+				zap.String("this", p),
+				zap.String("jump", jump),
+			)
+			continue IMAGES
+		} else if jump != "" {
+			i.log.Info("jumping to image",
+				zap.String("this", p),
+			)
+		}
+
 		select {
 		case <-ctx.Done():
 			return context.Canceled
 		case <-preloader[p]:
 			i.log.Debug("preloader finished", zap.String("path", p))
 		case <-time.After(preloaderTimeout):
-			i.log.Error("timed out waiting for image preloader", zap.String("path", p))
-			continue
+			i.log.Error("timed out waiting for image preloader",
+				zap.String("path", p),
+				zap.Duration("preloader timeout", preloaderTimeout),
+			)
+			continue IMAGES
 		}
 
 		g, ok := preloadImages[p]
 		if !ok {
 			i.log.Error("preloaded GIF was not ready", zap.String("path", p))
-			continue
+			continue IMAGES
 		}
 
 		i.log.Debug("playing GIF", zap.String("path", p))
@@ -277,7 +310,7 @@ func (i *ImageBoard) renderGIFs(ctx context.Context, canvas board.Canvas, images
 	return nil
 }
 
-func (i *ImageBoard) renderImages(ctx context.Context, canvas board.Canvas, images []string) error {
+func (i *ImageBoard) renderImages(ctx context.Context, canvas board.Canvas, images []string, jump string) error {
 	preloader := make(map[string]chan struct{})
 	preloadImages := make(map[string]image.Image, len(images))
 
@@ -296,8 +329,7 @@ func (i *ImageBoard) renderImages(ctx context.Context, canvas board.Canvas, imag
 		preload(images[0])
 	}
 
-	preloaderTimeout := i.config.boardDelay + (1 * time.Minute)
-
+IMAGES:
 	for index, p := range images {
 		if !i.config.Enabled.Load() {
 			i.log.Warn("ImageBoard is disabled, not rendering")
@@ -310,20 +342,35 @@ func (i *ImageBoard) renderImages(ctx context.Context, canvas board.Canvas, imag
 			go preload(images[nextIndex])
 		}
 
+		if jump != "" && !strings.EqualFold(filepath.Base(p), jump) {
+			i.log.Debug("skipping image",
+				zap.String("this", p),
+				zap.String("jump", jump),
+			)
+			continue IMAGES
+		} else if jump != "" {
+			i.log.Info("jumping to image",
+				zap.String("this", p),
+			)
+		}
+
 		select {
 		case <-ctx.Done():
 			return context.Canceled
 		case <-preloader[p]:
 			i.log.Debug("preloader finished", zap.String("path", p))
 		case <-time.After(preloaderTimeout):
-			i.log.Error("timed out waiting for image preloader", zap.String("path", p))
-			continue
+			i.log.Error("timed out waiting for image preloader",
+				zap.String("path", p),
+				zap.Duration("preloader timeout", preloaderTimeout),
+			)
+			continue IMAGES
 		}
 
 		img, ok := preloadImages[p]
 		if !ok || img == nil {
 			i.log.Error("preloaded image was not ready", zap.String("path", p))
-			continue
+			continue IMAGES
 		}
 
 		i.log.Debug("playing image")
@@ -603,4 +650,9 @@ func (i *ImageBoard) validateDirectories() error {
 	}
 
 	return nil
+}
+
+// SetJumper sets the jumper function
+func (i *ImageBoard) SetJumper(j Jumper) {
+	i.jumper = j
 }

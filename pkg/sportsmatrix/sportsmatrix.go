@@ -467,3 +467,36 @@ func (s *SportsMatrix) allDisabled() bool {
 
 	return true
 }
+
+// JumpTo jumps to a board with a given name
+func (s *SportsMatrix) JumpTo(boardName string) error {
+	for _, b := range s.boards {
+		if strings.EqualFold(b.Name(), boardName) {
+			b.Enable()
+
+			select {
+			case s.screenOff <- struct{}{}:
+			case <-time.After(5 * time.Second):
+				return fmt.Errorf("timed out")
+			}
+
+			defer func() {
+				select {
+				case s.screenOn <- struct{}{}:
+				case <-time.After(5 * time.Second):
+					s.log.Error("failed to turn screen back on after /api/jump")
+				}
+			}()
+
+			select {
+			case s.jumpTo <- b.Name():
+			case <-time.After(5 * time.Second):
+				return fmt.Errorf("timed out")
+			}
+
+			return nil
+		}
+	}
+
+	return fmt.Errorf("could not find board %s to jump to", boardName)
+}

@@ -1,12 +1,20 @@
 package imageboard
 
 import (
+	"encoding/json"
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
 )
+
+type jumpRequest struct {
+	Name string `json:"name"`
+}
 
 // GetHTTPHandlers ...
 func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
@@ -93,6 +101,47 @@ func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 					return
 				}
 				_, _ = w.Write([]byte("false"))
+			},
+		},
+		{
+			Path: "/img/jump",
+			Handler: func(w http.ResponseWriter, req *http.Request) {
+				i.jumpLock.Lock()
+				defer i.jumpLock.Unlock()
+
+				// Clear the channel
+				select {
+				case <-i.jumpTo:
+				default:
+				}
+
+				d := json.NewDecoder(req.Body)
+				var j *jumpRequest
+				if err := d.Decode(&j); err != nil {
+					i.log.Error("failed to process /api/img/jump request",
+						zap.Error(err),
+					)
+					http.Error(w, "failed to process /api/img/jump request", http.StatusBadRequest)
+					return
+				}
+				select {
+				case i.jumpTo <- j.Name:
+				case <-time.After(5 * time.Second):
+					i.log.Error("timed out waiting to jump image")
+					http.Error(w, "timed out waiting to jump iamge", http.StatusRequestTimeout)
+					return
+				}
+
+				if i.jumpTo != nil {
+					if err := i.jumper(i.Name()); err != nil {
+						i.log.Error("failed to jump to image board",
+							zap.Error(err),
+							zap.String("file name", j.Name),
+						)
+						http.Error(w, "failed to jump to image board", http.StatusInternalServerError)
+						return
+					}
+				}
 			},
 		},
 	}, nil
