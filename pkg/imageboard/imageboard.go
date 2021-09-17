@@ -26,6 +26,8 @@ const (
 	diskCacheDir = "/tmp/sportsmatrix/imageboard"
 )
 
+var preloaderTimeout = (15 * time.Second)
+
 // Jumper is a function that jumps to a board
 type Jumper func(boardName string) error
 
@@ -240,7 +242,6 @@ func (i *ImageBoard) renderGIFs(ctx context.Context, canvas board.Canvas, images
 		preload(images[0])
 	}
 
-	preloaderTimeout := i.config.boardDelay + (1 * time.Minute)
 IMAGES:
 	for index, p := range images {
 		if !i.config.Enabled.Load() {
@@ -254,22 +255,6 @@ IMAGES:
 			go preload(images[nextIndex])
 		}
 
-		select {
-		case <-ctx.Done():
-			return context.Canceled
-		case <-preloader[p]:
-			i.log.Debug("preloader finished", zap.String("path", p))
-		case <-time.After(preloaderTimeout):
-			i.log.Error("timed out waiting for image preloader", zap.String("path", p))
-			continue IMAGES
-		}
-
-		g, ok := preloadImages[p]
-		if !ok {
-			i.log.Error("preloaded GIF was not ready", zap.String("path", p))
-			continue IMAGES
-		}
-
 		if jump != "" && !strings.EqualFold(filepath.Base(p), jump) {
 			i.log.Debug("skipping image",
 				zap.String("this", p),
@@ -277,9 +262,28 @@ IMAGES:
 			)
 			continue IMAGES
 		} else if jump != "" {
-			i.log.Debug("jumping to image",
+			i.log.Info("jumping to image",
 				zap.String("this", p),
 			)
+		}
+
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		case <-preloader[p]:
+			i.log.Debug("preloader finished", zap.String("path", p))
+		case <-time.After(preloaderTimeout):
+			i.log.Error("timed out waiting for image preloader",
+				zap.String("path", p),
+				zap.Duration("preloader timeout", preloaderTimeout),
+			)
+			continue IMAGES
+		}
+
+		g, ok := preloadImages[p]
+		if !ok {
+			i.log.Error("preloaded GIF was not ready", zap.String("path", p))
+			continue IMAGES
 		}
 
 		i.log.Debug("playing GIF", zap.String("path", p))
@@ -325,8 +329,6 @@ func (i *ImageBoard) renderImages(ctx context.Context, canvas board.Canvas, imag
 		preload(images[0])
 	}
 
-	preloaderTimeout := i.config.boardDelay + (1 * time.Minute)
-
 IMAGES:
 	for index, p := range images {
 		if !i.config.Enabled.Load() {
@@ -340,27 +342,34 @@ IMAGES:
 			go preload(images[nextIndex])
 		}
 
+		if jump != "" && !strings.EqualFold(filepath.Base(p), jump) {
+			i.log.Debug("skipping image",
+				zap.String("this", p),
+				zap.String("jump", jump),
+			)
+			continue IMAGES
+		} else if jump != "" {
+			i.log.Info("jumping to image",
+				zap.String("this", p),
+			)
+		}
+
 		select {
 		case <-ctx.Done():
 			return context.Canceled
 		case <-preloader[p]:
 			i.log.Debug("preloader finished", zap.String("path", p))
 		case <-time.After(preloaderTimeout):
-			i.log.Error("timed out waiting for image preloader", zap.String("path", p))
+			i.log.Error("timed out waiting for image preloader",
+				zap.String("path", p),
+				zap.Duration("preloader timeout", preloaderTimeout),
+			)
 			continue IMAGES
 		}
 
 		img, ok := preloadImages[p]
 		if !ok || img == nil {
 			i.log.Error("preloaded image was not ready", zap.String("path", p))
-			continue IMAGES
-		}
-
-		if jump != "" && !strings.EqualFold(filepath.Base(p), jump) {
-			i.log.Debug("skipping image",
-				zap.String("this", p),
-				zap.String("jump", jump),
-			)
 			continue IMAGES
 		}
 
