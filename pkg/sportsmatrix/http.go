@@ -209,36 +209,9 @@ func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
 						zap.Error(err),
 					)
 				}
-				for _, b := range s.boards {
-					if strings.ToLower(b.Name()) == j.Board {
-						if !b.Enabled() {
-							b.Enable()
-						}
-
-						select {
-						case s.screenOff <- struct{}{}:
-						case <-time.After(5 * time.Second):
-							http.Error(w, "timed out", http.StatusRequestTimeout)
-							return
-						}
-
-						defer func() {
-							select {
-							case s.screenOn <- struct{}{}:
-							case <-time.After(5 * time.Second):
-								s.log.Error("failed to turn screen back on after /api/jump")
-							}
-						}()
-
-						select {
-						case s.jumpTo <- j.Board:
-						case <-time.After(5 * time.Second):
-							http.Error(w, "timed out", http.StatusRequestTimeout)
-							return
-						}
-
-						return
-					}
+				if err := s.JumpTo(j.Board); err != nil {
+					s.log.Error(err.Error(), zap.Error(err))
+					http.Error(w, err.Error(), http.StatusRequestTimeout)
 				}
 			},
 		},

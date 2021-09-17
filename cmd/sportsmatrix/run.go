@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/spf13/cobra"
 
 	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/imageboard"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 )
@@ -83,6 +85,14 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	defer mtrx.Close()
+
+	for _, b := range boards {
+		if strings.EqualFold(b.Name(), "img") {
+			if i, ok := b.(*imageboard.ImageBoard); ok {
+				i.SetJumper(mtrx.JumpTo)
+			}
+		}
+	}
 
 	fmt.Println("Starting matrix service")
 	if err := mtrx.Serve(ctx); err != nil {
