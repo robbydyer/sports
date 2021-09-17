@@ -7,8 +7,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/robbydyer/sports/pkg/board"
 	"go.uber.org/zap"
+
+	"github.com/robbydyer/sports/pkg/board"
 )
 
 type jumpRequest struct {

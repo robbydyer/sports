@@ -26,6 +26,7 @@ const (
 	diskCacheDir = "/tmp/sportsmatrix/imageboard"
 )
 
+// Jumper is a function that jumps to a board
 type Jumper func(boardName string) error
 
 // ImageBoard is a board for displaying image files
@@ -642,6 +643,7 @@ func (i *ImageBoard) validateDirectories() error {
 	return nil
 }
 
+// SetJumper sets the jumper function
 func (i *ImageBoard) SetJumper(j Jumper) {
 	i.jumper = j
 }

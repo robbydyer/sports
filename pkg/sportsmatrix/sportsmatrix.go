@@ -468,6 +468,7 @@ func (s *SportsMatrix) allDisabled() bool {
 	return true
 }
 
+// JumpTo jumps to a board with a given name
 func (s *SportsMatrix) JumpTo(boardName string) error {
 	for _, b := range s.boards {
 		if strings.EqualFold(b.Name(), boardName) {
