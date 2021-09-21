@@ -133,3 +133,11 @@ func (f *fakeStocks) Get(ctx context.Context, symbols []string, cacheExpire time
 
 func (f *fakeStocks) CacheClear() {
 }
+
+func (f *fakeStocks) TradingClose() (time.Time, error) {
+	return time.Now(), fmt.Errorf("no")
+}
+
+func (f *fakeStocks) TradingOpen() (time.Time, error) {
+	return time.Now(), fmt.Errorf("no")
+}

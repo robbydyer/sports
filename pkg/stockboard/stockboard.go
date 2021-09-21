@@ -68,6 +68,8 @@ type Stock struct {
 // API interface for getting stock data
 type API interface {
 	Get(ctx context.Context, symbols []string, interval time.Duration) ([]*Stock, error)
+	TradingOpen() (time.Time, error)
+	TradingClose() (time.Time, error)
 	CacheClear()
 }
 

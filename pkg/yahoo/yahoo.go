@@ -102,6 +102,16 @@ func (a *API) Get(ctx context.Context, symbols []string, interval time.Duration)
 	return stocks, nil
 }
 
+// TradingOpen ...
+func (a *API) TradingOpen() (time.Time, error) {
+	return tradingBegin()
+}
+
+// TradingClose ...
+func (a *API) TradingClose() (time.Time, error) {
+	return tradingEnd()
+}
+
 func (a *API) getTicker(ctx context.Context, ticker string, interval time.Duration) (*stockboard.Stock, error) {
 	cacheExpire := interval * 2
 	if stock := a.getCache(ticker, cacheExpire); stock != nil {
