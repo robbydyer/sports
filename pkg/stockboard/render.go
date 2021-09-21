@@ -16,7 +16,8 @@ import (
 
 func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board.Canvas) error {
 	canvasBounds := rgbrender.ZeroedBounds(canvas.Bounds())
-	chartBounds := rgbrender.ZeroedBounds(image.Rect(canvasBounds.Min.X, canvasBounds.Max.Y/2, canvasBounds.Max.X, canvasBounds.Max.Y))
+	chartWidth, _ := s.chartWidth(canvasBounds.Dx())
+	chartBounds := rgbrender.ZeroedBounds(image.Rect(canvasBounds.Min.X, canvasBounds.Max.Y/2, chartWidth+canvasBounds.Min.X, canvasBounds.Max.Y))
 	symbolBounds := rgbrender.ZeroedBounds(image.Rect(canvasBounds.Min.X, canvasBounds.Min.Y, canvasBounds.Max.X/2, canvasBounds.Max.Y/2))
 	priceBounds := rgbrender.ZeroedBounds(image.Rect(canvasBounds.Max.X/2, canvasBounds.Min.Y, canvasBounds.Max.X, canvasBounds.Max.Y/2))
 

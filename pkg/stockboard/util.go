@@ -5,6 +5,7 @@ import (
 	"image"
 	"math"
 	"sort"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -230,4 +231,20 @@ func (s *StockBoard) specialName(symbol string) string {
 	default:
 		return symbol
 	}
+}
+
+func (s *StockBoard) chartWidth(totalWidth int) (int, error) {
+	open, err := s.api.TradingOpen()
+	if err != nil {
+		return totalWidth, err
+	}
+	close, err := s.api.TradingClose()
+	if err != nil {
+		return totalWidth, err
+	}
+
+	totalTime := close.Sub(open)
+	passed := time.Since(open)
+
+	return int(math.Ceil((passed.Minutes() / totalTime.Minutes() * float64(totalWidth)))), nil
 }
