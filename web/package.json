@@ -6,6 +6,7 @@
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^11.2.4",
     "@testing-library/user-event": "^12.6.3",
+    "ansi-html":"npm:ansi-html-community@^0.0.8",
     "bootstrap": "^4.6.0",
     "browserslist": ">=4.16.5",
     "color-string": ">=1.5.5",
