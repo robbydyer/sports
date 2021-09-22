@@ -17,14 +17,14 @@ class Stocks extends React.Component {
             "scroll": false,
         };
     }
-    async componentDidMount() {
+    componentDidMount() {
         this.updateStatus()
     }
-    async updateStatus() {
-        await GetStatus("stocks/status", (val) => {
+    updateStatus() {
+        GetStatus("stocks/status", (val) => {
             this.setState({ "enabled": val })
         })
-        await GetStatus(`stocks/scrollstatus`, (val) => {
+        GetStatus(`stocks/scrollstatus`, (val) => {
             this.setState({
                 "scroll": val,
             })

@@ -18,18 +18,18 @@ class ImageBoard extends React.Component {
             "diskcache": false
         };
     }
-    async componentDidMount() {
+    componentDidMount() {
         this.updateStatus()
     }
 
-    async updateStatus() {
-        await GetStatus("img/status", (val) => {
+    updateStatus() {
+        GetStatus("img/status", (val) => {
             this.setState({ "enabled": val })
         })
-        await GetStatus("img/memcachestatus", (val) => {
+        GetStatus("img/memcachestatus", (val) => {
             this.setState({ "memcache": val })
         })
-        await GetStatus("img/diskcachestatus", (val) => {
+        GetStatus("img/diskcachestatus", (val) => {
             this.setState({ "diskcache": val })
         })
     }

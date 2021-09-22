@@ -14,12 +14,12 @@ class Sys extends React.Component {
         super(props);
         this.state = { "enabled": false };
     }
-    async componentDidMount() {
+    componentDidMount() {
         this.updateStatus()
     }
 
-    async updateStatus() {
-        await GetStatus(`sys/status`, (val) => {
+    updateStatus() {
+        GetStatus(`sys/status`, (val) => {
             this.setState({
                 "enabled": val,
             })

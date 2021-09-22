@@ -7,7 +7,7 @@ import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Image from 'react-bootstrap/Image';
 import pgalogo from './pga.png'
-import { GetStatus, CallMatrix } from './util';
+import { GetStatus, CallMatrix, MatrixPost } from './util';
 
 class Pga extends React.Component {
     constructor(props) {
@@ -17,16 +17,16 @@ class Pga extends React.Component {
             "scroll": false,
         };
     }
-    async componentDidMount() {
+    componentDidMount() {
         this.updateStatus()
     }
-    async updateStatus() {
-        await GetStatus(`pga/stats/status`, (val) => {
+    updateStatus() {
+        GetStatus(`pga/stats/status`, (val) => {
             this.setState({
                 "stats": val,
             })
         })
-        await GetStatus(`pga/stats/scrollstatus`, (val) => {
+        GetStatus(`pga/stats/scrollstatus`, (val) => {
             this.setState({
                 "scroll": val,
             })
@@ -47,6 +47,10 @@ class Pga extends React.Component {
             [stateVar]: !prev[stateVar],
         }))
     }
+    handleJump = (board) => {
+        MatrixPost("jump", `{"board":"${board}"}`)
+        this.updateStatus()
+    }
 
     logosrc() {
         return pgalogo;
@@ -65,6 +69,11 @@ class Pga extends React.Component {
                     <Col>
                         <Form.Switch id="pgascroll" label="Scroll Mode" checked={this.state.scroll}
                             onChange={() => this.handleSwitch(`pga/stats/scrollon`, `pga/stats/scrolloff`, "scroll")} />
+                    </Col>
+                </Row>
+                <Row className="text-left">
+                    <Col>
+                        <Button variant="primary" onClick={() => this.handleJump("pga")}>Jump</Button>
                     </Col>
                 </Row>
             </Container>

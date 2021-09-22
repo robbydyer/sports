@@ -30,11 +30,17 @@ class Sport extends React.Component {
             "record": false,
             "odds": false,
         };
+        if (this.props.sport === "ncaaf") {
+            console.log("Sport created " + this.props.sport)
+        }
     }
     async componentDidMount() {
-        this.updateStatus()
+        await this.updateStatus()
+        if (this.props.sport === "ncaaf") {
+            console.log("Sport Updated " + this.props.sport + " " + this.state.enabled)
+        }
     }
-    async updateStatus() {
+    updateStatus = async () => {
         await GetStatus(`${this.props.sport}/status`, (val) => {
             this.setState({
                 "enabled": val,
@@ -97,25 +103,25 @@ class Sport extends React.Component {
         }))
     }
 
-    handleJump = (board) => {
-        MatrixPost("jump", `{"board":"${board}"}`)
-        this.updateStatus()
+    handleJump = async (board) => {
+        await MatrixPost("jump", `{"board":"${board}"}`)
+        await this.updateStatus()
     }
 
     logosrc() {
-        if (this.props.sport == "nhl") {
+        if (this.props.sport === "nhl") {
             return nhllogo
-        } else if (this.props.sport == "ncaam") {
+        } else if (this.props.sport === "ncaam") {
             return ncaamlogo
-        } else if (this.props.sport == "ncaaf") {
+        } else if (this.props.sport === "ncaaf") {
             return ncaaflogo
-        } else if (this.props.sport == "nba") {
+        } else if (this.props.sport === "nba") {
             return nbalogo
-        } else if (this.props.sport == "nfl") {
+        } else if (this.props.sport === "nfl") {
             return nfllogo
-        } else if (this.props.sport == "mls") {
+        } else if (this.props.sport === "mls") {
             return mlslogo
-        } else if (this.props.sport == "epl") {
+        } else if (this.props.sport === "epl") {
             return epllogo
         } else {
             return mlblogo

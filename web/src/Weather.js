@@ -19,22 +19,22 @@ class Weather extends React.Component {
             "hourly": false,
         };
     }
-    async componentDidMount() {
+    componentDidMount() {
         this.updateStatus()
     }
-    async updateStatus() {
-        await GetStatus("weather/status", (val) => {
+    updateStatus() {
+        GetStatus("weather/status", (val) => {
             this.setState({ "enabled": val })
         })
-        await GetStatus(`weather/scrollstatus`, (val) => {
+        GetStatus(`weather/scrollstatus`, (val) => {
             this.setState({
                 "scroll": val,
             })
         })
-        await GetStatus("weather/dailystatus", (val) => {
+        GetStatus("weather/dailystatus", (val) => {
             this.setState({ "daily": val })
         })
-        await GetStatus("weather/hourlystatus", (val) => {
+        GetStatus("weather/hourlystatus", (val) => {
             this.setState({ "hourly": val })
         })
     }
