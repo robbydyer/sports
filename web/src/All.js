@@ -24,53 +24,66 @@ const styles = {
 
 const card_border = "18rem"
 
-const sports = ["ncaaf", "nhl", "mlb", "ncaam", "nfl", "nba", "mls", "epl"].map((sport) =>
-    <Col lg="auto" style={styles.col}>
-        <Card style={{ width: { card_border } }}>
-            <Sport sport={sport} id={sport} key={sport} />
-        </Card>
-    </Col>
-);
 
 class All extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            "sync": Date.now(),
+        }
+    }
+
+
+    doSync = () => {
+        console.log("All page updating sync time")
+        this.setState({ "sync": Date.now() })
+    }
+
     render() {
+        var sports = ["ncaaf", "nhl", "mlb", "ncaam", "nfl", "nba", "mls", "epl"].map((sport) =>
+            <Col lg="auto" style={styles.col}>
+                <Card style={{ width: { card_border } }}>
+                    <Sport sport={sport} id={sport} key={sport + this.state.sync} doSync={this.doSync} />
+                </Card>
+            </Col>
+        );
         return (
             <Container fluid="xl">
                 <Row className="justify-content-md-space-between" sm={1} lg={2} xl={3} style={styles.row}>
                     <Col lg="auto" style={styles.col}>
                         <Card style={{ width: { card_border } }}>
-                            <Home />
+                            <Home doSync={this.doSync} key={"home" + this.state.sync} />
                         </Card>
                     </Col>
                     {sports}
                     <Col lg="auto" style={styles.col}>
                         <Card style={{ width: { card_border } }}>
-                            <Pga />
+                            <Pga doSync={this.doSync} key={"pga" + this.state.sync} />
                         </Card>
                     </Col>
                     <Col lg="auto" style={styles.col}>
                         <Card style={{ width: { card_border } }}>
-                            <Weather id="weatherboard" />
+                            <Weather id="weatherboard" doSync={this.doSync} key={"weather" + this.state.sync} />
                         </Card>
                     </Col>
                     <Col lg="auto" style={styles.col}>
                         <Card style={{ width: { card_border } }}>
-                            <ImageBoard id="imgboard" />
+                            <ImageBoard id="imgboard" doSync={this.doSync} key={"img" + this.state.sync} />
                         </Card>
                     </Col>
                     <Col lg="auto" style={styles.col}>
                         <Card style={{ width: { card_border } }}>
-                            <Stocks id="stocks" />
+                            <Stocks id="stocks" doSync={this.doSync} key={"stocks" + this.state.sync} />
                         </Card>
                     </Col>
                     <Col lg="auto" style={styles.col}>
                         <Card style={{ width: { card_border } }}>
-                            <Clock id="clock" />
+                            <Clock id="clock" doSync={this.doSync} key={"clock" + this.state.sync} />
                         </Card>
                     </Col>
                     <Col lg="auto" style={styles.col}>
                         <Card style={{ width: { card_border } }}>
-                            <Sys id="sys" />
+                            <Sys id="sys" doSync={this.doSync} key={"sys" + this.state.sync} />
                         </Card>
                     </Col>
                 </Row>

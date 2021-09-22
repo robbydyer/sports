@@ -20,7 +20,7 @@ class Weather extends React.Component {
         };
     }
     async componentDidMount() {
-        this.updateStatus()
+        await this.updateStatus()
     }
     async updateStatus() {
         await GetStatus("weather/status", (val) => {
@@ -52,9 +52,9 @@ class Weather extends React.Component {
             [stateVar]: !prev[stateVar],
         }))
     }
-    handleJump = (board) => {
-        MatrixPost("jump", `{"board":"${board}"}`)
-        this.updateStatus()
+    handleJump = async (board) => {
+        await MatrixPost("jump", `{"board":"${board}"}`)
+        await this.updateStatus()
     }
 
     render() {

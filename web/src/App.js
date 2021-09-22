@@ -1,6 +1,5 @@
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import Home from './Home.js';
 import Sport from './Sport.js';
 import Pga from './Pga.js';
 import ImageBoard from './ImageBoard.js';
@@ -13,24 +12,7 @@ import TopNav from './Nav.js';
 import All from './All.js';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
-var BACKEND = "http://" + window.location.host
-
 class App extends React.Component {
-  screenOn() {
-    console.log("Turning screen on")
-    fetch(`${BACKEND}/api/screenon`, {
-      method: "GET",
-      mode: "cors",
-    });
-  }
-  screenOff() {
-    console.log("Turning screen off")
-    fetch(`${BACKEND}/api/screenoff`, {
-      method: "GET",
-      mode: "cors",
-    });
-  }
-
   render() {
     return (
       <>

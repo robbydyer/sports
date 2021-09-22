@@ -15,10 +15,10 @@ class Sys extends React.Component {
         this.state = { "enabled": false };
     }
     async componentDidMount() {
-        this.updateStatus()
+        await this.updateStatus()
     }
 
-    async updateStatus() {
+    updateStatus = async () => {
         await GetStatus(`sys/status`, (val) => {
             this.setState({
                 "enabled": val,
@@ -40,9 +40,9 @@ class Sys extends React.Component {
             [stateVar]: !prev[stateVar],
         }))
     }
-    handleJump = (board) => {
-        MatrixPost("jump", `{"board":"${board}"}`)
-        this.updateStatus()
+    handleJump = async (board) => {
+        await MatrixPost("jump", `{"board":"${board}"}`)
+        await this.updateStatus()
     }
     render() {
         return (

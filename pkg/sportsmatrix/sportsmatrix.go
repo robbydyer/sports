@@ -230,7 +230,10 @@ func (s *SportsMatrix) screenWatcher(ctx context.Context) {
 			changed := s.screenIsOn.CAS(false, true)
 			if changed {
 				s.log.Warn("screen turning on")
-				s.serveBlock <- struct{}{}
+				select {
+				case s.serveBlock <- struct{}{}:
+				default:
+				}
 				if webBoardWasOn {
 					s.webBoardOn <- struct{}{}
 				}
@@ -340,7 +343,6 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 				}
 			})
 
-			time.Sleep(2 * time.Second)
 			continue
 		}
 
@@ -354,6 +356,8 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 			case <-ctx.Done():
 				return context.Canceled
 			case <-s.serveBlock:
+				continue
+			case <-s.boardCtx.Done():
 				continue
 			}
 		}
@@ -477,6 +481,9 @@ func (s *SportsMatrix) JumpTo(boardName string) error {
 			select {
 			case s.screenOff <- struct{}{}:
 			case <-time.After(5 * time.Second):
+				s.log.Error("timed out jumping board trying to turn screen off",
+					zap.String("board", b.Name()),
+				)
 				return fmt.Errorf("timed out")
 			}
 
@@ -484,13 +491,18 @@ func (s *SportsMatrix) JumpTo(boardName string) error {
 				select {
 				case s.screenOn <- struct{}{}:
 				case <-time.After(5 * time.Second):
-					s.log.Error("failed to turn screen back on after /api/jump")
+					s.log.Error("failed to turn screen back on after /api/jump",
+						zap.String("board", b.Name()),
+					)
 				}
 			}()
 
 			select {
 			case s.jumpTo <- b.Name():
 			case <-time.After(5 * time.Second):
+				s.log.Error("timed out setting jump board in channel",
+					zap.String("board", b.Name()),
+				)
 				return fmt.Errorf("timed out")
 			}
 

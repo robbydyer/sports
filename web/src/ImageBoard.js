@@ -19,10 +19,10 @@ class ImageBoard extends React.Component {
         };
     }
     async componentDidMount() {
-        this.updateStatus()
+        await this.updateStatus()
     }
 
-    async updateStatus() {
+    updateStatus = async () => {
         await GetStatus("img/status", (val) => {
             this.setState({ "enabled": val })
         })
@@ -47,9 +47,9 @@ class ImageBoard extends React.Component {
             [stateVar]: !prev[stateVar],
         }))
     }
-    handleJump = (board) => {
-        MatrixPost("jump", `{"board":"${board}"}`)
-        this.updateStatus()
+    handleJump = async (board) => {
+        await MatrixPost("jump", `{"board":"${board}"}`)
+        await this.updateStatus()
     }
 
     render() {

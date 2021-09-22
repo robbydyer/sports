@@ -181,9 +181,11 @@ func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				s.Lock()
 				defer s.Unlock()
+				s.log.Info("disabling all boards")
 				for _, board := range s.boards {
 					board.Disable()
 				}
+				s.log.Info("all boards disabled")
 			},
 		},
 		{
@@ -194,6 +196,7 @@ func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
 				for _, board := range s.boards {
 					board.Enable()
 				}
+				s.log.Info("all boards enabled")
 			},
 		},
 		{
