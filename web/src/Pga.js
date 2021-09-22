@@ -17,16 +17,16 @@ class Pga extends React.Component {
             "scroll": false,
         };
     }
-    componentDidMount() {
-        this.updateStatus()
+    async componentDidMount() {
+        await this.updateStatus()
     }
-    updateStatus() {
-        GetStatus(`pga/stats/status`, (val) => {
+    updateStatus = async () => {
+        await GetStatus(`pga/stats/status`, (val) => {
             this.setState({
                 "stats": val,
             })
         })
-        GetStatus(`pga/stats/scrollstatus`, (val) => {
+        await GetStatus(`pga/stats/scrollstatus`, (val) => {
             this.setState({
                 "scroll": val,
             })
@@ -47,9 +47,9 @@ class Pga extends React.Component {
             [stateVar]: !prev[stateVar],
         }))
     }
-    handleJump = (board) => {
-        MatrixPost("jump", `{"board":"${board}"}`)
-        this.updateStatus()
+    handleJump = async (board) => {
+        await MatrixPost("jump", `{"board":"${board}"}`)
+        await this.updateStatus()
     }
 
     logosrc() {

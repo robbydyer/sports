@@ -19,22 +19,22 @@ class Weather extends React.Component {
             "hourly": false,
         };
     }
-    componentDidMount() {
-        this.updateStatus()
+    async componentDidMount() {
+        await this.updateStatus()
     }
-    updateStatus() {
-        GetStatus("weather/status", (val) => {
+    async updateStatus() {
+        await GetStatus("weather/status", (val) => {
             this.setState({ "enabled": val })
         })
-        GetStatus(`weather/scrollstatus`, (val) => {
+        await GetStatus(`weather/scrollstatus`, (val) => {
             this.setState({
                 "scroll": val,
             })
         })
-        GetStatus("weather/dailystatus", (val) => {
+        await GetStatus("weather/dailystatus", (val) => {
             this.setState({ "daily": val })
         })
-        GetStatus("weather/hourlystatus", (val) => {
+        await GetStatus("weather/hourlystatus", (val) => {
             this.setState({ "hourly": val })
         })
     }
@@ -52,9 +52,9 @@ class Weather extends React.Component {
             [stateVar]: !prev[stateVar],
         }))
     }
-    handleJump = (board) => {
-        MatrixPost("jump", `{"board":"${board}"}`)
-        this.updateStatus()
+    handleJump = async (board) => {
+        await MatrixPost("jump", `{"board":"${board}"}`)
+        await this.updateStatus()
     }
 
     render() {

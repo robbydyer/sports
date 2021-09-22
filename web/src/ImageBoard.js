@@ -18,18 +18,18 @@ class ImageBoard extends React.Component {
             "diskcache": false
         };
     }
-    componentDidMount() {
-        this.updateStatus()
+    async componentDidMount() {
+        await this.updateStatus()
     }
 
-    updateStatus() {
-        GetStatus("img/status", (val) => {
+    updateStatus = async () => {
+        await GetStatus("img/status", (val) => {
             this.setState({ "enabled": val })
         })
-        GetStatus("img/memcachestatus", (val) => {
+        await GetStatus("img/memcachestatus", (val) => {
             this.setState({ "memcache": val })
         })
-        GetStatus("img/diskcachestatus", (val) => {
+        await GetStatus("img/diskcachestatus", (val) => {
             this.setState({ "diskcache": val })
         })
     }
@@ -47,9 +47,9 @@ class ImageBoard extends React.Component {
             [stateVar]: !prev[stateVar],
         }))
     }
-    handleJump = (board) => {
-        MatrixPost("jump", `{"board":"${board}"}`)
-        this.updateStatus()
+    handleJump = async (board) => {
+        await MatrixPost("jump", `{"board":"${board}"}`)
+        await this.updateStatus()
     }
 
     render() {

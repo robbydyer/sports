@@ -17,14 +17,14 @@ class Stocks extends React.Component {
             "scroll": false,
         };
     }
-    componentDidMount() {
-        this.updateStatus()
+    async componentDidMount() {
+        await this.updateStatus()
     }
-    updateStatus() {
-        GetStatus("stocks/status", (val) => {
+    updateStatus = async () => {
+        await GetStatus("stocks/status", (val) => {
             this.setState({ "enabled": val })
         })
-        GetStatus(`stocks/scrollstatus`, (val) => {
+        await GetStatus(`stocks/scrollstatus`, (val) => {
             this.setState({
                 "scroll": val,
             })
@@ -44,9 +44,9 @@ class Stocks extends React.Component {
             [stateVar]: !prev[stateVar],
         }))
     }
-    handleJump = (board) => {
-        MatrixPost("jump", `{"board":"${board}"}`)
-        this.updateStatus()
+    handleJump = async (board) => {
+        await MatrixPost("jump", `{"board":"${board}"}`)
+        await this.updateStatus()
     }
 
     render() {
