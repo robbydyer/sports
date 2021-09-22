@@ -250,6 +250,14 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 	}
 	c.Start()
 
+	// TEST
+	go func() {
+		time.Sleep(60 * time.Second)
+		for k := range s.logoDrawCache {
+			s.logoDrawCache[k] = &image.NRGBA{}
+		}
+	}()
+
 	return s, nil
 }
 
