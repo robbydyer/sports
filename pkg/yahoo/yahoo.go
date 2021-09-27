@@ -195,7 +195,7 @@ func (a *API) stockFromData(data *chartDat) (*stockboard.Stock, error) {
 		t := time.Unix(ts, 0)
 
 		price := c.Indicators.Quote[0].Close[i]
-		// If price doesn't change from previos period, it returns as `null`
+		// If price doesn't change from previous period, it returns as `null`
 		if price == nil {
 			price = fltPtr(lastPrice)
 		} else {

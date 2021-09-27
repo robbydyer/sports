@@ -176,7 +176,6 @@ func (s *StockBoard) getChart(bounds image.Rectangle, stock *Stock, prices []*Pr
 			for thisY := y; thisY <= midY; thisY++ {
 				if thisY == y {
 					img.Set(x, thisY, green)
-
 				} else {
 					img.Set(x, thisY, lightGreen)
 				}
