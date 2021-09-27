@@ -153,7 +153,7 @@ func (s *StockBoard) getChart(bounds image.Rectangle, stock *Stock, prices []*Pr
 			}
 		}
 
-		if bounds.Dx()/resolution != bounds.Dx() {
+		if bounds.Dx()/resolution != bounds.Dx() && resolution > 1 {
 			fillChartGaps(img, midY, image.Pt(lastX, lastY), image.Pt(x, y))
 		}
 
@@ -166,14 +166,22 @@ func (s *StockBoard) getChart(bounds image.Rectangle, stock *Stock, prices []*Pr
 
 		if y > midY {
 			for thisY := y; thisY > midY; thisY-- {
-				img.Set(x, thisY, red)
+				if thisY == y {
+					img.Set(x, thisY, red)
+				} else {
+					img.Set(x, thisY, lightRed)
+				}
 			}
 		} else {
 			for thisY := y; thisY <= midY; thisY++ {
-				img.Set(x, thisY, green)
+				if thisY == y {
+					img.Set(x, thisY, green)
+
+				} else {
+					img.Set(x, thisY, lightGreen)
+				}
 			}
 		}
-
 		lastY = y
 	}
 
@@ -203,11 +211,19 @@ func fillChartGaps(img draw.Image, midY int, previous image.Point, current image
 	for thisX := x - 1; thisX > lastX; thisX-- {
 		if thisY <= midY {
 			for myY := thisY; myY <= midY; myY++ {
-				img.Set(thisX, myY, green)
+				if myY == thisY {
+					img.Set(thisX, myY, green)
+				} else {
+					img.Set(thisX, myY, lightGreen)
+				}
 			}
 		} else {
 			for myY := thisY; myY > midY; myY-- {
-				img.Set(thisX, myY, red)
+				if myY == thisY {
+					img.Set(thisX, myY, red)
+				} else {
+					img.Set(thisX, myY, lightRed)
+				}
 			}
 		}
 		thisY = thisY + (multiplier * fill)
