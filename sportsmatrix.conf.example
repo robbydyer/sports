@@ -624,11 +624,12 @@ stocksConfig:
   - ^IXIC
   # DOW
   - ^DJI
+  - GME
 
   # The number of price points to use in rendering the chart.
   # This number should be between 1 and the width of your matrix (i.e. 64).
   # Larger numbers *might* improve performance on lower-powered Pi's.
-  chartResolution: 1
+  chartResolution: 4
 
   # Delay between each ticker
   boardDelay: "10s"

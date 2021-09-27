@@ -268,7 +268,23 @@ func TestGetChartPrices(t *testing.T) {
 						Price: 0.0,
 					},
 					{
+						Time:  now.Add(6 * time.Minute),
+						Price: 0.0,
+					},
+					{
+						Time:  now.Add(7 * time.Minute),
+						Price: 0.0,
+					},
+					{
 						Time:  now.Add(15 * time.Minute),
+						Price: 1.0,
+					},
+					{
+						Time:  now.Add(16 * time.Minute),
+						Price: 1.0,
+					},
+					{
+						Time:  now.Add(17 * time.Minute),
 						Price: 1.0,
 					},
 					{

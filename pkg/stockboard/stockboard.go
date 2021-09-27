@@ -19,8 +19,10 @@ import (
 )
 
 var (
-	red   = color.RGBA{255, 0, 0, 255}
-	green = color.RGBA{0, 255, 0, 255}
+	red        = color.RGBA{255, 0, 0, 255}
+	green      = color.RGBA{0, 255, 0, 255}
+	lightGreen = color.NRGBA{0, 255, 0, 50}
+	lightRed   = color.NRGBA{255, 0, 0, 50}
 )
 
 // StockBoard displays stocks

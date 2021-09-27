@@ -41,7 +41,7 @@ type chartDat struct {
 			Timestamp  []int64 `json:"timestamp"`
 			Indicators *struct {
 				Quote []*struct {
-					Close []float64 `json:"close"`
+					Close []*float64 `json:"close"`
 				} `json:"quote"`
 			} `json:"indicators"`
 		} `json:"result"`
@@ -186,12 +186,25 @@ func (a *API) stockFromData(data *chartDat) (*stockboard.Stock, error) {
 
 	s.Change = ((s.Price - s.OpenPrice) / s.OpenPrice) * 100.0
 
+	fltPtr := func(f float64) *float64 {
+		return &f
+	}
+
+	lastPrice := s.OpenPrice
 	for i, ts := range c.Timestamp {
 		t := time.Unix(ts, 0)
 
+		price := c.Indicators.Quote[0].Close[i]
+		// If price doesn't change from previous period, it returns as `null`
+		if price == nil {
+			price = fltPtr(lastPrice)
+		} else {
+			lastPrice = *price
+		}
+
 		p := &stockboard.Price{
 			Time:  t,
-			Price: c.Indicators.Quote[0].Close[i],
+			Price: *price,
 		}
 
 		a.log.Debug("add price",
