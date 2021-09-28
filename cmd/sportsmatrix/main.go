@@ -22,6 +22,7 @@ import (
 	"github.com/robbydyer/sports/pkg/espnboard"
 	"github.com/robbydyer/sports/pkg/imageboard"
 	"github.com/robbydyer/sports/pkg/mlb"
+	"github.com/robbydyer/sports/pkg/musicboard"
 	"github.com/robbydyer/sports/pkg/nhl"
 	"github.com/robbydyer/sports/pkg/openweather"
 	"github.com/robbydyer/sports/pkg/pga"
@@ -31,6 +32,7 @@ import (
 	"github.com/robbydyer/sports/pkg/statboard"
 	"github.com/robbydyer/sports/pkg/stockboard"
 	"github.com/robbydyer/sports/pkg/sysboard"
+	"github.com/robbydyer/sports/pkg/tidal"
 	"github.com/robbydyer/sports/pkg/util"
 	"github.com/robbydyer/sports/pkg/weatherboard"
 	"github.com/robbydyer/sports/pkg/yahoo"
@@ -264,6 +266,13 @@ func (r *rootArgs) setConfigDefaults() {
 		}
 	}
 	r.config.WeatherConfig.SetDefaults()
+
+	if r.config.TidalConfig == nil {
+		r.config.TidalConfig = &musicboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
+	r.config.TidalConfig.SetDefaults()
 }
 
 func (r *rootArgs) getRGBMatrix(logger *zap.Logger) (rgb.Matrix, error) {
@@ -503,6 +512,18 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 		b, err := weatherboard.New(api, r.config.WeatherConfig, logger)
+		if err != nil {
+			return nil, err
+		}
+		boards = append(boards, b)
+	}
+
+	if r.config.TidalConfig != nil {
+		api, err := tidal.New(ctx, logger)
+		if err != nil {
+			return nil, err
+		}
+		b, err := musicboard.New(api, r.config.TidalConfig, logger)
 		if err != nil {
 			return nil, err
 		}
