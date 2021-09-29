@@ -1,0 +1,31 @@
+syntax = "proto3";
+package github.com.robbydyer.sports.sportsmatrix;
+option go_package = "github.com/robbyder/sports/sportsmatrix";
+
+message Empty {}
+
+service Sportsmatrix {
+       rpc Version(Empty) returns (VersionResp);
+       rpc ScreenOn(Empty) returns (Empty);
+       rpc ScreenOff(Empty) returns (Empty);
+       rpc Status(Empty) returns (ScreenStatusResp);
+       rpc SetAll(SetAllReq) returns (Empty);
+       rpc Jump(JumpReq) returns (Empty);
+}
+
+message VersionResp {
+    string version = 1;
+}
+
+message ScreenStatusResp {
+    bool screen_on = 1;
+    bool webboard_on = 2;
+}
+
+message SetAllReq {
+    bool enabled = 1;
+}
+
+message JumpReq {
+    string board = 1;
+}
