@@ -29,6 +29,7 @@ type ncaafRanks struct {
 	Previous int    `json:"previous"`
 	Record   string `json:"recordSummary"`
 	Team     *struct {
+		ID           string `json:"id"`
 		Abbreviation string `json:"abbreviation"`
 	} `json:"team"`
 }
@@ -123,7 +124,7 @@ RANK:
 	for _, rank := range ranks {
 		// Set rank for ALL teams, not just ones passed to this func
 		for _, t := range e.teams {
-			if t.Abbreviation == rank.Team.Abbreviation {
+			if t.ID == rank.Team.ID {
 				e.log.Debug("setting NCAAF rank",
 					zap.String("team", t.Abbreviation),
 					zap.Int("rank", rank.Current),

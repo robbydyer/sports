@@ -12,7 +12,7 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
-func (s *SportBoard) getTeamInfoWidth(league string, teamAbbrev string) (int, error) {
+func (s *SportBoard) getTeamInfoWidth(league string, teamID string) (int, error) {
 	s.teamInfoLock.RLock()
 	defer s.teamInfoLock.RUnlock()
 
@@ -20,15 +20,15 @@ func (s *SportBoard) getTeamInfoWidth(league string, teamAbbrev string) (int, er
 	if !lOk {
 		return 0, fmt.Errorf("no info for league %s", league)
 	}
-	i, ok := s.teamInfoWidths[league][teamAbbrev]
+	i, ok := s.teamInfoWidths[league][teamID]
 	if !ok {
-		return 0, fmt.Errorf("no info for %s %s", league, teamAbbrev)
+		return 0, fmt.Errorf("no info for %s %s", league, teamID)
 	}
 
 	return i, nil
 }
 
-func (s *SportBoard) setTeamInfoWidth(league string, teamAbbrev string, width int) {
+func (s *SportBoard) setTeamInfoWidth(league string, teamID string, width int) {
 	s.teamInfoLock.Lock()
 	defer s.teamInfoLock.Unlock()
 
@@ -37,7 +37,7 @@ func (s *SportBoard) setTeamInfoWidth(league string, teamAbbrev string, width in
 		s.teamInfoWidths[league] = make(map[string]int)
 	}
 
-	s.teamInfoWidths[league][teamAbbrev] = width
+	s.teamInfoWidths[league][teamID] = width
 }
 
 func (s *SportBoard) logCanvas(canvas board.Canvas, msg string) {

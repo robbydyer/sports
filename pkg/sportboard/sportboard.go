@@ -99,13 +99,13 @@ type FontConfig struct {
 // API ...
 type API interface {
 	GetTeams(ctx context.Context) ([]Team, error)
-	TeamFromAbbreviation(ctx context.Context, abbreviation string) (Team, error)
+	TeamFromID(ctx context.Context, abbreviation string) (Team, error)
 	GetScheduledGames(ctx context.Context, date []time.Time) ([]Game, error)
 	DateStr(d time.Time) string
 	League() string
 	HTTPPathPrefix() string
 	GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config, bounds image.Rectangle) (*logo.Logo, error)
-	AllTeamAbbreviations() []string
+	// AllTeamAbbreviations() []string
 	GetWatchTeams(teams []string, season string) []string
 	TeamRecord(ctx context.Context, team Team, season string) string
 	TeamRank(ctx context.Context, team Team, season string) string
@@ -115,7 +115,7 @@ type API interface {
 
 // Team ...
 type Team interface {
-	GetID() int
+	GetID() string
 	GetName() string
 	GetAbbreviation() string
 	GetDisplayName() string
@@ -424,14 +424,8 @@ OUTER:
 			s.log.Error("failed to get away team", zap.Error(err))
 			continue OUTER
 		}
-		for _, watchTeam := range s.watchTeams {
-			team, err := s.api.TeamFromAbbreviation(boardCtx, watchTeam)
-			if err != nil {
-				s.log.Error("failed to get team", zap.Error(err))
-				continue OUTER
-			}
-
-			if home.GetID() == team.GetID() || away.GetID() == team.GetID() {
+		for _, watchTeamID := range s.watchTeams {
+			if home.GetID() == watchTeamID || away.GetID() == watchTeamID {
 				games = append(games, game)
 
 				// Ensures the daily data for this team has been fetched

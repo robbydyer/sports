@@ -99,6 +99,39 @@ func (e *ESPNBoard) getTeams(ctx context.Context) ([]*Team, error) {
 		return e.teams, nil
 	}
 
+	teams, err := e.teamsFromAPI(ctx)
+	if err == nil {
+		return teams, nil
+	}
+	e.log.Error("failed to pull team info from API",
+		zap.String("league", e.League()),
+		zap.Error(err),
+	)
+
+	return e.teamsFromAssests()
+}
+
+func (e *ESPNBoard) teamsFromAPI(ctx context.Context) ([]*Team, error) {
+	e.log.Info("pulling team info from API",
+		zap.String("league", e.leaguer.League()),
+	)
+	teams := []*Team{}
+	for _, endpoint := range e.leaguer.TeamEndpoints() {
+		dat, err := pullTeams(ctx, endpoint)
+		if err != nil {
+			return nil, err
+		}
+		t, err := parseTeamData(dat)
+		if err != nil {
+			return nil, err
+		}
+		teams = append(teams, t...)
+	}
+
+	return teams, nil
+}
+
+func (e *ESPNBoard) teamsFromAssests() ([]*Team, error) {
 	assetFiles := []string{
 		fmt.Sprintf("%s_groups.json", e.leaguer.HTTPPathPrefix()),
 		fmt.Sprintf("%s_teams.json", e.leaguer.HTTPPathPrefix()),
@@ -125,21 +158,6 @@ func (e *ESPNBoard) getTeams(ctx context.Context) ([]*Team, error) {
 		}
 	}
 
-	e.log.Info("pulling team info from API",
-		zap.String("league", e.leaguer.League()),
-	)
-	for _, endpoint := range e.leaguer.TeamEndpoints() {
-		dat, err := pullTeams(ctx, endpoint)
-		if err != nil {
-			return nil, err
-		}
-		t, err := parseTeamData(dat)
-		if err != nil {
-			return nil, err
-		}
-		teams = append(teams, t...)
-	}
-
 	return teams, nil
 }
 
@@ -161,7 +179,7 @@ func parseTeamData(dat []byte) ([]*Team, error) {
 					Abbreviation: fmt.Sprintf("%s_%s", conf, division),
 				}
 				team.Conference = conf
-				teamSet[team.Abbreviation] = team
+				teamSet[team.ID] = team
 			}
 		}
 	}
@@ -170,7 +188,7 @@ func parseTeamData(dat []byte) ([]*Team, error) {
 	for _, sport := range d.Sports {
 		for _, league := range sport.Leagues {
 			for _, t := range league.Teams {
-				teamSet[t.Team.Abbreviation] = t.Team
+				teamSet[t.Team.ID] = t.Team
 			}
 		}
 	}
@@ -184,13 +202,8 @@ func parseTeamData(dat []byte) ([]*Team, error) {
 }
 
 // GetID ...
-func (t *Team) GetID() int {
-	id, err := strconv.Atoi(t.ID)
-	if err != nil {
-		return 0
-	}
-
-	return id
+func (t *Team) GetID() string {
+	return t.ID
 }
 
 // GetName ...

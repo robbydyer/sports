@@ -42,7 +42,7 @@ type ESPNBoard struct {
 	logos            map[string]*logo.Logo
 	logoConfOnce     map[string]struct{}
 	defaultLogoConf  *[]*logo.Config
-	allTeams         []string
+	allTeamIDs       []string
 	logoLock         sync.RWMutex
 	logoLockers      map[string]*sync.Mutex
 	conferenceNames  map[string]struct{}
@@ -109,7 +109,7 @@ func (e *ESPNBoard) CacheClear(ctx context.Context) {
 	for k := range e.logos {
 		delete(e.logos, k)
 	}
-	e.allTeams = []string{}
+	e.allTeamIDs = []string{}
 	e.teams = nil
 	e.rankSorted.Store(false)
 	e.ranksSet.Store(false)
@@ -132,7 +132,7 @@ func (e *ESPNBoard) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 	var tList []sportboard.Team
 
 	for _, t := range e.teams {
-		e.allTeams = append(e.allTeams, t.Abbreviation)
+		e.allTeamIDs = append(e.allTeamIDs, t.ID)
 		tList = append(tList, t)
 
 		if t.Conference != nil {
@@ -143,15 +143,15 @@ func (e *ESPNBoard) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 	return tList, nil
 }
 
-// TeamFromAbbreviation ...
-func (e *ESPNBoard) TeamFromAbbreviation(ctx context.Context, abbreviation string) (sportboard.Team, error) {
+// TeamFromID ...
+func (e *ESPNBoard) TeamFromID(ctx context.Context, id string) (sportboard.Team, error) {
 	for _, t := range e.teams {
-		if t.Abbreviation == abbreviation {
+		if t.ID == id {
 			return t, nil
 		}
 	}
 
-	return nil, fmt.Errorf("could not find team '%s'", abbreviation)
+	return nil, fmt.Errorf("could not find team '%s'", id)
 }
 
 // GetScheduledGames ...
@@ -218,16 +218,11 @@ func (e *ESPNBoard) HTTPPathPrefix() string {
 	return e.leaguer.HTTPPathPrefix()
 }
 
-// AllTeamAbbreviations ...
-func (e *ESPNBoard) AllTeamAbbreviations() []string {
-	return e.allTeams
-}
-
-// GetWatchTeams ...
+// GetWatchTeams returns a list of team ID's
 func (e *ESPNBoard) GetWatchTeams(teams []string, season string) []string {
 	if len(teams) == 0 {
 		e.log.Info("setting ESPNBoard watch teams to ALL teams")
-		return e.AllTeamAbbreviations()
+		return e.allTeamIDs
 	}
 
 	confs := make([]string, len(e.conferenceNames))
@@ -248,7 +243,7 @@ OUTER:
 	for _, t := range teams {
 		if t == "ALL" {
 			e.log.Info("setting ESPNBoard watch teams to ALL teams")
-			return e.AllTeamAbbreviations()
+			return e.allTeamIDs
 		}
 		if strings.HasPrefix(t, "TOP") {
 			fields := strings.Split(t, "TOP")
@@ -262,18 +257,17 @@ OUTER:
 				)
 			}
 			for _, a := range e.teamsInRank(top, season) {
-				watch[a] = struct{}{}
+				watch[a.GetID()] = struct{}{}
 			}
 			continue OUTER
 		}
-		for _, a := range e.AllTeamAbbreviations() {
-			if t == a {
-				watch[t] = struct{}{}
-				continue OUTER
+		for _, team := range e.teams {
+			if team.GetAbbreviation() == t {
+				watch[team.GetID()] = struct{}{}
 			}
 		}
 		for _, team := range e.TeamsInConference(t) {
-			watch[team] = struct{}{}
+			watch[team.GetID()] = struct{}{}
 		}
 	}
 
@@ -288,7 +282,7 @@ OUTER:
 }
 
 // TeamsInConference ...
-func (e *ESPNBoard) TeamsInConference(conference string) []string {
+func (e *ESPNBoard) TeamsInConference(conference string) []*Team {
 	conference = strings.ToLower(conference)
 	found := false
 	for c := range e.conferenceNames {
@@ -301,14 +295,14 @@ func (e *ESPNBoard) TeamsInConference(conference string) []string {
 		return nil
 	}
 	e.log.Debug("checking conference for teams", zap.String("conference", conference))
-	ret := []string{}
+	ret := []*Team{}
 
 	for _, team := range e.teams {
 		if team.Conference == nil {
 			continue
 		}
 		if strings.Contains(conference, strings.ToLower(team.Conference.Abbreviation)) || strings.Contains(strings.ToLower(team.Conference.Abbreviation), conference) {
-			ret = append(ret, team.Abbreviation)
+			ret = append(ret, team)
 		}
 	}
 
@@ -316,15 +310,15 @@ func (e *ESPNBoard) TeamsInConference(conference string) []string {
 }
 
 // teamsInRank grabs all teams within the top X number of rankings
-func (e *ESPNBoard) teamsInRank(top int, season string) []string {
+func (e *ESPNBoard) teamsInRank(top int, season string) []*Team {
 	if top < 1 {
-		return []string{}
+		return []*Team{}
 	}
 	e.log.Debug("fetching teams in rank",
 		zap.Int("top", top),
 		zap.String("league", e.League()),
 	)
-	teams := []string{}
+	teams := []*Team{}
 	if !e.rankSorted.Load() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
@@ -346,7 +340,7 @@ func (e *ESPNBoard) teamsInRank(top int, season string) []string {
 			break
 		}
 		if t.rank != 0 {
-			teams = append(teams, t.GetAbbreviation())
+			teams = append(teams, t)
 			index++
 		}
 	}
@@ -373,7 +367,7 @@ func (e *ESPNBoard) UpdateGames(ctx context.Context, dateStr string) error {
 func (e *ESPNBoard) TeamRank(ctx context.Context, team sportboard.Team, season string) string {
 	var realTeam *Team
 	for _, t := range e.teams {
-		if t.Abbreviation == team.GetAbbreviation() {
+		if t.ID == team.GetID() {
 			realTeam = t
 			break
 		}
@@ -402,7 +396,7 @@ func (e *ESPNBoard) TeamRank(ctx context.Context, team sportboard.Team, season s
 func (e *ESPNBoard) TeamRecord(ctx context.Context, team sportboard.Team, season string) string {
 	var realTeam *Team
 	for _, t := range e.teams {
-		if t.Abbreviation == team.GetAbbreviation() {
+		if t.ID == team.GetID() {
 			realTeam = t
 			break
 		}
