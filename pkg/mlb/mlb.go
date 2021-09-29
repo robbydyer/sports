@@ -96,15 +96,15 @@ func (m *MLB) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 	return tList, nil
 }
 
-// TeamFromAbbreviation ...
-func (m *MLB) TeamFromAbbreviation(ctx context.Context, abbreviation string) (sportboard.Team, error) {
+// TeamFromID ...
+func (m *MLB) TeamFromID(ctx context.Context, id string) (sportboard.Team, error) {
 	for _, t := range m.teams {
-		if t.Abbreviation == abbreviation {
+		if t.GetID() == id {
 			return t, nil
 		}
 	}
 
-	return nil, fmt.Errorf("could not find team '%s'", abbreviation)
+	return nil, fmt.Errorf("could not find team '%s'", id)
 }
 
 // GetScheduledGames ...
@@ -158,22 +158,23 @@ func (m *MLB) GetWatchTeams(teams []string, season string) []string {
 	watch := make(map[string]struct{})
 	for _, t := range teams {
 		if t == "ALL" {
-			m.log.Info("setting MLB watch teams to ALL teams")
-			return m.AllTeamAbbreviations()
+			m.log.Info("setting NHL watch teams to ALL teams")
+			ids := []string{}
+			for _, t := range m.teams {
+				ids = append(ids, t.GetID())
+			}
+			return ids
 		}
-		isDiv := false
+
 	INNER:
 		for _, team := range m.teams {
-			if team.Division == nil {
+			if team.Division != nil && team.Division.Abbreviation == t {
+				watch[team.GetID()] = struct{}{}
 				continue INNER
 			}
-			if team.Division.Abbreviation == t {
-				watch[team.Abbreviation] = struct{}{}
-				isDiv = true
+			if team.GetAbbreviation() == t {
+				watch[team.GetID()] = struct{}{}
 			}
-		}
-		if !isDiv {
-			watch[t] = struct{}{}
 		}
 	}
 

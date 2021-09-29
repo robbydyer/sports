@@ -106,14 +106,14 @@ func (s *SportBoard) getLogoCache(logoKey string) (*logo.Logo, error) {
 }
 
 // RenderLeftLogo ...
-func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rectangle, abbreviation string) (image.Image, error) {
+func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rectangle, teamID string) (image.Image, error) {
 	select {
 	case <-ctx.Done():
 		return nil, context.Canceled
 	default:
 	}
 	bounds := rgbrender.ZeroedBounds(canvasBounds)
-	logoKey := fmt.Sprintf("%s_HOME_%dx%d", abbreviation, bounds.Dx(), bounds.Dy())
+	logoKey := fmt.Sprintf("%s_HOME_%dx%d", teamID, bounds.Dx(), bounds.Dy())
 
 	i, err := s.getLogoDrawCache(logoKey)
 	if err == nil && i != nil {
@@ -166,7 +166,7 @@ func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rect
 	}
 
 	if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
-		w, err := s.getTeamInfoWidth(s.api.League(), abbreviation)
+		w, err := s.getTeamInfoWidth(s.api.League(), teamID)
 		if err != nil {
 			w = defaultTeamInfoArea
 			setCache = false
@@ -197,14 +197,14 @@ func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rect
 }
 
 // RenderRightLogo ...
-func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rectangle, abbreviation string) (image.Image, error) {
+func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rectangle, teamID string) (image.Image, error) {
 	select {
 	case <-ctx.Done():
 		return nil, context.Canceled
 	default:
 	}
 	bounds := rgbrender.ZeroedBounds(canvasBounds)
-	logoKey := fmt.Sprintf("%s_AWAY_%dx%d", abbreviation, bounds.Dx(), bounds.Dy())
+	logoKey := fmt.Sprintf("%s_AWAY_%dx%d", teamID, bounds.Dx(), bounds.Dy())
 
 	i, err := s.getLogoDrawCache(logoKey)
 	if err == nil && i != nil {
@@ -218,7 +218,7 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 		logoConf := s.logoConfig(logoKey, bounds)
 
 		s.log.Debug("fetching logo",
-			zap.String("abbreviation", abbreviation),
+			zap.String("abbreviation", teamID),
 			zap.Int("X", bounds.Dx()),
 			zap.Int("Y", bounds.Dy()),
 		)
@@ -263,7 +263,7 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 	}
 
 	if s.config.ShowRecord.Load() || s.config.GamblingSpread.Load() {
-		recordAdder, err = s.getTeamInfoWidth(s.api.League(), abbreviation)
+		recordAdder, err = s.getTeamInfoWidth(s.api.League(), teamID)
 		if err != nil {
 			s.log.Error("failed to get team info width",
 				zap.Error(err),

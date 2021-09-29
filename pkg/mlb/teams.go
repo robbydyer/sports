@@ -52,8 +52,8 @@ type division struct {
 }
 
 // GetID ...
-func (t *Team) GetID() int {
-	return t.ID
+func (t *Team) GetID() string {
+	return fmt.Sprintf("%d", t.ID)
 }
 
 // GetName ...

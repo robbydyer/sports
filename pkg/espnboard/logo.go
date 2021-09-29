@@ -49,13 +49,13 @@ func (e *ESPNBoard) GetLogo(ctx context.Context, logoKey string, logoConf *logo.
 		return nil, err
 	}
 
-	// A logoKey should be LEAGUE_TEAM_HOME|AWAY_XxY, ie. ncaam_ALA_HOME_64x32
+	// A logoKey should be LEAGUE_TEAM_HOME|AWAY_XxY, ie. ncaam_1234_HOME_64x32
 	p := strings.Split(logoKey, "_")
 	if len(p) < 4 {
 		return nil, fmt.Errorf("invalid logo key")
 	}
 
-	teamAbbrev := p[1]
+	teamID := p[1]
 	dimKey := p[3]
 
 	e.logoLock.Lock()
@@ -77,7 +77,7 @@ func (e *ESPNBoard) GetLogo(ctx context.Context, logoKey string, logoConf *logo.
 	defer e.setLogoCache(logoKey, l)
 
 	logoGetter := func(ctx context.Context) (image.Image, error) {
-		return e.GetLogoSource(ctx, teamAbbrev, logoSearch(teamAbbrev))
+		return e.GetLogoSource(ctx, teamID, logoSearch(teamID))
 	}
 
 	if logoConf != nil {
@@ -127,9 +127,10 @@ func (e *ESPNBoard) loadDefaultLogoConfigs(bounds image.Rectangle) error {
 	return nil
 }
 
-func logoSearch(team string) string {
-	switch team {
-	case "IOWA":
+func logoSearch(teamID string) string {
+	switch teamID {
+	case "2294":
+		// IOWA
 		return "dark"
 	}
 
@@ -137,12 +138,12 @@ func logoSearch(team string) string {
 }
 
 // GetLogoSource ...
-func (e *ESPNBoard) GetLogoSource(ctx context.Context, teamAbbreviation string, logoURLSearch string) (image.Image, error) {
+func (e *ESPNBoard) GetLogoSource(ctx context.Context, teamID string, logoURLSearch string) (image.Image, error) {
 	e.Lock()
-	l, ok := e.logoLockers[teamAbbreviation]
+	l, ok := e.logoLockers[teamID]
 	if !ok {
-		e.logoLockers[teamAbbreviation] = &sync.Mutex{}
-		l = e.logoLockers[teamAbbreviation]
+		e.logoLockers[teamID] = &sync.Mutex{}
+		l = e.logoLockers[teamID]
 	}
 	e.Unlock()
 	l.Lock()
@@ -153,7 +154,7 @@ func (e *ESPNBoard) GetLogoSource(ctx context.Context, teamAbbreviation string, 
 		return nil, err
 	}
 
-	cacheFile := filepath.Join(cacheDir, fmt.Sprintf("%s_%s.png", e.leaguer.HTTPPathPrefix(), teamAbbreviation))
+	cacheFile := filepath.Join(cacheDir, fmt.Sprintf("%s_%s.png", e.leaguer.HTTPPathPrefix(), teamID))
 
 	if _, err := os.Stat(cacheFile); err != nil {
 		if !os.IsNotExist(err) {
@@ -162,7 +163,7 @@ func (e *ESPNBoard) GetLogoSource(ctx context.Context, teamAbbreviation string, 
 	} else {
 		e.log.Debug("reading source logo from cache",
 			zap.String("league", e.leaguer.League()),
-			zap.String("team", teamAbbreviation),
+			zap.String("team", teamID),
 		)
 		r, err := os.Open(cacheFile)
 		if err != nil {
@@ -177,7 +178,7 @@ func (e *ESPNBoard) GetLogoSource(ctx context.Context, teamAbbreviation string, 
 	}
 	e.log.Debug("looking for logo source",
 		zap.String("league", e.leaguer.League()),
-		zap.String("team", teamAbbreviation),
+		zap.String("team", teamID),
 		zap.Int("num teams", len(teams)),
 	)
 
@@ -185,13 +186,13 @@ func (e *ESPNBoard) GetLogoSource(ctx context.Context, teamAbbreviation string, 
 	foundSource := false
 OUTER:
 	for _, team := range teams {
-		if team.Abbreviation != teamAbbreviation {
+		if team.ID != teamID {
 			continue OUTER
 		}
 
 		e.log.Debug("looking for logo source",
 			zap.String("league", e.leaguer.League()),
-			zap.String("team", teamAbbreviation),
+			zap.String("team", teamID),
 			zap.Int("num logos", len(team.Logos)),
 		)
 
@@ -227,22 +228,22 @@ OUTER:
 		e.log.Debug("pulling logo from API",
 			zap.String("URL", href),
 			zap.String("league", e.leaguer.League()),
-			zap.String("team", teamAbbreviation),
+			zap.String("team", teamID),
 		)
 		i, err = util.PullPng(ctx, href)
 		if err != nil || i == nil {
-			return nil, fmt.Errorf("failed to retrieve logo from API for %s %s: %w", teamAbbreviation, href, err)
+			return nil, fmt.Errorf("failed to retrieve logo from API for %s %s: %w", teamID, href, err)
 		}
 		foundSource = true
 	}
 
 	if !foundSource {
-		return nil, fmt.Errorf("failed to determine source URL for logo %s", teamAbbreviation)
+		return nil, fmt.Errorf("failed to determine source URL for logo %s", teamID)
 	}
 
 	e.log.Debug("saving source logo to cache",
 		zap.String("league", e.leaguer.League()),
-		zap.String("team", teamAbbreviation),
+		zap.String("team", teamID),
 	)
 	if err := rgbrender.SavePng(i, cacheFile); err != nil {
 		e.log.Error("failed to save logo to cache", zap.Error(err))

@@ -519,7 +519,7 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 	return []*rgbrender.Layer{
 		rgbrender.NewLayer(
 			func(ctx context.Context) (image.Image, error) {
-				l, err := s.RenderLeftLogo(ctx, bounds, leftTeam.GetAbbreviation())
+				l, err := s.RenderLeftLogo(ctx, bounds, leftTeam.GetID())
 				if err != nil {
 					s.log.Error("failed to render left logo",
 						zap.Error(err),
@@ -564,7 +564,7 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 
 		rgbrender.NewLayer(
 			func(ctx context.Context) (image.Image, error) {
-				l, err := s.RenderRightLogo(ctx, bounds, rightTeam.GetAbbreviation())
+				l, err := s.RenderRightLogo(ctx, bounds, rightTeam.GetID())
 				if err != nil {
 					s.log.Error("failed to render right logo",
 						zap.Error(err),
@@ -689,7 +689,7 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 						zap.String("league", s.api.League()),
 						zap.String("team", leftTeam.GetAbbreviation()),
 					)
-					s.setTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation(), w)
+					s.setTeamInfoWidth(s.api.League(), leftTeam.GetID(), w)
 					maxX := (leftBounds.Bounds().Dx() - s.textAreaWidth(leftBounds)) / 2
 					maxX -= teamInfoPad
 					leftBounds = image.Rect(leftBounds.Min.X, leftBounds.Min.Y, maxX, leftBounds.Max.Y)
@@ -698,7 +698,7 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 				}
 
 				// Scroll mode
-				infoWidth, err := s.getTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation())
+				infoWidth, err := s.getTeamInfoWidth(s.api.League(), leftTeam.GetID())
 				if err != nil || infoWidth == 0 {
 					var err error
 					infoWidth, err = s.calculateTeamInfoWidth(canvas, writer, widthStrs)
@@ -713,7 +713,7 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 						zap.String("team", leftTeam.GetAbbreviation()),
 						zap.Int("width", infoWidth),
 					)
-					s.setTeamInfoWidth(s.api.League(), leftTeam.GetAbbreviation(), infoWidth)
+					s.setTeamInfoWidth(s.api.League(), leftTeam.GetID(), infoWidth)
 				}
 				endX := ((z.Dx() - textWidth) / 2) - teamInfoPad
 				switch longestScore {
@@ -803,7 +803,7 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 						zap.String("league", s.api.League()),
 						zap.String("team", rightTeam.GetAbbreviation()),
 					)
-					s.setTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation(), w)
+					s.setTeamInfoWidth(s.api.League(), rightTeam.GetID(), w)
 					minX := ((rightBounds.Bounds().Dx() - s.textAreaWidth(rightBounds)) / 2) + s.textAreaWidth(rightBounds)
 					minX += teamInfoPad
 					rightBounds = image.Rect(minX, rightBounds.Min.Y, rightBounds.Max.X, rightBounds.Max.Y)
@@ -812,7 +812,7 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 				}
 
 				// Scroll mode
-				infoWidth, err := s.getTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation())
+				infoWidth, err := s.getTeamInfoWidth(s.api.League(), rightTeam.GetID())
 				if err != nil || infoWidth == 0 {
 					var err error
 					infoWidth, err = s.calculateTeamInfoWidth(canvas, writer, widthStrs)
@@ -826,7 +826,7 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 						zap.String("team", rightTeam.GetAbbreviation()),
 						zap.Int("width", infoWidth),
 					)
-					s.setTeamInfoWidth(s.api.League(), rightTeam.GetAbbreviation(), infoWidth)
+					s.setTeamInfoWidth(s.api.League(), rightTeam.GetID(), infoWidth)
 				}
 				logoWidth := (z.Dx() - textWidth) / 2
 				startX := textWidth + logoWidth + teamInfoPad
