@@ -12,14 +12,17 @@ import (
 	"time"
 
 	"github.com/robfig/cron/v3"
+	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
+	pb "github.com/robbydyer/sports/internal/proto/sportboard"
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 	"github.com/robbydyer/sports/pkg/statboard"
+	"github.com/robbydyer/sports/pkg/twirphelpers"
 	"github.com/robbydyer/sports/pkg/util"
 )
 
@@ -50,6 +53,7 @@ type SportBoard struct {
 	cancelBoard     chan struct{}
 	previousScores  []*previousScore
 	prevScoreLock   sync.Mutex
+	rpcServer       pb.TwirpServer
 	sync.Mutex
 }
 
@@ -249,6 +253,20 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		return nil, fmt.Errorf("failed to set cron for cacheClear: %w", err)
 	}
 	c.Start()
+
+	svr := &Server{
+		board: s,
+	}
+	prfx := s.api.HTTPPathPrefix()
+	if !strings.HasPrefix(prfx, "/") {
+		prfx = fmt.Sprintf("/%s", prfx)
+	}
+	s.rpcServer = pb.NewSportServer(svr,
+		twirp.WithServerPathPrefix(prfx),
+		twirp.ChainHooks(
+			twirphelpers.GetDefaultHooks(s, s.log),
+		),
+	)
 
 	return s, nil
 }

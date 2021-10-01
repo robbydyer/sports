@@ -13,9 +13,13 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
+	"github.com/twitchtv/twirp"
+
+	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
+	"github.com/robbydyer/sports/pkg/twirphelpers"
 )
 
 var (
@@ -34,6 +38,7 @@ type StockBoard struct {
 	priceWriter  *rgbrender.TextWriter
 	enablerLock  sync.Mutex
 	cancelBoard  chan struct{}
+	rpcServer    pb.TwirpServer
 	sync.Mutex
 }
 
@@ -128,6 +133,16 @@ func New(api API, cfg *Config, log *zap.Logger) (*StockBoard, error) {
 		log:         log,
 		cancelBoard: make(chan struct{}),
 	}
+
+	svr := &Server{
+		board: s,
+	}
+	s.rpcServer = pb.NewBasicBoardServer(svr,
+		twirp.WithServerPathPrefix("/stocks"),
+		twirp.ChainHooks(
+			twirphelpers.GetDefaultHooks(s, s.log),
+		),
+	)
 
 	return s, nil
 }

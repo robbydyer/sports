@@ -2,6 +2,7 @@ package sportsmatrix
 
 import (
 	"context"
+	"net/http"
 	"testing"
 	"time"
 
@@ -49,6 +50,10 @@ func (b *TestBoard) Render(ctx context.Context, canvases board.Canvas) error {
 
 func (b *TestBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 	return nil, nil
+}
+
+func (b *TestBoard) GetRPCHandler() (string, http.Handler) {
+	return "", nil
 }
 
 func (b *TestBoard) HasRendered() bool {

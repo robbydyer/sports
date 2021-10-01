@@ -14,8 +14,11 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robfig/cron/v3"
+	"github.com/twitchtv/twirp"
 
+	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/pkg/rgbrender"
+	"github.com/robbydyer/sports/pkg/twirphelpers"
 )
 
 // StatBoard ...
@@ -29,6 +32,7 @@ type StatBoard struct {
 	withPrefixCol bool
 	lastUpdate    time.Time
 	cancelBoard   chan struct{}
+	rpcServer     pb.TwirpServer
 	sync.Mutex
 }
 
@@ -149,42 +153,61 @@ func New(ctx context.Context, api API, config *Config, logger *zap.Logger, opts 
 		s.sorter = defaultSorter
 	}
 
-	if len(config.OnTimes) < 1 && len(config.OffTimes) < 1 {
-		return s, nil
-	}
-	c := cron.New()
+	if len(config.OnTimes) > 1 || len(config.OffTimes) > 1 {
+		c := cron.New()
 
-	for _, off := range config.OffTimes {
-		s.log.Info("statboard will be scheduled to turn off",
-			zap.String("turn off", off),
-			zap.String("league", s.api.LeagueShortName()),
-		)
-		_, err := c.AddFunc(off, func() {
-			s.log.Warn("statboard turning off",
+		for _, off := range config.OffTimes {
+			s.log.Info("statboard will be scheduled to turn off",
+				zap.String("turn off", off),
 				zap.String("league", s.api.LeagueShortName()),
 			)
-			s.Disable()
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to add cron for statboard off time: %w", err)
+			_, err := c.AddFunc(off, func() {
+				s.log.Warn("statboard turning off",
+					zap.String("league", s.api.LeagueShortName()),
+				)
+				s.Disable()
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to add cron for statboard off time: %w", err)
+			}
 		}
-	}
-	for _, on := range config.OnTimes {
-		s.log.Info("statboard will be scheduled to turn off",
-			zap.String("turn on", on),
-			zap.String("league", s.api.LeagueShortName()),
-		)
-		_, err := c.AddFunc(on, func() {
-			s.log.Warn("statboard turning on",
+		for _, on := range config.OnTimes {
+			s.log.Info("statboard will be scheduled to turn off",
+				zap.String("turn on", on),
 				zap.String("league", s.api.LeagueShortName()),
 			)
-			s.Enable()
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to add cron for statboard on time: %w", err)
+			_, err := c.AddFunc(on, func() {
+				s.log.Warn("statboard turning on",
+					zap.String("league", s.api.LeagueShortName()),
+				)
+				s.Enable()
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to add cron for statboard on time: %w", err)
+			}
 		}
+		c.Start()
 	}
-	c.Start()
+
+	svr := &Server{
+		board: s,
+	}
+	prfx := s.api.HTTPPathPrefix()
+	if !strings.HasPrefix(prfx, "/") {
+		prfx = fmt.Sprintf("/%s", prfx)
+	}
+	prfx = fmt.Sprintf("/stat%s", prfx)
+
+	s.log.Info("registering RPC server for Statboard",
+		zap.String("league", s.api.LeagueShortName()),
+		zap.String("prefix", prfx),
+	)
+	s.rpcServer = pb.NewBasicBoardServer(svr,
+		twirp.WithServerPathPrefix(prfx),
+		twirp.ChainHooks(
+			twirphelpers.GetDefaultHooks(s, s.log),
+		),
+	)
 
 	return s, nil
 }

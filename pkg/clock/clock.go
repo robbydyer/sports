@@ -9,9 +9,11 @@ import (
 	"time"
 
 	"github.com/golang/freetype/truetype"
+	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
+	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
@@ -22,6 +24,7 @@ type Clock struct {
 	font        *truetype.Font
 	textWriters map[int]*rgbrender.TextWriter
 	log         *zap.Logger
+	rpcServer   pb.TwirpServer
 	sync.Mutex
 }
 
@@ -61,6 +64,24 @@ func New(config *Config, logger *zap.Logger) (*Clock, error) {
 		log:         logger,
 		textWriters: make(map[int]*rgbrender.TextWriter),
 	}
+
+	svr := &Server{
+		board: c,
+	}
+	c.rpcServer = pb.NewBasicBoardServer(svr,
+		twirp.WithServerPathPrefix("/clock"),
+		twirp.ChainHooks(
+			&twirp.ServerHooks{
+				Error: func(ctx context.Context, err twirp.Error) context.Context {
+					c.log.Error("twirp API error",
+						zap.Error(err),
+						zap.String("board", "clock"),
+					)
+					return ctx
+				},
+			},
+		),
+	)
 
 	return c, nil
 }

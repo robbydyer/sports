@@ -19,6 +19,7 @@ if [ "${IN_DOCKER}" = "no" ]; then
     -v /tmp:/tmp \
     -w /src \
     -p 8080:8080 \
+    -p 8081:8081 \
     ${pibuilder} \
     /src/script/$(basename $0)
 fi

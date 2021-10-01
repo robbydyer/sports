@@ -13,10 +13,14 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
+	"github.com/twitchtv/twirp"
+
+	pb "github.com/robbydyer/sports/internal/proto/weatherboard"
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
+	"github.com/robbydyer/sports/pkg/twirphelpers"
 )
 
 // WeatherBoard displays weather
@@ -30,6 +34,7 @@ type WeatherBoard struct {
 	cancelBoard chan struct{}
 	bigWriter   *rgbrender.TextWriter
 	smallWriter *rgbrender.TextWriter
+	rpcServer   pb.TwirpServer
 	sync.Mutex
 }
 
@@ -130,6 +135,16 @@ func New(api API, cfg *Config, log *zap.Logger) (*WeatherBoard, error) {
 		cancelBoard: make(chan struct{}),
 		iconCache:   make(map[string]*logo.Logo),
 	}
+
+	svr := &Server{
+		board: s,
+	}
+	s.rpcServer = pb.NewWeatherBoardServer(svr,
+		twirp.WithServerPathPrefix(""),
+		twirp.ChainHooks(
+			twirphelpers.GetDefaultHooks(s, s.log),
+		),
+	)
 
 	return s, nil
 }

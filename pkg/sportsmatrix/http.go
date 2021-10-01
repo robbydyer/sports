@@ -11,9 +11,12 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 
+	pb "github.com/robbydyer/sports/internal/proto/sportsmatrix"
 	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/twirphelpers"
 )
 
 //go:embed assets
@@ -56,6 +59,9 @@ func (s *SportsMatrix) startHTTP() chan error {
 	}
 
 	for _, b := range s.boards {
+		s.log.Info("register HTTP/RPC handlers for board",
+			zap.String("board", b.Name()),
+		)
 		handlers, err := b.GetHTTPHandlers()
 		if err != nil {
 			errChan <- err
@@ -63,6 +69,16 @@ func (s *SportsMatrix) startHTTP() chan error {
 		}
 		for _, h := range handlers {
 			register(b.Name(), h)
+		}
+
+		// RPC handlers
+		if path, h := b.GetRPCHandler(); h != nil && path != "" {
+			// path = strings.TrimPrefix(path, "/")
+			s.log.Info("register RPC Handler",
+				zap.String("path", path),
+				zap.String("board", b.Name()),
+			)
+			router.PathPrefix(path).Handler(h)
 		}
 	}
 
@@ -87,6 +103,29 @@ func (s *SportsMatrix) startHTTP() chan error {
 		dupe[e] = struct{}{}
 	}
 
+	s.server = http.Server{
+		Addr:    fmt.Sprintf(":%d", s.cfg.HTTPListenPort),
+		Handler: router,
+	}
+
+	// RPC server
+	svr := &Server{
+		sm: s,
+	}
+
+	twirpHandler := pb.NewSportsmatrixServer(svr,
+		twirp.WithServerPathPrefix(""),
+		twirp.ChainHooks(
+			twirphelpers.GetDefaultHooks(nil, s.log),
+		),
+	)
+	s.log.Info("register RPC Handler",
+		zap.String("board", "Sportsmatrix"),
+		zap.String("path", twirpHandler.PathPrefix()),
+	)
+	// router.Handle(twirpHandler.PathPrefix(), twirpHandler)
+	router.PathPrefix(twirpHandler.PathPrefix()).Handler(twirpHandler)
+
 	if s.cfg.ServeWebUI {
 		filesys := fs.FS(assets)
 		web, err := fs.Sub(filesys, "assets/web")
@@ -97,11 +136,6 @@ func (s *SportsMatrix) startHTTP() chan error {
 		}
 		s.log.Info("serving web UI", zap.Int("port", s.cfg.HTTPListenPort))
 		router.PathPrefix("/").Handler(http.FileServer(EmbedDir{http.FS(web)}))
-	}
-
-	s.server = http.Server{
-		Addr:    fmt.Sprintf(":%d", s.cfg.HTTPListenPort),
-		Handler: router,
 	}
 
 	s.log.Info("Starting http server")
