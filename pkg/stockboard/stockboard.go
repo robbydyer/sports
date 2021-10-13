@@ -42,6 +42,7 @@ type Config struct {
 	boardDelay         time.Duration
 	updateInterval     time.Duration
 	scrollDelay        time.Duration
+	adjustedResolution int
 	Enabled            *atomic.Bool `json:"enabled"`
 	Symbols            []string     `json:"symbols"`
 	ChartResolution    int          `json:"chartResolution"`

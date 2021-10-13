@@ -21,7 +21,24 @@ func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board
 	symbolBounds := rgbrender.ZeroedBounds(image.Rect(canvasBounds.Min.X, canvasBounds.Min.Y, canvasBounds.Max.X/2, canvasBounds.Max.Y/2))
 	priceBounds := rgbrender.ZeroedBounds(image.Rect(canvasBounds.Max.X/2, canvasBounds.Min.Y, canvasBounds.Max.X, canvasBounds.Max.Y/2))
 
-	chartPrices := s.getChartPrices(chartBounds.Dx()/s.config.ChartResolution, stock)
+	if len(stock.Prices) < canvasBounds.Dx()/s.config.ChartResolution {
+		s.config.adjustedResolution = int(math.Ceil(float64(chartBounds.Dx()) / float64(len(stock.Prices))))
+	}
+
+	chartPrices := s.getChartPrices(chartBounds.Dx()/s.config.adjustedResolution, stock)
+
+	s.log.Debug("stock prices",
+		zap.String("symbol", stock.Symbol),
+		zap.Float64("open", stock.OpenPrice),
+		zap.Int("total prices", len(stock.Prices)),
+		zap.Int("sampled prices", len(chartPrices)),
+		zap.Int("canvas width", canvasBounds.Dx()),
+		zap.Int("max pix", chartWidth),
+		zap.Int("max allowed pixels", chartBounds.Dx()/s.config.adjustedResolution),
+		zap.Int("configured resolution", s.config.ChartResolution),
+		zap.Int("adjusted resolution", s.config.adjustedResolution),
+		zap.Float64s("prices", prices(chartPrices)),
+	)
 
 	chart := s.getChart(chartBounds, stock, chartPrices)
 
@@ -114,29 +131,27 @@ func (s *StockBoard) getChart(bounds image.Rectangle, stock *Stock, prices []*Pr
 
 	midY := ((bounds.Max.Y - bounds.Min.Y) / 2) + bounds.Min.Y
 
+	x := bounds.Min.X - 1
+	lastY := midY
+
 	s.log.Debug("draw chart",
 		zap.Int("mid", midY),
 		zap.Float64("open price", stock.OpenPrice),
 		zap.Float64("max price", maxPrice.Price),
 		zap.Float64("min price", minPrice.Price),
 		zap.Float64("deviator", deviator),
+		zap.Int("num prices", len(prices)),
+		zap.Int("configured resolution", s.config.ChartResolution),
+		zap.Int("adjusted resolution", s.config.adjustedResolution),
 	)
-
-	x := bounds.Min.X - 1
-	lastY := midY
-
-	resolution := s.config.ChartResolution
-
-	if len(prices) < bounds.Dx()/resolution {
-		resolution = int(math.Ceil(float64(bounds.Dx()) / float64(len(prices))))
-	}
 
 	for _, price := range prices {
 		lastX := x
-		x += resolution
+		x += s.config.adjustedResolution
 
 		var y int
 		clr := green
+		logClr := "green"
 		if price.Price == stock.OpenPrice {
 			y = midY
 		} else if price.Price > stock.OpenPrice {
@@ -147,21 +162,24 @@ func (s *StockBoard) getChart(bounds image.Rectangle, stock *Stock, prices []*Pr
 			}
 		} else {
 			clr = red
+			logClr = "red"
 			y = midY + int(math.Ceil((stock.OpenPrice-price.Price)/deviator))
 			if y == midY {
 				y++
 			}
 		}
 
-		if bounds.Dx()/resolution != bounds.Dx() && resolution > 1 {
-			fillChartGaps(img, midY, image.Pt(lastX, lastY), image.Pt(x, y))
+		if bounds.Dx()/s.config.adjustedResolution != bounds.Dx() && s.config.adjustedResolution > 1 {
+			s.fillChartGaps(img, midY, image.Pt(lastX, lastY), image.Pt(x, y))
 		}
 
 		img.Set(x, y, clr)
 		s.log.Debug("set pt",
 			zap.Int("X", x),
 			zap.Int("Y", y),
+			zap.Int("midY", midY),
 			zap.Float64("price", price.Price),
+			zap.String("color", logClr),
 		)
 
 		if y > midY {
@@ -189,7 +207,7 @@ func (s *StockBoard) getChart(bounds image.Rectangle, stock *Stock, prices []*Pr
 
 // fillChartGaps fills in a draw.Image chart with a mid line Y value with corresponding
 // colors above/below the mid line
-func fillChartGaps(img draw.Image, midY int, previous image.Point, current image.Point) {
+func (s *StockBoard) fillChartGaps(img draw.Image, midY int, previous image.Point, current image.Point) {
 	lastX := previous.X
 	lastY := previous.Y
 	x := current.X
@@ -207,11 +225,28 @@ func fillChartGaps(img draw.Image, midY int, previous image.Point, current image
 	if y > midY {
 		thisY = y - fill
 	}
+
+	s.log.Debug("fill chart gaps",
+		zap.Int("prevX", previous.X),
+		zap.Int("prevY", previous.Y),
+		zap.Int("X", current.X),
+		zap.Int("Y", current.X),
+		zap.Int("steps", steps),
+		zap.Int("fill", fill),
+		zap.Int("multiplier", multiplier),
+		zap.Int("thisX", x-1),
+		zap.Int("thisY", thisY),
+	)
 	for thisX := x - 1; thisX > lastX; thisX-- {
 		if thisY <= midY {
 			for myY := thisY; myY <= midY; myY++ {
 				if myY == thisY {
 					img.Set(thisX, myY, green)
+					s.log.Debug("fill",
+						zap.Int("X", thisX),
+						zap.Int("Y", myY),
+						zap.String("color", "green"),
+					)
 				} else {
 					img.Set(thisX, myY, lightGreen)
 				}
@@ -220,6 +255,11 @@ func fillChartGaps(img draw.Image, midY int, previous image.Point, current image
 			for myY := thisY; myY > midY; myY-- {
 				if myY == thisY {
 					img.Set(thisX, myY, red)
+					s.log.Debug("fill",
+						zap.Int("X", thisX),
+						zap.Int("Y", myY),
+						zap.String("color", "red"),
+					)
 				} else {
 					img.Set(thisX, myY, lightRed)
 				}
