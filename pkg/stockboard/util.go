@@ -246,5 +246,20 @@ func (s *StockBoard) chartWidth(totalWidth int) (int, error) {
 	totalTime := close.Sub(open)
 	passed := time.Since(open)
 
-	return int(math.Ceil((passed.Minutes() / totalTime.Minutes() * float64(totalWidth)))), nil
+	val := int(math.Ceil((passed.Minutes() / totalTime.Minutes() * float64(totalWidth))))
+	if val > totalWidth || val < 1 {
+		return totalWidth, nil
+	}
+
+	return val, nil
+}
+
+func prices(p []*Price) []float64 {
+	ret := []float64{}
+
+	for _, price := range p {
+		ret = append(ret, price.Price)
+	}
+
+	return ret
 }
