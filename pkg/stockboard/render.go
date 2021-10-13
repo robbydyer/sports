@@ -21,11 +21,14 @@ func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board
 	symbolBounds := rgbrender.ZeroedBounds(image.Rect(canvasBounds.Min.X, canvasBounds.Min.Y, canvasBounds.Max.X/2, canvasBounds.Max.Y/2))
 	priceBounds := rgbrender.ZeroedBounds(image.Rect(canvasBounds.Max.X/2, canvasBounds.Min.Y, canvasBounds.Max.X, canvasBounds.Max.Y/2))
 
-	if len(stock.Prices) < canvasBounds.Dx()/s.config.ChartResolution {
+	var chartPrices []*Price
+	if len(stock.Prices) >= chartBounds.Dx() {
+		chartPrices = s.getChartPrices(chartBounds.Dx(), stock)
+		s.config.adjustedResolution = 1
+	} else {
 		s.config.adjustedResolution = int(math.Ceil(float64(chartBounds.Dx()) / float64(len(stock.Prices))))
+		chartPrices = s.getChartPrices(chartBounds.Dx()/s.config.adjustedResolution, stock)
 	}
-
-	chartPrices := s.getChartPrices(chartBounds.Dx()/s.config.adjustedResolution, stock)
 
 	s.log.Debug("stock prices",
 		zap.String("symbol", stock.Symbol),
@@ -169,7 +172,7 @@ func (s *StockBoard) getChart(bounds image.Rectangle, stock *Stock, prices []*Pr
 			}
 		}
 
-		if bounds.Dx()/s.config.adjustedResolution != bounds.Dx() && s.config.adjustedResolution > 1 {
+		if s.config.adjustedResolution > 1 {
 			s.fillChartGaps(img, midY, image.Pt(lastX, lastY), image.Pt(x, y))
 		}
 

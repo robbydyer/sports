@@ -247,7 +247,7 @@ func (s *StockBoard) chartWidth(totalWidth int) (int, error) {
 	passed := time.Since(open)
 
 	val := int(math.Ceil((passed.Minutes() / totalTime.Minutes() * float64(totalWidth))))
-	if val > totalWidth {
+	if val > totalWidth || val < 1 {
 		return totalWidth, nil
 	}
 
