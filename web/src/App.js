@@ -16,7 +16,7 @@ class App extends React.Component {
   render() {
     var sports = ["ncaaf", "nhl", "mlb", "ncaam", "nfl", "nba", "mls", "epl"].map((sport) =>
       <Route path={"/" + sport} render={() => {
-        <Sport sport={sport} id={sport} key={sport} />
+        <Sport sport={sport} id={sport} key={sport + Date.now()} doSync={() => { console.log("I didn't really sync") }} />
       }} />
     );
     return (

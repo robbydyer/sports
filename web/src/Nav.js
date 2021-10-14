@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Container from 'react-bootstrap/Container';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
+import NavDropDown from 'react-bootstrap/NavDropdown';
 import { Link } from 'react-router-dom';
 import { withRouter } from "react-router";
 import { GetVersion } from './util';
@@ -33,6 +34,10 @@ class TopNav extends React.Component {
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="mr-auto">
                             <Nav.Link as={Link} to="/">Home</Nav.Link>
+                            <NavDropDown title="Sports" id="sports-drop">
+
+                                <NavDropDown.Item><Nav.Link as={Link} to="/nhl">NHL</Nav.Link></NavDropDown.Item>
+                            </NavDropDown>
                             <Nav.Link as={Link} to="/nhl">NHL</Nav.Link>
                             <Nav.Link as={Link} to="/ncaaf">NCAA Football</Nav.Link>
                             <Nav.Link as={Link} to="/mlb">MLB</Nav.Link>
