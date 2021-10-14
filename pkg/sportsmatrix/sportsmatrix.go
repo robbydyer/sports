@@ -21,25 +21,27 @@ var version = "noversion"
 
 // SportsMatrix controls the RGB matrix. It rotates through a list of given board.Board
 type SportsMatrix struct {
-	cfg           *Config
-	isServing     chan struct{}
-	canvases      []board.Canvas
-	boards        []board.Board
-	screenIsOn    *atomic.Bool
-	screenOff     chan struct{}
-	screenOn      chan struct{}
-	webBoardIsOn  *atomic.Bool
-	webBoardOn    chan struct{}
-	webBoardOff   chan struct{}
-	serveBlock    chan struct{}
-	log           *zap.Logger
-	boardCtx      context.Context
-	boardCancel   context.CancelFunc
-	server        http.Server
-	close         chan struct{}
-	httpEndpoints []string
-	jumpLock      sync.Mutex
-	jumpTo        chan string
+	cfg                *Config
+	isServing          chan struct{}
+	canvases           []board.Canvas
+	boards             []board.Board
+	screenIsOn         *atomic.Bool
+	screenOff          chan struct{}
+	screenOn           chan struct{}
+	webBoardIsOn       *atomic.Bool
+	webBoardOn         chan struct{}
+	webBoardOff        chan struct{}
+	serveBlock         chan struct{}
+	log                *zap.Logger
+	boardCtx           context.Context
+	boardCancel        context.CancelFunc
+	currentBoardCtx    context.Context
+	currentBoardCancel context.CancelFunc
+	server             http.Server
+	close              chan struct{}
+	httpEndpoints      []string
+	jumpLock           sync.Mutex
+	jumpTo             chan string
 	sync.Mutex
 }
 
@@ -372,10 +374,14 @@ func (s *SportsMatrix) serveLoop(ctx context.Context) {
 
 LOOP:
 	for _, b := range s.boards {
+		s.currentBoardCtx, s.currentBoardCancel = context.WithCancel(ctx)
+
 		select {
 		case <-ctx.Done():
 			s.log.Error("board context was canceled")
 			return
+		case <-s.currentBoardCtx.Done():
+			continue LOOP
 		case j := <-s.jumpTo:
 			jumpTo = j
 		default:
@@ -403,6 +409,8 @@ LOOP:
 			select {
 			case <-ctx.Done():
 				return
+			case <-s.currentBoardCtx.Done():
+				return
 			case <-renderDone:
 			case <-time.After(5 * time.Minute):
 				s.log.Error("board rendered longer than normal", zap.String("board", b.Name()))
@@ -428,7 +436,7 @@ LOOP:
 			go func(canvas board.Canvas) {
 				defer wg.Done()
 				s.log.Debug("rendering board", zap.String("board", b.Name()))
-				if err := b.Render(ctx, canvas); err != nil {
+				if err := b.Render(s.currentBoardCtx, canvas); err != nil {
 					s.log.Error(err.Error())
 				}
 			}(canvas)
@@ -445,6 +453,8 @@ LOOP:
 		case <-ctx.Done():
 			s.log.Warn("context canceled waiting for canvases to render")
 			return
+		case <-s.currentBoardCtx.Done():
+			continue LOOP
 		case <-done:
 		}
 		s.log.Debug("done waiting for canvases")

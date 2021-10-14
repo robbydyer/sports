@@ -25,6 +25,7 @@ type SportsmatrixClient interface {
 	Status(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ScreenStatusResp, error)
 	SetAll(ctx context.Context, in *SetAllReq, opts ...grpc.CallOption) (*empty.Empty, error)
 	Jump(ctx context.Context, in *JumpReq, opts ...grpc.CallOption) (*empty.Empty, error)
+	NextBoard(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type sportsmatrixClient struct {
@@ -89,6 +90,15 @@ func (c *sportsmatrixClient) Jump(ctx context.Context, in *JumpReq, opts ...grpc
 	return out, nil
 }
 
+func (c *sportsmatrixClient) NextBoard(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/matrix.v1.Sportsmatrix/NextBoard", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SportsmatrixServer is the server API for Sportsmatrix service.
 // All implementations must embed UnimplementedSportsmatrixServer
 // for forward compatibility
@@ -99,6 +109,7 @@ type SportsmatrixServer interface {
 	Status(context.Context, *empty.Empty) (*ScreenStatusResp, error)
 	SetAll(context.Context, *SetAllReq) (*empty.Empty, error)
 	Jump(context.Context, *JumpReq) (*empty.Empty, error)
+	NextBoard(context.Context, *empty.Empty) (*empty.Empty, error)
 	mustEmbedUnimplementedSportsmatrixServer()
 }
 
@@ -123,6 +134,9 @@ func (UnimplementedSportsmatrixServer) SetAll(context.Context, *SetAllReq) (*emp
 }
 func (UnimplementedSportsmatrixServer) Jump(context.Context, *JumpReq) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Jump not implemented")
+}
+func (UnimplementedSportsmatrixServer) NextBoard(context.Context, *empty.Empty) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NextBoard not implemented")
 }
 func (UnimplementedSportsmatrixServer) mustEmbedUnimplementedSportsmatrixServer() {}
 
@@ -245,6 +259,24 @@ func _Sportsmatrix_Jump_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Sportsmatrix_NextBoard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SportsmatrixServer).NextBoard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/matrix.v1.Sportsmatrix/NextBoard",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SportsmatrixServer).NextBoard(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Sportsmatrix_ServiceDesc is the grpc.ServiceDesc for Sportsmatrix service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -275,6 +307,10 @@ var Sportsmatrix_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Jump",
 			Handler:    _Sportsmatrix_Jump_Handler,
+		},
+		{
+			MethodName: "NextBoard",
+			Handler:    _Sportsmatrix_NextBoard_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
