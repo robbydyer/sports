@@ -8,6 +8,9 @@ import TopNav from './Nav.js';
 import All from './All.js';
 import BasicBoard from './BasicBoard';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
+import SwaggerUI from 'swagger-ui-react';
+import "swagger-ui-react/swagger-ui.css";
+import swag from './matrix.swagger.json';
 
 class App extends React.Component {
   render() {
@@ -29,6 +32,7 @@ class App extends React.Component {
           <Route path="/stocks" render={() => <BasicBoard id="stocks" name="stocks" key="stocks" />} />
           <Route path="/weather" exact component={Weather} />
           <Route path="/board" exact component={Board} />
+          <Route path="/docs" exact component={() => <SwaggerUI spec={swag} />} />
         </Router>
         <hr />
       </>

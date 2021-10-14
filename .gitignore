@@ -16,3 +16,4 @@ sportsmatrix.arm*
 .vscode
 web/src/config.json
 web/build
+docs-base/

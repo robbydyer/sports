@@ -16,7 +16,6 @@ import mlslogo from './mls.png';
 import epllogo from './epl.png'
 import { MatrixPostRet, JSONToStatus, JumpToBoard } from './util';
 import { SetStatusReq, Status } from './sportboard/sportboard_pb';
-import { JumpReq } from './sportsmatrix/sportsmatrix_pb';
 import * as statboard_pb from './basicboard/basicboard_pb';
 
 
