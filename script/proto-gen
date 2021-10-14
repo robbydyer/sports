@@ -1,21 +1,30 @@
 #!/bin/bash
 set -euo pipefail
 
-ROOT=$(git rev-parse --show-toplevel)
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 cd "${ROOT}"
 
-img="proto-gen-go"
-if ! docker images | grep $img; then
-  docker build -t $img -f Dockerfile.proto .
-fi
+source "${ROOT}/script/build.pibuilder"
+buildprotoc
 
-for f in `echo proto/*`; do
-  gof="$(echo $f | cut -f1 -d.)"
-  [ ! -d internal/${gof} ] && mkdir -p internal/${gof}
+rm -rf "${ROOT}"/internal/proto/*
+
+for dir in $(find proto -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq | grep -v ^proto/google); do
+  set -x
   docker run --rm \
     -u $(id -u):$(id -g) \
-    -v ${ROOT}:/src \
+    -v ${ROOT}:/src:delegated \
     -w /src \
-    $img \
-    protoc -I ./proto --go_out=plugins=grpc:internal/${gof} ${f}
+    $(latestprotoc) \
+    protoc \
+      --proto_path=./proto \
+      --go_out=./internal/proto \
+      --twirp_out=./internal/proto \
+      --go-grpc_out=./internal/proto \
+      --js_out=import_style=commonjs,binary:./web/src \
+      "${dir}"/*.proto
 done
+
+module=$(awk '/module/ {print $2}' go.mod)
+mv "internal/proto/$module"/internal/proto/* ./internal/proto/
+find ./internal/proto -empty -type d -delete

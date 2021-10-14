@@ -15,11 +15,14 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
+	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
+	pb "github.com/robbydyer/sports/internal/proto/imageboard"
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbrender"
+	"github.com/robbydyer/sports/pkg/twirphelpers"
 )
 
 const (
@@ -42,6 +45,7 @@ type ImageBoard struct {
 	jumpLock   sync.Mutex
 	jumper     Jumper
 	jumpTo     chan string
+	rpcServer  pb.TwirpServer
 	sync.Mutex
 }
 
@@ -97,6 +101,16 @@ func New(fs afero.Fs, cfg *Config, logger *zap.Logger) (*ImageBoard, error) {
 	if err := i.validateDirectories(); err != nil {
 		return nil, err
 	}
+
+	svr := &Server{
+		board: i,
+	}
+	i.rpcServer = pb.NewImageBoardServer(svr,
+		twirp.WithServerPathPrefix(""),
+		twirp.ChainHooks(
+			twirphelpers.GetDefaultHooks(i, i.log),
+		),
+	)
 
 	return i, nil
 }

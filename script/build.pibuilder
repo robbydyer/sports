@@ -19,6 +19,10 @@ latestlinter() {
   echo "robbydyer/rgbmatrixlint:$(getsha "${ROOT}/Dockerfile.lint")"
 }
 
+latestprotoc() {
+  echo "robbydyer/protoc:$(getsha "${ROOT}/Dockerfile.protoc")"
+}
+
 buildpibuilder() {
   cd "${ROOT}"
   img=$(latestpibuilder)
@@ -29,6 +33,21 @@ buildpibuilder() {
       --builder=build \
       -f Dockerfile.pibuilder \
       --platform=linux/amd64,linux/arm64/v8 \
+      --push \
+      .
+  fi
+}
+
+buildprotoc() {
+  cd "${ROOT}"
+  img=$(latestprotoc)
+
+  if [ "$(docker images -q ${img})" = "" ]; then
+    docker buildx create --use --name=build --node=build
+    docker buildx build -t "${img}" -t robbydyer/protoc:latest \
+      --builder=build \
+      -f Dockerfile.protoc \
+      --platform=linux/arm64/v8 \
       --push \
       .
   fi

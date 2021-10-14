@@ -1,37 +1,32 @@
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Sport from './Sport.js';
-import Pga from './Pga.js';
 import ImageBoard from './ImageBoard.js';
-import Clock from './Clock.js';
 import Board from './Board.js';
-import Sys from './Sys.js';
-import Stocks from './Stocks.js';
 import Weather from './Weather.js';
 import TopNav from './Nav.js';
 import All from './All.js';
+import BasicBoard from './BasicBoard';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
 class App extends React.Component {
   render() {
+    var sports = ["ncaaf", "nhl", "mlb", "ncaam", "nfl", "nba", "mls", "epl"].map((sport) =>
+      <Route path={"/" + sport} render={() => {
+        <Sport sport={sport} id={sport} key={sport} />
+      }} />
+    );
     return (
       <>
         <Router>
           <TopNav />
+          {sports}
           <Route path="/" exact component={All} />
-          <Route path="/nhl" render={() => <Sport sport="nhl" />} />
-          <Route path="/mlb" render={() => <Sport sport="mlb" />} />
-          <Route path="/pga" render={() => <Pga />} />
-          <Route path="/ncaam" render={() => <Sport sport="ncaam" />} />
-          <Route path="/ncaaf" render={() => <Sport sport="ncaaf" />} />
-          <Route path="/nba" render={() => <Sport sport="nba" />} />
-          <Route path="/nfl" render={() => <Sport sport="nfl" />} />
-          <Route path="/mls" render={() => <Sport sport="mls" />} />
-          <Route path="/epl" render={() => <Sport sport="epl" />} />
+          <Route path="/pga" render={() => <BasicBoard id="pga" name="pga" key="pga" path="stat/pga" />} />
           <Route path="/img" exact component={ImageBoard} />
-          <Route path="/clock" exact component={Clock} />
-          <Route path="/sys" exact component={Sys} />
-          <Route path="/stocks" exact component={Stocks} />
+          <Route path="/clock" render={() => <BasicBoard id="clock" name="clock" key="clock" />} />
+          <Route path="/sys" render={() => <BasicBoard id="sys" name="sys" key="sys" />} />
+          <Route path="/stocks" render={() => <BasicBoard id="stocks" name="stocks" key="stocks" />} />
           <Route path="/weather" exact component={Weather} />
           <Route path="/board" exact component={Board} />
         </Router>

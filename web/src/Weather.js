@@ -7,87 +7,83 @@ import Col from 'react-bootstrap/Col';
 import Image from 'react-bootstrap/Image';
 import weatherimg from './weather.png';
 import Form from 'react-bootstrap/Form';
-import { GetStatus, CallMatrix, MatrixPost } from './util';
+import { MatrixPostRet, JumpToBoard } from './util';
+import * as pb from './weatherboard/weatherboard_pb';
+
+function jsonToStatus(jsonDat) {
+    var d = JSON.parse(jsonDat);
+    var dat = d.status;
+    var status = new pb.Status();
+    status.setEnabled(dat.enabled);
+    status.setScrollEnabled(dat.scroll_enabled);
+    status.setDailyEnabled(dat.daily_enabled);
+    status.setHourlyEnabled(dat.hourly_enabled);
+
+    return status;
+}
 
 class Weather extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            "enabled": false,
-            "scroll": false,
-            "daily": false,
-            "hourly": false,
+            "status": new pb.Status(),
         };
     }
     async componentDidMount() {
-        await this.updateStatus()
+        await this.getStatus();
     }
-    async updateStatus() {
-        await GetStatus("weather/status", (val) => {
-            this.setState({ "enabled": val })
-        })
-        await GetStatus(`weather/scrollstatus`, (val) => {
+    getStatus = async () => {
+        await MatrixPostRet("weather.v1.WeatherBoard/GetStatus", '{}').then((resp) => {
+            if (resp.ok) {
+                return resp.text()
+            }
+            throw resp
+        }).then((data) => {
+            var dat = jsonToStatus(data);
             this.setState({
-                "scroll": val,
+                "status": dat,
             })
-        })
-        await GetStatus("weather/dailystatus", (val) => {
-            this.setState({ "daily": val })
-        })
-        await GetStatus("weather/hourlystatus", (val) => {
-            this.setState({ "hourly": val })
-        })
+        });
     }
-    handleSwitch = (apiOn, apiOff, stateVar) => {
-        var currentState = this.state[stateVar]
-        console.log("handle switch", currentState)
-        if (currentState) {
-            console.log("Turn off", apiOff)
-            CallMatrix(apiOff);
-        } else {
-            console.log("Turn on", apiOn)
-            CallMatrix(apiOn);
-        }
-        this.setState(prev => ({
-            [stateVar]: !prev[stateVar],
-        }))
-    }
-    handleJump = async (board) => {
-        await MatrixPost("jump", `{"board":"${board}"}`)
-        await this.updateStatus()
+
+    updateStatus = async () => {
+        var req = new pb.SetStatusReq();
+        req.setStatus(this.state.status);
+        await MatrixPostRet("weather.v1.WeatherBoard/SetStatus", JSON.stringify(req.toObject()));
+        await this.getStatus();
     }
 
     render() {
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Image src={weatherimg} style={{ height: '100px', width: 'auto' }} onClick={() => this.handleJump("weather")} fluid /></Col></Row>
+                <Row className="text-center"><Col><Image src={weatherimg} style={{ height: '100px', width: 'auto' }} onClick={() => { JumpToBoard("weather"); this.updateStatus(); this.props.doSync(); }} fluid /></Col></Row>
                 <Row className="text-left">
                     <Col>
-                        <Form.Switch id="weatherenabler" label="Enable/Disable" checked={this.state.enabled}
-                            onChange={() => this.handleSwitch("weather/enable", "weather/disable", "enabled")} />
+                        <Form.Switch id="weatherenabler" label="Enable/Disable" checked={this.state.status.getEnabled()}
+                            onChange={() => { this.state.status.setEnabled(!this.state.status.getEnabled()); this.updateStatus(); }} />
                     </Col>
                 </Row>
                 <Row className="text-left">
                     <Col>
-                        <Form.Switch id="weatherscroller" label="Scroll Mode" checked={this.state.scroll}
-                            onChange={() => this.handleSwitch(`weather/scrollon`, `weather/scrolloff`, "scroll")} />
+                        <Form.Switch id="weatherscroller" label="Scroll Mode" checked={this.state.status.getScrollEnabled()}
+                            onChange={() => { this.state.status.setScrollEnabled(!this.state.status.getScrollEnabled()); this.updateStatus(); }} />
                     </Col>
                 </Row>
                 <Row className="text-left">
                     <Col>
-                        <Form.Switch id="dailyenabler" label="Daily Forecast" checked={this.state.daily}
-                            onChange={() => this.handleSwitch("weather/dailyenable", "weather/dailydisable", "daily")} />
+                        <Form.Switch id="dailyenabler" label="Daily Forecast" checked={this.state.status.getDailyEnabled()}
+                            onChange={() => { this.state.status.setDailyEnabled(!this.state.status.getDailyEnabled()); this.updateStatus(); }} />
                     </Col>
                 </Row>
                 <Row className="text-left">
                     <Col>
-                        <Form.Switch id="hourlyenabler" label="Hourly Forecast" checked={this.state.hourly}
-                            onChange={() => this.handleSwitch("weather/hourlyenable", "weather/hourlydisable", "hourly")} />
+                        <Form.Switch id="hourlyenabler" label="Hourly Forecast" checked={this.state.status.getHourlyEnabled()}
+                            onChange={() => { this.state.status.setHourlyEnabled(!this.state.status.getHourlyEnabled()); this.updateStatus(); }} />
                     </Col>
                 </Row>
                 <Row className="text-left">
                     <Col>
-                        <Button variant="primary" onClick={() => this.handleJump("weather")}>Jump</Button>
+                        <Button variant="primary" onClick={() => { JumpToBoard("weather"); this.updateStatus(); this.props.doSync(); }}>Jump</Button>
                     </Col>
                 </Row>
             </Container>

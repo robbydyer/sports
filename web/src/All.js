@@ -7,10 +7,7 @@ import Card from 'react-bootstrap/Card';
 import Home from './Home.js';
 import Sport from './Sport.js';
 import ImageBoard from './ImageBoard.js';
-import Clock from './Clock.js';
-import Sys from './Sys.js';
-import Pga from './Pga.js';
-import Stocks from './Stocks.js';
+import BasicBoard from './BasicBoard';
 import Weather from './Weather.js';
 
 const styles = {
@@ -58,7 +55,7 @@ class All extends React.Component {
                     {sports}
                     <Col lg="auto" style={styles.col}>
                         <Card style={{ width: { card_border } }}>
-                            <Pga doSync={this.doSync} key={"pga" + this.state.sync} />
+                            <BasicBoard id="pga" name="pga" doSync={this.doSync} key={"pga" + this.state.sync} path="stat/pga" />
                         </Card>
                     </Col>
                     <Col lg="auto" style={styles.col}>
@@ -73,17 +70,17 @@ class All extends React.Component {
                     </Col>
                     <Col lg="auto" style={styles.col}>
                         <Card style={{ width: { card_border } }}>
-                            <Stocks id="stocks" doSync={this.doSync} key={"stocks" + this.state.sync} />
+                            <BasicBoard id="stocks" name="stocks" doSync={this.doSync} key={"stocks" + this.state.sync} />
                         </Card>
                     </Col>
                     <Col lg="auto" style={styles.col}>
                         <Card style={{ width: { card_border } }}>
-                            <Clock id="clock" doSync={this.doSync} key={"clock" + this.state.sync} />
+                            <BasicBoard id="clock" name="clock" doSync={this.doSync} key={"clock" + this.state.sync} />
                         </Card>
                     </Col>
                     <Col lg="auto" style={styles.col}>
                         <Card style={{ width: { card_border } }}>
-                            <Sys id="sys" doSync={this.doSync} key={"sys" + this.state.sync} />
+                            <BasicBoard id="sys" name="sys" doSync={this.doSync} key={"sys" + this.state.sync} />
                         </Card>
                     </Col>
                 </Row>

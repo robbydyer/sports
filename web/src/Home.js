@@ -4,48 +4,60 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
-import { GetStatus, CallMatrix } from './util.js';
+import { MatrixPostRet } from './util.js';
+import { SetAllReq } from './sportsmatrix/sportsmatrix_pb';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 class Home extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            "screen": false,
-            "webboard": false,
+            "status": {},
         };
     }
     async componentDidMount() {
-        await GetStatus("status", (val) => {
-            this.setState({ "screen": val })
-        })
-        await GetStatus("webboardstatus", (val) => {
-            this.setState({ "webboard": val })
-        })
+        this.updateStatus()
     }
 
-    handleSwitch = (apiOn, apiOff, stateVar) => {
-        var currentState = this.state[stateVar]
-        console.log("handle switch", currentState)
+    updateStatus = async () => {
+        await MatrixPostRet("matrix.v1.Sportsmatrix/Status", '{}').then((resp) => {
+            if (resp.ok) {
+                return resp.text()
+            }
+            throw resp
+        }).then((data) => {
+            console.log("Got MatrixPostRet", data)
+            this.setState({
+                "status": JSON.parse(data),
+            })
+        });
+    }
+
+    handleSwitch = async (stateVar) => {
+        var currentState = this.state.status[stateVar]
         if (currentState) {
-            console.log("Turn off", apiOff)
-            CallMatrix(apiOff);
+            await MatrixPostRet("matrix.v1.Sportsmatrix/ScreenOff", '{}')
         } else {
-            console.log("Turn on", apiOn)
-            CallMatrix(apiOn);
+            await MatrixPostRet("matrix.v1.Sportsmatrix/ScreenOn", '{}')
         }
         this.setState(prev => ({
-            [stateVar]: !prev[stateVar],
+            "status": {
+                [stateVar]: !prev.status[stateVar],
+            }
         }))
     }
 
     disableAll = async () => {
-        await CallMatrix("/disableall")
-        this.props.doSync()
+        var req = new SetAllReq();
+        req.setEnabled(false)
+        await MatrixPostRet("matrix.v1.Sportsmatrix/SetAll", JSON.stringify(req.toObject()));
+        this.props.doSync();
     }
     enableAll = async () => {
-        await CallMatrix("/enableall")
-        this.props.doSync()
+        var req = new SetAllReq();
+        req.setEnabled(true)
+        await MatrixPostRet("matrix.v1.Sportsmatrix/SetAll", JSON.stringify(req.toObject()));
+        this.props.doSync();
     }
 
     render() {
@@ -53,12 +65,12 @@ class Home extends React.Component {
             <Container fluid>
                 <Row className="text-left">
                     <Col>
-                        <Form.Switch id="screen" label="Screen On/Off" checked={this.state["screen"]} onChange={() => this.handleSwitch("screenon", "screenoff", "screen")} />
+                        <Form.Switch id="screen" label="Screen On/Off" checked={this.state.status["screen_on"]} onChange={() => this.handleSwitch("screen_on")} />
                     </Col>
                 </Row>
                 <Row className="text-left">
                     <Col>
-                        <Form.Switch id="webboard" label="Web Board On/Off" checked={this.state["webboard"]} onChange={() => this.handleSwitch("webboardon", "webboardoff", "webboard")} />
+                        <Form.Switch id="webboard" label="Web Board On/Off" checked={this.state.status["webboard_on"]} onChange={() => this.handleSwitch("webboard_on")} />
                     </Col>
                 </Row>
                 <Row className="text-left">

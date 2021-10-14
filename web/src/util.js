@@ -1,73 +1,43 @@
-var BACKEND = "http://" + window.location.host
+import * as basicboard_pb from './basicboard/basicboard_pb';
+import * as sportsmatrix_pb from './sportsmatrix/sportsmatrix_pb';
 
-export async function GetStatus(api, callback) {
-    if (api.includes("ncaaf")) {
-        console.log(`Calling status /api/${api}`)
-    }
-    return fetch(`${BACKEND}/api/${api}`,
-        {
-            method: "GET",
-            mode: "cors",
-        }
-    ).then((resp) => {
-        if (resp.ok) {
-            return resp.text();
-        }
-        throw resp
-    }
-    ).then((status) => {
-        if (status === "true") {
-            if (api.includes("ncaaf")) {
-                console.log(`Status ${api}: ${status}`)
-            }
-            callback(true)
-        } else if (status === "false") {
-            if (api.includes("ncaaf")) {
-                console.log(`Status ${api}: ${status}`)
-            }
-            callback(false)
-        }
-    }
-    ).catch(error => {
-        console.log(`Error calling /api/${api}: ` + error)
-    })
+export var BACKEND = "http://" + window.location.host
 
-}
-export async function CallMatrix(path) {
-    console.log(`Calling matrix API ${path}`)
-    return fetch(`${BACKEND}/api/${path}`, {
-        method: "GET",
-        mode: "cors",
-    }).then((resp) => {
-        console.log(`Response ${path}: ${resp.status}`);
-    });
-}
-export async function MatrixPost(path, body) {
+export function MatrixPostRet(path, body) {
     const req = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: body,
     }
-    console.log(`Matrix POST ${body}`)
-    return fetch(`${BACKEND}/api/${path}`, req).then((resp) => {
-        if (resp.ok) {
-            console.log(`POST ${path}: ${resp.status}`)
-            return
-        }
-        console.log(`POST ${path}: ${resp.status}`)
-        throw resp
-    }).catch(error => console.log(`POST ERROR: ${error}`))
+    console.log(`Matrix POST ${BACKEND}/${path} ${body}`)
+    return fetch(`${BACKEND}/${path}`, req)
 }
 export async function GetVersion(callback) {
-    return fetch(`${BACKEND}/api/version`, {
-        method: "GET",
-        mode: "cors",
-    }).then((resp) => {
+    return await MatrixPostRet("matrix.v1.Sportsmatrix/Version", '{}').then((resp) => {
         if (resp.ok) {
-            return resp.text();
+            return resp.text()
         }
         throw resp
-    }).then((ver) => {
-        callback(ver);
-    }).catch(error => console.log(`ERROR /api/version: ${error}`))
+    }).then((data) => {
+        var d = JSON.parse(data);
+        return d.version;
+    });
+}
+
+export function JSONToStatus(jsonDat) {
+    var d = JSON.parse(jsonDat);
+    var dat = d.status;
+    var status = new basicboard_pb.Status();
+    status.setEnabled(dat.enabled);
+    status.setScrollEnabled(dat.scroll_enabled);
+
+    return status;
+}
+
+export async function JumpToBoard(board) {
+    var req = new sportsmatrix_pb.JumpReq();
+    req.setBoard(board);
+    var r = JSON.stringify(req.toObject());
+    console.log("Board Jump", "matrix.v1.Sportsmatrix/Jump", r);
+    await MatrixPostRet("matrix.v1.Sportsmatrix/Jump", r);
 }

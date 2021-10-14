@@ -15,11 +15,14 @@ import (
 
 	"github.com/mackerelio/go-osstat/cpu"
 	"github.com/mackerelio/go-osstat/memory"
+	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
+	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbrender"
+	"github.com/robbydyer/sports/pkg/twirphelpers"
 )
 
 const cpuTempFile = "/sys/class/thermal/thermal_zone0/temp"
@@ -29,6 +32,7 @@ type SysBoard struct {
 	config      *Config
 	log         *zap.Logger
 	textWriters map[int]*rgbrender.TextWriter
+	rpcServer   pb.TwirpServer
 	sync.Mutex
 }
 
@@ -58,11 +62,23 @@ func (c *Config) SetDefaults() {
 
 // New ...
 func New(logger *zap.Logger, config *Config) (*SysBoard, error) {
-	return &SysBoard{
+	s := &SysBoard{
 		config:      config,
 		log:         logger,
 		textWriters: make(map[int]*rgbrender.TextWriter),
-	}, nil
+	}
+
+	svr := &Server{
+		board: s,
+	}
+	s.rpcServer = pb.NewBasicBoardServer(svr,
+		twirp.WithServerPathPrefix("/sys"),
+		twirp.ChainHooks(
+			twirphelpers.GetDefaultHooks(s, s.log),
+		),
+	)
+
+	return s, nil
 }
 
 func (s *SysBoard) textWriter(canvasHeight int) (*rgbrender.TextWriter, error) {

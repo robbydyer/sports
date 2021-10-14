@@ -27,6 +27,7 @@ type Board interface {
 	Render(ctx context.Context, canvases Canvas) error
 	GetHTTPHandlers() ([]*HTTPHandler, error)
 	ScrollMode() bool
+	GetRPCHandler() (string, http.Handler)
 }
 
 // Canvas ...
