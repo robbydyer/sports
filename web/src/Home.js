@@ -60,6 +60,10 @@ class Home extends React.Component {
         this.props.doSync();
     }
 
+    nextBoard = () => {
+        MatrixPostRet("matrix.v1.Sportsmatrix/NextBoard", '{}')
+    }
+
     render() {
         return (
             <Container fluid>
@@ -75,13 +79,18 @@ class Home extends React.Component {
                 </Row>
                 <Row className="text-left">
                     <Col>
+                        <Button variant="primary" onClick={this.nextBoard}>Next Board</Button>
+                    </Col>
+                </Row>
+                <Row className="text-left">
+                    <Col>
                         <Button variant="primary" onClick={this.enableAll}>Enable All</Button>
                     </Col>
                     <Col>
                         <Button variant="primary" onClick={this.disableAll}>Disable All</Button>
                     </Col>
                 </Row>
-            </Container>
+            </Container >
         );
     }
 }

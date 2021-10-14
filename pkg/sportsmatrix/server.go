@@ -83,3 +83,9 @@ func (s *Server) Status(ctx context.Context, req *emptypb.Empty) (*pb.ScreenStat
 		WebboardOn: s.sm.webBoardIsOn.Load(),
 	}, nil
 }
+
+// NextBoard jumps to the next board in the sequence
+func (s *Server) NextBoard(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
+	s.sm.currentBoardCancel()
+	return &emptypb.Empty{}, nil
+}

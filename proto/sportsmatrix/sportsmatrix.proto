@@ -10,6 +10,7 @@ service Sportsmatrix {
        rpc Status(google.protobuf.Empty) returns (ScreenStatusResp);
        rpc SetAll(SetAllReq) returns (google.protobuf.Empty);
        rpc Jump(JumpReq) returns (google.protobuf.Empty);
+       rpc NextBoard(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
 message VersionResp {
