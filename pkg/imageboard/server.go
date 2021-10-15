@@ -55,14 +55,19 @@ func (s *Server) Jump(ctx context.Context, req *pb.JumpReq) (*emptypb.Empty, err
 	default:
 	}
 
+	s.board.priorJumpState.Store(s.board.config.Enabled.Load())
+
 	select {
 	case i.jumpTo <- req.Name:
 	case <-time.After(5 * time.Second):
 		return &emptypb.Empty{}, twirp.InternalError("timed out attempting image jump")
 	}
 
+	c, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	if i.jumpTo != nil {
-		if err := i.jumper(i.Name()); err != nil {
+		if err := i.jumper(c, i.Name()); err != nil {
 			i.log.Error("failed to jump to image board",
 				zap.Error(err),
 				zap.String("file name", req.Name),

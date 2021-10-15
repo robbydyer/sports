@@ -1,6 +1,7 @@
 package sportsmatrix
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -246,7 +247,10 @@ func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
 						zap.Error(err),
 					)
 				}
-				if err := s.JumpTo(j.Board); err != nil {
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+
+				if err := s.JumpTo(ctx, j.Board); err != nil {
 					s.log.Error(err.Error(), zap.Error(err))
 					http.Error(w, err.Error(), http.StatusRequestTimeout)
 				}

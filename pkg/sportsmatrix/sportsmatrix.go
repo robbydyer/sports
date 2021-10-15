@@ -401,7 +401,7 @@ LOOP:
 		s.log.Debug("Processing board", zap.String("board", b.Name()))
 
 		if !b.Enabled() {
-			s.log.Warn("skipping disabled board", zap.String("board", b.Name()))
+			// s.log.Debug("skipping disabled board", zap.String("board", b.Name()))
 			continue LOOP
 		}
 
@@ -422,7 +422,7 @@ LOOP:
 	CANVASES:
 		for _, canvas := range s.canvases {
 			if !canvas.Enabled() {
-				s.log.Warn("canvas is disabled, skipping", zap.String("canvas", canvas.Name()))
+				// s.log.Warn("canvas is disabled, skipping", zap.String("canvas", canvas.Name()))
 				continue CANVASES
 			}
 
@@ -483,37 +483,36 @@ func (s *SportsMatrix) allDisabled() bool {
 }
 
 // JumpTo jumps to a board with a given name
-func (s *SportsMatrix) JumpTo(boardName string) error {
+func (s *SportsMatrix) JumpTo(ctx context.Context, boardName string) error {
 	for _, b := range s.boards {
 		if strings.EqualFold(b.Name(), boardName) {
 			b.Enable()
 
 			select {
 			case s.screenOff <- struct{}{}:
-			case <-time.After(5 * time.Second):
-				s.log.Error("timed out jumping board trying to turn screen off",
+			case <-ctx.Done():
+				s.log.Error("context canceled while jumping board trying to turn screen off",
 					zap.String("board", b.Name()),
 				)
-				return fmt.Errorf("timed out")
+				return context.Canceled
 			}
-
-			defer func() {
-				select {
-				case s.screenOn <- struct{}{}:
-				case <-time.After(5 * time.Second):
-					s.log.Error("failed to turn screen back on after /api/jump",
-						zap.String("board", b.Name()),
-					)
-				}
-			}()
 
 			select {
 			case s.jumpTo <- b.Name():
-			case <-time.After(5 * time.Second):
-				s.log.Error("timed out setting jump board in channel",
+			case <-ctx.Done():
+				s.log.Error("context canceled while setting jump board",
 					zap.String("board", b.Name()),
 				)
-				return fmt.Errorf("timed out")
+				return context.Canceled
+			}
+
+			select {
+			case s.screenOn <- struct{}{}:
+			case <-ctx.Done():
+				s.log.Error("failed to turn screen back on after /api/jump",
+					zap.String("board", b.Name()),
+				)
+				return context.Canceled
 			}
 
 			return nil
