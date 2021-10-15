@@ -13,6 +13,7 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
+	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 
 	pb "github.com/robbydyer/sports/internal/proto/weatherboard"
@@ -55,6 +56,8 @@ type Config struct {
 	DailyForecast      *atomic.Bool `json:"dailyForecast"`
 	DailyNumber        int          `json:"dailyNumber"`
 	HourlyNumber       int          `json:"hourlyNumber"`
+	OnTimes            []string     `json:"onTimes"`
+	OffTimes           []string     `json:"offTimes"`
 }
 
 // Forecast ...
@@ -127,9 +130,9 @@ func (c *Config) SetDefaults() {
 }
 
 // New ...
-func New(api API, cfg *Config, log *zap.Logger) (*WeatherBoard, error) {
+func New(api API, config *Config, log *zap.Logger) (*WeatherBoard, error) {
 	s := &WeatherBoard{
-		config:      cfg,
+		config:      config,
 		api:         api,
 		log:         log,
 		cancelBoard: make(chan struct{}),
@@ -145,6 +148,37 @@ func New(api API, cfg *Config, log *zap.Logger) (*WeatherBoard, error) {
 			twirphelpers.GetDefaultHooks(s, s.log),
 		),
 	)
+
+	if len(config.OffTimes) > 0 || len(config.OnTimes) > 0 {
+		c := cron.New()
+		for _, on := range config.OnTimes {
+			s.log.Info("weatherboard will be schedule to turn on",
+				zap.String("turn on", on),
+			)
+			_, err := c.AddFunc(on, func() {
+				s.log.Info("weatherboard turning on")
+				s.Enable()
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to add cron for weatherboard: %w", err)
+			}
+		}
+
+		for _, off := range config.OffTimes {
+			s.log.Info("weatherboard will be schedule to turn off",
+				zap.String("turn on", off),
+			)
+			_, err := c.AddFunc(off, func() {
+				s.log.Info("weatherboard turning off")
+				s.Disable()
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to add cron for weatherboard: %w", err)
+			}
+		}
+
+		c.Start()
+	}
 
 	return s, nil
 }

@@ -91,11 +91,23 @@ sportsMatrixConfig:
 clockConfig:
   enabled: true
   boardDelay: "10s"
+  
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *
 
 ## Sys board shows system's Mem and CPU usage
 sysConfig:
   enabled: false
   boardDelay: "10s"
+  
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *
 
 ## NCAA Football Config
 ncaafConfig:
@@ -153,6 +165,12 @@ ncaafConfig:
 
   # This sets the number of runs through the scoreboard that a score change will be highlighted in red
   scoreHighlightRepeat: 3
+
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *
 
 ## NHL config
 nhlConfig:
@@ -221,6 +239,12 @@ nhlConfig:
 
   # This sets the number of runs through the scoreboard that a score change will be highlighted in red
   scoreHighlightRepeat: 3
+
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *
 
 ## MLB Config
 mlbConfig:
@@ -292,6 +316,12 @@ mlbConfig:
 
   # This sets the number of runs through the scoreboard that a score change will be highlighted in red
   scoreHighlightRepeat: 3
+  
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *
 
 ## NCAA Mens Basketball Config
 ncaamConfig:
@@ -352,6 +382,12 @@ ncaamConfig:
 
   # This sets the number of runs through the scoreboard that a score change will be highlighted in red
   scoreHighlightRepeat: 3
+  
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *
 
 ## NBA Config
 nbaConfig:
@@ -409,6 +445,12 @@ nbaConfig:
 
   # This sets the number of runs through the scoreboard that a score change will be highlighted in red
   scoreHighlightRepeat: 3
+  
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *
 
 ## NFL Config
 nflConfig:
@@ -466,6 +508,12 @@ nflConfig:
 
   # This sets the number of runs through the scoreboard that a score change will be highlighted in red
   scoreHighlightRepeat: 3
+  
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *
 
 ## MLS Config
 mlsConfig:
@@ -523,6 +571,12 @@ mlsConfig:
 
   # This sets the number of runs through the scoreboard that a score change will be highlighted in red
   scoreHighlightRepeat: 3
+  
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *
 
 ## English Premiere League Config
 eplConfig:
@@ -580,6 +634,12 @@ eplConfig:
 
   # This sets the number of runs through the scoreboard that a score change will be highlighted in red
   scoreHighlightRepeat: 3
+  
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *
 
 # Image Board. Rotates showing all the images in a list of directories
 # All images in the directory will be automatically scaled to fit the matrix
@@ -589,6 +649,12 @@ imageConfig:
   boardDelay: 5s
   #directories:
   #- /home/pi/matrix_images
+  
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *
 
 # PGA Leaderboard
 pga:
@@ -636,6 +702,12 @@ stocksConfig:
 
   # Interval in which pricing data is pulled from API. Default is 5m
   updateInterval: "5m"
+  
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *
 
 weatherConfig:
   enabled: false
@@ -671,3 +743,9 @@ weatherConfig:
 
   # Delay between each screen in non-scroll mode
   boardDelay: "10s"
+  
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *

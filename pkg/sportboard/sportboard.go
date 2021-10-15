@@ -92,6 +92,8 @@ type Config struct {
 	GamblingSpread       *atomic.Bool      `json:"showOdds"`
 	ShowNoScheduledLogo  *atomic.Bool      `json:"showNotScheduled"`
 	ScoreHighlightRepeat *int              `json:"scoreHighlightRepeat"`
+	OnTimes              []string          `json:"onTimes"`
+	OffTimes             []string          `json:"offTimes"`
 }
 
 // FontConfig ...
@@ -252,7 +254,6 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 	if _, err := c.AddFunc("0 4 * * *", s.cacheClear); err != nil {
 		return nil, fmt.Errorf("failed to set cron for cacheClear: %w", err)
 	}
-	c.Start()
 
 	svr := &Server{
 		board: s,
@@ -267,6 +268,40 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 			twirphelpers.GetDefaultHooks(s, s.log),
 		),
 	)
+
+	for _, on := range config.OnTimes {
+		s.log.Info("sportboard will be schedule to turn on",
+			zap.String("league", s.api.League()),
+			zap.String("turn on", on),
+		)
+		_, err := c.AddFunc(on, func() {
+			s.log.Info("sportboard turning on",
+				zap.String("league", s.api.League()),
+			)
+			s.Enable()
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to add cron for sportboard: %w", err)
+		}
+	}
+
+	for _, off := range config.OffTimes {
+		s.log.Info("sportboard will be schedule to turn off",
+			zap.String("league", s.api.League()),
+			zap.String("turn on", off),
+		)
+		_, err := c.AddFunc(off, func() {
+			s.log.Info("sportboard turning off",
+				zap.String("league", s.api.League()),
+			)
+			s.Disable()
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to add cron for sportboard: %w", err)
+		}
+	}
+
+	c.Start()
 
 	return s, nil
 }

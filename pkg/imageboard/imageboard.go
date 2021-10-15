@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/robfig/cron/v3"
 	"github.com/spf13/afero"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
@@ -57,6 +58,8 @@ type Config struct {
 	Directories  []string     `json:"directories"`
 	UseDiskCache *atomic.Bool `json:"useDiskCache"`
 	UseMemCache  *atomic.Bool `json:"useMemCache"`
+	OnTimes      []string     `json:"onTimes"`
+	OffTimes     []string     `json:"offTimes"`
 }
 
 // SetDefaults sets some Config defaults
@@ -84,12 +87,12 @@ func (c *Config) SetDefaults() {
 }
 
 // New ...
-func New(fs afero.Fs, cfg *Config, logger *zap.Logger) (*ImageBoard, error) {
+func New(fs afero.Fs, config *Config, logger *zap.Logger) (*ImageBoard, error) {
 	if fs == nil {
 		fs = afero.NewOsFs()
 	}
 	i := &ImageBoard{
-		config:     cfg,
+		config:     config,
 		log:        logger,
 		fs:         fs,
 		imageCache: make(map[string]image.Image),
@@ -111,6 +114,37 @@ func New(fs afero.Fs, cfg *Config, logger *zap.Logger) (*ImageBoard, error) {
 			twirphelpers.GetDefaultHooks(i, i.log),
 		),
 	)
+
+	if len(config.OffTimes) > 0 || len(config.OnTimes) > 0 {
+		c := cron.New()
+		for _, on := range config.OnTimes {
+			i.log.Info("imageboard will be schedule to turn on",
+				zap.String("turn on", on),
+			)
+			_, err := c.AddFunc(on, func() {
+				i.log.Info("imageboard turning on")
+				i.Enable()
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to add cron for imageboard: %w", err)
+			}
+		}
+
+		for _, off := range config.OffTimes {
+			i.log.Info("imageboard will be schedule to turn off",
+				zap.String("turn on", off),
+			)
+			_, err := c.AddFunc(off, func() {
+				i.log.Info("imageboard turning off")
+				i.Disable()
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to add cron for imageboard: %w", err)
+			}
+		}
+
+		c.Start()
+	}
 
 	return i, nil
 }
