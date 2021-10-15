@@ -34,24 +34,23 @@ class TopNav extends React.Component {
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="mr-auto">
                             <Nav.Link as={Link} to="/">Home</Nav.Link>
-                            <NavDropDown title="Sports" id="sports-drop">
+                            <NavDropDown bg="dark" variant="dark" title="Sports" id="sports-drop">
 
-                                <NavDropDown.Item><Nav.Link as={Link} to="/nhl">NHL</Nav.Link></NavDropDown.Item>
+                                <NavDropDown.Item as={Link} to="/mlb">MLB</NavDropDown.Item>
+                                <NavDropDown.Item as={Link} to="/mls">MLS</NavDropDown.Item>
+                                <NavDropDown.Item as={Link} to="/nba">NBA</NavDropDown.Item>
+                                <NavDropDown.Item as={Link} to="/ncaaf">NCAAF</NavDropDown.Item>
+                                <NavDropDown.Item as={Link} to="/nhl">NHL</NavDropDown.Item>
+                                <NavDropDown.Item as={Link} to="/ncaam">NCAA Men's Basketball</NavDropDown.Item>
+                                <NavDropDown.Item as={Link} to="/nfl">NFL</NavDropDown.Item>
+                                <NavDropDown.Item as={Link} to="/pga">PGA</NavDropDown.Item>
+                                <NavDropDown.Item as={Link} to="/epl">EPL</NavDropDown.Item>
                             </NavDropDown>
-                            <Nav.Link as={Link} to="/nhl">NHL</Nav.Link>
-                            <Nav.Link as={Link} to="/ncaaf">NCAA Football</Nav.Link>
-                            <Nav.Link as={Link} to="/mlb">MLB</Nav.Link>
-                            <Nav.Link as={Link} to="/pga">PGA</Nav.Link>
-                            <Nav.Link as={Link} to="/ncaam">NCAA Men Basketball</Nav.Link>
-                            <Nav.Link as={Link} to="/nfl">NFL</Nav.Link>
-                            <Nav.Link as={Link} to="/nba">NBA</Nav.Link>
-                            <Nav.Link as={Link} to="/mls">MLS</Nav.Link>
-                            <Nav.Link as={Link} to="/epl">EPL</Nav.Link>
+                            <Nav.Link as={Link} to="/stocks">Stocks</Nav.Link>
+                            <Nav.Link as={Link} to="/weather">Weather</Nav.Link>
                             <Nav.Link as={Link} to="/img">Image Board</Nav.Link>
                             <Nav.Link as={Link} to="/clock">Clock</Nav.Link>
                             <Nav.Link as={Link} to="/sys">System Info</Nav.Link>
-                            <Nav.Link as={Link} to="/stocks">Stocks</Nav.Link>
-                            <Nav.Link as={Link} to="/weather">Weather</Nav.Link>
                             <Nav.Link as={Link} to="/docs">API Docs</Nav.Link>
                             <Nav.Link as={Link} to="/board">Live Board</Nav.Link>
                         </Nav>
