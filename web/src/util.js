@@ -20,8 +20,11 @@ export async function GetVersion(callback) {
         throw resp
     }).then((data) => {
         var d = JSON.parse(data);
-        return d.version;
-    });
+        callback(d.version);
+    }).catch(err => {
+        console.log("failed to get version", err);
+    }
+    );
 }
 
 export function JSONToStatus(jsonDat) {

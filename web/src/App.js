@@ -14,17 +14,19 @@ import swag from './matrix.swagger.json';
 
 class App extends React.Component {
   render() {
-    var sports = ["ncaaf", "nhl", "mlb", "ncaam", "nfl", "nba", "mls", "epl"].map((sport) =>
-      <Route path={"/" + sport} render={() => {
-        <Sport sport={sport} id={sport} key={sport} />
-      }} />
-    );
     return (
       <>
         <Router>
           <TopNav />
-          {sports}
           <Route path="/" exact component={All} />
+          <Route path="/mlb" render={() => <Sport sport="mlb" id="mlb" key="mlb" />} />
+          <Route path="/ncaaf" render={() => <Sport sport="ncaaf" id="ncaaf" key="ncaaf" />} />
+          <Route path="/nhl" render={() => <Sport sport="nhl" id="nhl" key="nhl" />} />
+          <Route path="/ncaam" render={() => <Sport sport="ncaam" id="ncaam" key="ncaam" />} />
+          <Route path="/nfl" render={() => <Sport sport="nfl" id="nfl" key="nfl" />} />
+          <Route path="/nba" render={() => <Sport sport="nba" id="nba" key="nba" />} />
+          <Route path="/mls" render={() => <Sport sport="mls" id="mls" key="mls" />} />
+          <Route path="/epl" render={() => <Sport sport="epl" id="epl" key="epl" />} />
           <Route path="/pga" render={() => <BasicBoard id="pga" name="pga" key="pga" path="stat/pga" />} />
           <Route path="/img" exact component={ImageBoard} />
           <Route path="/clock" render={() => <BasicBoard id="clock" name="clock" key="clock" />} />
