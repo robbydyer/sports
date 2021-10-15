@@ -15,6 +15,7 @@ import (
 
 	"github.com/mackerelio/go-osstat/cpu"
 	"github.com/mackerelio/go-osstat/memory"
+	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
@@ -41,6 +42,8 @@ type Config struct {
 	boardDelay time.Duration
 	Enabled    *atomic.Bool `json:"enabled"`
 	BoardDelay string       `json:"boardDelay"`
+	OnTimes    []string     `json:"onTimes"`
+	OffTimes   []string     `json:"offTimes"`
 }
 
 // SetDefaults ...
@@ -77,6 +80,37 @@ func New(logger *zap.Logger, config *Config) (*SysBoard, error) {
 			twirphelpers.GetDefaultHooks(s, s.log),
 		),
 	)
+
+	if len(config.OffTimes) > 0 || len(config.OnTimes) > 0 {
+		c := cron.New()
+		for _, on := range config.OnTimes {
+			s.log.Info("sysboard will be schedule to turn on",
+				zap.String("turn on", on),
+			)
+			_, err := c.AddFunc(on, func() {
+				s.log.Info("sysboard turning on")
+				s.Enable()
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to add cron for sysboard: %w", err)
+			}
+		}
+
+		for _, off := range config.OffTimes {
+			s.log.Info("sysboard will be schedule to turn off",
+				zap.String("turn on", off),
+			)
+			_, err := c.AddFunc(off, func() {
+				s.log.Info("sysboard turning off")
+				s.Disable()
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to add cron for sysboard: %w", err)
+			}
+		}
+
+		c.Start()
+	}
 
 	return s, nil
 }

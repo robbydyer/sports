@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/golang/freetype/truetype"
+	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
@@ -33,6 +34,8 @@ type Config struct {
 	boardDelay time.Duration
 	Enabled    *atomic.Bool `json:"enabled"`
 	BoardDelay string       `json:"boardDelay"`
+	OnTimes    []string     `json:"onTimes"`
+	OffTimes   []string     `json:"offTimes"`
 }
 
 // SetDefaults ...
@@ -82,6 +85,37 @@ func New(config *Config, logger *zap.Logger) (*Clock, error) {
 			},
 		),
 	)
+
+	if len(config.OffTimes) > 0 || len(config.OnTimes) > 0 {
+		cr := cron.New()
+		for _, on := range config.OnTimes {
+			c.log.Info("clock will be schedule to turn on",
+				zap.String("turn on", on),
+			)
+			_, err := cr.AddFunc(on, func() {
+				c.log.Info("clock turning on")
+				c.Enable()
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to add cron for clock: %w", err)
+			}
+		}
+
+		for _, off := range config.OffTimes {
+			c.log.Info("clock will be schedule to turn off",
+				zap.String("turn on", off),
+			)
+			_, err := cr.AddFunc(off, func() {
+				c.log.Info("clock turning off")
+				c.Disable()
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to add cron for clock: %w", err)
+			}
+		}
+
+		cr.Start()
+	}
 
 	return c, nil
 }
