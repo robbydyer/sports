@@ -18,6 +18,7 @@ import (
 
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 	"github.com/robbydyer/sports/pkg/twirphelpers"
@@ -40,6 +41,8 @@ type StockBoard struct {
 	enablerLock  sync.Mutex
 	cancelBoard  chan struct{}
 	rpcServer    pb.TwirpServer
+	logos        map[string]*logo.Logo
+	logoLock     sync.Mutex
 	sync.Mutex
 }
 
@@ -59,6 +62,7 @@ type Config struct {
 	ScrollDelay        string       `json:"scrollDelay"`
 	OnTimes            []string     `json:"onTimes"`
 	OffTimes           []string     `json:"offTimes"`
+	UseLogos           *atomic.Bool `json:"useLogos"`
 }
 
 // Price represents a price of a stock at a particular time
@@ -126,6 +130,10 @@ func (c *Config) SetDefaults() {
 	} else {
 		c.scrollDelay = rgbmatrix.DefaultScrollDelay
 	}
+
+	if c.UseLogos == nil {
+		c.UseLogos = atomic.NewBool(false)
+	}
 }
 
 // New ...
@@ -135,6 +143,7 @@ func New(api API, config *Config, log *zap.Logger) (*StockBoard, error) {
 		api:         api,
 		log:         log,
 		cancelBoard: make(chan struct{}),
+		logos:       make(map[string]*logo.Logo),
 	}
 
 	svr := &Server{
