@@ -1,0 +1,78 @@
+package stockboard
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"image"
+	"image/draw"
+	"image/png"
+	"path/filepath"
+	"strings"
+
+	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/logo"
+)
+
+func (s *StockBoard) logoSource(symbol string) (logo.SourceGetter, error) {
+	b, err := assets.ReadFile(filepath.Join("assets", "logos", fmt.Sprintf("%s.PNG", strings.ToUpper(symbol))))
+	if err != nil {
+		return nil, err
+	}
+
+	r := bytes.NewReader(b)
+
+	return func(ctx context.Context) (image.Image, error) {
+		return png.Decode(r)
+	}, nil
+}
+
+func (s *StockBoard) drawLogo(ctx context.Context, canvas board.Canvas, bounds image.Rectangle, symbol string) error {
+	l, err := s.getOrCreateLogo(symbol, canvas, bounds)
+	if err != nil {
+		return err
+	}
+
+	i, err := l.RenderRightAlignedWithEnd(ctx, bounds, bounds.Max.X-2)
+	if err != nil {
+		return err
+	}
+
+	draw.Draw(canvas, i.Bounds(), i, image.Pt(i.Bounds().Min.X, i.Bounds().Min.Y), draw.Over)
+
+	return nil
+}
+
+func (s *StockBoard) getOrCreateLogo(symbol string, canvas board.Canvas, bounds image.Rectangle) (*logo.Logo, error) {
+	s.logoLock.Lock()
+	defer s.logoLock.Unlock()
+
+	key := fmt.Sprintf("%s_%dx%d", strings.ToLower(symbol), bounds.Dx(), bounds.Dy())
+
+	l, ok := s.logos[strings.ToLower(symbol)]
+	if ok {
+		return l, nil
+	}
+
+	src, err := s.logoSource(symbol)
+	if err != nil {
+		return nil, err
+	}
+
+	lo := logo.New(key, src, "/tmp/sportsmatrix/stocks", canvas.Bounds(),
+		&logo.Config{
+			Abbrev: key,
+			XSize:  bounds.Dx(),
+			YSize:  bounds.Dy(),
+			Pt: &logo.Pt{
+				X:    0,
+				Y:    0,
+				Zoom: 1.0,
+			},
+		},
+	)
+
+	s.logos[strings.ToLower(symbol)] = lo
+
+	return lo, nil
+}

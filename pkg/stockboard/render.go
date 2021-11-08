@@ -2,6 +2,7 @@ package stockboard
 
 import (
 	"context"
+	"embed"
 	"fmt"
 	"image"
 	"image/color"
@@ -14,12 +15,43 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
+//go:embed assets
+var assets embed.FS
+
 func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board.Canvas) error {
 	canvasBounds := rgbrender.ZeroedBounds(canvas.Bounds())
-	chartWidth, _ := s.chartWidth(canvasBounds.Dx())
-	chartBounds := rgbrender.ZeroedBounds(image.Rect(canvasBounds.Min.X, canvasBounds.Max.Y/2, chartWidth+canvasBounds.Min.X, canvasBounds.Max.Y))
-	symbolBounds := rgbrender.ZeroedBounds(image.Rect(canvasBounds.Min.X, canvasBounds.Min.Y, canvasBounds.Max.X/2, canvasBounds.Max.Y/2))
-	priceBounds := rgbrender.ZeroedBounds(image.Rect(canvasBounds.Max.X/2, canvasBounds.Min.Y, canvasBounds.Max.X, canvasBounds.Max.Y/2))
+
+	var chartBounds image.Rectangle
+	var symbolBounds image.Rectangle
+	var priceBounds image.Rectangle
+	var chartWidth int
+	if s.config.UseLogos.Load() {
+		chartWidth, _ = s.chartWidth(canvasBounds.Dx() / 2)
+		chartBounds = rgbrender.ZeroedBounds(
+			image.Rect(
+				canvasBounds.Max.X/2,
+				canvasBounds.Max.Y/2,
+				chartWidth+(canvasBounds.Max.X/2),
+				canvasBounds.Max.Y),
+		)
+		symbolBounds = rgbrender.ZeroedBounds(
+			image.Rect(
+				canvasBounds.Min.X,
+				canvasBounds.Min.Y,
+				(canvasBounds.Max.X/2)+1,
+				canvasBounds.Max.Y))
+		priceBounds = rgbrender.ZeroedBounds(
+			image.Rect(
+				canvasBounds.Max.X/2,
+				canvasBounds.Min.Y,
+				canvasBounds.Max.X,
+				canvasBounds.Max.Y/2))
+	} else {
+		chartWidth, _ = s.chartWidth(canvasBounds.Dx())
+		chartBounds = rgbrender.ZeroedBounds(image.Rect(canvasBounds.Min.X, canvasBounds.Max.Y/2, chartWidth+canvasBounds.Min.X, canvasBounds.Max.Y))
+		symbolBounds = rgbrender.ZeroedBounds(image.Rect(canvasBounds.Min.X, canvasBounds.Min.Y, canvasBounds.Max.X/2, canvasBounds.Max.Y/2))
+		priceBounds = rgbrender.ZeroedBounds(image.Rect(canvasBounds.Max.X/2, canvasBounds.Min.Y, canvasBounds.Max.X, canvasBounds.Max.Y/2))
+	}
 
 	var chartPrices []*Price
 	if len(stock.Prices) >= chartBounds.Dx() {
@@ -69,14 +101,34 @@ func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board
 	if len(symbol) > 4 {
 		symbolWriter = priceWriter
 	}
-	if err := symbolWriter.WriteAligned(
-		rgbrender.CenterCenter,
-		canvas,
-		symbolBounds,
-		[]string{symbol},
-		color.White,
-	); err != nil {
-		return err
+
+	writeSymbol := func() {
+		if err := symbolWriter.WriteAligned(
+			rgbrender.CenterCenter,
+			canvas,
+			symbolBounds,
+			[]string{symbol},
+			color.White,
+		); err != nil {
+			s.log.Error("failed to write symbol",
+				zap.Error(err),
+			)
+		}
+	}
+
+	if s.config.UseLogos.Load() {
+		s.log.Debug("attempting to draw logo for stock",
+			zap.String("symbol", stock.Symbol),
+		)
+		if err := s.drawLogo(ctx, canvas, symbolBounds, stock.Symbol); err != nil {
+			s.log.Error("failed to draw logo for stock",
+				zap.Error(err),
+				zap.String("symbol", stock.Symbol),
+			)
+			writeSymbol()
+		}
+	} else {
+		writeSymbol()
 	}
 
 	if err := priceWriter.WriteAligned(
