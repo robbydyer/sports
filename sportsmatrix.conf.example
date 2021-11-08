@@ -172,6 +172,13 @@ ncaafConfig:
   #offTimes:
   #- 00 02 * * *
 
+  # Adjust font sizes of the Time/Quarter/Inning font and the Score/VS. font.
+  # Leave these commented out to use the default values that scale based on matrix size.
+  #timeFont:
+    #size: 8.0
+  #scoreFont:
+    #size: 16.0
+
 ## NHL config
 nhlConfig:
   enabled: true
@@ -245,6 +252,13 @@ nhlConfig:
   #- 00 18 * * *
   #offTimes:
   #- 00 02 * * *
+
+  # Adjust font sizes of the Time/Quarter/Inning font and the Score/VS. font.
+  # Leave these commented out to use the default values that scale based on matrix size.
+  #timeFont:
+    #size: 8.0
+  #scoreFont:
+    #size: 16.0
 
 ## MLB Config
 mlbConfig:
@@ -323,6 +337,13 @@ mlbConfig:
   #offTimes:
   #- 00 02 * * *
 
+  # Adjust font sizes of the Time/Quarter/Inning font and the Score/VS. font.
+  # Leave these commented out to use the default values that scale based on matrix size.
+  #timeFont:
+    #size: 8.0
+  #scoreFont:
+    #size: 16.0
+
 ## NCAA Mens Basketball Config
 ncaamConfig:
   enabled: true
@@ -389,6 +410,13 @@ ncaamConfig:
   #offTimes:
   #- 00 02 * * *
 
+  # Adjust font sizes of the Time/Quarter/Inning font and the Score/VS. font.
+  # Leave these commented out to use the default values that scale based on matrix size.
+  #timeFont:
+    #size: 8.0
+  #scoreFont:
+    #size: 16.0
+
 ## NBA Config
 nbaConfig:
   enabled: true
@@ -451,6 +479,13 @@ nbaConfig:
   #- 00 18 * * *
   #offTimes:
   #- 00 02 * * *
+
+  # Adjust font sizes of the Time/Quarter/Inning font and the Score/VS. font.
+  # Leave these commented out to use the default values that scale based on matrix size.
+  #timeFont:
+    #size: 8.0
+  #scoreFont:
+    #size: 16.0
 
 ## NFL Config
 nflConfig:
@@ -515,6 +550,13 @@ nflConfig:
   #offTimes:
   #- 00 02 * * *
 
+  # Adjust font sizes of the Time/Quarter/Inning font and the Score/VS. font.
+  # Leave these commented out to use the default values that scale based on matrix size.
+  #timeFont:
+    #size: 8.0
+  #scoreFont:
+    #size: 16.0
+
 ## MLS Config
 mlsConfig:
   enabled: true
@@ -578,6 +620,13 @@ mlsConfig:
   #offTimes:
   #- 00 02 * * *
 
+  # Adjust font sizes of the Time/Quarter/Inning font and the Score/VS. font.
+  # Leave these commented out to use the default values that scale based on matrix size.
+  #timeFont:
+    #size: 8.0
+  #scoreFont:
+    #size: 16.0
+
 ## English Premiere League Config
 eplConfig:
   enabled: true
@@ -640,6 +689,13 @@ eplConfig:
   #- 00 18 * * *
   #offTimes:
   #- 00 02 * * *
+
+  # Adjust font sizes of the Time/Quarter/Inning font and the Score/VS. font.
+  # Leave these commented out to use the default values that scale based on matrix size.
+  #timeFont:
+    #size: 8.0
+  #scoreFont:
+    #size: 16.0
 
 # Image Board. Rotates showing all the images in a list of directories
 # All images in the directory will be automatically scaled to fit the matrix

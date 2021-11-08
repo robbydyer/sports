@@ -75,11 +75,22 @@ func (s *SportBoard) getTimeWriter(canvasBounds image.Rectangle) (*rgbrender.Tex
 		return nil, err
 	}
 
+	if s.config.TimeFont != nil {
+		s.log.Warn("using configured font size for time",
+			zap.Float64("configured", s.config.TimeFont.Size),
+		)
+		timeWriter.FontSize = s.config.TimeFont.Size
+	} else {
+		if bounds.Dy() <= 256 {
+			timeWriter.FontSize = 8.0
+		} else {
+			timeWriter.FontSize = 0.25 * float64(bounds.Dy())
+		}
+	}
+
 	if bounds.Dy() <= 256 {
-		timeWriter.FontSize = 8.0
 		timeWriter.YStartCorrection = -2
 	} else {
-		timeWriter.FontSize = 0.25 * float64(bounds.Dy())
 		timeWriter.YStartCorrection = -1 * ((bounds.Dy() / 32) + 1)
 	}
 
@@ -121,6 +132,13 @@ func (s *SportBoard) getScoreWriter(canvasBounds image.Rectangle) (*rgbrender.Te
 			return nil, fmt.Errorf("failed to load font for score: %w", err)
 		}
 		size := 0.5 * float64(bounds.Dy())
+		if s.config.ScoreFont != nil {
+			s.log.Warn("Using configured font for Scores",
+				zap.Float64("configured", s.config.ScoreFont.Size),
+				zap.Float64("default", size),
+			)
+			size = s.config.ScoreFont.Size
+		}
 		scoreWriter = rgbrender.NewTextWriter(fnt, size)
 		yCorrect := math.Ceil(float64(3.0/32.0) * float64(bounds.Dy()))
 		scoreWriter.YStartCorrection = int(yCorrect * -1)
