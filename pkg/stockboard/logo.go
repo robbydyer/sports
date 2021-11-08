@@ -33,7 +33,7 @@ func (s *StockBoard) drawLogo(ctx context.Context, canvas board.Canvas, bounds i
 		return err
 	}
 
-	i, err := l.RenderRightAlignedWithEnd(ctx, bounds, bounds.Max.X)
+	i, err := l.RenderRightAlignedWithEnd(ctx, bounds, bounds.Max.X-2)
 	if err != nil {
 		return err
 	}
