@@ -19,6 +19,7 @@
 #include <string>
 
 #include <getopt.h>
+#include <math.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,11 +39,14 @@ static int usage(const char *progname) {
   fprintf(stderr, "Takes text and scrolls it with speed -s\n");
   fprintf(stderr, "Options:\n");
   fprintf(stderr,
-          "\t-s <speed>        : Approximate letters per second. "
-          "(Zero for no scrolling)\n"
+          "\t-f <font-file>    : Path to *.bdf-font to be used.\n"
+          "\t-s <speed>        : Approximate letters per second. \n"
+          "\t                    Positive: scroll right to left; Negative: scroll left to right\n"
+          "\t                    (Zero for no scrolling)\n"
           "\t-l <loop-count>   : Number of loops through the text. "
           "-1 for endless (default)\n"
-          "\t-f <font-file>    : Path to *.bdf-font to be used.\n"
+          "\t-b <on-time>,<off-time>  : Blink while scrolling. Keep "
+          "on and off for these amount of scrolled pixels.\n"
           "\t-x <x-origin>     : Shift X-Origin of displaying text (Default: 0)\n"
           "\t-y <y-origin>     : Shift Y-Origin of displaying text (Default: 0)\n"
           "\t-t <track-spacing>: Spacing pixels between letters (Default: 0)\n"
@@ -92,21 +96,27 @@ int main(int argc, char *argv[]) {
 
   const char *bdf_font_file = NULL;
   std::string line;
-  /* x_origin is set by default just right of the screen */
-  const int x_default_start = (matrix_options.chain_length
-                               * matrix_options.cols) + 5;
-  int x_orig = x_default_start;
+  bool xorigin_configured = false;
+  int x_orig = 0;
   int y_orig = 0;
   int letter_spacing = 0;
   float speed = 7.0f;
   int loops = -1;
+  int blink_on = 0;
+  int blink_off = 0;
 
   int opt;
-  while ((opt = getopt(argc, argv, "x:y:f:C:B:O:t:s:l:")) != -1) {
+  while ((opt = getopt(argc, argv, "x:y:f:C:B:O:t:s:l:b:")) != -1) {
     switch (opt) {
     case 's': speed = atof(optarg); break;
+    case 'b':
+      if (sscanf(optarg, "%d,%d", &blink_on, &blink_off) == 1) {
+        blink_off = blink_on;
+      }
+      fprintf(stderr, "hz: on=%d off=%d\n", blink_on, blink_off);
+      break;
     case 'l': loops = atoi(optarg); break;
-    case 'x': x_orig = atoi(optarg); break;
+    case 'x': x_orig = atoi(optarg); xorigin_configured = true; break;
     case 'y': y_orig = atoi(optarg); break;
     case 'f': bdf_font_file = strdup(optarg); break;
     case 't': letter_spacing = atoi(optarg); break;
@@ -185,12 +195,20 @@ int main(int argc, char *argv[]) {
   // Create a new canvas to be used with led_matrix_swap_on_vsync
   FrameCanvas *offscreen_canvas = canvas->CreateFrameCanvas();
 
+  const int scroll_direction = (speed >= 0) ? -1 : 1;
+  speed = fabs(speed);
   int delay_speed_usec = 1000000;
   if (speed > 0) {
     delay_speed_usec = 1000000 / speed / font.CharacterWidth('W');
-  } else if (x_orig == x_default_start) {
-    // There would be no scrolling, so text would never appear. Move to front.
-    x_orig = with_outline ? 1 : 0;
+  }
+
+  if (!xorigin_configured) {
+    if (speed == 0) {
+      // There would be no scrolling, so text would never appear. Move to front.
+      x_orig = with_outline ? 1 : 0;
+    } else {
+      x_orig = scroll_direction < 0 ? canvas->width() : 0;
+    }
   }
 
   int x = x_orig;
@@ -199,27 +217,35 @@ int main(int argc, char *argv[]) {
 
   struct timespec next_frame = {0, 0};
 
+  uint frame_counter = 0;
   while (!interrupt_received && loops != 0) {
+    ++frame_counter;
     offscreen_canvas->Fill(bg_color.r, bg_color.g, bg_color.b);
-    if (outline_font) {
-      // The outline font, we need to write with a negative (-2) text-spacing,
-      // as we want to have the same letter pitch as the regular text that
-      // we then write on top.
-      rgb_matrix::DrawText(offscreen_canvas, *outline_font,
-                           x - 1, y + font.baseline(),
-                           outline_color, NULL,
-                           line.c_str(), letter_spacing - 2);
+    const bool draw_on_frame = (blink_on <= 0)
+      || (frame_counter % (blink_on + blink_off) < (uint)blink_on);
+
+    if (draw_on_frame) {
+      if (outline_font) {
+        // The outline font, we need to write with a negative (-2) text-spacing,
+        // as we want to have the same letter pitch as the regular text that
+        // we then write on top.
+        rgb_matrix::DrawText(offscreen_canvas, *outline_font,
+                             x - 1, y + font.baseline(),
+                             outline_color, NULL,
+                             line.c_str(), letter_spacing - 2);
+      }
+
+      // length = holds how many pixels our text takes up
+      length = rgb_matrix::DrawText(offscreen_canvas, font,
+                                    x, y + font.baseline(),
+                                    color, NULL,
+                                    line.c_str(), letter_spacing);
     }
 
-    // length = holds how many pixels our text takes up
-    length = rgb_matrix::DrawText(offscreen_canvas, font,
-                                  x, y + font.baseline(),
-                                  color, NULL,
-                                  line.c_str(), letter_spacing);
-
-    --x;
-    if (speed > 0 && x + length < 0) {  // moved all the way left out of frame.
-      x = x_orig;
+    x += scroll_direction;
+    if ((scroll_direction < 0 && x + length < 0) ||
+        (scroll_direction > 0 && x > canvas->width())) {
+      x = x_orig + ((scroll_direction > 0) ? -length : 0);
       if (loops > 0) --loops;
     }
 
