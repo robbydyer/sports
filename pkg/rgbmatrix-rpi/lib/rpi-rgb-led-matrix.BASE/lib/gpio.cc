@@ -209,6 +209,7 @@ enum RaspberryPiModel {
 };
 
 static int ReadFileToBuffer(char *buffer, size_t size, const char *filename) {
+  buffer[0] = '\0';
   const int fd = open(filename, O_RDONLY);
   if (fd < 0) return -1;
   ssize_t r = read(fd, buffer, size - 1); // assume one read enough
@@ -252,6 +253,7 @@ static RaspberryPiModel DetermineRaspberryModel() {
     return PI_MODEL_2;
 
   case 0x11: /* Pi 4 */
+  case 0x13: /* Pi 400 */
   case 0x14: /* CM4 */
     return PI_MODEL_4;
 
@@ -357,6 +359,10 @@ bool GPIO::Init(int slowdown) {
   return true;
 }
 
+bool GPIO::IsPi4() {
+  return GetPiModel() == PI_MODEL_4;
+}
+
 /*
  * We support also other pinouts that don't have the OE- on the hardware
  * PWM output pin, so we need to provide (impefect) 'manual' timing as well.
@@ -414,6 +420,13 @@ static bool LinuxHasModuleLoaded(const char *name) {
   return found;
 }
 
+// Check that 3 shows up in isolcpus
+static bool HasIsolCPUs() {
+  char buf[256];
+  ReadFileToBuffer(buf, sizeof(buf), "/sys/devices/system/cpu/isolated");
+  return index(buf, '3') != NULL;
+}
+
 static void busy_wait_nanos_rpi_1(long nanos);
 static void busy_wait_nanos_rpi_2(long nanos);
 static void busy_wait_nanos_rpi_3(long nanos);
@@ -457,6 +470,11 @@ bool Timers::Init() {
   // If we have it, we run the update thread on core3. No perf-compromises:
   WriteTo("/sys/devices/system/cpu/cpu3/cpufreq/scaling_governor",
           "performance");
+
+  if (GetPiModel() != PI_MODEL_1 && !HasIsolCPUs()) {
+    fprintf(stderr, "Suggestion: to slightly improve display update, add\n\tisolcpus=3\n"
+            "at the end of /boot/cmdline.txt and reboot (see README.md)\n");
+  }
   return true;
 }
 
