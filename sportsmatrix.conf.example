@@ -729,6 +729,10 @@ pga:
 stocksConfig:
   enabled: false
 
+  # Set to true to show company logos for stocks. See pkg/stockboard/assets/logos to see which
+  # symbols are supported (mostly S&P500)
+  useLogos: false
+
   # Enable scroll mode
   scrollMode: false
 
