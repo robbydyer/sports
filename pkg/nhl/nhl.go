@@ -184,7 +184,7 @@ func (n *NHL) LeagueShortName() string {
 
 // UpdateTeams ...
 func (n *NHL) UpdateTeams(ctx context.Context) error {
-	teamList, err := GetTeams(ctx)
+	teamList, err := n.getTeams(ctx)
 	if err != nil {
 		return err
 	}

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/robbydyer/sports/pkg/util"
+	"go.uber.org/zap"
 )
 
 //go:embed assets/divisions.json
@@ -103,16 +104,21 @@ func (t *Team) setGameTimes() error {
 }
 
 // GetTeams ...
-func GetTeams(ctx context.Context) ([]*Team, error) {
+func (n *NHL) getTeams(ctx context.Context) ([]*Team, error) {
 	var body []byte
 	var teams *teams
 	var err error
 
-	body, err = assets.ReadFile(filepath.Join("assets", "teams.json"))
+	body, err = n.getTeamAPIData(ctx)
 	if err != nil {
-		body, err = getTeamAPIData(ctx)
-		if err != nil {
-			return nil, err
+		var err2 error
+		n.log.Error("failed to get team data from API",
+			zap.String("league", n.LeagueShortName()),
+			zap.Error(err),
+		)
+		body, err2 = assets.ReadFile(filepath.Join("assets", "teams.json"))
+		if err2 != nil {
+			return nil, fmt.Errorf("failed to get team data: %s: %w", err.Error(), err2)
 		}
 	}
 
@@ -146,12 +152,23 @@ OUTER:
 	return teams.Teams, nil
 }
 
-func getTeamAPIData(ctx context.Context) ([]byte, error) {
+func (n *NHL) getTeamAPIData(ctx context.Context) ([]byte, error) {
 	season := ""
-	if len(util.Today()) > 1 {
-		season = GetSeason(util.Today()[0])
+	if d := util.Today(); len(d) > 0 {
+		season = fmt.Sprintf("season=%s", GetSeason(d[0]))
+		n.log.Debug("nhl today season",
+			zap.String("util.Today", d[0].String()),
+		)
+	} else {
+		n.log.Error("failed to determine today",
+			zap.String("league", n.LeagueShortName()),
+		)
 	}
-	uri := fmt.Sprintf("%s/teams?expand=team.roster,team.schedule.next&season=%s", baseURL, season)
+	uri := fmt.Sprintf("%s/teams?expand=team.roster,team.schedule.next&%s", baseURL, season)
+	n.log.Debug("fetching team data from API",
+		zap.String("league", n.LeagueShortName()),
+		zap.String("url", uri),
+	)
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return nil, err
