@@ -10,8 +10,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/robbydyer/sports/pkg/util"
 	"go.uber.org/zap"
+
+	"github.com/robbydyer/sports/pkg/util"
 )
 
 //go:embed assets/divisions.json
