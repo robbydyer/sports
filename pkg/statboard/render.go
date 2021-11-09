@@ -2,6 +2,7 @@ package statboard
 
 import (
 	"context"
+	"fmt"
 	"image/color"
 	"strings"
 	"time"
@@ -32,8 +33,8 @@ func (s *StatBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc
 
 // Render ...
 func (s *StatBoard) Render(ctx context.Context, canvas board.Canvas) error {
-	if !s.config.Enabled.Load() || len(s.config.Players) == 0 && len(s.config.Teams) == 0 {
-		return nil
+	if len(s.config.Players) == 0 && len(s.config.Teams) == 0 {
+		return fmt.Errorf("no players or teams configured for stats %s", s.api.LeagueShortName())
 	}
 
 	boardCtx, boardCancel := context.WithCancel(ctx)
