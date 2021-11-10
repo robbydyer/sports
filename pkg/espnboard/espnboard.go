@@ -84,13 +84,6 @@ func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger, r rankSetter,
 		offSeason:        make(map[string]bool),
 	}
 
-	if _, err := e.GetTeams(ctx); err != nil {
-		e.log.Error("failed to get teams",
-			zap.Error(err),
-			zap.String("league", leaguer.League()),
-		)
-	}
-
 	c := cron.New()
 	if _, err := c.AddFunc("0 5 * * *", func() { e.CacheClear(context.Background()) }); err != nil {
 		return e, fmt.Errorf("failed to set cron job for cacheClear: %w", err)
@@ -145,6 +138,11 @@ func (e *ESPNBoard) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 
 // TeamFromID ...
 func (e *ESPNBoard) TeamFromID(ctx context.Context, id string) (sportboard.Team, error) {
+	if len(e.teams) < 1 {
+		if _, err := e.GetTeams(ctx); err != nil {
+			return nil, err
+		}
+	}
 	for _, t := range e.teams {
 		if t.ID == id {
 			return t, nil
@@ -220,6 +218,16 @@ func (e *ESPNBoard) HTTPPathPrefix() string {
 
 // GetWatchTeams returns a list of team ID's
 func (e *ESPNBoard) GetWatchTeams(teams []string, season string) []string {
+	if len(e.teams) < 1 {
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		if _, err := e.GetTeams(ctx); err != nil {
+			e.log.Error("failed to get teams",
+				zap.Error(err),
+				zap.String("league", e.League()),
+			)
+		}
+	}
 	if len(teams) == 0 {
 		e.log.Info("setting ESPNBoard watch teams to ALL teams")
 		return e.allTeamIDs
@@ -283,6 +291,17 @@ OUTER:
 
 // TeamsInConference ...
 func (e *ESPNBoard) TeamsInConference(conference string) []*Team {
+	if len(e.teams) < 1 {
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		if _, err := e.GetTeams(ctx); err != nil {
+			e.log.Error("failed to get teams",
+				zap.Error(err),
+				zap.String("league", e.League()),
+			)
+			return nil
+		}
+	}
 	conference = strings.ToLower(conference)
 	found := false
 	for c := range e.conferenceNames {
@@ -311,6 +330,17 @@ func (e *ESPNBoard) TeamsInConference(conference string) []*Team {
 
 // teamsInRank grabs all teams within the top X number of rankings
 func (e *ESPNBoard) teamsInRank(top int, season string) []*Team {
+	if len(e.teams) < 1 {
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		if _, err := e.GetTeams(ctx); err != nil {
+			e.log.Error("failed to get teams",
+				zap.Error(err),
+				zap.String("league", e.League()),
+			)
+			return nil
+		}
+	}
 	if top < 1 {
 		return []*Team{}
 	}
@@ -365,6 +395,15 @@ func (e *ESPNBoard) UpdateGames(ctx context.Context, dateStr string) error {
 
 // TeamRank ...
 func (e *ESPNBoard) TeamRank(ctx context.Context, team sportboard.Team, season string) string {
+	if len(e.teams) < 1 {
+		if _, err := e.GetTeams(ctx); err != nil {
+			e.log.Error("failed to get teams",
+				zap.Error(err),
+				zap.String("league", e.League()),
+			)
+			return ""
+		}
+	}
 	var realTeam *Team
 	for _, t := range e.teams {
 		if t.ID == team.GetID() {
@@ -394,6 +433,15 @@ func (e *ESPNBoard) TeamRank(ctx context.Context, team sportboard.Team, season s
 
 // TeamRecord ...
 func (e *ESPNBoard) TeamRecord(ctx context.Context, team sportboard.Team, season string) string {
+	if len(e.teams) < 1 {
+		if _, err := e.GetTeams(ctx); err != nil {
+			e.log.Error("failed to get teams",
+				zap.Error(err),
+				zap.String("league", e.League()),
+			)
+			return ""
+		}
+	}
 	var realTeam *Team
 	for _, t := range e.teams {
 		if t.ID == team.GetID() {

@@ -46,10 +46,6 @@ func New(ctx context.Context, logger *zap.Logger) (*NHL, error) {
 		espnAPI: espn.New(logger),
 	}
 
-	if err := n.UpdateTeams(ctx); err != nil {
-		n.log.Error("failed to get NHL teams", zap.Error(err))
-	}
-
 	c := cron.New()
 	if _, err := c.AddFunc("0 5 * * *", func() { n.CacheClear(context.Background()) }); err != nil {
 		return n, fmt.Errorf("failed to set cron job for cacheClear: %w", err)
@@ -86,6 +82,16 @@ func (n *NHL) AllTeamAbbreviations() []string {
 
 // GetWatchTeams returns a list of team ID's
 func (n *NHL) GetWatchTeams(teams []string, season string) []string {
+	if len(n.teams) < 1 {
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		if err := n.UpdateTeams(ctx); err != nil {
+			n.log.Error("failed to update nhl teams",
+				zap.Error(err),
+			)
+			return []string{}
+		}
+	}
 	watch := make(map[string]struct{})
 	for _, t := range teams {
 		if t == "ALL" {

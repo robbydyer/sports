@@ -85,6 +85,11 @@ func fName(f string, l string) string {
 
 // FindPlayer ...
 func (m *MLB) FindPlayer(ctx context.Context, first string, last string) (statboard.Player, error) {
+	if len(m.teams) < 1 {
+		if _, err := m.GetTeams(ctx); err != nil {
+			return nil, err
+		}
+	}
 	full := fName(first, last)
 
 	for _, team := range m.teams {
@@ -105,6 +110,11 @@ func (m *MLB) FindPlayer(ctx context.Context, first string, last string) (statbo
 
 // ListPlayers ...
 func (m *MLB) ListPlayers(ctx context.Context, teamAbbreviation string) ([]statboard.Player, error) {
+	if len(m.teams) < 1 {
+		if _, err := m.GetTeams(ctx); err != nil {
+			return nil, err
+		}
+	}
 	var players []statboard.Player
 	for _, team := range m.teams {
 		if team.Abbreviation != teamAbbreviation {
@@ -135,6 +145,11 @@ func (m *MLB) ListPlayers(ctx context.Context, teamAbbreviation string) ([]statb
 
 // GetPlayer ...
 func (m *MLB) GetPlayer(ctx context.Context, id string) (statboard.Player, error) {
+	if len(m.teams) < 1 {
+		if _, err := m.GetTeams(ctx); err != nil {
+			return nil, err
+		}
+	}
 	intID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return nil, err

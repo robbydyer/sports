@@ -86,6 +86,12 @@ func (n *NHL) PlayerCategories() []string {
 func (n *NHL) FindPlayer(ctx context.Context, first string, last string) (statboard.Player, error) {
 	full := fmt.Sprintf("%s %s", strings.ToLower(first), strings.ToLower(last))
 
+	if len(n.teams) < 1 {
+		if err := n.UpdateTeams(ctx); err != nil {
+			return nil, err
+		}
+	}
+
 	for _, team := range n.teams {
 		for _, p := range team.Roster.Roster {
 			if full == strings.ToLower(p.Person.FullName) {
@@ -104,6 +110,12 @@ func (n *NHL) FindPlayer(ctx context.Context, first string, last string) (statbo
 
 // ListPlayers ...
 func (n *NHL) ListPlayers(ctx context.Context, teamAbbreviation string) ([]statboard.Player, error) {
+	if len(n.teams) < 1 {
+		if err := n.UpdateTeams(ctx); err != nil {
+			return nil, err
+		}
+	}
+
 	var players []statboard.Player
 	for _, team := range n.teams {
 		if team.Abbreviation != teamAbbreviation {
@@ -129,6 +141,12 @@ func (n *NHL) ListPlayers(ctx context.Context, teamAbbreviation string) ([]statb
 
 // GetPlayer ...
 func (n *NHL) GetPlayer(ctx context.Context, id string) (statboard.Player, error) {
+	if len(n.teams) < 1 {
+		if err := n.UpdateTeams(ctx); err != nil {
+			return nil, err
+		}
+	}
+
 	intID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return nil, err
