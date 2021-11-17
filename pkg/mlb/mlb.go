@@ -48,10 +48,6 @@ func New(ctx context.Context, logger *zap.Logger) (*MLB, error) {
 		espnAPI: espn.New(logger),
 	}
 
-	if err := m.UpdateTeams(ctx); err != nil {
-		m.log.Error("failed to get teams for MLB", zap.Error(err))
-	}
-
 	c := cron.New()
 	if _, err := c.AddFunc("0 5 * * *", func() { m.CacheClear(context.Background()) }); err != nil {
 		return m, fmt.Errorf("failed to set cron job for cacheClear: %w", err)
@@ -98,6 +94,11 @@ func (m *MLB) GetTeams(ctx context.Context) ([]sportboard.Team, error) {
 
 // TeamFromID ...
 func (m *MLB) TeamFromID(ctx context.Context, id string) (sportboard.Team, error) {
+	if len(m.teams) < 1 {
+		if _, err := m.GetTeams(ctx); err != nil {
+			return nil, err
+		}
+	}
 	for _, t := range m.teams {
 		if t.GetID() == id {
 			return t, nil
@@ -155,6 +156,15 @@ func (m *MLB) AllTeamAbbreviations() []string {
 
 // GetWatchTeams parses 'ALL' or divisions and adds teams accordingly
 func (m *MLB) GetWatchTeams(teams []string, season string) []string {
+	if len(m.teams) < 1 {
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		if _, err := m.GetTeams(ctx); err != nil {
+			m.log.Error("failed to get mlb teams",
+				zap.Error(err),
+			)
+		}
+	}
 	watch := make(map[string]struct{})
 	for _, t := range teams {
 		if t == "ALL" {
