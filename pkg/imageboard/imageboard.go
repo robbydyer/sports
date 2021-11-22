@@ -53,6 +53,7 @@ type ImageBoard struct {
 	sync.Mutex
 }
 
+// ImageDirectory is a configurable directory of images
 type ImageDirectory struct {
 	Directory string `json:"directory"`
 	JumpOnly  bool   `json:"jumpOnly"`
