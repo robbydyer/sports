@@ -2,6 +2,7 @@ package sportsmatrix
 
 import (
 	"context"
+	"time"
 
 	"github.com/twitchtv/twirp"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -69,7 +70,10 @@ func (s *Server) Jump(ctx context.Context, req *pb.JumpReq) (*emptypb.Empty, err
 	s.sm.jumpLock.Lock()
 	defer s.sm.jumpLock.Unlock()
 
-	if err := s.sm.JumpTo(req.Board); err != nil {
+	c, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := s.sm.JumpTo(c, req.Board); err != nil {
 		return nil, twirp.NewError(twirp.Internal, err.Error())
 	}
 

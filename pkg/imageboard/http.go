@@ -1,6 +1,7 @@
 package imageboard
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -132,8 +133,11 @@ func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 					return
 				}
 
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+
 				if i.jumpTo != nil {
-					if err := i.jumper(i.Name()); err != nil {
+					if err := i.jumper(ctx, i.Name()); err != nil {
 						i.log.Error("failed to jump to image board",
 							zap.Error(err),
 							zap.String("file name", j.Name),

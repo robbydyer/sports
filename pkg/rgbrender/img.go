@@ -26,9 +26,14 @@ func ResizeImage(img image.Image, bounds image.Rectangle, zoom float64) image.Im
 }
 
 // ResizeGIF ...
-func ResizeGIF(g *gif.GIF, bounds image.Rectangle, zoom float64) error {
+func ResizeGIF(ctx context.Context, g *gif.GIF, bounds image.Rectangle, zoom float64) error {
 	var newPals []*image.Paletted
 	for _, i := range g.Image {
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		default:
+		}
 		resizedI := ResizeImage(i, bounds, 1)
 
 		resizedPal := image.NewPaletted(resizedI.Bounds(), palette.Plan9)

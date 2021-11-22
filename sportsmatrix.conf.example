@@ -703,8 +703,12 @@ imageConfig:
   enabled: false
   useDiskCache: true
   boardDelay: 5s
-  #directories:
-  #- /home/pi/matrix_images
+
+  directoryList:
+  - directory: /home/pi/matrix_images
+    # Set this to true if you only want these images displayed when API calls are made to display it.
+    # In most cases, you would leave this set to false.
+    jumpOnly: false
   
   # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
   #onTimes:

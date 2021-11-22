@@ -36,18 +36,6 @@ If you feel so inclined, beer money can be sent to my Venmo (www.venmo.com/u/Rob
 - Clock: It's...a clock
 - Sys: Displays basic system info. Currently Mem and CPU usage
 
-## Roadmap
-
-#### More Sports
-- NCAA Football
-
-#### Web API for on-the-fly config changes
-~I ultimately would like to integrate a web API that allows certain things to be modified on the fly- this would ideally mean a simple web UI for tweaking things without having to access the Pi and restart the service.~
-The Web API is a thing now! Check out [API Endpoints](#api-endpoints)
-
-#### More Misc. Boards
-I'd like to add some other basic boards- ~clock~, weather, etc.
-
 ## Installation
 There's a helper install script that pulls the latest release's .deb package and installs it and starts the service. Obviously, piping a
 remote script to `sudo bash` is risky, so please take a look at `script/install.sh` to verify nothing nefarious is going on. You can always manually download the .deb package in the [Releases Section](https://github.com/robbydyer/sports/releases/latest). Just make sure to pick the correct one for your architecture (armv7l for all but Pi Zero).
@@ -101,36 +89,24 @@ Example of the Web Board:<br>
 ![webboard](assets/images/tv_nhl.jpg)
 
 ## API endpoints
-The sportsmatrix creates some HTTP endpoints for on-the-fly changes. The matrix itself registers some endpoints, and each board is capable of registering it's own.
+The Web UI has a built-in doc page describing the API. It also includes an interactive way to test API calls. There's a
+button in the nav "API Docs", or you can go to `http://[YOURIP]/docs`
 
-The matrix defines the following:
-- `/api/screenon` => Turns the board on
-- `/api/screenoff` => Turns the board off
-Examples:
-```shell
-curl http://127.0.0.1:8080/api/screenon
-curl http://127.0.0.1:8080/api/screenoff
+### Special "Jump only" Image directories
+If you would like to configure certain image directories to contain "jump only" images (only seen when an API call is made to show them), you can
+do so by configuring them like:
+
+```
+imageConfig:
+  directoryList:
+  - directory: /my/image/dir
+    jumpOnly: true
 ```
 
-The sportboard.SportBoard type (which all the team sport types use) implements the following:
-- `/api/[sport_path]/disable` => Disable the board. The matrix will skip this board in the rotation
-- `/api/[sport_path]/enable` => Enable the board.
-- `/api/[sport_path]/hidefavoritescore` => Hide scores for games that favorite teams are playing in. 
-- `/api/[sport_path]/showfavoritescore` => Show scores for games that favorite teams are in.
-- `/api/[sport_path]/favoritesticky` => Pins the matrix to a live game that a favorite team is participating in.
-- `/api/[sport_path]/favoriteunstick` => Unsticks a favorite team game
+Then, to display a particular image in that directory, make the API call and pass the desired image name.
 
-Examples:
-```shell
-curl http://127.0.0.1:8080/api/nhl/showfavoritescore
-curl http://127.0.0.1:8080/api/mlb/favoritesticky
 ```
-
-The imageboard can be turned on/off and also have it's cache cleared
-```shell
-curl http://127.0.0.1:8080/api/img/enable
-curl http://127.0.0.1:8080/api/img/disable
-curl http://127.0.0.1:8080/api/img/clearcache
+curl -X POST --header "Content-Type: application/json" -d '{"name":"goal.gif"}' "http://myhost:myport/imageboard.v1.ImageBoard/Jump"
 ```
 
 ## Contributing
