@@ -190,7 +190,7 @@ github.com/thechriswalker/protoc-gen-twirp_js
 github.com/thechriswalker/protoc-gen-twirp_js/internal/gen
 github.com/thechriswalker/protoc-gen-twirp_js/internal/gen/stringutils
 github.com/thechriswalker/protoc-gen-twirp_js/internal/gen/typemap
-# github.com/twitchtv/twirp v8.1.0+incompatible
+# github.com/twitchtv/twirp v8.1.1+incompatible
 ## explicit
 github.com/twitchtv/twirp
 github.com/twitchtv/twirp/ctxsetters

@@ -38,8 +38,10 @@ Here is a list of some third-party implementations in other languages.
 | **Java**       |         |    ✓    | [https://github.com/devork/flit](https://github.com/devork/flit)
 | **JavaScript** |    ✓    |         | [github.com/thechriswalker/protoc-gen-twirp_js](https://github.com/thechriswalker/protoc-gen-twirp_js)
 | **JavaScript** |    ✓    |         | [github.com/Xe/twirp-codegens/cmd/protoc-gen-twirp_jsbrowser](https://github.com/Xe/twirp-codegens)
+| **JavaScript** |    ✓    |    ✓    | [github.com/tatethurston/TwirpScript](https://github.com/tatethurston/TwirpScript)
 | **Typescript** |    ✓    |    ✓    | [https://github.com/hopin-team/twirp-ts](https://github.com/hopin-team/twirp-ts)
 | **Typescript** |    ✓    |         | [github.com/larrymyers/protoc-gen-twirp_typescript](https://github.com/larrymyers/protoc-gen-twirp_typescript)
+| **Typescript** |    ✓    |    ✓    | [github.com/tatethurston/TwirpScript](https://github.com/tatethurston/TwirpScript)
 | **Ruby**       |    ✓    |    ✓    | [github.com/twitchtv/twirp-ruby](https://github.com/twitchtv/twirp-ruby)
 | **Rust**       |    ✓    |    ✓    | [github.com/cretz/prost-twirp](https://github.com/cretz/prost-twirp)
 | **Scala**      |    ✓    |    ✓    | [github.com/soundcloud/twinagle](https://github.com/soundcloud/twinagle)
@@ -47,6 +49,7 @@ Here is a list of some third-party implementations in other languages.
 | **PHP**        |    ✓    |    ✓    | [github.com/twirphp/twirp](https://github.com/twirphp/twirp)
 | **Dart**       |    ✓    |         | [github.com/apptreesoftware/protoc-gen-twirp_dart](https://github.com/apptreesoftware/protoc-gen-twirp_dart)
 | **Elixir**     |    ✓    |    ✓    | [github.com/keathley/twirp-elixir](https://github.com/keathley/twirp-elixir)
+| **Swift**      |    ✓    |         | [github.com/CrazyHulk/protoc-gen-swiftwirp](https://github.com/CrazyHulk/protoc-gen-swiftwirp)
 
 
 ### Support and Community
