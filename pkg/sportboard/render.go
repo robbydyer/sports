@@ -22,12 +22,14 @@ const (
 )
 
 var (
-	red                  = color.RGBA{255, 0, 0, 255}
-	green                = color.RGBA{0, 255, 0, 255}
-	infoLayerPriority    = rgbrender.BackgroundPriority + 1
-	counterLayerPriority = rgbrender.ForegroundPriority
-	scoreLayerPriority   = rgbrender.BackgroundPriority + 2
-	logoLayerPriority    = rgbrender.BackgroundPriority
+	red                     = color.RGBA{255, 0, 0, 255}
+	green                   = color.RGBA{0, 255, 0, 255}
+	infoLayerPriority       = rgbrender.BackgroundPriority + 1
+	counterLayerPriority    = rgbrender.ForegroundPriority
+	scoreLayerPriority      = rgbrender.BackgroundPriority + 2
+	logoLayerPriority       = rgbrender.BackgroundPriority
+	gradientLayerPriority   = rgbrender.BackgroundPriority + 3
+	gradientBlackPercentage = 0.75
 )
 
 func (s *SportBoard) homeSide() side {
@@ -105,6 +107,13 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 	if err != nil {
 		return err
 	}
+	txtBounds := s.textAreaWidth(canvas.Bounds())
+	gradientLayers, err := s.gradientLayer(image.Rect(
+		canvas.Bounds().Min.X+(canvas.Bounds().Max.X-txtBounds)/2,
+		canvas.Bounds().Min.Y,
+		(canvas.Bounds().Min.X+(canvas.Bounds().Max.X-txtBounds)/2)+txtBounds,
+		canvas.Bounds().Max.Y,
+	))
 
 	for {
 		select {
@@ -113,6 +122,9 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 		default:
 		}
 
+		for _, l := range gradientLayers {
+			layers.AddLayer(gradientLayerPriority, l)
+		}
 		for _, l := range logos {
 			layers.AddLayer(logoLayerPriority, l)
 		}
@@ -321,6 +333,18 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 		return err
 	}
 
+	txtBounds := s.textAreaWidth(canvas.Bounds())
+	gradientLayers, err := s.gradientLayer(image.Rect(
+		canvas.Bounds().Min.X+(canvas.Bounds().Max.X-txtBounds)/2,
+		canvas.Bounds().Min.Y,
+		(canvas.Bounds().Min.X+(canvas.Bounds().Max.X-txtBounds)/2)+txtBounds,
+		canvas.Bounds().Max.Y,
+	))
+
+	for _, l := range gradientLayers {
+		layers.AddLayer(gradientLayerPriority, l)
+	}
+
 	for _, l := range logos {
 		layers.AddLayer(logoLayerPriority, l)
 	}
@@ -410,6 +434,18 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 		for _, i := range infos {
 			layers.AddTextLayer(infoLayerPriority, i)
 		}
+	}
+
+	txtBounds := s.textAreaWidth(canvas.Bounds())
+	gradientLayers, err := s.gradientLayer(image.Rect(
+		canvas.Bounds().Min.X+(canvas.Bounds().Max.X-txtBounds)/2,
+		canvas.Bounds().Min.Y,
+		(canvas.Bounds().Min.X+(canvas.Bounds().Max.X-txtBounds)/2)+txtBounds,
+		canvas.Bounds().Max.Y,
+	))
+
+	for _, l := range gradientLayers {
+		layers.AddLayer(gradientLayerPriority, l)
 	}
 
 	// Give the logoLayers the real bounds, as it already accounts for scroll mode itself
@@ -590,6 +626,23 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 				}
 				pt := image.Pt(img.Bounds().Min.X, img.Bounds().Min.Y)
 				draw.Draw(canvas, img.Bounds(), img, pt, draw.Over)
+				return nil
+			},
+		),
+	}, nil
+}
+
+func (s *SportBoard) gradientLayer(bounds image.Rectangle) ([]*rgbrender.Layer, error) {
+	return []*rgbrender.Layer{
+		rgbrender.NewLayer(
+			func(ctx context.Context) (image.Image, error) {
+				gradient := rgbrender.GradientRectangle(bounds, gradientBlackPercentage, color.Black)
+				return gradient, nil
+			},
+			func(canvas board.Canvas, img image.Image) error {
+				pt := image.Pt(img.Bounds().Min.X, img.Bounds().Min.Y)
+				draw.Draw(canvas, img.Bounds(), img, pt, draw.Over)
+
 				return nil
 			},
 		),
