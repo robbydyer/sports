@@ -94,6 +94,7 @@ type Config struct {
 	ScoreHighlightRepeat *int              `json:"scoreHighlightRepeat"`
 	OnTimes              []string          `json:"onTimes"`
 	OffTimes             []string          `json:"offTimes"`
+	UseGradient          *atomic.Bool      `json:"useGradient"`
 }
 
 // FontConfig ...
@@ -206,6 +207,9 @@ func (c *Config) SetDefaults() {
 	if c.ScoreHighlightRepeat == nil {
 		p := 3
 		c.ScoreHighlightRepeat = &p
+	}
+	if c.UseGradient == nil {
+		c.UseGradient = atomic.NewBool(true)
 	}
 }
 

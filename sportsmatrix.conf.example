@@ -179,6 +179,9 @@ ncaafConfig:
   #scoreFont:
     #size: 16.0
 
+  # Set this to false to disable the logo gradient effect
+  useGradient: true
+
 ## NHL config
 nhlConfig:
   enabled: true
@@ -259,6 +262,9 @@ nhlConfig:
     #size: 8.0
   #scoreFont:
     #size: 16.0
+
+  # Set this to false to disable the logo gradient effect
+  useGradient: true
 
 ## MLB Config
 mlbConfig:
@@ -344,6 +350,9 @@ mlbConfig:
   #scoreFont:
     #size: 16.0
 
+  # Set this to false to disable the logo gradient effect
+  useGradient: true
+
 ## NCAA Mens Basketball Config
 ncaamConfig:
   enabled: true
@@ -417,6 +426,9 @@ ncaamConfig:
   #scoreFont:
     #size: 16.0
 
+  # Set this to false to disable the logo gradient effect
+  useGradient: true
+
 ## NBA Config
 nbaConfig:
   enabled: true
@@ -486,6 +498,9 @@ nbaConfig:
     #size: 8.0
   #scoreFont:
     #size: 16.0
+
+  # Set this to false to disable the logo gradient effect
+  useGradient: true
 
 ## NFL Config
 nflConfig:
@@ -557,6 +572,9 @@ nflConfig:
   #scoreFont:
     #size: 16.0
 
+  # Set this to false to disable the logo gradient effect
+  useGradient: true
+
 ## MLS Config
 mlsConfig:
   enabled: true
@@ -627,6 +645,9 @@ mlsConfig:
   #scoreFont:
     #size: 16.0
 
+  # Set this to false to disable the logo gradient effect
+  useGradient: true
+
 ## English Premiere League Config
 eplConfig:
   enabled: true
@@ -696,6 +717,9 @@ eplConfig:
     #size: 8.0
   #scoreFont:
     #size: 16.0
+
+  # Set this to false to disable the logo gradient effect
+  useGradient: true
 
 # Image Board. Rotates showing all the images in a list of directories
 # All images in the directory will be automatically scaled to fit the matrix

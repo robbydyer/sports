@@ -23,6 +23,7 @@ func (s *SportBoard) GetRPCHandler() (string, http.Handler) {
 // SetStatus ...
 func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.Empty, error) {
 	cancelBoard := false
+	clearDrawCache := false
 
 	if req.Status == nil {
 		return &emptypb.Empty{}, twirp.NewError(twirp.InvalidArgument, "nil status sent")
@@ -39,15 +40,27 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 	}
 	if s.board.config.GamblingSpread.CAS(!req.Status.OddsEnabled, req.Status.OddsEnabled) {
 		cancelBoard = true
+		clearDrawCache = true
 	}
 	if s.board.config.ScrollMode.CAS(!req.Status.ScrollEnabled, req.Status.ScrollEnabled) {
 		cancelBoard = true
+		clearDrawCache = true
 	}
 	if s.board.config.TightScroll.CAS(!req.Status.TightScrollEnabled, req.Status.TightScrollEnabled) {
 		cancelBoard = true
+		clearDrawCache = true
 	}
 	if s.board.config.ShowRecord.CAS(!req.Status.RecordRankEnabled, req.Status.RecordRankEnabled) {
 		cancelBoard = true
+		clearDrawCache = true
+	}
+	if s.board.config.UseGradient.CAS(!req.Status.UseGradient, req.Status.UseGradient) {
+		cancelBoard = true
+		clearDrawCache = true
+	}
+
+	if clearDrawCache {
+		s.board.clearDrawCache()
 	}
 
 	if cancelBoard {
@@ -72,6 +85,7 @@ func (s *Server) GetStatus(ctx context.Context, req *emptypb.Empty) (*pb.StatusR
 			TightScrollEnabled: s.board.config.TightScroll.Load(),
 			RecordRankEnabled:  s.board.config.ShowRecord.Load(),
 			OddsEnabled:        s.board.config.GamblingSpread.Load(),
+			UseGradient:        s.board.config.UseGradient.Load(),
 		},
 	}, nil
 }

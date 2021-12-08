@@ -30,6 +30,7 @@ function jsonToStatus(jsonDat) {
     status.setTightScrollEnabled(dat.tight_scroll_enabled);
     status.setRecordRankEnabled(dat.record_rank_enabled);
     status.setOddsEnabled(dat.odds_enabled);
+    status.setUseGradient(dat.use_gradient);
 
     return status;
 }
@@ -187,6 +188,12 @@ class Sport extends React.Component {
                     <Col>
                         <Form.Switch id={this.props.sport + "favstick"} label="Stick Favorite Live Games" checked={this.state.status.getFavoriteSticky()}
                             onChange={() => { this.state.status.setFavoriteSticky(!this.state.status.getFavoriteSticky()); this.updateStatus(); }} />
+                    </Col>
+                </Row>
+                <Row className="text-left">
+                    <Col>
+                        <Form.Switch id={this.props.sport + "gradient"} label="Logo Gradient" checked={this.state.status.getUseGradient()}
+                            onChange={() => { this.state.status.setUseGradient(!this.state.status.getUseGradient()); this.updateStatus(); }} />
                     </Col>
                 </Row>
                 <Row className="text-left">

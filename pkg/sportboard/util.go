@@ -3,6 +3,7 @@ package sportboard
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"image/draw"
 	"math"
 
@@ -184,6 +185,13 @@ func (s *SportBoard) textAreaWidth(bounds image.Rectangle) int {
 		return bounds.Dx() / 8
 	}
 
+	if s.config.UseGradient.Load() && !s.config.ScrollMode.Load() {
+		if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
+			return 10
+		}
+		return int(math.Floor(float64(bounds.Dx()) / 5.0))
+	}
+
 	if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
 		return 16
 	}
@@ -204,6 +212,14 @@ func (s *SportBoard) calculateTeamInfoWidth(canvas draw.Image, writer *rgbrender
 	}
 
 	return max, nil
+}
+
+func (s *SportBoard) writeBoxColor() color.Color {
+	if s.config.UseGradient.Load() {
+		return color.NRGBA{255, 255, 255, 0}
+	}
+
+	return color.Black
 }
 
 func scoreStr(g Game, homeSide side) (string, error) {
