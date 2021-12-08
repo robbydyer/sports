@@ -185,17 +185,17 @@ func (s *SportBoard) textAreaWidth(bounds image.Rectangle) int {
 		return bounds.Dx() / 8
 	}
 
-	if s.config.ScrollMode.Load() {
+	if s.config.UseGradient.Load() && !s.config.ScrollMode.Load() {
 		if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
-			return 16
+			return 10
 		}
-		return int(math.Floor(float64(bounds.Dx()) / 4.0))
+		return int(math.Floor(float64(bounds.Dx()) / 5.0))
 	}
 
 	if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
-		return 10
+		return 16
 	}
-	return int(math.Floor(float64(bounds.Dx()) / 5.0))
+	return bounds.Dx() / 4
 }
 
 func (s *SportBoard) calculateTeamInfoWidth(canvas draw.Image, writer *rgbrender.TextWriter, strs []string) (int, error) {
