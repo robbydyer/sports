@@ -22,14 +22,13 @@ const (
 )
 
 var (
-	red                     = color.RGBA{255, 0, 0, 255}
-	green                   = color.RGBA{0, 255, 0, 255}
-	infoLayerPriority       = rgbrender.BackgroundPriority + 2
-	counterLayerPriority    = rgbrender.ForegroundPriority
-	scoreLayerPriority      = rgbrender.BackgroundPriority + 3
-	logoLayerPriority       = rgbrender.BackgroundPriority
-	gradientLayerPriority   = rgbrender.BackgroundPriority + 1
-	gradientBlackPercentage = 0.25
+	red                   = color.RGBA{255, 0, 0, 255}
+	green                 = color.RGBA{0, 255, 0, 255}
+	infoLayerPriority     = rgbrender.BackgroundPriority + 2
+	counterLayerPriority  = rgbrender.ForegroundPriority
+	scoreLayerPriority    = rgbrender.BackgroundPriority + 3
+	logoLayerPriority     = rgbrender.BackgroundPriority
+	gradientLayerPriority = rgbrender.BackgroundPriority + 1
 )
 
 func (s *SportBoard) homeSide() side {
@@ -632,7 +631,6 @@ func (s *SportBoard) gradientLayer(bounds image.Rectangle, scoreLen int) []*rgbr
 
 	var width int
 	if scoreLen == 5 {
-		// width = int(float64(bounds.Dx()) / 1.5)
 		width = int(float64(txtArea) * 4.2)
 	} else if scoreLen > 5 {
 		width = int(float64(txtArea) * 4.7)
