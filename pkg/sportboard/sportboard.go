@@ -209,7 +209,7 @@ func (c *Config) SetDefaults() {
 		c.ScoreHighlightRepeat = &p
 	}
 	if c.UseGradient == nil {
-		c.UseGradient = atomic.NewBool(false)
+		c.UseGradient = atomic.NewBool(true)
 	}
 }
 

@@ -40,6 +40,12 @@ func (s *SportBoard) logoConfig(logoKey string, bounds image.Rectangle) *logo.Co
 	}
 }
 
+func (s *SportBoard) clearDrawCache() {
+	s.drawLock.Lock()
+	defer s.drawLock.Unlock()
+	s.logoDrawCache = make(map[string]image.Image)
+}
+
 func (s *SportBoard) getLogoDrawCache(logoKey string) (image.Image, error) {
 	s.drawLock.RLock()
 	defer s.drawLock.RUnlock()

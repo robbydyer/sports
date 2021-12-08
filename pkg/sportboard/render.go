@@ -632,11 +632,12 @@ func (s *SportBoard) gradientLayer(bounds image.Rectangle, scoreLen int) []*rgbr
 
 	var width int
 	if scoreLen == 5 {
-		width = int(float64(bounds.Dx()) / 1.5)
+		// width = int(float64(bounds.Dx()) / 1.5)
+		width = int(float64(txtArea) * 4.2)
 	} else if scoreLen > 5 {
-		width = int(float64(bounds.Dx()) / 1.35)
+		width = int(float64(txtArea) * 4.7)
 	} else {
-		width = int(float64(bounds.Dx()) / 1.75)
+		width = int(float64(txtArea) / 3.7)
 	}
 
 	gradientBounds := image.Rect(

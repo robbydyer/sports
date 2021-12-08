@@ -16,6 +16,7 @@ message Status{
     bool tight_scroll_enabled = 5;
     bool record_rank_enabled = 6;
     bool odds_enabled = 7;
+    bool use_gradient = 8;
 }
 
 message SetStatusReq {
