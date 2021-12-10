@@ -68,6 +68,9 @@ func (i *ImgCanvas) Close() error {
 	return nil
 }
 
+// SetWidth ...
+func (i *ImgCanvas) SetWidth(x int) {}
+
 // disableWatcher checks if the canvas is disabled for 20 sec consecutively in 500ms increments.
 // If so, it clears the lastPng cache to save memory.
 func (i *ImgCanvas) disableWatcher() {

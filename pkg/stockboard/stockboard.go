@@ -272,6 +272,7 @@ STOCK:
 			s.log.Error("failed to render stock",
 				zap.Error(err),
 			)
+			continue STOCK
 		}
 
 		if scrollCanvas != nil && s.config.ScrollMode.Load() {

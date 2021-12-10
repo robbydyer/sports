@@ -29,6 +29,7 @@ type Leaguer interface {
 	APIPath() string
 	TeamEndpoints() []string
 	HTTPPathPrefix() string
+	HeadlinePath() string
 }
 
 // ESPNBoard ...

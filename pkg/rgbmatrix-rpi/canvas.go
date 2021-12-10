@@ -73,6 +73,10 @@ func (c *Canvas) Set(x, y int, color color.Color) {
 	c.m.Set(c.position(x, y), color)
 }
 
+// SetWidth ...
+func (c *Canvas) SetWidth(x int) {
+}
+
 func (c *Canvas) position(x, y int) int {
 	return x + (y * c.w)
 }

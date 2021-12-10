@@ -31,6 +31,7 @@ import (
 	"github.com/robbydyer/sports/pkg/statboard"
 	"github.com/robbydyer/sports/pkg/stockboard"
 	"github.com/robbydyer/sports/pkg/sysboard"
+	"github.com/robbydyer/sports/pkg/textboard"
 	"github.com/robbydyer/sports/pkg/util"
 	"github.com/robbydyer/sports/pkg/weatherboard"
 	"github.com/robbydyer/sports/pkg/yahoo"
@@ -336,6 +337,18 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 
+		boards = append(boards, b)
+	}
+	if r.config.NHLConfig.Headlines != nil {
+		l, err := espnboard.GetLeaguer("nhl")
+		if err != nil {
+			return nil, err
+		}
+		api := espnboard.NewHeadlines(l, logger)
+		b, err := textboard.New(api, r.config.NHLConfig.Headlines, logger)
+		if err != nil {
+			return nil, err
+		}
 		boards = append(boards, b)
 	}
 	if r.config.MLBConfig != nil {

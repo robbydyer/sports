@@ -13,8 +13,10 @@ import (
 	"go.uber.org/zap"
 )
 
-var black = color.RGBA{R: 0x0, G: 0x0, B: 0x0, A: 0x0}
-var DefaultScrollDelay = 50 * time.Millisecond
+var (
+	black              = color.RGBA{R: 0x0, G: 0x0, B: 0x0, A: 0x0}
+	DefaultScrollDelay = 50 * time.Millisecond
+)
 
 // ScrollDirection represents the direction the canvas scrolls
 type ScrollDirection int
@@ -69,43 +71,43 @@ func NewScrollCanvas(m Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (
 	return c, nil
 }
 
-func (s *ScrollCanvas) Width() int {
-	return s.w
+func (c *ScrollCanvas) Width() int {
+	return c.w
 }
 
-func (s *ScrollCanvas) SetWidth(w int) {
-	s.w = w
-	s.SetPadding(s.pad)
+func (c *ScrollCanvas) SetWidth(w int) {
+	c.w = w
+	c.SetPadding(w + int(float64(w)*0.25))
 }
 
-func (s *ScrollCanvas) AddCanvas(add draw.Image) {
-	if s.direction != RightToLeft && s.direction != LeftToRight {
+func (c *ScrollCanvas) AddCanvas(add draw.Image) {
+	if c.direction != RightToLeft && c.direction != LeftToRight {
 		return
 	}
 
 	img := image.NewRGBA(add.Bounds())
 	draw.Draw(img, add.Bounds(), add, add.Bounds().Min, draw.Over)
 
-	s.actuals = append(s.actuals, img)
+	c.actuals = append(c.actuals, img)
 }
 
-func (s *ScrollCanvas) Merge(padding int) {
+func (c *ScrollCanvas) Merge(padding int) {
 	maxX := 0
 	maxY := 0
-	for _, img := range s.actuals {
+	for _, img := range c.actuals {
 		maxX += img.Bounds().Dx()
 		maxY = img.Bounds().Dy()
 	}
 
 	merged := image.NewRGBA(image.Rect(0, 0, maxX, maxY))
 
-	s.log.Debug("merging tight scroll canvas",
+	c.log.Debug("merging tight scroll canvas",
 		zap.Int("width", maxX),
 		zap.Int("height", maxY),
 	)
 
 	lastX := 0
-	for _, img := range s.actuals {
+	for _, img := range c.actuals {
 		startX := firstNonBlankX(img)
 		endX := lastNonBlankX(img)
 		negStart := 0
@@ -127,7 +129,7 @@ func (s *ScrollCanvas) Merge(padding int) {
 		lastX += x + negStart
 	}
 
-	s.actual = merged
+	c.actual = merged
 }
 
 func (c *ScrollCanvas) position(x, y int) int {
@@ -269,7 +271,7 @@ func (c *ScrollCanvas) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 }
 
 func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
-	//thisX := c.actual.Bounds().Min.X * -1
+	// thisX := c.actual.Bounds().Min.X * -1
 	thisX := firstNonBlankX(c.actual)
 	thisX -= c.w
 	if thisX < 0 {
@@ -392,6 +394,7 @@ func firstNonBlankY(img image.Image) int {
 
 	return img.Bounds().Min.Y
 }
+
 func firstNonBlankX(img image.Image) int {
 	for x := img.Bounds().Min.X; x <= img.Bounds().Max.X; x++ {
 		for y := img.Bounds().Min.Y; y <= img.Bounds().Max.Y; y++ {
@@ -403,6 +406,7 @@ func firstNonBlankX(img image.Image) int {
 
 	return img.Bounds().Min.X
 }
+
 func lastNonBlankY(img image.Image) int {
 	for y := img.Bounds().Max.Y; y >= img.Bounds().Min.Y; y-- {
 		for x := img.Bounds().Min.X; x <= img.Bounds().Max.X; x++ {
@@ -414,6 +418,7 @@ func lastNonBlankY(img image.Image) int {
 
 	return img.Bounds().Max.Y
 }
+
 func lastNonBlankX(img image.Image) int {
 	for x := img.Bounds().Max.X; x >= img.Bounds().Min.X; x-- {
 		for y := img.Bounds().Max.Y; y >= img.Bounds().Min.Y; y-- {
