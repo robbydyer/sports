@@ -212,7 +212,7 @@ func (s *TextBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc
 
 // Render ...
 func (s *TextBoard) Render(ctx context.Context, canvas board.Canvas) error {
-	if !canvas.Scrollable() {
+	if !canvas.Scrollable() || !s.config.Enabled.Load() {
 		return nil
 	}
 

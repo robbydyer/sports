@@ -132,7 +132,7 @@ class Sport extends React.Component {
 
         var hreq = new basicboard_pb.SetStatusReq();
         hreq.setStatus(this.state.headlines);
-        await MatrixPostRet("headlines/" + this.props.sport + "/board.v1.BasicBoard/SetStatus", JSON.stringify(sreq.toObject()));
+        await MatrixPostRet("headlines/" + this.props.sport + "/board.v1.BasicBoard/SetStatus", JSON.stringify(hreq.toObject()));
         await this.getStatus();
     }
 
