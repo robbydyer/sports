@@ -1,13 +1,16 @@
 package espnboard
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"image"
+	"image/png"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -21,6 +24,7 @@ type Headlines struct {
 	lastUpdate     time.Time
 	lastHeadlines  []string
 	includeTop     bool
+	logo           image.Image
 	sync.Mutex
 }
 
@@ -36,12 +40,41 @@ func NewHeadlines(leaguer Leaguer, logger *zap.Logger) *Headlines {
 		leaguer:        leaguer,
 		log:            logger,
 		updateInterval: 1 * time.Hour,
+		logo:           nil,
 	}
+}
+
+// HTTPPathPrefix ...
+func (h *Headlines) HTTPPathPrefix() string {
+	return h.leaguer.HTTPPathPrefix()
 }
 
 // GetLogo ...
 func (h *Headlines) GetLogo(ctx context.Context) (image.Image, error) {
-	return nil, nil
+	h.Lock()
+	defer h.Unlock()
+
+	if h.logo != nil {
+		h.log.Debug("using cached logo for headlines",
+			zap.String("league", h.leaguer.League()),
+		)
+		return h.logo, nil
+	}
+	assetfile := fmt.Sprintf("assets/league_logos/%s.png", strings.ToLower(h.leaguer.HTTPPathPrefix()))
+
+	dat, err := assets.ReadFile(assetfile)
+	if err != nil {
+		return nil, err
+	}
+	r := bytes.NewReader(dat)
+
+	l, err := png.Decode(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode logo for %s: %w", h.leaguer.League(), err)
+	}
+	h.logo = l
+
+	return h.logo, nil
 }
 
 // GetText ...

@@ -16,7 +16,7 @@ import mlslogo from './mls.png';
 import epllogo from './epl.png'
 import { MatrixPostRet, JSONToStatus, JumpToBoard } from './util';
 import { SetStatusReq, Status } from './sportboard/sportboard_pb';
-import * as statboard_pb from './basicboard/basicboard_pb';
+import * as basicboard_pb from './basicboard/basicboard_pb';
 
 
 function jsonToStatus(jsonDat) {
@@ -41,7 +41,8 @@ class Sport extends React.Component {
         var status = new Status();
         this.state = {
             "status": status,
-            "stats": new statboard_pb.Status(),
+            "stats": new basicboard_pb.Status(),
+            "headlines": new basicboard_pb.Status(),
             "has_stats": false,
         };
         if (this.props.sport === "nhl") {
@@ -95,15 +96,43 @@ class Sport extends React.Component {
                 "has_stats": false,
             });
         });
+
+        await MatrixPostRet("headlines/" + this.props.sport + "/board.v1.BasicBoard/GetStatus", '{}').then((resp) => {
+            if (resp.ok) {
+                return resp.text();
+            }
+            throw resp;
+        }).then((data) => {
+            try {
+                var dat = JSONToStatus(data);
+                this.setState({
+                    "headlines": dat,
+                    "has_headlines": true,
+                })
+            } catch (e) {
+                this.setState({
+                    "has_headlines": false,
+                });
+            }
+        }).catch(error => {
+            this.setState({
+                "has_headlines": false,
+            });
+        });
     }
 
     updateStatus = async () => {
         var req = new SetStatusReq();
         req.setStatus(this.state.status);
         await MatrixPostRet(this.props.sport + "/sport.v1.Sport/SetStatus", JSON.stringify(req.toObject()));
-        var sreq = new statboard_pb.SetStatusReq();
+
+        var sreq = new basicboard_pb.SetStatusReq();
         sreq.setStatus(this.state.stats);
         await MatrixPostRet("stat/" + this.props.sport + "/board.v1.BasicBoard/SetStatus", JSON.stringify(sreq.toObject()));
+
+        var hreq = new basicboard_pb.SetStatusReq();
+        hreq.setStatus(this.state.headlines);
+        await MatrixPostRet("headlines/" + this.props.sport + "/board.v1.BasicBoard/SetStatus", JSON.stringify(sreq.toObject()));
         await this.getStatus();
     }
 
@@ -158,6 +187,12 @@ class Sport extends React.Component {
                     <Col>
                         <Form.Switch id={this.props.sport + "stats"} label="Stats" checked={this.state.stats.getEnabled()} disabled={!this.state.has_stats}
                             onChange={() => { this.state.stats.setEnabled(!this.state.stats.getEnabled()); this.updateStatus(); }} />
+                    </Col>
+                </Row>
+                <Row className="text-left">
+                    <Col>
+                        <Form.Switch id={this.props.sport + "headlines"} label="News Headlines" checked={this.state.headlines.getEnabled()} disabled={!this.state.has_headlines}
+                            onChange={() => { this.state.headlines.setEnabled(!this.state.headlines.getEnabled()); this.updateStatus(); }} />
                     </Col>
                 </Row>
                 <Row className="text-left">

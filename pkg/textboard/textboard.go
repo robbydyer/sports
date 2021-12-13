@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"strings"
 	"sync"
 	"time"
 
@@ -24,10 +25,11 @@ import (
 )
 
 var (
-	red        = color.RGBA{255, 0, 0, 255}
-	green      = color.RGBA{0, 255, 0, 255}
-	lightGreen = color.NRGBA{0, 255, 0, 50}
-	lightRed   = color.NRGBA{255, 0, 0, 50}
+	red                = color.RGBA{255, 0, 0, 255}
+	green              = color.RGBA{0, 255, 0, 255}
+	lightGreen         = color.NRGBA{0, 255, 0, 50}
+	lightRed           = color.NRGBA{255, 0, 0, 50}
+	defaultScrollDelay = 15 * time.Millisecond
 )
 
 // TextBoard displays stocks
@@ -40,7 +42,6 @@ type TextBoard struct {
 	cancelBoard chan struct{}
 	rpcServer   pb.TwirpServer
 	logos       map[string]*logo.Logo
-	logoLock    sync.Mutex
 	sync.Mutex
 }
 
@@ -49,10 +50,7 @@ type Config struct {
 	boardDelay         time.Duration
 	updateInterval     time.Duration
 	scrollDelay        time.Duration
-	adjustedResolution int
 	Enabled            *atomic.Bool `json:"enabled"`
-	Symbols            []string     `json:"symbols"`
-	ChartResolution    int          `json:"chartResolution"`
 	BoardDelay         string       `json:"boardDelay"`
 	UpdateInterval     string       `json:"updateInterval"`
 	TightScrollPadding int          `json:"tightScrollPadding"`
@@ -60,22 +58,20 @@ type Config struct {
 	OnTimes            []string     `json:"onTimes"`
 	OffTimes           []string     `json:"offTimes"`
 	UseLogos           *atomic.Bool `json:"useLogos"`
-	Leagues            []string     `json:"leagues"`
+	Max                *int         `json:"max"`
 }
 
 // API ...
 type API interface {
 	GetLogo(ctx context.Context) (image.Image, error)
 	GetText(ctx context.Context) ([]string, error)
+	HTTPPathPrefix() string
 }
 
 // SetDefaults ...
 func (c *Config) SetDefaults() {
 	if c.Enabled == nil {
 		c.Enabled = atomic.NewBool(false)
-	}
-	if c.ChartResolution <= 0 {
-		c.ChartResolution = 4
 	}
 	if c.BoardDelay != "" {
 		d, err := time.ParseDuration(c.BoardDelay)
@@ -102,15 +98,15 @@ func (c *Config) SetDefaults() {
 	if c.ScrollDelay != "" {
 		d, err := time.ParseDuration(c.ScrollDelay)
 		if err != nil {
-			c.scrollDelay = rgbmatrix.DefaultScrollDelay
+			c.scrollDelay = defaultScrollDelay
 		}
 		c.scrollDelay = d
 	} else {
-		c.scrollDelay = rgbmatrix.DefaultScrollDelay
+		c.scrollDelay = defaultScrollDelay
 	}
 
 	if c.UseLogos == nil {
-		c.UseLogos = atomic.NewBool(false)
+		c.UseLogos = atomic.NewBool(true)
 	}
 }
 
@@ -124,11 +120,17 @@ func New(api API, config *Config, log *zap.Logger) (*TextBoard, error) {
 		logos:       make(map[string]*logo.Logo),
 	}
 
+	prfx := s.api.HTTPPathPrefix()
+	if !strings.HasPrefix(prfx, "/") {
+		prfx = fmt.Sprintf("/%s", prfx)
+	}
+	prfx = fmt.Sprintf("/headlines%s", prfx)
+
 	svr := &Server{
 		board: s,
 	}
 	s.rpcServer = pb.NewBasicBoardServer(svr,
-		twirp.WithServerPathPrefix("/stocks"),
+		twirp.WithServerPathPrefix(prfx),
 		twirp.ChainHooks(
 			twirphelpers.GetDefaultHooks(s, s.log),
 		),
@@ -259,8 +261,30 @@ func (s *TextBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	scrollCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
 	scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
 
+	s.log.Debug("scroll config",
+		zap.Duration("scroll delay", s.config.scrollDelay),
+	)
+
+	num := 0
+
 TEXT:
 	for _, text := range texts {
+		select {
+		case <-boardCtx.Done():
+			return context.Canceled
+		default:
+		}
+		num++
+		if s.config.UseLogos.Load() {
+			if err := s.renderLogo(boardCtx, canvas); err != nil {
+				s.log.Error("failed to render news logo",
+					zap.Error(err),
+				)
+			}
+			scrollCanvas.AddCanvas(canvas)
+			draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
+		}
+
 		s.log.Debug("render text",
 			zap.String("text", text),
 		)
@@ -273,6 +297,14 @@ TEXT:
 
 		scrollCanvas.AddCanvas(canvas)
 		draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
+
+		if s.config.Max != nil && num >= *s.config.Max {
+			s.log.Debug("max number of headlines reached, skipping remainder",
+				zap.Int("max", *s.config.Max),
+				zap.Int("num shown", num),
+			)
+			break TEXT
+		}
 	}
 
 	scrollCanvas.Merge(s.config.TightScrollPadding)
