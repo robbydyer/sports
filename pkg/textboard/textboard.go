@@ -50,6 +50,7 @@ type Config struct {
 	boardDelay         time.Duration
 	updateInterval     time.Duration
 	scrollDelay        time.Duration
+	halfSizeLogo       bool
 	Enabled            *atomic.Bool `json:"enabled"`
 	BoardDelay         string       `json:"boardDelay"`
 	UpdateInterval     string       `json:"updateInterval"`
@@ -60,6 +61,9 @@ type Config struct {
 	UseLogos           *atomic.Bool `json:"useLogos"`
 	Max                *int         `json:"max"`
 }
+
+// OptionFunc ...
+type OptionFunc func(*TextBoard) error
 
 // API ...
 type API interface {
@@ -111,7 +115,7 @@ func (c *Config) SetDefaults() {
 }
 
 // New ...
-func New(api API, config *Config, log *zap.Logger) (*TextBoard, error) {
+func New(api API, config *Config, log *zap.Logger, opts ...OptionFunc) (*TextBoard, error) {
 	s := &TextBoard{
 		config:      config,
 		api:         api,
@@ -119,22 +123,6 @@ func New(api API, config *Config, log *zap.Logger) (*TextBoard, error) {
 		cancelBoard: make(chan struct{}),
 		logos:       make(map[string]*logo.Logo),
 	}
-
-	prfx := s.api.HTTPPathPrefix()
-	if !strings.HasPrefix(prfx, "/") {
-		prfx = fmt.Sprintf("/%s", prfx)
-	}
-	prfx = fmt.Sprintf("/headlines%s", prfx)
-
-	svr := &Server{
-		board: s,
-	}
-	s.rpcServer = pb.NewBasicBoardServer(svr,
-		twirp.WithServerPathPrefix(prfx),
-		twirp.ChainHooks(
-			twirphelpers.GetDefaultHooks(s, s.log),
-		),
-	)
 
 	if len(config.OffTimes) > 0 || len(config.OnTimes) > 0 {
 		c := cron.New()
@@ -166,6 +154,31 @@ func New(api API, config *Config, log *zap.Logger) (*TextBoard, error) {
 
 		c.Start()
 	}
+
+	for _, o := range opts {
+		if err := o(s); err != nil {
+			return nil, err
+		}
+	}
+
+	prfx := s.api.HTTPPathPrefix()
+	if !strings.HasPrefix(prfx, "/") {
+		prfx = fmt.Sprintf("/%s", prfx)
+	}
+	prfx = fmt.Sprintf("/headlines%s", prfx)
+
+	svr := &Server{
+		board: s,
+	}
+	s.log.Info("registering textboard",
+		zap.String("endpoint", prfx),
+	)
+	s.rpcServer = pb.NewBasicBoardServer(svr,
+		twirp.WithServerPathPrefix(prfx),
+		twirp.ChainHooks(
+			twirphelpers.GetDefaultHooks(s, s.log),
+		),
+	)
 
 	return s, nil
 }
@@ -319,4 +332,12 @@ func (s *TextBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 // ScrollMode ...
 func (s *TextBoard) ScrollMode() bool {
 	return true
+}
+
+// WithHalfSizeLogo option to shrink headline logo by half
+func WithHalfSizeLogo() OptionFunc {
+	return func(s *TextBoard) error {
+		s.config.halfSizeLogo = true
+		return nil
+	}
 }

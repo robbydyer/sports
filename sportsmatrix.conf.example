@@ -115,12 +115,12 @@ ncaafConfig:
 
   # Headline news from ESPN
   headlines:
-    enabled: true
+    enabled: false
 
     # Shows the league logo before each headline
     useLogos: true
 
-    # Max number of headlines to show
+    # Max number of headlines to show for this league
     max: 3
 
     tightScrollPadding: 2
@@ -200,6 +200,21 @@ ncaafConfig:
 ## NHL config
 nhlConfig:
   enabled: true
+
+  # Headline news from ESPN
+  headlines:
+    enabled: false
+
+    # Shows the league logo before each headline
+    useLogos: true
+
+    # Max number of headlines to show for this league
+    max: 3
+
+    tightScrollPadding: 2
+
+    # Increase this number to slow down the headline scroll
+    scrollDelay: "10ms"
 
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
@@ -284,6 +299,21 @@ nhlConfig:
 ## MLB Config
 mlbConfig:
   enabled: true
+
+  # Headline news from ESPN
+  headlines:
+    enabled: false
+
+    # Shows the league logo before each headline
+    useLogos: true
+
+    # Max number of headlines to show for this league
+    max: 3
+
+    tightScrollPadding: 2
+
+    # Increase this number to slow down the headline scroll
+    scrollDelay: "10ms"
 
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
@@ -372,6 +402,21 @@ mlbConfig:
 ncaamConfig:
   enabled: true
 
+  # Headline news from ESPN
+  headlines:
+    enabled: false
+
+    # Shows the league logo before each headline
+    useLogos: true
+
+    # Max number of headlines to show for this league
+    max: 3
+
+    tightScrollPadding: 2
+
+    # Increase this number to slow down the headline scroll
+    scrollDelay: "10ms"
+
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
 
@@ -448,6 +493,21 @@ ncaamConfig:
 nbaConfig:
   enabled: true
 
+  # Headline news from ESPN
+  headlines:
+    enabled: false
+
+    # Shows the league logo before each headline
+    useLogos: true
+
+    # Max number of headlines to show for this league
+    max: 3
+
+    tightScrollPadding: 2
+
+    # Increase this number to slow down the headline scroll
+    scrollDelay: "10ms"
+
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
 
@@ -520,6 +580,21 @@ nbaConfig:
 ## NFL Config
 nflConfig:
   enabled: true
+
+  # Headline news from ESPN
+  headlines:
+    enabled: false
+
+    # Shows the league logo before each headline
+    useLogos: true
+
+    # Max number of headlines to show for this league
+    max: 3
+
+    tightScrollPadding: 2
+
+    # Increase this number to slow down the headline scroll
+    scrollDelay: "10ms"
 
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
@@ -594,6 +669,21 @@ nflConfig:
 mlsConfig:
   enabled: true
 
+  # Headline news from ESPN
+  headlines:
+    enabled: false
+
+    # Shows the league logo before each headline
+    useLogos: true
+
+    # Max number of headlines to show for this league
+    max: 3
+
+    tightScrollPadding: 2
+
+    # Increase this number to slow down the headline scroll
+    scrollDelay: "10ms"
+
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
 
@@ -666,6 +756,21 @@ mlsConfig:
 ## English Premiere League Config
 eplConfig:
   enabled: true
+
+  # Headline news from ESPN
+  headlines:
+    enabled: false
+
+    # Shows the league logo before each headline
+    useLogos: true
+
+    # Max number of headlines to show for this league
+    max: 3
+
+    tightScrollPadding: 2
+
+    # Increase this number to slow down the headline scroll
+    scrollDelay: "10ms"
 
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false

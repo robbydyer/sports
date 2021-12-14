@@ -218,6 +218,7 @@ func (r *rootArgs) setConfigDefaults() {
 		}
 	}
 	r.config.NCAAMConfig.SetDefaults()
+	r.config.NCAAMConfig.Headlines.SetDefaults()
 
 	if r.config.NCAAFConfig == nil {
 		r.config.NCAAFConfig = &sportboard.Config{
@@ -392,7 +393,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 		api := espnboard.NewHeadlines(l, logger)
-		b, err := textboard.New(api, r.config.NHLConfig.Headlines, logger)
+		b, err := textboard.New(api, r.config.NHLConfig.Headlines, logger, textboard.WithHalfSizeLogo())
 		if err != nil {
 			return nil, err
 		}
@@ -431,7 +432,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 		api := espnboard.NewHeadlines(l, logger)
-		b, err := textboard.New(api, r.config.MLBConfig.Headlines, logger)
+		b, err := textboard.New(api, r.config.MLBConfig.Headlines, logger, textboard.WithHalfSizeLogo())
 		if err != nil {
 			return nil, err
 		}
@@ -531,7 +532,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 		api := espnboard.NewHeadlines(l, logger)
-		b, err := textboard.New(api, r.config.NFLConfig.Headlines, logger)
+		b, err := textboard.New(api, r.config.NFLConfig.Headlines, logger, textboard.WithHalfSizeLogo())
 		if err != nil {
 			return nil, err
 		}
@@ -556,7 +557,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 		api := espnboard.NewHeadlines(l, logger)
-		b, err := textboard.New(api, r.config.MLSConfig.Headlines, logger)
+		b, err := textboard.New(api, r.config.MLSConfig.Headlines, logger, textboard.WithHalfSizeLogo())
 		if err != nil {
 			return nil, err
 		}

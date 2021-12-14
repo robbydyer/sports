@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"strings"
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/logo"
@@ -13,7 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const logoCacheDir = "/tmp/sportsmatrix/newslogos"
+const logoCacheDir = "/tmp/sportsmatrix_logos/newslogos"
 
 func (s *TextBoard) renderLogo(ctx context.Context, canvas board.Canvas) error {
 	s.Lock()
@@ -21,15 +22,15 @@ func (s *TextBoard) renderLogo(ctx context.Context, canvas board.Canvas) error {
 
 	zeroed := rgbrender.ZeroedBounds(canvas.Bounds())
 
-	/*
+	if s.config.halfSizeLogo {
 		var err error
 		zeroed, err = rgbrender.AlignPosition(rgbrender.CenterCenter, zeroed, zeroed.Dx()/2, zeroed.Dy()/2)
 		if err != nil {
 			return err
 		}
-	*/
+	}
 
-	key := fmt.Sprintf("%dx%d", zeroed.Dx(), zeroed.Dy())
+	key := fmt.Sprintf("%s_%dx%d", strings.ReplaceAll(s.api.HTTPPathPrefix(), "/", ""), zeroed.Dx(), zeroed.Dy())
 	l, ok := s.logos[key]
 	if !ok {
 		g := func(ctx context.Context) (image.Image, error) {
