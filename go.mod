@@ -18,7 +18,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/afero v1.6.0
 	github.com/spf13/cobra v1.2.1
-	github.com/spf13/viper v1.9.0
+	github.com/spf13/viper v1.10.0
 	github.com/srikrsna/protoc-gen-gotag v0.6.2
 	github.com/stretchr/testify v1.7.0
 	github.com/thechriswalker/protoc-gen-twirp_js v0.0.0-20190627152235-0fe8731d4d8f

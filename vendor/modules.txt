@@ -8,7 +8,7 @@ github.com/Masterminds/sprig
 github.com/aokoli/goutils
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/envoyproxy/protoc-gen-validate v0.3.0-java
+# github.com/envoyproxy/protoc-gen-validate v0.6.2
 github.com/envoyproxy/protoc-gen-validate/validate
 # github.com/fatih/structtag v1.2.0
 github.com/fatih/structtag
@@ -105,7 +105,7 @@ github.com/mackerelio/go-osstat/cpu
 github.com/mackerelio/go-osstat/memory
 # github.com/magiconair/properties v1.8.5
 github.com/magiconair/properties
-# github.com/mitchellh/mapstructure v1.4.2
+# github.com/mitchellh/mapstructure v1.4.3
 github.com/mitchellh/mapstructure
 # github.com/mwitkow/go-proto-validators v0.0.0-20180403085117-0950a7990007
 github.com/mwitkow/go-proto-validators
@@ -165,7 +165,7 @@ github.com/spf13/cobra
 github.com/spf13/jwalterweatherman
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
-# github.com/spf13/viper v1.9.0
+# github.com/spf13/viper v1.10.0
 ## explicit
 github.com/spf13/viper
 github.com/spf13/viper/internal/encoding
@@ -232,23 +232,23 @@ golang.org/x/mobile/event/paint
 golang.org/x/mobile/event/size
 golang.org/x/mobile/geom
 golang.org/x/mobile/gl
-# golang.org/x/net v0.0.0-20210503060351-7fd8e65b6420
+# golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf
+# golang.org/x/sys v0.0.0-20211205182925-97ca703d548d
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.3.6
+# golang.org/x/text v0.3.7
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# google.golang.org/genproto v0.0.0-20211129164237-f09f9a12af12
+# google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.42.0
@@ -344,7 +344,7 @@ google.golang.org/protobuf/types/pluginpb
 # gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b
 ## explicit
 gopkg.in/check.v1
-# gopkg.in/ini.v1 v1.63.2
+# gopkg.in/ini.v1 v1.66.2
 gopkg.in/ini.v1
 # gopkg.in/yaml.v2 v2.4.0
 ## explicit
