@@ -65,7 +65,7 @@ func NewScrollCanvas(m Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (
 	}
 
 	if c.actual == nil {
-		c.SetPadding(int(float64(w) * 0.25))
+		c.SetPadding(w + int(float64(w)*0.25))
 	}
 
 	return c, nil
@@ -77,7 +77,7 @@ func (c *ScrollCanvas) Width() int {
 
 func (c *ScrollCanvas) SetWidth(w int) {
 	c.w = w
-	c.SetPadding(int(float64(w) * 0.25))
+	c.SetPadding(w + int(float64(w)*0.25))
 }
 
 func (c *ScrollCanvas) GetWidth() int {
