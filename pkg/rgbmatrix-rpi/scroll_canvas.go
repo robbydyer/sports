@@ -65,7 +65,7 @@ func NewScrollCanvas(m Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (
 	}
 
 	if c.actual == nil {
-		c.SetPadding(w + int(float64(w)*0.25))
+		c.SetPadding(int(float64(w) * 0.25))
 	}
 
 	return c, nil
@@ -77,7 +77,11 @@ func (c *ScrollCanvas) Width() int {
 
 func (c *ScrollCanvas) SetWidth(w int) {
 	c.w = w
-	c.SetPadding(w + int(float64(w)*0.25))
+	c.SetPadding(int(float64(w) * 0.25))
+}
+
+func (c *ScrollCanvas) GetWidth() int {
+	return c.w
 }
 
 func (c *ScrollCanvas) AddCanvas(add draw.Image) {
@@ -96,7 +100,9 @@ func (c *ScrollCanvas) Merge(padding int) {
 	maxY := 0
 	for _, img := range c.actuals {
 		maxX += img.Bounds().Dx()
-		maxY = img.Bounds().Dy()
+		if img.Bounds().Dy() > maxY {
+			maxY = img.Bounds().Dy()
+		}
 	}
 
 	merged := image.NewRGBA(image.Rect(0, 0, maxX, maxY))
@@ -293,9 +299,6 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 			return context.Canceled
 		case <-time.After(c.interval):
 		}
-		c.log.Debug("scrolling",
-			zap.Int("thisX", thisX),
-		)
 		if thisX == finish {
 			return nil
 		}
@@ -324,9 +327,6 @@ func (c *ScrollCanvas) topToBottom(ctx context.Context) error {
 			return context.Canceled
 		case <-time.After(c.interval):
 		}
-		c.log.Debug("scrolling",
-			zap.Int("thisY", thisY),
-		)
 		if thisY == c.actual.Bounds().Max.Y {
 			return nil
 		}

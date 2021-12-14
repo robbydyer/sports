@@ -77,6 +77,11 @@ func (c *Canvas) Set(x, y int, color color.Color) {
 func (c *Canvas) SetWidth(x int) {
 }
 
+// GetWidth ...
+func (c *Canvas) GetWidth() int {
+	return c.w
+}
+
 func (c *Canvas) position(x, y int) int {
 	return x + (y * c.w)
 }

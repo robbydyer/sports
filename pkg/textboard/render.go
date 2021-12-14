@@ -82,7 +82,9 @@ func (s *TextBoard) render(canvas board.Canvas, text string) error {
 		zap.Int("canvas X", zeroed.Max.X),
 		zap.Int("canvas Y", zeroed.Max.Y),
 	)
+
 	canvas.SetWidth(bounds.Dx())
+
 	_ = s.writer.WriteAligned(
 		rgbrender.CenterCenter,
 		canvas,
