@@ -24,13 +24,7 @@ import (
 	"github.com/robbydyer/sports/pkg/twirphelpers"
 )
 
-var (
-	red                = color.RGBA{255, 0, 0, 255}
-	green              = color.RGBA{0, 255, 0, 255}
-	lightGreen         = color.NRGBA{0, 255, 0, 50}
-	lightRed           = color.NRGBA{255, 0, 0, 50}
-	defaultScrollDelay = 15 * time.Millisecond
-)
+var defaultScrollDelay = 15 * time.Millisecond
 
 // TextBoard displays stocks
 type TextBoard struct {
@@ -301,7 +295,7 @@ TEXT:
 		s.log.Debug("render text",
 			zap.String("text", text),
 		)
-		if err := s.render(boardCtx, canvas, text); err != nil {
+		if err := s.render(canvas, text); err != nil {
 			s.log.Error("failed to render text",
 				zap.Error(err),
 			)

@@ -8,10 +8,11 @@ import (
 	"image/draw"
 	"strings"
 
+	"go.uber.org/zap"
+
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/rgbrender"
-	"go.uber.org/zap"
 )
 
 const logoCacheDir = "/tmp/sportsmatrix_logos/newslogos"
@@ -58,7 +59,7 @@ func (s *TextBoard) renderLogo(ctx context.Context, canvas board.Canvas) error {
 	return nil
 }
 
-func (s *TextBoard) render(ctx context.Context, canvas board.Canvas, text string) error {
+func (s *TextBoard) render(canvas board.Canvas, text string) error {
 	zeroed := rgbrender.ZeroedBounds(canvas.Bounds())
 	lengths, err := s.writer.MeasureStrings(canvas, []string{text})
 	if err != nil {

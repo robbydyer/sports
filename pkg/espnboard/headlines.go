@@ -17,13 +17,13 @@ import (
 	"go.uber.org/zap"
 )
 
+// Headlines ...
 type Headlines struct {
 	leaguer        Leaguer
 	log            *zap.Logger
 	updateInterval time.Duration
 	lastUpdate     time.Time
 	lastHeadlines  []string
-	includeTop     bool
 	logo           image.Image
 	sync.Mutex
 }
