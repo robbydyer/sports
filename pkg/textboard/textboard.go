@@ -233,6 +233,10 @@ func (s *TextBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		return err
 	}
 
+	if len(texts) < 1 {
+		return nil
+	}
+
 	if s.writer == nil {
 		var err error
 		s.writer, err = rgbrender.DefaultTextWriter()

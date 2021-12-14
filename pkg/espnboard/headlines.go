@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -31,6 +32,7 @@ type Headlines struct {
 type news struct {
 	Articles []*struct {
 		Headline string `json:"headline"`
+		Type     string `json:"type"`
 	} `json:"articles"`
 }
 
@@ -116,8 +118,45 @@ func (h *Headlines) GetText(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 
+	type headline struct {
+		str      string
+		priority int
+	}
+	headlines := []headline{}
+
 	for _, article := range n.Articles {
-		h.lastHeadlines = append(h.lastHeadlines, article.Headline)
+		t := strings.ToLower(article.Type)
+
+		head := headline{
+			str: article.Headline,
+		}
+		switch t {
+		case "headlinenews":
+			head.priority = 1
+		case "story":
+			head.priority = 2
+		default:
+			head.priority = 3
+		}
+
+		h.log.Debug("adding headline",
+			zap.Int("priority", head.priority),
+			zap.String("headline", head.str),
+		)
+		headlines = append(headlines, head)
+	}
+
+	// sort headlines based on priority
+	sort.SliceStable(headlines, func(i int, j int) bool {
+		return headlines[i].priority < headlines[j].priority
+	})
+
+	h.lastHeadlines = make([]string, len(headlines))
+
+	index := 0
+	for _, head := range headlines {
+		h.lastHeadlines[index] = head.str
+		index++
 	}
 
 	h.lastUpdate = time.Now()
