@@ -278,6 +278,14 @@ func (s *TextBoard) Render(ctx context.Context, canvas board.Canvas) error {
 
 	num := 0
 
+	origWidth := canvas.GetWidth()
+	defer func() {
+		s.log.Debug("reset canvas width",
+			zap.Int("width", origWidth),
+		)
+		canvas.SetWidth(origWidth)
+	}()
+
 TEXT:
 	for _, text := range texts {
 		select {
