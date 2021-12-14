@@ -31,6 +31,7 @@ import (
 	"github.com/robbydyer/sports/pkg/statboard"
 	"github.com/robbydyer/sports/pkg/stockboard"
 	"github.com/robbydyer/sports/pkg/sysboard"
+	"github.com/robbydyer/sports/pkg/textboard"
 	"github.com/robbydyer/sports/pkg/util"
 	"github.com/robbydyer/sports/pkg/weatherboard"
 	"github.com/robbydyer/sports/pkg/yahoo"
@@ -163,9 +164,15 @@ func (r *rootArgs) setConfigDefaults() {
 			Enabled: atomic.NewBool(false),
 		}
 	}
+	if r.config.NHLConfig.Headlines == nil {
+		r.config.NHLConfig.Headlines = &textboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
 
 	r.config.NHLConfig.SetDefaults()
 	r.config.NHLConfig.Stats.SetDefaults()
+	r.config.NHLConfig.Headlines.SetDefaults()
 
 	if r.config.ImageConfig == nil {
 		r.config.ImageConfig = &imageboard.Config{
@@ -191,50 +198,92 @@ func (r *rootArgs) setConfigDefaults() {
 			Enabled: atomic.NewBool(false),
 		}
 	}
+	if r.config.MLBConfig.Headlines == nil {
+		r.config.MLBConfig.Headlines = &textboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
 	r.config.MLBConfig.SetDefaults()
 	r.config.MLBConfig.Stats.SetDefaults()
+	r.config.MLBConfig.Headlines.SetDefaults()
 
 	if r.config.NCAAMConfig == nil {
 		r.config.NCAAMConfig = &sportboard.Config{
 			Enabled: atomic.NewBool(false),
 		}
 	}
+	if r.config.NCAAMConfig.Headlines == nil {
+		r.config.NCAAMConfig.Headlines = &textboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
 	r.config.NCAAMConfig.SetDefaults()
+	r.config.NCAAMConfig.Headlines.SetDefaults()
 
 	if r.config.NCAAFConfig == nil {
 		r.config.NCAAFConfig = &sportboard.Config{
 			Enabled: atomic.NewBool(false),
 		}
 	}
+	if r.config.NCAAFConfig.Headlines == nil {
+		r.config.NCAAFConfig.Headlines = &textboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
 	r.config.NCAAFConfig.SetDefaults()
+	r.config.NCAAFConfig.Headlines.SetDefaults()
 
 	if r.config.NBAConfig == nil {
 		r.config.NBAConfig = &sportboard.Config{
 			Enabled: atomic.NewBool(false),
 		}
 	}
+	if r.config.NBAConfig.Headlines == nil {
+		r.config.NBAConfig.Headlines = &textboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
 	r.config.NBAConfig.SetDefaults()
+	r.config.NBAConfig.Headlines.SetDefaults()
 
 	if r.config.NFLConfig == nil {
 		r.config.NFLConfig = &sportboard.Config{
 			Enabled: atomic.NewBool(false),
 		}
 	}
+	if r.config.NFLConfig.Headlines == nil {
+		r.config.NFLConfig.Headlines = &textboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
 	r.config.NFLConfig.SetDefaults()
+	r.config.NFLConfig.Headlines.SetDefaults()
 
 	if r.config.MLSConfig == nil {
 		r.config.MLSConfig = &sportboard.Config{
 			Enabled: atomic.NewBool(false),
 		}
 	}
+	if r.config.MLSConfig.Headlines == nil {
+		r.config.MLSConfig.Headlines = &textboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
 	r.config.MLSConfig.SetDefaults()
+	r.config.MLSConfig.Headlines.SetDefaults()
 
 	if r.config.EPLConfig == nil {
 		r.config.EPLConfig = &sportboard.Config{
 			Enabled: atomic.NewBool(false),
 		}
 	}
+	if r.config.EPLConfig.Headlines == nil {
+		r.config.EPLConfig.Headlines = &textboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
 	r.config.EPLConfig.SetDefaults()
+	r.config.EPLConfig.Headlines.SetDefaults()
 
 	if r.config.SysConfig == nil {
 		r.config.SysConfig = &sysboard.Config{
@@ -338,6 +387,18 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 
 		boards = append(boards, b)
 	}
+	if r.config.NHLConfig.Headlines != nil {
+		l, err := espnboard.GetLeaguer("nhl")
+		if err != nil {
+			return nil, err
+		}
+		api := espnboard.NewHeadlines(l, logger)
+		b, err := textboard.New(api, r.config.NHLConfig.Headlines, logger, textboard.WithHalfSizeLogo())
+		if err != nil {
+			return nil, err
+		}
+		boards = append(boards, b)
+	}
 	if r.config.MLBConfig != nil {
 		var api sportboard.API
 		if r.alternateAPI {
@@ -365,6 +426,18 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 		}
 		boards = append(boards, b)
 	}
+	if r.config.MLBConfig.Headlines != nil {
+		l, err := espnboard.GetLeaguer("mlb")
+		if err != nil {
+			return nil, err
+		}
+		api := espnboard.NewHeadlines(l, logger)
+		b, err := textboard.New(api, r.config.MLBConfig.Headlines, logger, textboard.WithHalfSizeLogo())
+		if err != nil {
+			return nil, err
+		}
+		boards = append(boards, b)
+	}
 	if r.config.NCAAMConfig != nil {
 		api, err := espnboard.NewNCAAMensBasketball(ctx, logger)
 		if err != nil {
@@ -376,6 +449,18 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return boards, err
 		}
 
+		boards = append(boards, b)
+	}
+	if r.config.NCAAMConfig.Headlines != nil {
+		l, err := espnboard.GetLeaguer("ncaam")
+		if err != nil {
+			return nil, err
+		}
+		api := espnboard.NewHeadlines(l, logger)
+		b, err := textboard.New(api, r.config.NCAAMConfig.Headlines, logger)
+		if err != nil {
+			return nil, err
+		}
 		boards = append(boards, b)
 	}
 	if r.config.NCAAFConfig != nil {
@@ -391,6 +476,18 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 
 		boards = append(boards, b)
 	}
+	if r.config.NCAAFConfig.Headlines != nil {
+		l, err := espnboard.GetLeaguer("ncaaf")
+		if err != nil {
+			return nil, err
+		}
+		api := espnboard.NewHeadlines(l, logger)
+		b, err := textboard.New(api, r.config.NCAAFConfig.Headlines, logger)
+		if err != nil {
+			return nil, err
+		}
+		boards = append(boards, b)
+	}
 	if r.config.NBAConfig != nil {
 		api, err := espnboard.NewNBA(ctx, logger)
 		if err != nil {
@@ -402,6 +499,18 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 
+		boards = append(boards, b)
+	}
+	if r.config.NBAConfig.Headlines != nil {
+		l, err := espnboard.GetLeaguer("nba")
+		if err != nil {
+			return nil, err
+		}
+		api := espnboard.NewHeadlines(l, logger)
+		b, err := textboard.New(api, r.config.NBAConfig.Headlines, logger)
+		if err != nil {
+			return nil, err
+		}
 		boards = append(boards, b)
 	}
 	if r.config.NFLConfig != nil {
@@ -417,6 +526,18 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 
 		boards = append(boards, b)
 	}
+	if r.config.NFLConfig.Headlines != nil {
+		l, err := espnboard.GetLeaguer("nfl")
+		if err != nil {
+			return nil, err
+		}
+		api := espnboard.NewHeadlines(l, logger)
+		b, err := textboard.New(api, r.config.NFLConfig.Headlines, logger, textboard.WithHalfSizeLogo())
+		if err != nil {
+			return nil, err
+		}
+		boards = append(boards, b)
+	}
 	if r.config.MLSConfig != nil {
 		api, err := espnboard.NewMLS(ctx, logger)
 		if err != nil {
@@ -430,6 +551,18 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 
 		boards = append(boards, b)
 	}
+	if r.config.MLSConfig.Headlines != nil {
+		l, err := espnboard.GetLeaguer("mls")
+		if err != nil {
+			return nil, err
+		}
+		api := espnboard.NewHeadlines(l, logger)
+		b, err := textboard.New(api, r.config.MLSConfig.Headlines, logger, textboard.WithHalfSizeLogo())
+		if err != nil {
+			return nil, err
+		}
+		boards = append(boards, b)
+	}
 	if r.config.EPLConfig != nil {
 		api, err := espnboard.NewEPL(ctx, logger)
 		if err != nil {
@@ -441,6 +574,18 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 
+		boards = append(boards, b)
+	}
+	if r.config.EPLConfig.Headlines != nil {
+		l, err := espnboard.GetLeaguer("epl")
+		if err != nil {
+			return nil, err
+		}
+		api := espnboard.NewHeadlines(l, logger)
+		b, err := textboard.New(api, r.config.EPLConfig.Headlines, logger)
+		if err != nil {
+			return nil, err
+		}
 		boards = append(boards, b)
 	}
 

@@ -22,6 +22,7 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 	"github.com/robbydyer/sports/pkg/statboard"
+	"github.com/robbydyer/sports/pkg/textboard"
 	"github.com/robbydyer/sports/pkg/twirphelpers"
 	"github.com/robbydyer/sports/pkg/util"
 )
@@ -85,6 +86,7 @@ type Config struct {
 	MinimumGridWidth     int               `json:"minimumGridWidth"`
 	MinimumGridHeight    int               `json:"minimumGridHeight"`
 	Stats                *statboard.Config `json:"stats"`
+	Headlines            *textboard.Config `json:"headlines"`
 	ScrollMode           *atomic.Bool      `json:"scrollMode"`
 	TightScroll          *atomic.Bool      `json:"tightScroll"`
 	TightScrollPadding   int               `json:"tightScrollPadding"`

@@ -2,10 +2,36 @@ package espnboard
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
+	"strings"
 
 	"go.uber.org/zap"
 )
+
+// GetLeaguer ...
+func GetLeaguer(league string) (Leaguer, error) {
+	switch strings.Trim(strings.ToLower(league), " ") {
+	case "nfl":
+		return &nfl{}, nil
+	case "mlb":
+		return &mlb{}, nil
+	case "ncaaf":
+		return &ncaaf{}, nil
+	case "ncaam":
+		return &ncaam{}, nil
+	case "epl":
+		return &epl{}, nil
+	case "nhl":
+		return &nhl{}, nil
+	case "mls":
+		return &mls{}, nil
+	case "nba":
+		return &nba{}, nil
+	}
+
+	return nil, fmt.Errorf("invalid league '%s'", league)
+}
 
 type nfl struct{}
 
@@ -23,6 +49,10 @@ func (n *nfl) TeamEndpoints() []string {
 
 func (n *nfl) HTTPPathPrefix() string {
 	return "nfl"
+}
+
+func (n *nfl) HeadlinePath() string {
+	return "football/nfl/news"
 }
 
 // NewNFL ...
@@ -51,6 +81,10 @@ func (n *ncaam) HTTPPathPrefix() string {
 	return "ncaam"
 }
 
+func (n *ncaam) HeadlinePath() string {
+	return fmt.Sprintf("%s/news", n.APIPath())
+}
+
 // NewNCAAMensBasketball ...
 func NewNCAAMensBasketball(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &ncaam{}, logger, defaultRankSetter, defaultRankSetter)
@@ -74,6 +108,10 @@ func (n *nba) HTTPPathPrefix() string {
 	return "nba"
 }
 
+func (n *nba) HeadlinePath() string {
+	return fmt.Sprintf("%s/news", n.APIPath())
+}
+
 // NewNBA ...
 func NewNBA(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &nba{}, logger, defaultRankSetter, defaultRankSetter)
@@ -95,6 +133,10 @@ func (n *mls) TeamEndpoints() []string {
 
 func (n *mls) HTTPPathPrefix() string {
 	return "mls"
+}
+
+func (n *mls) HeadlinePath() string {
+	return fmt.Sprintf("%s/news", n.APIPath())
 }
 
 // NewMLS ...
@@ -123,6 +165,10 @@ func (n *nhl) HTTPPathPrefix() string {
 	return "nhl"
 }
 
+func (n *nhl) HeadlinePath() string {
+	return fmt.Sprintf("%s/news", n.APIPath())
+}
+
 // NewNHL ...
 func NewNHL(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &nhl{}, logger, defaultRankSetter, defaultRankSetter)
@@ -147,6 +193,10 @@ func (n *mlb) TeamEndpoints() []string {
 
 func (n *mlb) HTTPPathPrefix() string {
 	return "mlb"
+}
+
+func (n *mlb) HeadlinePath() string {
+	return fmt.Sprintf("%s/news", n.APIPath())
 }
 
 // NewMLB ...
@@ -175,6 +225,10 @@ func (n *ncaaf) TeamEndpoints() []string {
 
 func (n *ncaaf) HTTPPathPrefix() string {
 	return "ncaaf"
+}
+
+func (n *ncaaf) HeadlinePath() string {
+	return fmt.Sprintf("%s/news", n.APIPath())
 }
 
 // NewNCAAF ...
@@ -206,4 +260,8 @@ func (n *epl) TeamEndpoints() []string {
 
 func (n *epl) HTTPPathPrefix() string {
 	return "epl"
+}
+
+func (n *epl) HeadlinePath() string {
+	return fmt.Sprintf("%s/news", n.APIPath())
 }

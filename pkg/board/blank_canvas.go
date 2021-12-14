@@ -48,6 +48,9 @@ func (i *BlankCanvas) Close() error {
 	return nil
 }
 
+// SetWidth ...
+func (i *BlankCanvas) SetWidth(x int) {}
+
 // Clear sets the canvas to all black
 func (i *BlankCanvas) Clear() error {
 	i.blackOut()

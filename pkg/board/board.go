@@ -42,4 +42,5 @@ type Canvas interface {
 	Close() error
 	Scrollable() bool
 	AlwaysRender() bool
+	SetWidth(int)
 }
