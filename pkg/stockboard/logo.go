@@ -12,9 +12,11 @@ import (
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/logo"
+	"go.uber.org/zap"
 )
 
 func (s *StockBoard) logoSource(symbol string) (logo.SourceGetter, error) {
+	symbol = strings.ReplaceAll(symbol, "^", "")
 	b, err := assets.ReadFile(filepath.Join("assets", "logos", fmt.Sprintf("%s.PNG", strings.ToUpper(symbol))))
 	if err != nil {
 		return nil, err
@@ -33,7 +35,13 @@ func (s *StockBoard) drawLogo(ctx context.Context, canvas board.Canvas, bounds i
 		return err
 	}
 
-	i, err := l.RenderRightAlignedWithEnd(ctx, bounds, bounds.Max.X-2)
+	s.log.Debug("draw stock logo",
+		zap.Int("width", bounds.Dx()),
+		zap.Int("height", bounds.Dy()),
+		zap.Int("endX", bounds.Max.X-2),
+	)
+
+	i, err := l.RenderRightAlignedScaledWithEnd(ctx, bounds, bounds.Max.X-2)
 	if err != nil {
 		return err
 	}
@@ -59,11 +67,12 @@ func (s *StockBoard) getOrCreateLogo(symbol string, canvas board.Canvas, bounds 
 		return nil, err
 	}
 
-	lo := logo.New(key, src, "/tmp/sportsmatrix/stocks", canvas.Bounds(),
+	lo := logo.New(key, src, "/tmp/sportsmatrix_logos/stocks", canvas.Bounds(),
 		&logo.Config{
-			Abbrev: key,
-			XSize:  bounds.Dx(),
-			YSize:  bounds.Dy(),
+			FitImage: true,
+			Abbrev:   key,
+			XSize:    bounds.Dx(),
+			YSize:    bounds.Dy(),
 			Pt: &logo.Pt{
 				X:    0,
 				Y:    0,
@@ -71,6 +80,8 @@ func (s *StockBoard) getOrCreateLogo(symbol string, canvas board.Canvas, bounds 
 			},
 		},
 	)
+
+	lo.SetLogger(s.log)
 
 	s.logos[strings.ToLower(symbol)] = lo
 

@@ -30,10 +30,11 @@ type Logo struct {
 
 // Config ...
 type Config struct {
-	Abbrev string `json:"abbrev"`
-	Pt     *Pt    `json:"pt"`
-	XSize  int    `json:"xSize"`
-	YSize  int    `json:"ySize"`
+	Abbrev   string `json:"abbrev"`
+	Pt       *Pt    `json:"pt"`
+	XSize    int    `json:"xSize"`
+	YSize    int    `json:"ySize"`
+	FitImage bool   `json:"fit"`
 }
 
 // Pt defines the x, y shift and zoom values for a logo
@@ -103,7 +104,17 @@ func (l *Logo) GetThumbnail(ctx context.Context, size image.Rectangle) (image.Im
 			}
 
 			// Create the thumbnail
-			l.thumbnail = rgbrender.ResizeImage(src, size, l.config.Pt.Zoom)
+			if l.config.FitImage {
+				if l.log != nil {
+					l.log.Debug("fit image thumbnail",
+						zap.Int("width", size.Dx()),
+						zap.Int("height", size.Dy()),
+					)
+				}
+				l.thumbnail = rgbrender.FitImage(src, size, l.config.Pt.Zoom)
+			} else {
+				l.thumbnail = rgbrender.ResizeImage(src, size, l.config.Pt.Zoom)
+			}
 
 			go func() {
 				l.ensureLogger()
@@ -262,6 +273,36 @@ func (l *Logo) RenderLeftAlignedWithStart(ctx context.Context, bounds image.Rect
 	)
 
 	align, err := rgbrender.AlignPosition(rgbrender.LeftCenter, newBounds, thumb.Bounds().Dx(), thumb.Bounds().Dy())
+	if err != nil {
+		return nil, err
+	}
+
+	i := image.NewRGBA(newBounds)
+	draw.Draw(i, align, thumb, image.Point{}, draw.Over)
+
+	return i, nil
+}
+
+// RenderRightAlignedScaledWithEnd renders the logo on the right side of the matrix
+// This is the same as RenderRightAlignedWithEnd, except that it scales the image based
+// on the given bounds instead of the matrix's bounds
+func (l *Logo) RenderRightAlignedScaledWithEnd(ctx context.Context, bounds image.Rectangle, endX int) (image.Image, error) {
+	thumb, err := l.GetThumbnail(ctx, bounds)
+	if err != nil {
+		return nil, err
+	}
+
+	startX := 0
+
+	if thumb.Bounds().Dx() > endX {
+		startX = endX - thumb.Bounds().Dx()
+	}
+
+	startX += l.config.Pt.X
+
+	startY := 0 + l.config.Pt.Y
+	newBounds := image.Rect(startX, startY, endX, bounds.Dy()-1)
+	align, err := rgbrender.AlignPosition(rgbrender.RightCenter, newBounds, thumb.Bounds().Dx(), thumb.Bounds().Dy())
 	if err != nil {
 		return nil, err
 	}
