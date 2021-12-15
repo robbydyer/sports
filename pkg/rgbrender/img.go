@@ -27,9 +27,9 @@ func ResizeImage(img image.Image, bounds image.Rectangle, zoom float64) image.Im
 
 // FitImage ...
 func FitImage(img image.Image, bounds image.Rectangle, zoom float64) image.Image {
-	// sizeX, _ := ZoomImageSize(bounds, zoom)
+	sizeX, sizeY := ZoomImageSize(bounds, zoom)
 
-	return imaging.Resize(img, bounds.Dx(), 0, imaging.CatmullRom)
+	return imaging.Fit(img, sizeX, sizeY, imaging.CatmullRom)
 }
 
 // ResizeGIF ...
