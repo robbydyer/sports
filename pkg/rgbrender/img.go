@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/disintegration/imaging"
 	"github.com/nfnt/resize"
 	"github.com/spf13/afero"
 
@@ -19,10 +20,16 @@ import (
 
 // ResizeImage ...
 func ResizeImage(img image.Image, bounds image.Rectangle, zoom float64) image.Image {
-	// Ignore Y, so that we maintain aspect ratio
 	sizeX, sizeY := ZoomImageSize(bounds, zoom)
 
 	return resize.Thumbnail(uint(sizeX), uint(sizeY), img, resize.Lanczos3)
+}
+
+// FitImage ...
+func FitImage(img image.Image, bounds image.Rectangle, zoom float64) image.Image {
+	sizeX, sizeY := ZoomImageSize(bounds, zoom)
+
+	return imaging.Fit(img, sizeX, sizeY, imaging.CatmullRom)
 }
 
 // ResizeGIF ...

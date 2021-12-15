@@ -34,6 +34,9 @@ type Config struct {
 	Pt     *Pt    `json:"pt"`
 	XSize  int    `json:"xSize"`
 	YSize  int    `json:"ySize"`
+	// FitImage determines if image scaling is based on bounds given
+	// to render functions. Default of false uses the matrix bounds for scaling
+	FitImage bool `json:"fit"`
 }
 
 // Pt defines the x, y shift and zoom values for a logo
@@ -103,7 +106,17 @@ func (l *Logo) GetThumbnail(ctx context.Context, size image.Rectangle) (image.Im
 			}
 
 			// Create the thumbnail
-			l.thumbnail = rgbrender.ResizeImage(src, size, l.config.Pt.Zoom)
+			if l.config.FitImage {
+				if l.log != nil {
+					l.log.Debug("fit image thumbnail",
+						zap.Int("width", size.Dx()),
+						zap.Int("height", size.Dy()),
+					)
+				}
+				l.thumbnail = rgbrender.FitImage(src, size, l.config.Pt.Zoom)
+			} else {
+				l.thumbnail = rgbrender.ResizeImage(src, size, l.config.Pt.Zoom)
+			}
 
 			go func() {
 				l.ensureLogger()
@@ -135,9 +148,18 @@ func (l *Logo) GetThumbnail(ctx context.Context, size image.Rectangle) (image.Im
 
 // RenderLeftAligned renders the logo on the left side of the matrix
 func (l *Logo) RenderLeftAligned(ctx context.Context, bounds image.Rectangle, endX int) (image.Image, error) {
-	thumb, err := l.GetThumbnail(ctx, l.bounds)
-	if err != nil {
-		return nil, err
+	var thumb image.Image
+	var err error
+	if l.config.FitImage {
+		thumb, err = l.GetThumbnail(ctx, bounds)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		thumb, err = l.GetThumbnail(ctx, l.bounds)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	startX := 0
@@ -183,9 +205,18 @@ func (l *Logo) RenderLeftAligned(ctx context.Context, bounds image.Rectangle, en
 
 // RenderRightAligned renders the logo on the right side of the matrix
 func (l *Logo) RenderRightAligned(ctx context.Context, bounds image.Rectangle, startX int) (image.Image, error) {
-	thumb, err := l.GetThumbnail(ctx, l.bounds)
-	if err != nil {
-		return nil, err
+	var thumb image.Image
+	var err error
+	if l.config.FitImage {
+		thumb, err = l.GetThumbnail(ctx, bounds)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		thumb, err = l.GetThumbnail(ctx, l.bounds)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	startX = startX + l.config.Pt.X
@@ -206,9 +237,18 @@ func (l *Logo) RenderRightAligned(ctx context.Context, bounds image.Rectangle, s
 
 // RenderRightAlignedWithEnd renders the logo on the right side of the matrix
 func (l *Logo) RenderRightAlignedWithEnd(ctx context.Context, bounds image.Rectangle, endX int) (image.Image, error) {
-	thumb, err := l.GetThumbnail(ctx, l.bounds)
-	if err != nil {
-		return nil, err
+	var thumb image.Image
+	var err error
+	if l.config.FitImage {
+		thumb, err = l.GetThumbnail(ctx, bounds)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		thumb, err = l.GetThumbnail(ctx, l.bounds)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	startX := 0
@@ -242,9 +282,18 @@ func (l *Logo) RenderRightAlignedWithEnd(ctx context.Context, bounds image.Recta
 
 // RenderLeftAlignedWithStart renders the logo on the left side of the matrix with a starting X point
 func (l *Logo) RenderLeftAlignedWithStart(ctx context.Context, bounds image.Rectangle, startX int) (image.Image, error) {
-	thumb, err := l.GetThumbnail(ctx, l.bounds)
-	if err != nil {
-		return nil, err
+	var thumb image.Image
+	var err error
+	if l.config.FitImage {
+		thumb, err = l.GetThumbnail(ctx, bounds)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		thumb, err = l.GetThumbnail(ctx, l.bounds)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	startX = startX + l.config.Pt.X
