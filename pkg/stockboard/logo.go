@@ -10,9 +10,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"go.uber.org/zap"
+
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/logo"
-	"go.uber.org/zap"
 )
 
 func (s *StockBoard) logoSource(symbol string) (logo.SourceGetter, error) {
