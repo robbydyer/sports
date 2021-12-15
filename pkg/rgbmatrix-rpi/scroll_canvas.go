@@ -115,7 +115,7 @@ func (c *ScrollCanvas) Merge(padding int) {
 	lastX := 0
 	for _, img := range c.actuals {
 		startX := firstNonBlankX(img)
-		endX := lastNonBlankX(img)
+		endX := lastNonBlankX(img) + 1
 		negStart := 0
 		if startX < 0 {
 			negStart = startX * -1
