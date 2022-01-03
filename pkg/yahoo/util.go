@@ -25,7 +25,7 @@ func tradingEnd() (time.Time, error) {
 	if err != nil {
 		return t, err
 	}
-	return time.Date(t.Year(), t.Month(), t.Day(), 16, 0, 0, 0, loc), nil
+	return time.Date(t.Year(), t.Month(), t.Day(), 16, 30, 0, 0, loc), nil
 }
 
 func tradingBegin() (time.Time, error) {
@@ -34,5 +34,5 @@ func tradingBegin() (time.Time, error) {
 	if err != nil {
 		return t, err
 	}
-	return time.Date(t.Year(), t.Month(), t.Day(), 9, 30, 0, 0, loc), nil
+	return time.Date(t.Year(), t.Month(), t.Day(), 8, 00, 0, 0, loc), nil
 }
