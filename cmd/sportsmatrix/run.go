@@ -115,10 +115,6 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Println("Starting matrix service")
-	if err := mtrx.StartServices(ctx); err != nil {
-		fmt.Printf("Matrix returned an error: %s", err.Error())
-		return err
-	}
 	if err := mtrx.Serve(ctx); err != nil {
 		fmt.Printf("Matrix returned an error: %s", err.Error())
 		return err

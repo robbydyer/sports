@@ -3,6 +3,7 @@ package sportsmatrix
 import (
 	"context"
 	"net/http"
+	"sync"
 	"testing"
 	"time"
 
@@ -148,4 +149,66 @@ func TestSportsMatrix(t *testing.T) {
 	case <-time.After(10 * time.Second):
 		require.NotNil(t, nil, "timed out waiting for context to cancel")
 	}
+}
+
+func TestScreenSwitch(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	logger := zaptest.NewLogger(t, zaptest.Level(zapcore.ErrorLevel))
+	cfg := &Config{
+		ServeWebUI:     false,
+		HTTPListenPort: 8080,
+		WebBoardWidth:  1,
+	}
+	cfg.Defaults()
+
+	canvas := board.NewBlankCanvas(1, 1, logger)
+	canvas.Enable()
+
+	require.True(t, canvas.Enabled())
+
+	b := &TestBoard{
+		log:         logger,
+		enabled:     atomic.NewBool(true),
+		hasRendered: atomic.NewBool(false),
+		tester:      t,
+	}
+
+	require.True(t, b.Enabled())
+
+	s, err := New(ctx, logger, cfg, []board.Canvas{canvas}, b)
+	require.NoError(t, err)
+	defer s.Close()
+
+	go func() {
+		err := s.Serve(ctx)
+		require.NoError(t, err)
+	}()
+
+	select {
+	case <-s.isServing:
+	case <-time.After(10 * time.Second):
+		require.NotNil(t, nil, "timed out waiting for matrix to serve")
+	}
+
+	switchCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	s.switchTestSleep = true
+
+	s.ScreenOff(switchCtx)
+
+	wg := sync.WaitGroup{}
+
+	for i := 0; i < 3; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			s.ScreenOn(switchCtx)
+		}()
+	}
+
+	wg.Wait()
+
+	require.Equal(t, 1, s.switchedOn)
 }

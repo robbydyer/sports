@@ -59,8 +59,7 @@ func (s *SportsMatrix) startHTTP() chan error {
 		register("sportsmatrix", h)
 	}
 
-	var allBoards []board.Board
-	allBoards = append(s.boards, s.betweenBoards...)
+	allBoards := append(s.boards, s.betweenBoards...)
 
 BOARDS:
 	for _, b := range allBoards {
@@ -171,17 +170,17 @@ func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
 		{
 			Path: "/api/screenon",
 			Handler: func(w http.ResponseWriter, req *http.Request) {
-				s.Lock()
-				defer s.Unlock()
-				s.screenOn <- struct{}{}
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				s.ScreenOn(ctx)
 			},
 		},
 		{
 			Path: "/api/screenoff",
 			Handler: func(w http.ResponseWriter, req *http.Request) {
-				s.Lock()
-				defer s.Unlock()
-				s.screenOff <- struct{}{}
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				s.ScreenOff(ctx)
 			},
 		},
 		{
@@ -248,8 +247,9 @@ func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
 		{
 			Path: "/api/jump",
 			Handler: func(w http.ResponseWriter, req *http.Request) {
-				s.jumpLock.Lock()
-				defer s.jumpLock.Unlock()
+				if s.jumping.Load() {
+					return
+				}
 
 				d := json.NewDecoder(req.Body)
 				var j *jumpRequest

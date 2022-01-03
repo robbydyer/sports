@@ -926,6 +926,9 @@ weatherConfig:
 
   # Set this to true if you want temps in Celsius
   metricUnits: false
+  
+  # Set this to true to show the weather board in between every other board
+  showBetween: false
 
   scrollMode: true
 
