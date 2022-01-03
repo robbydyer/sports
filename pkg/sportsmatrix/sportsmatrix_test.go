@@ -30,6 +30,10 @@ func (b *TestBoard) Enable() {
 	b.enabled.Store(true)
 }
 
+func (b *TestBoard) InBetween() bool {
+	return false
+}
+
 func (b *TestBoard) Disable() {
 	b.enabled.Store(false)
 }

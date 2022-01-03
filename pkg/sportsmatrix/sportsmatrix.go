@@ -43,7 +43,6 @@ type SportsMatrix struct {
 	httpEndpoints      []string
 	jumpLock           sync.Mutex
 	jumpTo             chan string
-	prevBoardStatus    *atomic.Bool
 	betweenBoards      []board.Board
 	sync.Mutex
 }
@@ -115,21 +114,20 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 	cfg.Defaults()
 
 	s := &SportsMatrix{
-		boards:          boards,
-		cfg:             cfg,
-		log:             logger,
-		screenOff:       make(chan struct{}),
-		screenOn:        make(chan struct{}),
-		serveBlock:      make(chan struct{}),
-		close:           make(chan struct{}),
-		screenIsOn:      atomic.NewBool(true),
-		webBoardIsOn:    atomic.NewBool(false),
-		webBoardOn:      make(chan struct{}),
-		webBoardOff:     make(chan struct{}),
-		isServing:       make(chan struct{}, 1),
-		jumpTo:          make(chan string, 1),
-		canvases:        canvases,
-		prevBoardStatus: atomic.NewBool(false),
+		boards:       boards,
+		cfg:          cfg,
+		log:          logger,
+		screenOff:    make(chan struct{}),
+		screenOn:     make(chan struct{}),
+		serveBlock:   make(chan struct{}),
+		close:        make(chan struct{}),
+		screenIsOn:   atomic.NewBool(true),
+		webBoardIsOn: atomic.NewBool(false),
+		webBoardOn:   make(chan struct{}),
+		webBoardOff:  make(chan struct{}),
+		isServing:    make(chan struct{}, 1),
+		jumpTo:       make(chan string, 1),
+		canvases:     canvases,
 	}
 
 	// Add an ImgCanvas
@@ -426,8 +424,6 @@ func (s *SportsMatrix) doBoard(ctx context.Context, b board.Board, jumpTo string
 	jumpTo = ""
 
 	s.log.Debug("Processing board", zap.String("board", b.Name()))
-
-	s.prevBoardStatus.Store(b.Enabled())
 
 	if !b.Enabled() {
 		// s.log.Debug("skipping disabled board", zap.String("board", b.Name()))
