@@ -920,6 +920,9 @@ stocksConfig:
 weatherConfig:
   enabled: false
 
+  # Set this to true if you want temps in Celsius
+  metricUnits: false
+
   scrollMode: true
 
   # Go to openweathermap.org and register an account, then put your API key here
