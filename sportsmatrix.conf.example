@@ -90,6 +90,10 @@ sportsMatrixConfig:
 # Clock Board
 clockConfig:
   enabled: true
+
+  # Set this to true to show the clock board in between every other board
+  showBetween: false
+
   boardDelay: "10s"
   
   # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
