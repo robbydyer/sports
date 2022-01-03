@@ -20,7 +20,7 @@ func (w *weather) expired(refresh time.Duration) bool {
 	return w.lastUpdate.Add(refresh).Before(time.Now().Local())
 }
 
-func (a *API) boardForecastFromForecast(forecasts []*forecast, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
+func (a *API) boardForecastFromForecast(forecasts []*forecast, bounds image.Rectangle, metric bool) ([]*weatherboard.Forecast, error) {
 	var ws []*weatherboard.Forecast
 
 	for _, f := range forecasts {
@@ -41,6 +41,10 @@ func (a *API) boardForecastFromForecast(forecasts []*forecast, bounds image.Rect
 			IsHourly:    f.isHourly,
 		}
 
+		if metric {
+			w.TempUnit = "C"
+		}
+
 		if f.Pop != nil {
 			c := int(*f.Pop * 100)
 			w.PrecipChance = &c
@@ -51,7 +55,7 @@ func (a *API) boardForecastFromForecast(forecasts []*forecast, bounds image.Rect
 	return ws, nil
 }
 
-func (a *API) boardForecastFromDaily(forecasts []*daily, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
+func (a *API) boardForecastFromDaily(forecasts []*daily, bounds image.Rectangle, metric bool) ([]*weatherboard.Forecast, error) {
 	var ws []*weatherboard.Forecast
 
 	for _, f := range forecasts {
@@ -71,6 +75,11 @@ func (a *API) boardForecastFromDaily(forecasts []*daily, bounds image.Rectangle)
 			Icon:     icon,
 			IconCode: f.Weather[0].Icon,
 		}
+
+		if metric {
+			w.TempUnit = "C"
+		}
+
 		ws = append(ws, w)
 		if f.Pop != nil {
 			c := int(*f.Pop * 100)
@@ -104,7 +113,7 @@ func (a *API) setWeatherCache(key string, w *weather) {
 	a.cache[key] = w
 }
 
-func (a *API) getWeather(ctx context.Context, zipCode string, country string) (*weather, error) {
+func (a *API) getWeather(ctx context.Context, zipCode string, country string, metric bool) (*weather, error) {
 	var w *weather
 	key := weatherKey(zipCode, country)
 	w = a.weatherFromCache(key)
@@ -154,7 +163,11 @@ func (a *API) getWeather(ctx context.Context, zipCode string, country string) (*
 	v := uri.Query()
 	v.Set("appid", a.apiKey)
 	// v.Set("id", cityID)
-	v.Set("units", "imperial")
+	if metric {
+		v.Set("units", "metric")
+	} else {
+		v.Set("units", "imperial")
+	}
 	v.Set("lat", fmt.Sprintf("%f", g.Lat))
 	v.Set("lon", fmt.Sprintf("%f", g.Lon))
 	v.Set("exclude", "minutely")

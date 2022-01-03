@@ -58,6 +58,7 @@ type Config struct {
 	HourlyNumber       int          `json:"hourlyNumber"`
 	OnTimes            []string     `json:"onTimes"`
 	OffTimes           []string     `json:"offTimes"`
+	MetricUnits        *atomic.Bool `json:"metricUnits"`
 }
 
 // Forecast ...
@@ -74,11 +75,11 @@ type Forecast struct {
 	PrecipChance *int
 }
 
-// API interface for getting stock data
+// API interface for getting weather data
 type API interface {
-	CurrentForecast(ctx context.Context, zipCode string, country string, bounds image.Rectangle) (*Forecast, error)
-	DailyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*Forecast, error)
-	HourlyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*Forecast, error)
+	CurrentForecast(ctx context.Context, zipCode string, country string, bounds image.Rectangle, metricUnits bool) (*Forecast, error)
+	DailyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle, metricUnits bool) ([]*Forecast, error)
+	HourlyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle, metricUnits bool) ([]*Forecast, error)
 	CacheClear()
 }
 
@@ -98,6 +99,9 @@ func (c *Config) SetDefaults() {
 	}
 	if c.DailyForecast == nil {
 		c.DailyForecast = atomic.NewBool(false)
+	}
+	if c.MetricUnits == nil {
+		c.MetricUnits = atomic.NewBool(false)
 	}
 	if c.BoardDelay != "" {
 		d, err := time.ParseDuration(c.BoardDelay)
@@ -253,14 +257,14 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	zeroed := rgbrender.ZeroedBounds(canvas.Bounds())
 	forecasts := []*Forecast{}
 	if w.config.CurrentForecast.Load() {
-		f, err := w.api.CurrentForecast(ctx, w.config.ZipCode, w.config.Country, zeroed)
+		f, err := w.api.CurrentForecast(ctx, w.config.ZipCode, w.config.Country, zeroed, w.config.MetricUnits.Load())
 		if err != nil {
 			return err
 		}
 		forecasts = append(forecasts, f)
 	}
 	if w.config.HourlyForecast.Load() {
-		fs, err := w.api.HourlyForecasts(ctx, w.config.ZipCode, w.config.Country, zeroed)
+		fs, err := w.api.HourlyForecasts(ctx, w.config.ZipCode, w.config.Country, zeroed, w.config.MetricUnits.Load())
 		if err != nil {
 			return err
 		}
@@ -281,7 +285,7 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	}
 
 	if w.config.DailyForecast.Load() {
-		fs, err := w.api.DailyForecasts(ctx, w.config.ZipCode, w.config.Country, zeroed)
+		fs, err := w.api.DailyForecasts(ctx, w.config.ZipCode, w.config.Country, zeroed, w.config.MetricUnits.Load())
 		if err != nil {
 			return err
 		}
