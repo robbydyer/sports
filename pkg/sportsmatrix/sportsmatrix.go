@@ -25,6 +25,7 @@ type SportsMatrix struct {
 	isServing          chan struct{}
 	canvases           []board.Canvas
 	boards             []board.Board
+	registeredBoards   []string
 	screenIsOn         *atomic.Bool
 	screenOff          chan struct{}
 	screenOn           chan struct{}
@@ -42,6 +43,8 @@ type SportsMatrix struct {
 	httpEndpoints      []string
 	jumpLock           sync.Mutex
 	jumpTo             chan string
+	prevBoardStatus    *atomic.Bool
+	betweenBoards      []board.Board
 	sync.Mutex
 }
 
@@ -112,20 +115,21 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 	cfg.Defaults()
 
 	s := &SportsMatrix{
-		boards:       boards,
-		cfg:          cfg,
-		log:          logger,
-		screenOff:    make(chan struct{}),
-		screenOn:     make(chan struct{}),
-		serveBlock:   make(chan struct{}),
-		close:        make(chan struct{}),
-		screenIsOn:   atomic.NewBool(true),
-		webBoardIsOn: atomic.NewBool(false),
-		webBoardOn:   make(chan struct{}),
-		webBoardOff:  make(chan struct{}),
-		isServing:    make(chan struct{}, 1),
-		jumpTo:       make(chan string, 1),
-		canvases:     canvases,
+		boards:          boards,
+		cfg:             cfg,
+		log:             logger,
+		screenOff:       make(chan struct{}),
+		screenOn:        make(chan struct{}),
+		serveBlock:      make(chan struct{}),
+		close:           make(chan struct{}),
+		screenIsOn:      atomic.NewBool(true),
+		webBoardIsOn:    atomic.NewBool(false),
+		webBoardOn:      make(chan struct{}),
+		webBoardOff:     make(chan struct{}),
+		isServing:       make(chan struct{}, 1),
+		jumpTo:          make(chan string, 1),
+		canvases:        canvases,
+		prevBoardStatus: atomic.NewBool(false),
 	}
 
 	// Add an ImgCanvas
@@ -177,16 +181,25 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 	}
 	c.Start()
 
+	return s, nil
+}
+
+// AddBetweenBoard adds a board to be run between each enabled board
+func (s *SportsMatrix) AddBetweenBoard(board board.Board) {
+	s.betweenBoards = append(s.betweenBoards, board)
+}
+
+func (s *SportsMatrix) StartServices(ctx context.Context) error {
 	errChan := s.startHTTP()
 
 	// check for startup error
 	s.log.Debug("checking http server for startup error")
 	select {
 	case <-ctx.Done():
-		return nil, context.Canceled
+		return context.Canceled
 	case err := <-errChan:
 		if err != nil {
-			return nil, err
+			return err
 		}
 	default:
 	}
@@ -202,7 +215,7 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 		}
 	}()
 
-	return s, nil
+	return nil
 }
 
 func (s *SportsMatrix) screenWatcher(ctx context.Context) {
@@ -369,100 +382,115 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 }
 
 func (s *SportsMatrix) serveLoop(ctx context.Context) {
-	renderDone := make(chan struct{})
 	jumpTo := ""
 
-LOOP:
 	for _, b := range s.boards {
-		s.currentBoardCtx, s.currentBoardCancel = context.WithCancel(ctx)
+		s.doBoard(ctx, b, jumpTo)
 
+		if b.Enabled() {
+			for _, between := range s.betweenBoards {
+				s.log.Debug("rendering in-between board",
+					zap.String("board", between.Name()),
+					zap.String("prior board", b.Name()),
+				)
+				s.doBoard(ctx, between, "")
+			}
+		}
+	}
+}
+
+func (s *SportsMatrix) doBoard(ctx context.Context, b board.Board, jumpTo string) {
+	renderDone := make(chan struct{})
+	s.currentBoardCtx, s.currentBoardCancel = context.WithCancel(ctx)
+
+	select {
+	case <-ctx.Done():
+		s.log.Error("board context was canceled")
+		return
+	case <-s.currentBoardCtx.Done():
+		return
+	case j := <-s.jumpTo:
+		jumpTo = j
+	default:
+	}
+
+	if jumpTo != "" {
+		if !strings.EqualFold(b.Name(), jumpTo) {
+			return
+		}
+		s.log.Info("jumping to board",
+			zap.String("board", b.Name()),
+		)
+	}
+
+	jumpTo = ""
+
+	s.log.Debug("Processing board", zap.String("board", b.Name()))
+
+	s.prevBoardStatus.Store(b.Enabled())
+
+	if !b.Enabled() {
+		// s.log.Debug("skipping disabled board", zap.String("board", b.Name()))
+		return
+	}
+
+	go func() {
 		select {
 		case <-ctx.Done():
-			s.log.Error("board context was canceled")
 			return
 		case <-s.currentBoardCtx.Done():
-			continue LOOP
-		case j := <-s.jumpTo:
-			jumpTo = j
-		default:
+			return
+		case <-renderDone:
+		case <-time.After(5 * time.Minute):
+			s.log.Error("board rendered longer than normal", zap.String("board", b.Name()))
+		}
+	}()
+
+	var wg sync.WaitGroup
+
+CANVASES:
+	for _, canvas := range s.canvases {
+		if !canvas.Enabled() {
+			// s.log.Warn("canvas is disabled, skipping", zap.String("canvas", canvas.Name()))
+			continue CANVASES
 		}
 
-		if jumpTo != "" {
-			if !strings.EqualFold(b.Name(), jumpTo) {
-				continue LOOP
-			}
-			s.log.Info("jumping to board",
-				zap.String("board", b.Name()),
-			)
-		}
-
-		jumpTo = ""
-
-		s.log.Debug("Processing board", zap.String("board", b.Name()))
-
-		if !b.Enabled() {
-			// s.log.Debug("skipping disabled board", zap.String("board", b.Name()))
-			continue LOOP
-		}
-
-		go func() {
-			select {
-			case <-ctx.Done():
-				return
-			case <-s.currentBoardCtx.Done():
-				return
-			case <-renderDone:
-			case <-time.After(5 * time.Minute):
-				s.log.Error("board rendered longer than normal", zap.String("board", b.Name()))
-			}
-		}()
-
-		var wg sync.WaitGroup
-
-	CANVASES:
-		for _, canvas := range s.canvases {
-			if !canvas.Enabled() {
-				// s.log.Warn("canvas is disabled, skipping", zap.String("canvas", canvas.Name()))
+		if (b.ScrollMode() && !canvas.Scrollable()) || (!b.ScrollMode() && canvas.Scrollable()) {
+			if !canvas.AlwaysRender() {
 				continue CANVASES
 			}
+		}
 
-			if (b.ScrollMode() && !canvas.Scrollable()) || (!b.ScrollMode() && canvas.Scrollable()) {
-				if !canvas.AlwaysRender() {
-					continue CANVASES
-				}
+		wg.Add(1)
+		go func(canvas board.Canvas) {
+			defer wg.Done()
+			s.log.Debug("rendering board", zap.String("board", b.Name()))
+			if err := b.Render(s.currentBoardCtx, canvas); err != nil {
+				s.log.Error(err.Error())
 			}
+		}(canvas)
+	}
+	done := make(chan struct{})
 
-			wg.Add(1)
-			go func(canvas board.Canvas) {
-				defer wg.Done()
-				s.log.Debug("rendering board", zap.String("board", b.Name()))
-				if err := b.Render(s.currentBoardCtx, canvas); err != nil {
-					s.log.Error(err.Error())
-				}
-			}(canvas)
-		}
-		done := make(chan struct{})
+	go func() {
+		defer close(done)
+		wg.Wait()
+	}()
 
-		go func() {
-			defer close(done)
-			wg.Wait()
-		}()
+	s.log.Debug("waiting for canvases to be rendered to")
+	select {
+	case <-ctx.Done():
+		s.log.Warn("context canceled waiting for canvases to render")
+		return
+	case <-s.currentBoardCtx.Done():
+		return
+	case <-done:
+	}
+	s.log.Debug("done waiting for canvases")
 
-		s.log.Debug("waiting for canvases to be rendered to")
-		select {
-		case <-ctx.Done():
-			s.log.Warn("context canceled waiting for canvases to render")
-			return
-		case <-s.currentBoardCtx.Done():
-			continue LOOP
-		case <-done:
-		}
-		s.log.Debug("done waiting for canvases")
-
-		select {
-		case renderDone <- struct{}{}:
-		default:
-		}
+	select {
+	case renderDone <- struct{}{}:
+	default:
 	}
 }
 

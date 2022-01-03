@@ -28,6 +28,7 @@ type Board interface {
 	GetHTTPHandlers() ([]*HTTPHandler, error)
 	ScrollMode() bool
 	GetRPCHandler() (string, http.Handler)
+	InBetween() bool
 }
 
 // Canvas ...

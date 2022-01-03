@@ -59,7 +59,18 @@ func (s *SportsMatrix) startHTTP() chan error {
 		register("sportsmatrix", h)
 	}
 
-	for _, b := range s.boards {
+	var allBoards []board.Board
+	allBoards = append(s.boards, s.betweenBoards...)
+
+BOARDS:
+	for _, b := range allBoards {
+		for _, registered := range s.registeredBoards {
+			if registered == b.Name() {
+				continue BOARDS
+			}
+		}
+		s.registeredBoards = append(s.registeredBoards, b.Name())
+
 		s.log.Info("register HTTP/RPC handlers for board",
 			zap.String("board", b.Name()),
 		)

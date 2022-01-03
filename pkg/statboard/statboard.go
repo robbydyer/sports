@@ -230,6 +230,11 @@ func (s *StatBoard) Enable() {
 	s.config.Enabled.Store(true)
 }
 
+// InBetween ...
+func (s *StatBoard) InBetween() bool {
+	return false
+}
+
 // Disable ..
 func (s *StatBoard) Disable() {
 	s.config.Enabled.Store(false)

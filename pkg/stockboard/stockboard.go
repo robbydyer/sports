@@ -204,6 +204,11 @@ func (s *StockBoard) Enable() {
 	s.config.Enabled.Store(true)
 }
 
+// InBetween ...
+func (s *StockBoard) InBetween() bool {
+	return false
+}
+
 // Disable ...
 func (s *StockBoard) Disable() {
 	s.config.Enabled.Store(false)

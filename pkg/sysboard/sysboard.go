@@ -115,6 +115,11 @@ func New(logger *zap.Logger, config *Config) (*SysBoard, error) {
 	return s, nil
 }
 
+// InBetween ...
+func (s *SysBoard) InBetween() bool {
+	return false
+}
+
 func (s *SysBoard) textWriter(canvasHeight int) (*rgbrender.TextWriter, error) {
 	if w, ok := s.textWriters[canvasHeight]; ok {
 		return w, nil

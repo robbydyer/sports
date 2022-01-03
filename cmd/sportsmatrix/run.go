@@ -80,6 +80,20 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 
 	canvases = append(canvases, rgb.NewCanvas(matrix), scroll)
 
+	newBoards := []board.Board{}
+	inBetweenBoards := []board.Board{}
+
+	for _, b := range boards {
+		if b.InBetween() {
+			fmt.Printf("Removing %s from board list- in-between setting enabled\n", b.Name())
+			inBetweenBoards = append(inBetweenBoards, b)
+		} else {
+			newBoards = append(newBoards, b)
+		}
+	}
+
+	boards = newBoards
+
 	mtrx, err := sportsmatrix.New(ctx, logger, s.rArgs.config.SportsMatrixConfig, canvases, boards...)
 	if err != nil {
 		return err
@@ -94,7 +108,17 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	for _, brd := range inBetweenBoards {
+		fmt.Printf("Registering %s as in-between board\n", brd.Name())
+		mtrx.AddBetweenBoard(brd)
+		break
+	}
+
 	fmt.Println("Starting matrix service")
+	if err := mtrx.StartServices(ctx); err != nil {
+		fmt.Printf("Matrix returned an error: %s", err.Error())
+		return err
+	}
 	if err := mtrx.Serve(ctx); err != nil {
 		fmt.Printf("Matrix returned an error: %s", err.Error())
 		return err

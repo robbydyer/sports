@@ -201,6 +201,11 @@ func (w *WeatherBoard) Enable() {
 	w.config.Enabled.Store(true)
 }
 
+// InBetween ...
+func (w *WeatherBoard) InBetween() bool {
+	return false
+}
+
 // Disable ...
 func (w *WeatherBoard) Disable() {
 	w.config.Enabled.Store(false)

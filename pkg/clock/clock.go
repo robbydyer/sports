@@ -19,6 +19,9 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
+// Name is the default board name for this Clock
+var Name = "Clock"
+
 // Clock implements board.Board
 type Clock struct {
 	config      *Config
@@ -31,11 +34,12 @@ type Clock struct {
 
 // Config is a Clock configuration
 type Config struct {
-	boardDelay time.Duration
-	Enabled    *atomic.Bool `json:"enabled"`
-	BoardDelay string       `json:"boardDelay"`
-	OnTimes    []string     `json:"onTimes"`
-	OffTimes   []string     `json:"offTimes"`
+	boardDelay  time.Duration
+	Enabled     *atomic.Bool `json:"enabled"`
+	BoardDelay  string       `json:"boardDelay"`
+	OnTimes     []string     `json:"onTimes"`
+	OffTimes    []string     `json:"offTimes"`
+	ShowBetween *atomic.Bool `json:"showBetween"`
 }
 
 // SetDefaults ...
@@ -52,6 +56,10 @@ func (c *Config) SetDefaults() {
 
 	if c.Enabled == nil {
 		c.Enabled = atomic.NewBool(false)
+	}
+
+	if c.ShowBetween == nil {
+		c.ShowBetween = atomic.NewBool(false)
 	}
 }
 
@@ -120,9 +128,14 @@ func New(config *Config, logger *zap.Logger) (*Clock, error) {
 	return c, nil
 }
 
+// InBetween ...
+func (c *Clock) InBetween() bool {
+	return c.config.ShowBetween.Load()
+}
+
 // Name ...
 func (c *Clock) Name() string {
-	return "Clock"
+	return Name
 }
 
 // Enabled ...

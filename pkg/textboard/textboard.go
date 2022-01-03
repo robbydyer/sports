@@ -187,6 +187,11 @@ func (s *TextBoard) Enable() {
 	s.config.Enabled.Store(true)
 }
 
+// InBetween ...
+func (s *TextBoard) InBetween() bool {
+	return false
+}
+
 // Disable ...
 func (s *TextBoard) Disable() {
 	s.config.Enabled.Store(false)
