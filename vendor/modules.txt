@@ -120,7 +120,7 @@ github.com/nfnt/resize
 github.com/niemeyer/pretty
 # github.com/pelletier/go-toml v1.9.4
 github.com/pelletier/go-toml
-# github.com/pkg/errors v0.8.1
+# github.com/pkg/errors v0.9.1
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
@@ -155,7 +155,7 @@ github.com/robbydyer/exp/shiny/screen
 # github.com/robfig/cron/v3 v3.0.1
 ## explicit
 github.com/robfig/cron/v3
-# github.com/spf13/afero v1.6.0
+# github.com/spf13/afero v1.7.1
 ## explicit
 github.com/spf13/afero
 github.com/spf13/afero/mem
@@ -217,7 +217,7 @@ go.uber.org/zap/internal/exit
 go.uber.org/zap/internal/ztest
 go.uber.org/zap/zapcore
 go.uber.org/zap/zaptest
-# golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
+# golang.org/x/crypto v0.0.0-20211108221036-ceb1ce70b4fa
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
 # golang.org/x/image v0.0.0-20201208152932-35266b937fa6
