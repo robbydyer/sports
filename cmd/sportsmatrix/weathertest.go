@@ -49,7 +49,7 @@ func (s *weatherCmd) run(cmd *cobra.Command, args []string) error {
 	}()
 
 	api := &fakeWeather{}
-	f, _ := api.DailyForecasts(ctx, "", "", image.Rectangle{})
+	f, _ := api.DailyForecasts(ctx, "", "", image.Rectangle{}, false)
 	s.rArgs.config.WeatherConfig.DailyNumber = len(f)
 
 	b, err := weatherboard.New(api, s.rArgs.config.WeatherConfig, logger)
@@ -101,7 +101,7 @@ func intPtr(i int) *int {
 	return &i
 }
 
-func (f *fakeWeather) CurrentForecast(ctx context.Context, zipCode string, country string, bounds image.Rectangle) (*weatherboard.Forecast, error) {
+func (f *fakeWeather) CurrentForecast(ctx context.Context, zipCode string, country string, bounds image.Rectangle, metric bool) (*weatherboard.Forecast, error) {
 	return &weatherboard.Forecast{
 		Time:         time.Now().Local(),
 		Temperature:  fltPtr(72),
@@ -112,7 +112,7 @@ func (f *fakeWeather) CurrentForecast(ctx context.Context, zipCode string, count
 	}, nil
 }
 
-func (f *fakeWeather) DailyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
+func (f *fakeWeather) DailyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle, metric bool) ([]*weatherboard.Forecast, error) {
 	return []*weatherboard.Forecast{
 		{
 			Time:     time.Now().Local().Add(24 * time.Hour),
@@ -181,7 +181,7 @@ func (f *fakeWeather) DailyForecasts(ctx context.Context, zipCode string, countr
 	}, nil
 }
 
-func (f *fakeWeather) HourlyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
+func (f *fakeWeather) HourlyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle, metric bool) ([]*weatherboard.Forecast, error) {
 	return []*weatherboard.Forecast{}, nil
 }
 func (f *fakeWeather) CacheClear() {}

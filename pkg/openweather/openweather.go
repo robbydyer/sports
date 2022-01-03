@@ -97,13 +97,13 @@ func weatherKey(zipCode string, country string) string {
 }
 
 // CurrentForecast ...
-func (a *API) CurrentForecast(ctx context.Context, zipCode string, country string, bounds image.Rectangle) (*weatherboard.Forecast, error) {
-	w, err := a.getWeather(ctx, zipCode, country)
+func (a *API) CurrentForecast(ctx context.Context, zipCode string, country string, bounds image.Rectangle, metric bool) (*weatherboard.Forecast, error) {
+	w, err := a.getWeather(ctx, zipCode, country, metric)
 	if err != nil {
 		return nil, err
 	}
 
-	forecasts, err := a.boardForecastFromForecast([]*forecast{w.Current}, bounds)
+	forecasts, err := a.boardForecastFromForecast([]*forecast{w.Current}, bounds, metric)
 	if err != nil {
 		return nil, err
 	}
@@ -116,23 +116,23 @@ func (a *API) CurrentForecast(ctx context.Context, zipCode string, country strin
 }
 
 // DailyForecasts ...
-func (a *API) DailyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
-	w, err := a.getWeather(ctx, zipCode, country)
+func (a *API) DailyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle, metric bool) ([]*weatherboard.Forecast, error) {
+	w, err := a.getWeather(ctx, zipCode, country, metric)
 	if err != nil {
 		return nil, err
 	}
 
-	return a.boardForecastFromDaily(w.Daily, bounds)
+	return a.boardForecastFromDaily(w.Daily, bounds, metric)
 }
 
 // HourlyForecasts ...
-func (a *API) HourlyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle) ([]*weatherboard.Forecast, error) {
-	w, err := a.getWeather(ctx, zipCode, country)
+func (a *API) HourlyForecasts(ctx context.Context, zipCode string, country string, bounds image.Rectangle, metric bool) ([]*weatherboard.Forecast, error) {
+	w, err := a.getWeather(ctx, zipCode, country, metric)
 	if err != nil {
 		return nil, err
 	}
 
-	return a.boardForecastFromForecast(w.Hourly, bounds)
+	return a.boardForecastFromForecast(w.Hourly, bounds, metric)
 }
 
 func (a *API) getIcon(icon string, bounds image.Rectangle) (*logo.Logo, error) {

@@ -162,7 +162,7 @@ func (w *WeatherBoard) tempHighLowLine(f *Forecast) *rgbrender.ColorCharLine {
 	}
 
 	line := &rgbrender.ColorCharLine{}
-	high := fmt.Sprintf("%0.fF", *f.HighTemp)
+	high := fmt.Sprintf("%0.f%s", *f.HighTemp, f.TempUnit)
 	for i := 0; i < len(high); i++ {
 		line.Chars = append(line.Chars, string(high[i]))
 		line.Clrs = append(line.Clrs, orange)
@@ -170,7 +170,7 @@ func (w *WeatherBoard) tempHighLowLine(f *Forecast) *rgbrender.ColorCharLine {
 	line.Chars = append(line.Chars, "/")
 	line.Clrs = append(line.Clrs, color.White)
 
-	low := fmt.Sprintf("%0.fF", *f.LowTemp)
+	low := fmt.Sprintf("%0.f%s", *f.LowTemp, f.TempUnit)
 	for i := 0; i < len(low); i++ {
 		line.Chars = append(line.Chars, string(low[i]))
 		line.Clrs = append(line.Clrs, blue)
