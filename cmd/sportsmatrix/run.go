@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/imageboard"
@@ -85,7 +86,9 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 
 	for _, b := range boards {
 		if b.InBetween() {
-			fmt.Printf("Removing %s from board list- in-between setting enabled\n", b.Name())
+			logger.Info("Removing board from list, in-between setting enabled",
+				zap.String("board", b.Name()),
+			)
 			inBetweenBoards = append(inBetweenBoards, b)
 		} else {
 			newBoards = append(newBoards, b)
@@ -109,13 +112,17 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, brd := range inBetweenBoards {
-		fmt.Printf("Registering %s as in-between board\n", brd.Name())
+		logger.Info("Registering in-between board",
+			zap.String("board", brd.Name()),
+		)
 		mtrx.AddBetweenBoard(brd)
 	}
 
-	fmt.Println("Starting matrix service")
+	logger.Info("Starting matrix service")
 	if err := mtrx.Serve(ctx); err != nil {
-		fmt.Printf("Matrix returned an error: %s", err.Error())
+		logger.Error("Matrix returned an error",
+			zap.Error(err),
+		)
 		return err
 	}
 

@@ -453,6 +453,7 @@ BOARDS:
 
 		s.currentBoardCtx, s.currentBoardCancel = context.WithCancel(ctx)
 		if err := s.doBoard(s.currentBoardCtx, b); err != nil {
+			s.currentBoardCancel()
 			continue BOARDS
 		}
 
