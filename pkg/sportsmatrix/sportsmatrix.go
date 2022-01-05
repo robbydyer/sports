@@ -207,12 +207,12 @@ func (s *SportsMatrix) ScreenOn(ctx context.Context) error {
 	// The screenSwitch channel is used just like a sync.Mutex, but with
 	// a timeout. It is non-buffered. This is so we don't try to turn the screen
 	// off or on at the same time and that we don't pool up a bunch of on/off requests
-	switchCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-	defer cancel()
 
 	select {
 	case s.screenSwitch <- struct{}{}:
-	case <-switchCtx.Done():
+	case <-time.After(2 * time.Second):
+		return fmt.Errorf("timed out waiting for switch lock")
+	case <-ctx.Done():
 		return context.Canceled
 	}
 
@@ -244,21 +244,17 @@ func (s *SportsMatrix) ScreenOn(ctx context.Context) error {
 
 // ScreenOff turns the matrix off
 func (s *SportsMatrix) ScreenOff(ctx context.Context) error {
-	switchCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-	defer cancel()
-
 	select {
 	case s.screenSwitch <- struct{}{}:
-	case <-switchCtx.Done():
+	case <-time.After(2 * time.Second):
+		return fmt.Errorf("timed out waiting for switch lock")
+	case <-ctx.Done():
 		return context.Canceled
 	}
 
 	defer func() {
 		<-s.screenSwitch
 	}()
-
-	s.Lock()
-	defer s.Unlock()
 
 	if changed := s.screenIsOn.CAS(true, false); !changed {
 		s.log.Warn("screen is already off")
@@ -384,10 +380,14 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 	clearer := sync.Once{}
 
 	// This is really only for testing.
-	select {
-	case s.isServing <- struct{}{}:
-	default:
+	setServing := func() {
+		select {
+		case s.isServing <- struct{}{}:
+		default:
+		}
 	}
+
+	setServingOnce := sync.Once{}
 
 	boardOrder := []string{}
 	for _, b := range s.boards {
@@ -437,6 +437,8 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 				continue
 			}
 		}
+
+		setServingOnce.Do(setServing)
 
 		s.serveLoop(s.boardCtx)
 	}

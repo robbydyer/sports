@@ -2,6 +2,7 @@ package sportsmatrix
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"sync"
 	"testing"
@@ -182,7 +183,7 @@ func TestScreenSwitch(t *testing.T) {
 
 	go func() {
 		err := s.Serve(ctx)
-		require.NoError(t, err)
+		require.ErrorIs(t, err, context.Canceled)
 	}()
 
 	select {
@@ -199,18 +200,36 @@ func TestScreenSwitch(t *testing.T) {
 	err = s.ScreenOff(switchCtx)
 	require.NoError(t, err)
 
+	err = s.ScreenOn(switchCtx)
+	require.NoError(t, err)
+
+	err = s.ScreenOff(switchCtx)
+	require.NoError(t, err)
+
 	wg := sync.WaitGroup{}
 
-	for i := 0; i < 3; i++ {
+	switchOnCtx, swOnCancel := context.WithTimeout(ctx, 5*time.Second)
+	defer swOnCancel()
+
+	for i := 0; i < 1; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			err := s.ScreenOn(switchCtx)
-			require.NoError(t, err)
+			_ = s.ScreenOn(switchOnCtx)
 		}()
 	}
 
-	wg.Wait()
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		wg.Wait()
+	}()
 
-	require.Equal(t, 1, s.switchedOn)
+	select {
+	case <-done:
+	case <-time.After(8 * time.Second):
+		require.NoError(t, fmt.Errorf("timed out waiting for ScreenOn calls"))
+	}
+
+	require.Equal(t, 2, s.switchedOn)
 }
