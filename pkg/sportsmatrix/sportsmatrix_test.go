@@ -196,7 +196,8 @@ func TestScreenSwitch(t *testing.T) {
 
 	s.switchTestSleep = true
 
-	s.ScreenOff(switchCtx)
+	err = s.ScreenOff(switchCtx)
+	require.NoError(t, err)
 
 	wg := sync.WaitGroup{}
 
@@ -204,7 +205,8 @@ func TestScreenSwitch(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			s.ScreenOn(switchCtx)
+			err := s.ScreenOn(switchCtx)
+			require.NoError(t, err)
 		}()
 	}
 

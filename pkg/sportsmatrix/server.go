@@ -32,7 +32,7 @@ func (s *Server) ScreenOn(ctx context.Context, req *emptypb.Empty) (*emptypb.Emp
 
 // ScreenOff ...
 func (s *Server) ScreenOff(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
-	if err := s.sm.ScreenOn(ctx); err != nil {
+	if err := s.sm.ScreenOff(ctx); err != nil {
 		return &emptypb.Empty{}, twirp.NewError(twirp.Internal, "failed to turn screen off")
 	}
 	return &emptypb.Empty{}, nil

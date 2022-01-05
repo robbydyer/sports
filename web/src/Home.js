@@ -16,17 +16,17 @@ class Home extends React.Component {
         };
     }
     async componentDidMount() {
-        this.updateStatus()
+        await this.getStatus();
     }
 
-    updateStatus = async () => {
+    getStatus = async () => {
         await MatrixPostRet("matrix.v1.Sportsmatrix/Status", '{}').then((resp) => {
             if (resp.ok) {
                 return resp.text()
             }
             throw resp
         }).then((data) => {
-            console.log("Got MatrixPostRet", data)
+            console.log("Got Home MatrixPostRet", data)
             this.setState({
                 "status": JSON.parse(data),
             })

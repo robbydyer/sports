@@ -172,7 +172,11 @@ func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
-				s.ScreenOn(ctx)
+				if err := s.ScreenOn(ctx); err != nil {
+					s.log.Error("failed /api/screenon",
+						zap.Error(err),
+					)
+				}
 			},
 		},
 		{
@@ -180,7 +184,11 @@ func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
-				s.ScreenOff(ctx)
+				if err := s.ScreenOff(ctx); err != nil {
+					s.log.Error("failed /api/screenoff",
+						zap.Error(err),
+					)
+				}
 			},
 		},
 		{

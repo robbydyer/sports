@@ -9,7 +9,7 @@ export function MatrixPostRet(path, body) {
         headers: { 'Content-Type': 'application/json' },
         body: body,
     }
-    console.log(`Matrix POST ${BACKEND}/${path} ${body}`)
+    //console.log(`Matrix POST ${BACKEND}/${path} ${body}`)
     return fetch(`${BACKEND}/${path}`, req)
 }
 export async function GetVersion(callback) {

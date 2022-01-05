@@ -136,6 +136,12 @@ class Sport extends React.Component {
         await this.getStatus();
     }
 
+    doJump = async () => {
+        await JumpToBoard(this.props.sport);
+        console.log("Syncing from sport")
+        this.props.doSync();
+    }
+
     logosrc() {
         if (this.props.sport === "nhl") {
             return nhllogo
@@ -162,7 +168,7 @@ class Sport extends React.Component {
             <Container fluid>
                 <Row className="text-center">
                     <Col>
-                        <Image src={this.logosrc()} style={{ height: '100px', width: 'auto' }} onClick={() => { JumpToBoard(this.props.sport); this.updateStatus(); this.props.doSync(); }} fluid />
+                        <Image src={this.logosrc()} style={{ height: '100px', width: 'auto' }} onClick={() => { this.doJump(); }} fluid />
                     </Col>
                 </Row>
                 <Row className="text-left">
@@ -233,7 +239,7 @@ class Sport extends React.Component {
                 </Row>
                 <Row className="text-left">
                     <Col>
-                        <Button variant="primary" onClick={() => { JumpToBoard(this.props.sport); this.updateStatus(); this.props.doSync(); }}>Jump</Button>
+                        <Button variant="primary" onClick={() => { this.doJump(); }}>Jump</Button>
                     </Col>
                 </Row>
             </Container>

@@ -53,10 +53,15 @@ class Weather extends React.Component {
         await this.getStatus();
     }
 
+    doJump = async () => {
+        await JumpToBoard("weather");
+        this.props.doSync();
+    }
+
     render() {
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Image src={weatherimg} style={{ height: '100px', width: 'auto' }} onClick={() => { JumpToBoard("weather"); this.updateStatus(); this.props.doSync(); }} fluid /></Col></Row>
+                <Row className="text-center"><Col><Image src={weatherimg} style={{ height: '100px', width: 'auto' }} onClick={() => { this.doJump(); }} fluid /></Col></Row>
                 <Row className="text-left">
                     <Col>
                         <Form.Switch id="weatherenabler" label="Enable/Disable" checked={this.state.status.getEnabled()}
@@ -83,7 +88,7 @@ class Weather extends React.Component {
                 </Row>
                 <Row className="text-left">
                     <Col>
-                        <Button variant="primary" onClick={() => { JumpToBoard("weather"); this.updateStatus(); this.props.doSync(); }}>Jump</Button>
+                        <Button variant="primary" onClick={() => { this.doJump(); }}>Jump</Button>
                     </Col>
                 </Row>
             </Container>

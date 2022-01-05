@@ -168,7 +168,11 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 		s.log.Info("Screen will be scheduled to turn off", zap.String("turn off", off))
 		_, err := c.AddFunc(off, func() {
 			s.log.Warn("Turning screen off!")
-			s.ScreenOff(context.Background())
+			if err := s.ScreenOff(context.Background()); err != nil {
+				s.log.Error("failed to turn screen off during ScreenOfftimes",
+					zap.Error(err),
+				)
+			}
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to add cron for screen off times: %w", err)
@@ -178,7 +182,11 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 		s.log.Info("Screen will be scheduled to turn on", zap.String("turn on", on))
 		_, err := c.AddFunc(on, func() {
 			s.log.Warn("Turning screen on!")
-			s.ScreenOn(context.Background())
+			if err := s.ScreenOn(context.Background()); err != nil {
+				s.log.Error("failed to turn screen on during ScreenOnTimes",
+					zap.Error(err),
+				)
+			}
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to add cron for screen on times: %w", err)
@@ -196,6 +204,9 @@ func (s *SportsMatrix) AddBetweenBoard(board board.Board) {
 
 // ScreenOn turns the matrix on
 func (s *SportsMatrix) ScreenOn(ctx context.Context) error {
+	// The screenSwitch channel is used just like a sync.Mutex, but with
+	// a timeout. It is non-buffered. This is so we don't try to turn the screen
+	// off or on at the same time and that we don't pool up a bunch of on/off requests
 	switchCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
@@ -630,6 +641,13 @@ func (s *SportsMatrix) JumpTo(ctx context.Context, boardName string) error {
 					zap.String("board", b.Name()),
 				)
 				return context.Canceled
+			}
+
+			if err := s.ScreenOn(context.Background()); err != nil {
+				s.log.Error("failed to turn screen back on after jump",
+					zap.String("board", b.Name()),
+					zap.Error(err),
+				)
 			}
 
 			return nil
