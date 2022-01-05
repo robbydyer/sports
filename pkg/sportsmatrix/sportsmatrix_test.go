@@ -192,7 +192,7 @@ func TestScreenSwitch(t *testing.T) {
 		require.NotNil(t, nil, "timed out waiting for matrix to serve")
 	}
 
-	switchCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	switchCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	s.switchTestSleep = true
@@ -211,7 +211,7 @@ func TestScreenSwitch(t *testing.T) {
 	switchOnCtx, swOnCancel := context.WithTimeout(ctx, 5*time.Second)
 	defer swOnCancel()
 
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 3; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -227,7 +227,7 @@ func TestScreenSwitch(t *testing.T) {
 
 	select {
 	case <-done:
-	case <-time.After(8 * time.Second):
+	case <-time.After(20 * time.Second):
 		require.NoError(t, fmt.Errorf("timed out waiting for ScreenOn calls"))
 	}
 

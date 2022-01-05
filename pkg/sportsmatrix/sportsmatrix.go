@@ -205,7 +205,7 @@ func (s *SportsMatrix) AddBetweenBoard(board board.Board) {
 // ScreenOn turns the matrix on
 func (s *SportsMatrix) ScreenOn(ctx context.Context) error {
 	// The screenSwitch channel is used just like a sync.Mutex, but with
-	// a timeout. It is non-buffered. This is so we don't try to turn the screen
+	// a timeout. It has a buffer size of 1. This is so we don't try to turn the screen
 	// off or on at the same time and that we don't pool up a bunch of on/off requests
 
 	select {
