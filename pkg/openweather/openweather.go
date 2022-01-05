@@ -174,6 +174,8 @@ func (a *API) getIcon(icon string, bounds image.Rectangle) (*logo.Logo, error) {
 		},
 	})
 
+	l.SetLogger(a.log)
+
 	a.icons[key] = l
 
 	return l, nil

@@ -111,7 +111,6 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 	for _, brd := range inBetweenBoards {
 		fmt.Printf("Registering %s as in-between board\n", brd.Name())
 		mtrx.AddBetweenBoard(brd)
-		break
 	}
 
 	fmt.Println("Starting matrix service")

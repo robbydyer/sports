@@ -220,7 +220,8 @@ func (s *SportsMatrix) ScreenOn(ctx context.Context) error {
 	s.log.Warn("screen turning on")
 	select {
 	case s.serveBlock <- struct{}{}:
-	default:
+	case <-time.After(10 * time.Second):
+		s.log.Error("timed out while trying to unblock serveBlock")
 	}
 
 	if s.webBoardWasOn.Load() {
@@ -418,10 +419,10 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 			// Block until the screen is turned back on
 			select {
 			case <-ctx.Done():
+				s.log.Warn("context canceled while waiting for screen to come back on")
 				return context.Canceled
 			case <-s.serveBlock:
-				continue
-			case <-s.boardCtx.Done():
+				s.log.Warn("screen is back on")
 				continue
 			}
 		}
@@ -433,26 +434,52 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 func (s *SportsMatrix) serveLoop(ctx context.Context) {
 BOARDS:
 	for _, b := range s.boards {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
 		s.currentBoardCtx, s.currentBoardCancel = context.WithCancel(ctx)
 		if err := s.doBoard(s.currentBoardCtx, b); err != nil {
 			continue BOARDS
 		}
 
 		if b.Enabled() {
+		BETWEEN_BOARDS:
 			for _, between := range s.betweenBoards {
+				select {
+				case <-ctx.Done():
+					return
+				case <-s.currentBoardCtx.Done():
+					s.log.Debug("current board context canceled while rendering in-between boards",
+						zap.String("board", b.Name()),
+						zap.String("in-between", between.Name()),
+					)
+					continue BOARDS
+				default:
+				}
 				s.log.Debug("rendering in-between board",
 					zap.String("board", between.Name()),
 					zap.String("prior board", b.Name()),
 				)
 				if err := s.doBoard(s.currentBoardCtx, between); err != nil {
-					continue BOARDS
+					continue BETWEEN_BOARDS
 				}
 			}
 		}
+
+		s.currentBoardCancel()
 	}
 }
 
 func (s *SportsMatrix) doBoard(ctx context.Context, b board.Board) error {
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	default:
+	}
+
 	s.boardLock.Lock()
 	defer s.boardLock.Unlock()
 
@@ -574,7 +601,9 @@ func (s *SportsMatrix) JumpTo(ctx context.Context, boardName string) error {
 	s.jumping.Store(true)
 	defer s.jumping.Store(false)
 
-	for _, b := range s.boards {
+	boards := append(s.boards, s.betweenBoards...)
+
+	for _, b := range boards {
 		if strings.EqualFold(b.Name(), boardName) {
 			b.Enable()
 
