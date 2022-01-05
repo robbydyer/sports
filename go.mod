@@ -17,7 +17,7 @@ require (
 	github.com/pseudomuto/protoc-gen-doc v1.5.0
 	github.com/robbydyer/exp v0.1.2
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/spf13/afero v1.7.1
+	github.com/spf13/afero v1.8.0
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.1
 	github.com/srikrsna/protoc-gen-gotag v0.6.2
