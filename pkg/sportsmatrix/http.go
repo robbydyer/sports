@@ -59,7 +59,17 @@ func (s *SportsMatrix) startHTTP() chan error {
 		register("sportsmatrix", h)
 	}
 
-	for _, b := range s.boards {
+	allBoards := append(s.boards, s.betweenBoards...)
+
+BOARDS:
+	for _, b := range allBoards {
+		for _, registered := range s.registeredBoards {
+			if registered == b.Name() {
+				continue BOARDS
+			}
+		}
+		s.registeredBoards = append(s.registeredBoards, b.Name())
+
 		s.log.Info("register HTTP/RPC handlers for board",
 			zap.String("board", b.Name()),
 		)
@@ -160,17 +170,25 @@ func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
 		{
 			Path: "/api/screenon",
 			Handler: func(w http.ResponseWriter, req *http.Request) {
-				s.Lock()
-				defer s.Unlock()
-				s.screenOn <- struct{}{}
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				if err := s.ScreenOn(ctx); err != nil {
+					s.log.Error("failed /api/screenon",
+						zap.Error(err),
+					)
+				}
 			},
 		},
 		{
 			Path: "/api/screenoff",
 			Handler: func(w http.ResponseWriter, req *http.Request) {
-				s.Lock()
-				defer s.Unlock()
-				s.screenOff <- struct{}{}
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				if err := s.ScreenOff(ctx); err != nil {
+					s.log.Error("failed /api/screenoff",
+						zap.Error(err),
+					)
+				}
 			},
 		},
 		{
@@ -237,8 +255,9 @@ func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
 		{
 			Path: "/api/jump",
 			Handler: func(w http.ResponseWriter, req *http.Request) {
-				s.jumpLock.Lock()
-				defer s.jumpLock.Unlock()
+				if s.jumping.Load() {
+					return
+				}
 
 				d := json.NewDecoder(req.Body)
 				var j *jumpRequest

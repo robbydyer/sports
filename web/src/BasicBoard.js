@@ -50,6 +50,11 @@ class BasicBoard extends React.Component {
         await this.getStatus();
     }
 
+    doJump = async () => {
+        await JumpToBoard(this.props.name);
+        this.props.doSync();
+    }
+
     logosrc() {
         if (this.props.name == "clock") {
             return clock;
@@ -64,7 +69,7 @@ class BasicBoard extends React.Component {
     render() {
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Image src={this.logosrc()} style={{ height: '100px', width: 'auto' }} onClick={() => { JumpToBoard(this.props.name); this.props.doSync(); }} fluid /></Col></Row>
+                <Row className="text-center"><Col><Image src={this.logosrc()} style={{ height: '100px', width: 'auto' }} onClick={() => { this.doJump(); }} fluid /></Col></Row>
                 <Row className="text-left">
                     <Col>
                         <Form.Switch id={this.props.name + "enabler"} label="Enable/Disable" checked={this.state.status.getEnabled()}
@@ -79,7 +84,7 @@ class BasicBoard extends React.Component {
                 </Row>
                 <Row className="text-left">
                     <Col>
-                        <Button variant="primary" onClick={() => { JumpToBoard(this.props.name); this.updateStatus(); this.props.doSync(); }}>Jump</Button>
+                        <Button variant="primary" onClick={() => { this.doJump(); }}>Jump</Button>
 
                     </Col>
                 </Row>

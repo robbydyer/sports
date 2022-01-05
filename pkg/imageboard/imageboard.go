@@ -185,6 +185,11 @@ func (i *ImageBoard) Enabled() bool {
 	return i.config.Enabled.Load()
 }
 
+// InBetween ...
+func (i *ImageBoard) InBetween() bool {
+	return false
+}
+
 // Enable ...
 func (i *ImageBoard) Enable() {
 	i.config.Enabled.Store(true)

@@ -59,6 +59,7 @@ type Config struct {
 	OnTimes            []string     `json:"onTimes"`
 	OffTimes           []string     `json:"offTimes"`
 	MetricUnits        *atomic.Bool `json:"metricUnits"`
+	ShowBetween        *atomic.Bool `json:"showBetween"`
 }
 
 // Forecast ...
@@ -102,6 +103,9 @@ func (c *Config) SetDefaults() {
 	}
 	if c.MetricUnits == nil {
 		c.MetricUnits = atomic.NewBool(false)
+	}
+	if c.ShowBetween == nil {
+		c.ShowBetween = atomic.NewBool(false)
 	}
 	if c.BoardDelay != "" {
 		d, err := time.ParseDuration(c.BoardDelay)
@@ -199,6 +203,11 @@ func (w *WeatherBoard) Enabled() bool {
 // Enable ...
 func (w *WeatherBoard) Enable() {
 	w.config.Enabled.Store(true)
+}
+
+// InBetween ...
+func (w *WeatherBoard) InBetween() bool {
+	return w.config.ShowBetween.Load()
 }
 
 // Disable ...

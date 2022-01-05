@@ -142,6 +142,7 @@ func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rect
 			s.log.Error("failed to get left logo", zap.Error(err))
 			return nil, fmt.Errorf("failed to get left logo: %w", err)
 		}
+		l.SetLogger(s.log)
 		s.setLogoCache(logoKey, l)
 	} else {
 		s.log.Debug("using logo cache", zap.String("logo key", logoKey))
@@ -233,6 +234,7 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 			s.log.Error("failed to get right logo", zap.Error(err))
 			return nil, fmt.Errorf("failed to get right logo: %w", err)
 		}
+		l.SetLogger(s.log)
 		s.setLogoCache(logoKey, l)
 	}
 

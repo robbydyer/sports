@@ -2,7 +2,9 @@ package sportsmatrix
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"sync"
 	"testing"
 	"time"
 
@@ -28,6 +30,10 @@ func (b *TestBoard) Enabled() bool {
 
 func (b *TestBoard) Enable() {
 	b.enabled.Store(true)
+}
+
+func (b *TestBoard) InBetween() bool {
+	return false
 }
 
 func (b *TestBoard) Disable() {
@@ -144,4 +150,86 @@ func TestSportsMatrix(t *testing.T) {
 	case <-time.After(10 * time.Second):
 		require.NotNil(t, nil, "timed out waiting for context to cancel")
 	}
+}
+
+func TestScreenSwitch(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	logger := zaptest.NewLogger(t, zaptest.Level(zapcore.ErrorLevel))
+	cfg := &Config{
+		ServeWebUI:     false,
+		HTTPListenPort: 8080,
+		WebBoardWidth:  1,
+	}
+	cfg.Defaults()
+
+	canvas := board.NewBlankCanvas(1, 1, logger)
+	canvas.Enable()
+
+	require.True(t, canvas.Enabled())
+
+	b := &TestBoard{
+		log:         logger,
+		enabled:     atomic.NewBool(true),
+		hasRendered: atomic.NewBool(false),
+		tester:      t,
+	}
+
+	require.True(t, b.Enabled())
+
+	s, err := New(ctx, logger, cfg, []board.Canvas{canvas}, b)
+	require.NoError(t, err)
+	defer s.Close()
+
+	go func() {
+		err := s.Serve(ctx)
+		require.ErrorIs(t, err, context.Canceled)
+	}()
+
+	select {
+	case <-s.isServing:
+	case <-time.After(10 * time.Second):
+		require.NotNil(t, nil, "timed out waiting for matrix to serve")
+	}
+
+	switchCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	s.switchTestSleep = true
+
+	err = s.ScreenOff(switchCtx)
+	require.NoError(t, err)
+
+	err = s.ScreenOn(switchCtx)
+	require.NoError(t, err)
+
+	err = s.ScreenOff(switchCtx)
+	require.NoError(t, err)
+
+	wg := sync.WaitGroup{}
+
+	switchOnCtx, swOnCancel := context.WithTimeout(ctx, 5*time.Second)
+	defer swOnCancel()
+
+	for i := 0; i < 3; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_ = s.ScreenOn(switchOnCtx)
+		}()
+	}
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		wg.Wait()
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(20 * time.Second):
+		require.NoError(t, fmt.Errorf("timed out waiting for ScreenOn calls"))
+	}
+
+	require.Equal(t, 2, s.switchedOn)
 }

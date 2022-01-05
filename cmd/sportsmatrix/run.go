@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/imageboard"
@@ -80,6 +81,22 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 
 	canvases = append(canvases, rgb.NewCanvas(matrix), scroll)
 
+	newBoards := []board.Board{}
+	inBetweenBoards := []board.Board{}
+
+	for _, b := range boards {
+		if b.InBetween() {
+			logger.Info("Removing board from list, in-between setting enabled",
+				zap.String("board", b.Name()),
+			)
+			inBetweenBoards = append(inBetweenBoards, b)
+		} else {
+			newBoards = append(newBoards, b)
+		}
+	}
+
+	boards = newBoards
+
 	mtrx, err := sportsmatrix.New(ctx, logger, s.rArgs.config.SportsMatrixConfig, canvases, boards...)
 	if err != nil {
 		return err
@@ -94,9 +111,18 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Println("Starting matrix service")
+	for _, brd := range inBetweenBoards {
+		logger.Info("Registering in-between board",
+			zap.String("board", brd.Name()),
+		)
+		mtrx.AddBetweenBoard(brd)
+	}
+
+	logger.Info("Starting matrix service")
 	if err := mtrx.Serve(ctx); err != nil {
-		fmt.Printf("Matrix returned an error: %s", err.Error())
+		logger.Error("Matrix returned an error",
+			zap.Error(err),
+		)
 		return err
 	}
 

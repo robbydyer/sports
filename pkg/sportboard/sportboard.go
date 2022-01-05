@@ -358,6 +358,11 @@ func (s *SportBoard) Enable() {
 	s.config.Enabled.Store(true)
 }
 
+// InBetween ...
+func (s *SportBoard) InBetween() bool {
+	return false
+}
+
 // Disable ...
 func (s *SportBoard) Disable() {
 	s.config.Enabled.Store(false)

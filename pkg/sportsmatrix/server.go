@@ -24,27 +24,18 @@ func (s *Server) Version(ctx context.Context, req *emptypb.Empty) (*pb.VersionRe
 
 // ScreenOn ...
 func (s *Server) ScreenOn(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
-	s.sm.Lock()
-	defer s.sm.Unlock()
-	select {
-	case s.sm.screenOn <- struct{}{}:
-		return &emptypb.Empty{}, nil
-	default:
+	if err := s.sm.ScreenOn(ctx); err != nil {
 		return &emptypb.Empty{}, twirp.NewError(twirp.Internal, "failed to turn screen on")
 	}
+	return &emptypb.Empty{}, nil
 }
 
 // ScreenOff ...
 func (s *Server) ScreenOff(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
-	s.sm.Lock()
-	defer s.sm.Unlock()
-
-	select {
-	case s.sm.screenOff <- struct{}{}:
-		return &emptypb.Empty{}, nil
-	default:
-		return nil, twirp.NewError(twirp.Internal, "failed to turn screen off")
+	if err := s.sm.ScreenOff(ctx); err != nil {
+		return &emptypb.Empty{}, twirp.NewError(twirp.Internal, "failed to turn screen off")
 	}
+	return &emptypb.Empty{}, nil
 }
 
 // SetAll ...
@@ -67,8 +58,9 @@ func (s *Server) SetAll(ctx context.Context, req *pb.SetAllReq) (*emptypb.Empty,
 
 // Jump ...
 func (s *Server) Jump(ctx context.Context, req *pb.JumpReq) (*emptypb.Empty, error) {
-	s.sm.jumpLock.Lock()
-	defer s.sm.jumpLock.Unlock()
+	if s.sm.jumping.Load() {
+		return &emptypb.Empty{}, nil
+	}
 
 	c, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -90,6 +82,8 @@ func (s *Server) Status(ctx context.Context, req *emptypb.Empty) (*pb.ScreenStat
 
 // NextBoard jumps to the next board in the sequence
 func (s *Server) NextBoard(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
+	s.sm.Lock()
+	defer s.sm.Unlock()
 	s.sm.currentBoardCancel()
 	return &emptypb.Empty{}, nil
 }

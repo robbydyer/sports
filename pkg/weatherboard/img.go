@@ -101,6 +101,8 @@ func (w *WeatherBoard) customIcon(iconCode string, bounds image.Rectangle) (*log
 		},
 	})
 
+	l.SetLogger(w.log)
+
 	w.iconCache[key] = l
 
 	return l, nil

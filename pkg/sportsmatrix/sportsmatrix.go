@@ -25,9 +25,8 @@ type SportsMatrix struct {
 	isServing          chan struct{}
 	canvases           []board.Canvas
 	boards             []board.Board
+	registeredBoards   []string
 	screenIsOn         *atomic.Bool
-	screenOff          chan struct{}
-	screenOn           chan struct{}
 	webBoardIsOn       *atomic.Bool
 	webBoardOn         chan struct{}
 	webBoardOff        chan struct{}
@@ -41,7 +40,20 @@ type SportsMatrix struct {
 	close              chan struct{}
 	httpEndpoints      []string
 	jumpLock           sync.Mutex
+	boardLock          sync.Mutex
+	webBoardLock       sync.Mutex
+	screenSwitch       chan struct{}
 	jumpTo             chan string
+	betweenBoards      []board.Board
+	currentJump        string
+	jumping            *atomic.Bool
+	switchedOn         int
+	switchedOff        int
+	switchTestSleep    bool
+	webBoardWasOn      *atomic.Bool
+	serveContext       context.Context
+	webBoardCtx        context.Context
+	webBoardCancel     context.CancelFunc
 	sync.Mutex
 }
 
@@ -112,20 +124,21 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 	cfg.Defaults()
 
 	s := &SportsMatrix{
-		boards:       boards,
-		cfg:          cfg,
-		log:          logger,
-		screenOff:    make(chan struct{}),
-		screenOn:     make(chan struct{}),
-		serveBlock:   make(chan struct{}),
-		close:        make(chan struct{}),
-		screenIsOn:   atomic.NewBool(true),
-		webBoardIsOn: atomic.NewBool(false),
-		webBoardOn:   make(chan struct{}),
-		webBoardOff:  make(chan struct{}),
-		isServing:    make(chan struct{}, 1),
-		jumpTo:       make(chan string, 1),
-		canvases:     canvases,
+		boards:        boards,
+		cfg:           cfg,
+		log:           logger,
+		serveBlock:    make(chan struct{}),
+		close:         make(chan struct{}),
+		screenIsOn:    atomic.NewBool(true),
+		webBoardIsOn:  atomic.NewBool(false),
+		webBoardOn:    make(chan struct{}),
+		webBoardOff:   make(chan struct{}),
+		isServing:     make(chan struct{}, 1),
+		jumpTo:        make(chan string, 1),
+		canvases:      canvases,
+		jumping:       atomic.NewBool(false),
+		screenSwitch:  make(chan struct{}, 1),
+		webBoardWasOn: atomic.NewBool(false),
 	}
 
 	// Add an ImgCanvas
@@ -155,9 +168,11 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 		s.log.Info("Screen will be scheduled to turn off", zap.String("turn off", off))
 		_, err := c.AddFunc(off, func() {
 			s.log.Warn("Turning screen off!")
-			s.Lock()
-			s.screenOff <- struct{}{}
-			s.Unlock()
+			if err := s.ScreenOff(context.Background()); err != nil {
+				s.log.Error("failed to turn screen off during ScreenOfftimes",
+					zap.Error(err),
+				)
+			}
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to add cron for screen off times: %w", err)
@@ -167,9 +182,11 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 		s.log.Info("Screen will be scheduled to turn on", zap.String("turn on", on))
 		_, err := c.AddFunc(on, func() {
 			s.log.Warn("Turning screen on!")
-			s.Lock()
-			s.screenOn <- struct{}{}
-			s.Unlock()
+			if err := s.ScreenOn(context.Background()); err != nil {
+				s.log.Error("failed to turn screen on during ScreenOnTimes",
+					zap.Error(err),
+				)
+			}
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to add cron for screen on times: %w", err)
@@ -177,16 +194,104 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 	}
 	c.Start()
 
+	return s, nil
+}
+
+// AddBetweenBoard adds a board to be run between each enabled board
+func (s *SportsMatrix) AddBetweenBoard(board board.Board) {
+	s.betweenBoards = append(s.betweenBoards, board)
+}
+
+// ScreenOn turns the matrix on
+func (s *SportsMatrix) ScreenOn(ctx context.Context) error {
+	// The screenSwitch channel is used just like a sync.Mutex, but with
+	// a timeout. It has a buffer size of 1. This is so we don't try to turn the screen
+	// off or on at the same time and that we don't pool up a bunch of on/off requests
+
+	select {
+	case s.screenSwitch <- struct{}{}:
+	case <-time.After(2 * time.Second):
+		return fmt.Errorf("timed out waiting for switch lock")
+	case <-ctx.Done():
+		return context.Canceled
+	}
+
+	defer func() {
+		<-s.screenSwitch
+	}()
+
+	if changed := s.screenIsOn.CAS(false, true); !changed {
+		s.log.Warn("screen is already on")
+		return nil
+	}
+
+	if s.switchTestSleep {
+		s.switchedOn++
+	}
+	s.log.Warn("screen turning on")
+	select {
+	case s.serveBlock <- struct{}{}:
+	case <-time.After(10 * time.Second):
+		s.log.Error("timed out while trying to unblock serveBlock")
+	}
+
+	if s.webBoardWasOn.Load() {
+		s.startWebBoard(s.serveContext)
+	}
+
+	return nil
+}
+
+// ScreenOff turns the matrix off
+func (s *SportsMatrix) ScreenOff(ctx context.Context) error {
+	select {
+	case s.screenSwitch <- struct{}{}:
+	case <-time.After(2 * time.Second):
+		return fmt.Errorf("timed out waiting for switch lock")
+	case <-ctx.Done():
+		return context.Canceled
+	}
+
+	defer func() {
+		<-s.screenSwitch
+	}()
+
+	if changed := s.screenIsOn.CAS(true, false); !changed {
+		s.log.Warn("screen is already off")
+		return nil
+	}
+
+	s.log.Warn("screen turning off")
+
+	if s.switchTestSleep {
+		s.switchedOff++
+	}
+
+	s.boardCancel()
+	for _, canvas := range s.canvases {
+		_ = canvas.Clear()
+	}
+
+	s.boardCtx, s.boardCancel = context.WithCancel(s.serveContext)
+
+	s.webBoardWasOn.Store(s.webBoardIsOn.Load())
+	s.stopWebBoard()
+
+	return nil
+}
+
+// startServices starts the HTTP/RPC services for the boards and the matrix itself
+func (s *SportsMatrix) startServices(ctx context.Context) error {
 	errChan := s.startHTTP()
 
 	// check for startup error
 	s.log.Debug("checking http server for startup error")
 	select {
 	case <-ctx.Done():
-		return nil, context.Canceled
+		return context.Canceled
 	case err := <-errChan:
 		if err != nil {
-			return nil, err
+			return err
 		}
 	default:
 	}
@@ -202,119 +307,71 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 		}
 	}()
 
-	return s, nil
+	return nil
 }
 
-func (s *SportsMatrix) screenWatcher(ctx context.Context) {
-	webBoardWasOn := false
+func (s *SportsMatrix) startWebBoard(ctx context.Context) {
+	s.webBoardLock.Lock()
+	defer s.webBoardLock.Unlock()
+
+	s.webBoardCtx, s.webBoardCancel = context.WithCancel(ctx)
+
+	tries := 0
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-s.screenOff:
-			changed := s.screenIsOn.CAS(true, false)
-			if !changed {
-				s.log.Warn("Screen is already off")
-				continue
-			}
-			s.log.Warn("screen turning off")
-
-			s.Lock()
-			s.boardCancel()
-			for _, canvas := range s.canvases {
-				_ = canvas.Clear()
-			}
-			s.boardCtx, s.boardCancel = context.WithCancel(ctx)
-			webBoardWasOn = s.webBoardIsOn.Load()
-			s.webBoardOff <- struct{}{}
-			s.Unlock()
-		case <-s.screenOn:
-			changed := s.screenIsOn.CAS(false, true)
-			if changed {
-				s.log.Warn("screen turning on")
-				select {
-				case s.serveBlock <- struct{}{}:
-				default:
-				}
-				if webBoardWasOn {
-					s.webBoardOn <- struct{}{}
-				}
-			} else {
-				s.log.Warn("screen is already on")
-			}
+		default:
 		}
-	}
-}
-
-func (s *SportsMatrix) webBoardWatcher(ctx context.Context) {
-	var webCtx context.Context
-	var webCancel context.CancelFunc
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-s.webBoardOff:
-			if !s.webBoardIsOn.Load() {
-				s.log.Warn("web board is already off")
-				continue
+		if err := s.launchWebBoard(ctx); err != nil {
+			if err == context.Canceled {
+				s.log.Warn("web board context canceled, closing", zap.Error(err))
+				return
 			}
-			webCancel()
-			s.webBoardIsOn.Store(false)
-		case <-s.webBoardOn:
-			if s.webBoardIsOn.Load() {
-				s.log.Warn("web board is already on")
-				continue
-			}
-			webCtx, webCancel = context.WithCancel(ctx)
-			defer webCancel()
-			go func() {
-				tries := 0
-				for {
-					select {
-					case <-webCtx.Done():
-						return
-					default:
-					}
-					if err := s.launchWebBoard(webCtx); err != nil {
-						if err == context.Canceled {
-							s.log.Warn("web board context canceled, closing", zap.Error(err))
-							return
-						}
-						s.log.Error("failed to launch web board", zap.Error(err))
-					}
-					tries++
-					if tries > 10 {
-						s.log.Error("failed too many times to launch web board")
-						return
-					}
-					time.Sleep(5 * time.Second)
-				}
-			}()
+			s.log.Error("failed to launch web board", zap.Error(err))
+		} else {
 			s.webBoardIsOn.Store(true)
+			return
 		}
+		tries++
+		if tries > 10 {
+			s.log.Error("failed too many times to launch web board")
+			return
+		}
+		time.Sleep(5 * time.Second)
 	}
+}
+
+func (s *SportsMatrix) stopWebBoard() {
+	s.webBoardLock.Lock()
+	defer s.webBoardLock.Unlock()
+	if !s.webBoardIsOn.Load() {
+		return
+	}
+	s.webBoardCancel()
+	s.webBoardIsOn.Store(false)
 }
 
 // Serve blocks until the context is canceled
 func (s *SportsMatrix) Serve(ctx context.Context) error {
+	if err := s.startServices(ctx); err != nil {
+		return err
+	}
+
 	defer func() {
 		for _, canvas := range s.canvases {
 			_ = canvas.Close()
 		}
 	}()
 
-	watcherCtx, watcherCancel := context.WithCancel(ctx)
-	defer watcherCancel()
+	s.serveContext = ctx
 
 	s.boardCtx, s.boardCancel = context.WithCancel(ctx)
 	defer s.boardCancel()
 
-	go s.webBoardWatcher(watcherCtx)
 	if s.cfg.LaunchWebBoard {
-		s.webBoardOn <- struct{}{}
+		s.startWebBoard(ctx)
 	}
-
-	go s.screenWatcher(watcherCtx)
 
 	if len(s.boards) < 1 {
 		return fmt.Errorf("no boards configured")
@@ -323,10 +380,27 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 	clearer := sync.Once{}
 
 	// This is really only for testing.
-	select {
-	case s.isServing <- struct{}{}:
-	default:
+	setServing := func() {
+		select {
+		case s.isServing <- struct{}{}:
+		default:
+		}
 	}
+
+	setServingOnce := sync.Once{}
+
+	boardOrder := []string{}
+	for _, b := range s.boards {
+		boardOrder = append(boardOrder, b.Name())
+
+		for _, inb := range s.betweenBoards {
+			boardOrder = append(boardOrder, inb.Name())
+		}
+	}
+
+	s.log.Info("Board Render order",
+		zap.Strings("order", boardOrder),
+	)
 
 	for {
 		select {
@@ -356,114 +430,165 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 			// Block until the screen is turned back on
 			select {
 			case <-ctx.Done():
+				s.log.Warn("context canceled while waiting for screen to come back on")
 				return context.Canceled
 			case <-s.serveBlock:
-				continue
-			case <-s.boardCtx.Done():
+				s.log.Warn("screen is back on")
 				continue
 			}
 		}
+
+		setServingOnce.Do(setServing)
 
 		s.serveLoop(s.boardCtx)
 	}
 }
 
 func (s *SportsMatrix) serveLoop(ctx context.Context) {
-	renderDone := make(chan struct{})
-	jumpTo := ""
-
-LOOP:
+BOARDS:
 	for _, b := range s.boards {
-		s.currentBoardCtx, s.currentBoardCancel = context.WithCancel(ctx)
-
 		select {
 		case <-ctx.Done():
-			s.log.Error("board context was canceled")
 			return
-		case <-s.currentBoardCtx.Done():
-			continue LOOP
-		case j := <-s.jumpTo:
-			jumpTo = j
 		default:
 		}
 
-		if jumpTo != "" {
-			if !strings.EqualFold(b.Name(), jumpTo) {
-				continue LOOP
-			}
-			s.log.Info("jumping to board",
-				zap.String("board", b.Name()),
-			)
+		s.currentBoardCtx, s.currentBoardCancel = context.WithCancel(ctx)
+		if err := s.doBoard(s.currentBoardCtx, b); err != nil {
+			s.currentBoardCancel()
+			continue BOARDS
 		}
 
-		jumpTo = ""
-
-		s.log.Debug("Processing board", zap.String("board", b.Name()))
-
-		if !b.Enabled() {
-			// s.log.Debug("skipping disabled board", zap.String("board", b.Name()))
-			continue LOOP
-		}
-
-		go func() {
-			select {
-			case <-ctx.Done():
-				return
-			case <-s.currentBoardCtx.Done():
-				return
-			case <-renderDone:
-			case <-time.After(5 * time.Minute):
-				s.log.Error("board rendered longer than normal", zap.String("board", b.Name()))
-			}
-		}()
-
-		var wg sync.WaitGroup
-
-	CANVASES:
-		for _, canvas := range s.canvases {
-			if !canvas.Enabled() {
-				// s.log.Warn("canvas is disabled, skipping", zap.String("canvas", canvas.Name()))
-				continue CANVASES
-			}
-
-			if (b.ScrollMode() && !canvas.Scrollable()) || (!b.ScrollMode() && canvas.Scrollable()) {
-				if !canvas.AlwaysRender() {
-					continue CANVASES
+		if b.Enabled() {
+		BETWEEN_BOARDS:
+			for _, between := range s.betweenBoards {
+				select {
+				case <-ctx.Done():
+					return
+				case <-s.currentBoardCtx.Done():
+					s.log.Debug("current board context canceled while rendering in-between boards",
+						zap.String("board", b.Name()),
+						zap.String("in-between", between.Name()),
+					)
+					continue BOARDS
+				default:
+				}
+				s.log.Debug("rendering in-between board",
+					zap.String("board", between.Name()),
+					zap.String("prior board", b.Name()),
+				)
+				if err := s.doBoard(s.currentBoardCtx, between); err != nil {
+					continue BETWEEN_BOARDS
 				}
 			}
-
-			wg.Add(1)
-			go func(canvas board.Canvas) {
-				defer wg.Done()
-				s.log.Debug("rendering board", zap.String("board", b.Name()))
-				if err := b.Render(s.currentBoardCtx, canvas); err != nil {
-					s.log.Error(err.Error())
-				}
-			}(canvas)
 		}
-		done := make(chan struct{})
 
-		go func() {
-			defer close(done)
-			wg.Wait()
-		}()
+		s.currentBoardCancel()
+	}
+}
 
-		s.log.Debug("waiting for canvases to be rendered to")
-		select {
-		case <-ctx.Done():
-			s.log.Warn("context canceled waiting for canvases to render")
-			return
-		case <-s.currentBoardCtx.Done():
-			continue LOOP
-		case <-done:
-		}
-		s.log.Debug("done waiting for canvases")
+func (s *SportsMatrix) doBoard(ctx context.Context, b board.Board) error {
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	default:
+	}
 
+	s.boardLock.Lock()
+	defer s.boardLock.Unlock()
+
+	renderDone := make(chan struct{})
+	defer func() {
 		select {
 		case renderDone <- struct{}{}:
 		default:
 		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		s.log.Error("serve loop context was canceled",
+			zap.String("board", b.Name()),
+		)
+		return context.Canceled
+	case j := <-s.jumpTo:
+		s.currentJump = j
+	default:
 	}
+
+	if s.currentJump != "" {
+		if !strings.EqualFold(b.Name(), s.currentJump) {
+			return nil
+		}
+		s.log.Info("jumping to board",
+			zap.String("board", b.Name()),
+		)
+	}
+
+	s.currentJump = ""
+
+	s.log.Debug("Processing board", zap.String("board", b.Name()))
+
+	if !b.Enabled() {
+		// s.log.Debug("skipping disabled board", zap.String("board", b.Name()))
+		return nil
+	}
+
+	go func() {
+		select {
+		case <-ctx.Done():
+			s.log.Error("serve loop context was canceled",
+				zap.String("board", b.Name()),
+			)
+		case <-renderDone:
+		case <-time.After(5 * time.Minute):
+			s.log.Error("board rendered longer than normal", zap.String("board", b.Name()))
+		}
+	}()
+
+	var wg sync.WaitGroup
+
+CANVASES:
+	for _, canvas := range s.canvases {
+		if !canvas.Enabled() {
+			// s.log.Warn("canvas is disabled, skipping", zap.String("canvas", canvas.Name()))
+			continue CANVASES
+		}
+
+		if (b.ScrollMode() && !canvas.Scrollable()) || (!b.ScrollMode() && canvas.Scrollable()) {
+			if !canvas.AlwaysRender() {
+				continue CANVASES
+			}
+		}
+
+		wg.Add(1)
+		go func(canvas board.Canvas) {
+			defer wg.Done()
+			s.log.Debug("rendering board", zap.String("board", b.Name()))
+			if err := b.Render(s.currentBoardCtx, canvas); err != nil {
+				s.log.Error("board render returned error",
+					zap.Error(err),
+				)
+			}
+		}(canvas)
+	}
+	done := make(chan struct{})
+
+	go func() {
+		defer close(done)
+		wg.Wait()
+	}()
+
+	s.log.Debug("waiting for canvases to be rendered to")
+	select {
+	case <-ctx.Done():
+		s.log.Error("context canceled waiting for canvases to render")
+		return context.Canceled
+	case <-done:
+	}
+	s.log.Debug("done waiting for canvases")
+
+	return nil
 }
 
 // Close closes the matrix
@@ -484,17 +609,32 @@ func (s *SportsMatrix) allDisabled() bool {
 
 // JumpTo jumps to a board with a given name
 func (s *SportsMatrix) JumpTo(ctx context.Context, boardName string) error {
-	for _, b := range s.boards {
+	s.jumpLock.Lock()
+	defer s.jumpLock.Unlock()
+
+	s.jumping.Store(true)
+	defer s.jumping.Store(false)
+
+	boards := append(s.boards, s.betweenBoards...)
+
+	for _, b := range boards {
 		if strings.EqualFold(b.Name(), boardName) {
 			b.Enable()
 
-			select {
-			case s.screenOff <- struct{}{}:
-			case <-ctx.Done():
-				s.log.Error("context canceled while jumping board trying to turn screen off",
+			defer func() {
+				if err := s.ScreenOn(context.Background()); err != nil {
+					s.log.Error("failed to turn screen back on after jump",
+						zap.String("board", b.Name()),
+						zap.Error(err),
+					)
+				}
+			}()
+
+			if err := s.ScreenOff(ctx); err != nil {
+				s.log.Error("error while jumping board trying to turn screen off",
 					zap.String("board", b.Name()),
+					zap.Error(err),
 				)
-				return context.Canceled
 			}
 
 			select {
@@ -506,13 +646,11 @@ func (s *SportsMatrix) JumpTo(ctx context.Context, boardName string) error {
 				return context.Canceled
 			}
 
-			select {
-			case s.screenOn <- struct{}{}:
-			case <-ctx.Done():
-				s.log.Error("failed to turn screen back on after /api/jump",
+			if err := s.ScreenOn(context.Background()); err != nil {
+				s.log.Error("failed to turn screen back on after jump",
 					zap.String("board", b.Name()),
+					zap.Error(err),
 				)
-				return context.Canceled
 			}
 
 			return nil

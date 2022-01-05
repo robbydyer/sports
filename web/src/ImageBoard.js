@@ -52,10 +52,15 @@ class ImageBoard extends React.Component {
         await MatrixPostRet("imageboard.v1.ImageBoard/SetStatus", JSON.stringify(req.toObject()));
         this.getStatus();
     }
+
+    doJump = async () => {
+        await JumpToBoard("img");
+        this.props.doSync();
+    }
     render() {
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Image src={imgimg} style={{ height: '100px', width: 'auto' }} onClick={() => this.handleJump("img")} fluid /></Col></Row>
+                <Row className="text-center"><Col><Image src={imgimg} style={{ height: '100px', width: 'auto' }} onClick={() => this.doJump()} fluid /></Col></Row>
                 <Row className="text-left">
                     <Col>
                         <Form.Switch id="imgenabler" label="Enable/Disable" checked={this.state.status.getEnabled()}
@@ -76,7 +81,7 @@ class ImageBoard extends React.Component {
                 </Row>
                 <Row className="text-left">
                     <Col>
-                        <Button variant="primary" onClick={() => { JumpToBoard("img"); this.updateStatus(); this.props.doSync(); }}>Jump</Button>
+                        <Button variant="primary" onClick={() => { this.doJump(); }}>Jump</Button>
                     </Col>
                 </Row>
             </Container >
