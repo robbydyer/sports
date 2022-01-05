@@ -497,14 +497,6 @@ func (s *SportsMatrix) doBoard(ctx context.Context, b board.Board) error {
 	s.boardLock.Lock()
 	defer s.boardLock.Unlock()
 
-	renderDone := make(chan struct{})
-	defer func() {
-		select {
-		case renderDone <- struct{}{}:
-		default:
-		}
-	}()
-
 	select {
 	case <-ctx.Done():
 		s.log.Error("serve loop context was canceled",
@@ -533,18 +525,6 @@ func (s *SportsMatrix) doBoard(ctx context.Context, b board.Board) error {
 		// s.log.Debug("skipping disabled board", zap.String("board", b.Name()))
 		return nil
 	}
-
-	go func() {
-		select {
-		case <-ctx.Done():
-			s.log.Error("serve loop context was canceled",
-				zap.String("board", b.Name()),
-			)
-		case <-renderDone:
-		case <-time.After(5 * time.Minute):
-			s.log.Error("board rendered longer than normal", zap.String("board", b.Name()))
-		}
-	}()
 
 	var wg sync.WaitGroup
 
