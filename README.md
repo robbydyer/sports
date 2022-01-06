@@ -28,12 +28,21 @@ If you feel so inclined, beer money can be sent to my Venmo (www.venmo.com/u/Rob
 
 ## Current Board Types
 
-- NHL, MLB, NFL, NBA, MLS, NCAA Men's Basketball : Shows upcoming, live, and completed games for the day
-- PGA Tour Leaderboard
+- Sports. Shows upcoming, live, and completed games for the day (or the week for football), as well as news headlines:
+  - NHL
+  - MLB
+  - NFL
+  - NBA
+  - MLS
+  - NCAA Football
+  - NCAA Men's Basketball
+  - English Premiere League
+  - PGA Tour Leaderboards
 - Stock Ticker
-- Stats boards- currently supports MLB and NHL.
+- Weather
+- Player Stats boards- currently supports MLB and NHL.
 - Image Board: Takes a list of directories containg images and displays them. Works with GIF's too!
-- Clock: It's...a clock
+- Clock
 - Sys: Displays basic system info. Currently Mem and CPU usage
 
 ## Installation
