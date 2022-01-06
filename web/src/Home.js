@@ -4,6 +4,7 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
+import Spinner from 'react-bootstrap/Spinner';
 import { MatrixPostRet } from './util.js';
 import { SetAllReq } from './sportsmatrix/sportsmatrix_pb';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -13,6 +14,7 @@ class Home extends React.Component {
         super(props);
         this.state = {
             "status": {},
+            "loading": false,
         };
     }
     async componentDidMount() {
@@ -60,6 +62,19 @@ class Home extends React.Component {
         this.props.doSync();
     }
 
+    restartMatrix = async () => {
+        await MatrixPostRet("matrix.v1.Sportsmatrix/RestartService", '{}');
+        this.setState({
+            "loading": true,
+        })
+        setTimeout(() => {
+            this.props.doSync();
+            this.setState({
+                "loading": false,
+            })
+        }, 10000);
+    }
+
     nextBoard = () => {
         MatrixPostRet("matrix.v1.Sportsmatrix/NextBoard", '{}')
     }
@@ -88,6 +103,20 @@ class Home extends React.Component {
                     </Col>
                     <Col>
                         <Button variant="primary" onClick={this.disableAll}>Disable All</Button>
+                    </Col>
+                </Row>
+                <Row className="text-left">
+                    <Col>
+                        <Button variant="danger" onClick={this.restartMatrix} disabled={this.state.loading}>
+                            {this.state.loading &&
+                                <Spinner
+                                    as="span"
+                                    animation="border"
+                                    size="sm"
+                                    role="status"
+                                />}
+                            Restart Matrix Service
+                        </Button>
                     </Col>
                 </Row>
             </Container >
