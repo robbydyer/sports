@@ -25,7 +25,6 @@ type SportsMatrix struct {
 	isServing          chan struct{}
 	canvases           []board.Canvas
 	boards             []board.Board
-	registeredBoards   []string
 	screenIsOn         *atomic.Bool
 	webBoardIsOn       *atomic.Bool
 	webBoardOn         chan struct{}

@@ -46,7 +46,15 @@ func (s *SportsMatrix) startHTTP() chan error {
 
 	router := mux.NewRouter()
 
+	registeredPaths := make(map[string]struct{})
+
 	register := func(name string, h *board.HTTPHandler) {
+		if _, ok := registeredPaths[h.Path]; ok {
+			// This path already registered
+			return
+		}
+		registeredPaths[h.Path] = struct{}{}
+
 		if !strings.HasPrefix(h.Path, "/api") {
 			h.Path = filepath.Join("/api", h.Path)
 		}
@@ -61,15 +69,9 @@ func (s *SportsMatrix) startHTTP() chan error {
 
 	allBoards := append(s.boards, s.betweenBoards...)
 
-BOARDS:
-	for _, b := range allBoards {
-		for _, registered := range s.registeredBoards {
-			if registered == b.Name() {
-				continue BOARDS
-			}
-		}
-		s.registeredBoards = append(s.registeredBoards, b.Name())
+	rpcPaths := make(map[string]struct{})
 
+	for _, b := range allBoards {
 		s.log.Info("register HTTP/RPC handlers for board",
 			zap.String("board", b.Name()),
 		)
@@ -84,12 +86,14 @@ BOARDS:
 
 		// RPC handlers
 		if path, h := b.GetRPCHandler(); h != nil && path != "" {
-			// path = strings.TrimPrefix(path, "/")
-			s.log.Info("register RPC Handler",
-				zap.String("path", path),
-				zap.String("board", b.Name()),
-			)
-			router.PathPrefix(path).Handler(h)
+			if _, ok := rpcPaths[path]; !ok {
+				s.log.Info("register RPC Handler",
+					zap.String("path", path),
+					zap.String("board", b.Name()),
+				)
+				router.PathPrefix(path).Handler(h)
+				rpcPaths[path] = struct{}{}
+			}
 		}
 	}
 
