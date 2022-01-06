@@ -70,14 +70,13 @@ class Home extends React.Component {
         setTimeout(() => {
             this.props.doSync();
             this.setState({
-                "laoding": false,
+                "loading": false,
             })
         }, 10000);
     }
 
     nextBoard = () => {
         MatrixPostRet("matrix.v1.Sportsmatrix/NextBoard", '{}')
-        this.props.doSync();
     }
 
     render() {
