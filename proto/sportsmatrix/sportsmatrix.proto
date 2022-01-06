@@ -11,6 +11,7 @@ service Sportsmatrix {
        rpc SetAll(SetAllReq) returns (google.protobuf.Empty);
        rpc Jump(JumpReq) returns (google.protobuf.Empty);
        rpc NextBoard(google.protobuf.Empty) returns (google.protobuf.Empty);
+       rpc RestartService(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
 message VersionResp {

@@ -2,9 +2,12 @@ package sportsmatrix
 
 import (
 	"context"
+	"os"
+	"syscall"
 	"time"
 
 	"github.com/twitchtv/twirp"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/robbydyer/sports/internal/proto/sportsmatrix"
@@ -85,5 +88,29 @@ func (s *Server) NextBoard(ctx context.Context, req *emptypb.Empty) (*emptypb.Em
 	s.sm.Lock()
 	defer s.sm.Unlock()
 	s.sm.currentBoardCancel()
+	return &emptypb.Empty{}, nil
+}
+
+// RestartService restarts the sportsmatrix service
+func (s *Server) RestartService(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
+	myPid := os.Getpid()
+	s.sm.log.Warn("restarting sportsmatrix service",
+		zap.Int("pid", myPid),
+	)
+
+	proc, err := os.FindProcess(myPid)
+	if err != nil {
+		return nil, twirp.NewError(twirp.Internal, err.Error())
+	}
+
+	go func() {
+		time.Sleep(2 * time.Second)
+		if err := proc.Signal(syscall.SIGHUP); err != nil {
+			s.sm.log.Error("failed to restart service",
+				zap.Error(err),
+			)
+		}
+	}()
+
 	return &emptypb.Empty{}, nil
 }
