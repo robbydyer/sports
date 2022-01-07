@@ -58,13 +58,7 @@ func SavePng(img image.Image, fileName string) error {
 	if img == nil {
 		return fmt.Errorf("cannot save nil image.Image as PNG")
 	}
-	f, err := os.Create(fileName)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	return png.Encode(f, img)
+	return imaging.Save(img, fileName, imaging.PNGCompressionLevel(png.NoCompression))
 }
 
 // SaveGif ...
@@ -89,7 +83,7 @@ func SavePngAfero(fs afero.Fs, img image.Image, fileName string) error {
 	}
 	defer f.Close()
 
-	return png.Encode(f, img)
+	return imaging.Encode(f, img, imaging.PNG, imaging.PNGCompressionLevel(png.NoCompression))
 }
 
 // SaveGifAfero ...
