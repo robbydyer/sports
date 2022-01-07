@@ -29,7 +29,7 @@ const (
 	diskCacheDir = "/tmp/sportsmatrix_logos/imageboard"
 
 	// Name is the board name
-	Name = "img"
+	Name = "Img"
 )
 
 var preloaderTimeout = (20 * time.Second)
