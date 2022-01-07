@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/disintegration/imaging"
+
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 

@@ -27,7 +27,9 @@ import (
 
 const (
 	diskCacheDir = "/tmp/sportsmatrix_logos/imageboard"
-	Name         = "img"
+
+	// Name is the board name
+	Name = "img"
 )
 
 var preloaderTimeout = (20 * time.Second)
