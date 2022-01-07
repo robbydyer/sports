@@ -9,7 +9,6 @@ import (
 	"time"
 
 	yaml "github.com/ghodss/yaml"
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/atomic"
@@ -590,7 +589,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 	}
 
 	if r.config.ImageConfig != nil {
-		b, err := imageboard.New(afero.NewOsFs(), r.config.ImageConfig, logger)
+		b, err := imageboard.New(r.config.ImageConfig, logger)
 		if err != nil {
 			return boards, err
 		}

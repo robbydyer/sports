@@ -30,6 +30,8 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 	}
 
 	s.board.config.Enabled.Store(req.Status.Enabled)
+	s.board.config.UseDiskCache.Store(req.Status.DiskcacheEnabled)
+	s.board.config.UseMemCache.Store(req.Status.MemcacheEnabled)
 
 	return &emptypb.Empty{}, nil
 }
@@ -38,7 +40,9 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 func (s *Server) GetStatus(ctx context.Context, req *emptypb.Empty) (*pb.StatusResp, error) {
 	return &pb.StatusResp{
 		Status: &pb.Status{
-			Enabled: s.board.config.Enabled.Load(),
+			Enabled:          s.board.config.Enabled.Load(),
+			DiskcacheEnabled: s.board.config.UseDiskCache.Load(),
+			MemcacheEnabled:  s.board.config.UseMemCache.Load(),
 		},
 	}, nil
 }

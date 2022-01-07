@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"image"
 	"image/draw"
-	"image/png"
 	"os"
 	"path/filepath"
 
 	"go.uber.org/zap"
+
+	"github.com/disintegration/imaging"
 
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
@@ -75,7 +76,7 @@ func (l *Logo) ensureLogger() {
 
 // ThumbnailFilename returns the filname for the resized thumbnail to use
 func (l *Logo) ThumbnailFilename(size image.Rectangle) string {
-	return filepath.Join(l.targetDirectory, fmt.Sprintf("%s.png", l.key))
+	return filepath.Join(l.targetDirectory, fmt.Sprintf("%s.tiff", l.key))
 }
 
 // GetThumbnail returns the resized image
@@ -121,8 +122,8 @@ func (l *Logo) GetThumbnail(ctx context.Context, size image.Rectangle) (image.Im
 			go func() {
 				l.ensureLogger()
 				l.log.Info("saving thumbnail logo", zap.String("filename", thumbFile))
-				if err := rgbrender.SavePng(l.thumbnail, thumbFile); err != nil {
-					l.log.Error("failed to save logo PNG", zap.Error(err))
+				if err := imaging.Save(l.thumbnail, thumbFile); err != nil {
+					l.log.Error("failed to save logo to file", zap.Error(err))
 				}
 			}()
 
@@ -132,15 +133,10 @@ func (l *Logo) GetThumbnail(ctx context.Context, size image.Rectangle) (image.Im
 		return nil, err
 	}
 
-	t, err := os.Open(thumbFile)
+	var err error
+	l.thumbnail, err = imaging.Open(thumbFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open logo %s: %w", thumbFile, err)
-	}
-	defer t.Close()
-
-	l.thumbnail, err = png.Decode(t)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode logo %s: %w", thumbFile, err)
 	}
 
 	return l.thumbnail, nil

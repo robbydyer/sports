@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/png"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -117,4 +118,17 @@ func PullPng(ctx context.Context, url string) (image.Image, error) {
 	}
 
 	return png.Decode(resp.Body)
+}
+
+// FileExists ...
+func FileExists(fileName string) (bool, error) {
+	_, err := os.Stat(fileName)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
 }

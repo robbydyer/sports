@@ -6,15 +6,14 @@ import (
 	"image"
 	"image/draw"
 	"image/gif"
-	"image/png"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/disintegration/imaging"
 	"github.com/robfig/cron/v3"
-	"github.com/spf13/afero"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
@@ -23,10 +22,14 @@ import (
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 	"github.com/robbydyer/sports/pkg/twirphelpers"
+	"github.com/robbydyer/sports/pkg/util"
 )
 
 const (
-	diskCacheDir = "/tmp/sportsmatrix/imageboard"
+	diskCacheDir = "/tmp/sportsmatrix_logos/imageboard"
+
+	// Name is the board name
+	Name = "Img"
 )
 
 var preloaderTimeout = (20 * time.Second)
@@ -38,7 +41,6 @@ type Jumper func(ctx context.Context, boardName string) error
 type ImageBoard struct {
 	config         *Config
 	log            *zap.Logger
-	fs             afero.Fs
 	imageCache     map[string]image.Image
 	gifCacheLock   sync.Mutex
 	gifCache       map[string]*gif.GIF
@@ -102,14 +104,10 @@ func (c *Config) SetDefaults() {
 }
 
 // New ...
-func New(fs afero.Fs, config *Config, logger *zap.Logger) (*ImageBoard, error) {
-	if fs == nil {
-		fs = afero.NewOsFs()
-	}
+func New(config *Config, logger *zap.Logger) (*ImageBoard, error) {
 	i := &ImageBoard{
 		config:         config,
 		log:            logger,
-		fs:             fs,
 		imageCache:     make(map[string]image.Image),
 		gifCache:       make(map[string]*gif.GIF),
 		lockers:        make(map[string]*sync.Mutex),
@@ -177,7 +175,7 @@ func (i *ImageBoard) cacheClear() {
 
 // Name ...
 func (i *ImageBoard) Name() string {
-	return "Img"
+	return Name
 }
 
 // Enabled ...
@@ -267,8 +265,7 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	for _, dir := range i.config.Directories {
 		i.log.Debug("walking directory", zap.String("directory", dir))
 
-		err := afero.Walk(i.fs, dir, dirWalker(false))
-		if err != nil {
+		if err := filepath.Walk(dir, dirWalker(false)); err != nil {
 			i.log.Error("failed to prepare image for board", zap.Error(err))
 		}
 	}
@@ -278,7 +275,7 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 			zap.String("directory", dir.Directory),
 		)
 
-		if err := afero.Walk(i.fs, dir.Directory, dirWalker(dir.JumpOnly)); err != nil {
+		if err := filepath.Walk(dir.Directory, dirWalker(dir.JumpOnly)); err != nil {
 			i.log.Error("failed to prepare image walking directory list",
 				zap.Error(err),
 			)
@@ -544,7 +541,11 @@ func cacheKey(path string, bounds image.Rectangle) string {
 
 func (i *ImageBoard) cachedFile(baseName string, bounds image.Rectangle) string {
 	parts := strings.Split(baseName, ".")
-	n := fmt.Sprintf("%s_%dx%d.%s", strings.Join(parts[0:len(parts)-1], "."), bounds.Dx(), bounds.Dy(), parts[len(parts)-1])
+	suffix := "tiff"
+	if strings.EqualFold(parts[len(parts)-1], "gif") {
+		suffix = "gif"
+	}
+	n := fmt.Sprintf("%s_%dx%d.%s", strings.Join(parts[0:len(parts)-1], "."), bounds.Dx(), bounds.Dy(), suffix)
 	return filepath.Join(diskCacheDir, n)
 }
 
@@ -587,9 +588,9 @@ func (i *ImageBoard) getSizedImage(path string, bounds image.Rectangle, preloade
 
 	if i.config.UseDiskCache.Load() {
 		i.log.Debug("checking for cached file", zap.String("file", cachedFile))
-		if exists, err := afero.Exists(i.fs, cachedFile); err == nil && exists {
+		if exists, err := util.FileExists(cachedFile); err == nil && exists {
 			i.log.Debug("cached file exists", zap.String("file", cachedFile))
-			img, err := i.getSizedImageDiskCache(cachedFile)
+			img, err := imaging.Open(cachedFile)
 			if err != nil {
 				return nil, err
 			}
@@ -604,16 +605,11 @@ func (i *ImageBoard) getSizedImage(path string, bounds image.Rectangle, preloade
 		}
 	}
 
-	f, err := i.fs.Open(path)
+	img, err := imaging.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open image: %w", err)
 	}
-	defer f.Close()
 
-	img, _, err := image.Decode(f)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode image: %w", err)
-	}
 	// Resize to matrix bounds
 	i.log.Debug("resizing image",
 		zap.String("name", path),
@@ -623,8 +619,10 @@ func (i *ImageBoard) getSizedImage(path string, bounds image.Rectangle, preloade
 	sizedImg := rgbrender.ResizeImage(img, bounds, 1)
 
 	if i.config.UseDiskCache.Load() {
-		if err := rgbrender.SavePngAfero(i.fs, sizedImg, cachedFile); err != nil {
-			i.log.Error("failed to save resized PNG to disk", zap.Error(err))
+		if err := imaging.Save(sizedImg, cachedFile); err != nil {
+			i.log.Error("failed to save resized image to disk",
+				zap.Error(err),
+			)
 		}
 	}
 
@@ -675,7 +673,7 @@ func (i *ImageBoard) getSizedGIF(ctx context.Context, path string, bounds image.
 
 	if i.config.UseDiskCache.Load() {
 		i.log.Debug("checking for cached file", zap.String("file", cachedFile))
-		if exists, err := afero.Exists(i.fs, cachedFile); err == nil && exists {
+		if exists, err := util.FileExists(cachedFile); err == nil && exists {
 			g, err := i.getSizedGIFDiskCache(cachedFile)
 			if err != nil {
 				return nil, err
@@ -688,7 +686,7 @@ func (i *ImageBoard) getSizedGIF(ctx context.Context, path string, bounds image.
 		}
 	}
 
-	f, err := i.fs.Open(path)
+	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
@@ -715,7 +713,7 @@ func (i *ImageBoard) getSizedGIF(ctx context.Context, path string, bounds image.
 
 	if i.config.UseDiskCache.Load() {
 		i.log.Debug("saving resized GIF", zap.String("filename", cachedFile))
-		if err := rgbrender.SaveGifAfero(i.fs, g, cachedFile); err != nil {
+		if err := rgbrender.SaveGif(g, cachedFile); err != nil {
 			i.log.Error("failed to save resized GIF to disk", zap.Error(err))
 		}
 	}
@@ -728,7 +726,7 @@ func (i *ImageBoard) getSizedGIF(ctx context.Context, path string, bounds image.
 }
 
 func (i *ImageBoard) getSizedGIFDiskCache(path string) (*gif.GIF, error) {
-	f, err := i.fs.Open(path)
+	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open cached GIF image: %w", err)
 	}
@@ -742,40 +740,6 @@ func (i *ImageBoard) getSizedGIFDiskCache(path string) (*gif.GIF, error) {
 	return g, nil
 }
 
-func (i *ImageBoard) getSizedImageDiskCache(path string) (image.Image, error) {
-	f, err := i.fs.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open cached image: %w", err)
-	}
-	defer f.Close()
-
-	if strings.HasSuffix(strings.ToLower(path), ".png") {
-		img, err := png.Decode(f)
-		if err != nil {
-			return nil, err
-		}
-
-		i.log.Debug("got PNG from disk cache",
-			zap.String("path", path),
-			zap.String("size", fmt.Sprintf("%dx%d", img.Bounds().Dx(), img.Bounds().Dy())),
-		)
-
-		return img, nil
-	}
-
-	img, _, err := image.Decode(f)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode image: %w", err)
-	}
-
-	i.log.Debug("got non-png from disk cache",
-		zap.String("path", path),
-		zap.String("size", fmt.Sprintf("%dx%d", img.Bounds().Dx(), img.Bounds().Dy())),
-	)
-
-	return img, nil
-}
-
 // HasPriority ...
 func (i *ImageBoard) HasPriority() bool {
 	return false
@@ -783,7 +747,7 @@ func (i *ImageBoard) HasPriority() bool {
 
 func (i *ImageBoard) validateDirectories() error {
 	for _, dir := range i.config.Directories {
-		exists, err := afero.DirExists(i.fs, dir)
+		exists, err := util.FileExists(dir)
 		if err != nil {
 			return err
 		}

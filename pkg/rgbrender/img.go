@@ -13,7 +13,6 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/nfnt/resize"
-	"github.com/spf13/afero"
 
 	"github.com/robbydyer/sports/pkg/board"
 )
@@ -58,43 +57,12 @@ func SavePng(img image.Image, fileName string) error {
 	if img == nil {
 		return fmt.Errorf("cannot save nil image.Image as PNG")
 	}
-	f, err := os.Create(fileName)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	return png.Encode(f, img)
+	return imaging.Save(img, fileName, imaging.PNGCompressionLevel(png.NoCompression))
 }
 
 // SaveGif ...
 func SaveGif(img *gif.GIF, fileName string) error {
 	f, err := os.Create(fileName)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	return gif.EncodeAll(f, img)
-}
-
-// SavePngAfero ...
-func SavePngAfero(fs afero.Fs, img image.Image, fileName string) error {
-	if img == nil {
-		return fmt.Errorf("cannot save nil image.Image as PNG")
-	}
-	f, err := fs.Create(fileName)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	return png.Encode(f, img)
-}
-
-// SaveGifAfero ...
-func SaveGifAfero(fs afero.Fs, img *gif.GIF, fileName string) error {
-	f, err := fs.Create(fileName)
 	if err != nil {
 		return err
 	}

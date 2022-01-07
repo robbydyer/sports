@@ -104,7 +104,7 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 	defer mtrx.Close()
 
 	for _, b := range boards {
-		if strings.EqualFold(b.Name(), "img") {
+		if strings.EqualFold(b.Name(), imageboard.Name) {
 			if i, ok := b.(*imageboard.ImageBoard); ok {
 				i.SetJumper(mtrx.JumpTo)
 			}
