@@ -192,7 +192,7 @@ func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
 			prevH := h
 			prevM := m
 			h, m, _ = time.Now().Local().Clock()
-			if h > 12 {
+			if h >= 12 {
 				h = h - 12
 				ampm = "PM"
 			} else {
