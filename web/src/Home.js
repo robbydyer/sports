@@ -6,7 +6,7 @@ import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Spinner from 'react-bootstrap/Spinner';
 import { MatrixPostRet } from './util.js';
-import { SetAllReq } from './sportsmatrix/sportsmatrix_pb';
+import { SetAllReq, LiveOnlyReq } from './sportsmatrix/sportsmatrix_pb';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 class Home extends React.Component {
@@ -115,6 +115,9 @@ class Home extends React.Component {
                 <Row>
                     <Col>
                         <Button variant="primary" onClick={() => this.handleLiveOnlySwitch(true)}>Live Games Only</Button>
+                    </Col>
+                    <Col>
+                        <Button variant="primary" onClick={() => this.handleLiveOnlySwitch(false)}>All Games</Button>
                     </Col>
                 </Row>
                 <Row className="text-left">

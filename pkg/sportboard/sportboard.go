@@ -197,6 +197,9 @@ func (c *Config) SetDefaults() {
 	if c.MinimumGridHeight == 0 {
 		c.MinimumGridHeight = 64
 	}
+	if c.LiveOnly == nil {
+		c.LiveOnly = atomic.NewBool(false)
+	}
 	if c.ScrollDelay != "" {
 		d, err := time.ParseDuration(c.ScrollDelay)
 		if err != nil {
@@ -377,6 +380,10 @@ func (s *SportBoard) ScrollMode() bool {
 // SetLiveOnly sets this board to show only live games or not
 func (s *SportBoard) SetLiveOnly(live bool) {
 	s.config.LiveOnly.Store(live)
+	select {
+	case s.cancelBoard <- struct{}{}:
+	default:
+	}
 }
 
 // GridSize returns the column width and row height for a grid layout. 0 is returned for

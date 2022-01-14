@@ -31,6 +31,7 @@ function jsonToStatus(jsonDat) {
     status.setRecordRankEnabled(dat.record_rank_enabled);
     status.setOddsEnabled(dat.odds_enabled);
     status.setUseGradient(dat.use_gradient);
+    status.setLiveOnly(dat.live_only);
 
     return status;
 }
@@ -235,6 +236,12 @@ class Sport extends React.Component {
                     <Col>
                         <Form.Switch id={this.props.sport + "gradient"} label="Logo Gradient" checked={this.state.status.getUseGradient()}
                             onChange={() => { this.state.status.setUseGradient(!this.state.status.getUseGradient()); this.updateStatus(); }} />
+                    </Col>
+                </Row>
+                <Row className="text-left">
+                    <Col>
+                        <Form.Switch id={this.props.sport + "liveonly"} label="Live Games Only" checked={this.state.status.getLiveOnly()}
+                            onChange={() => { this.state.status.setLiveOnly(!this.state.status.getLiveOnly()); this.updateStatus(); }} />
                     </Col>
                 </Row>
                 <Row className="text-left">
