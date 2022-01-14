@@ -97,6 +97,7 @@ type Config struct {
 	OnTimes              []string          `json:"onTimes"`
 	OffTimes             []string          `json:"offTimes"`
 	UseGradient          *atomic.Bool      `json:"useGradient"`
+	LiveOnly             *atomic.Bool      `json:"liveOnly"`
 }
 
 // FontConfig ...
@@ -195,6 +196,9 @@ func (c *Config) SetDefaults() {
 	}
 	if c.MinimumGridHeight == 0 {
 		c.MinimumGridHeight = 64
+	}
+	if c.LiveOnly == nil {
+		c.LiveOnly = atomic.NewBool(false)
 	}
 	if c.ScrollDelay != "" {
 		d, err := time.ParseDuration(c.ScrollDelay)
@@ -373,6 +377,15 @@ func (s *SportBoard) ScrollMode() bool {
 	return s.config.ScrollMode.Load()
 }
 
+// SetLiveOnly sets this board to show only live games or not
+func (s *SportBoard) SetLiveOnly(live bool) {
+	s.config.LiveOnly.Store(live)
+	select {
+	case s.cancelBoard <- struct{}{}:
+	default:
+	}
+}
+
 // GridSize returns the column width and row height for a grid layout. 0 is returned for
 // both if the canvas is too small for a grid.
 func (s *SportBoard) GridSize(bounds image.Rectangle) (int, int) {
@@ -490,11 +503,21 @@ OUTER:
 		}
 		for _, watchTeamID := range s.watchTeams {
 			if home.GetID() == watchTeamID || away.GetID() == watchTeamID {
-				games = append(games, game)
+				isLive, err := game.IsLive()
+				if err != nil {
+					s.log.Error("failed to determine if game is live",
+						zap.Error(err),
+					)
+					continue OUTER
+				}
 
-				// Ensures the daily data for this team has been fetched
-				_ = s.api.TeamRecord(boardCtx, home, s.season())
-				_ = s.api.TeamRecord(boardCtx, away, s.season())
+				if (s.config.LiveOnly.Load() && isLive) || !s.config.LiveOnly.Load() {
+					games = append(games, game)
+
+					// Ensures the daily data for this team has been fetched
+					_ = s.api.TeamRecord(boardCtx, home, s.season())
+					_ = s.api.TeamRecord(boardCtx, away, s.season())
+				}
 				continue OUTER
 			}
 		}
@@ -850,6 +873,7 @@ func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGa
 	if err != nil {
 		return fmt.Errorf("failed to determine if game is live: %w", err)
 	}
+
 	isOver, err := liveGame.IsComplete()
 	if err != nil {
 		return fmt.Errorf("failed to determine if game is complete: %w", err)

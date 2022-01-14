@@ -58,6 +58,9 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 		cancelBoard = true
 		clearDrawCache = true
 	}
+	if s.board.config.LiveOnly.CAS(!req.Status.LiveOnly, req.Status.LiveOnly) {
+		cancelBoard = true
+	}
 
 	if clearDrawCache {
 		s.board.clearDrawCache()
@@ -86,6 +89,7 @@ func (s *Server) GetStatus(ctx context.Context, req *emptypb.Empty) (*pb.StatusR
 			RecordRankEnabled:  s.board.config.ShowRecord.Load(),
 			OddsEnabled:        s.board.config.GamblingSpread.Load(),
 			UseGradient:        s.board.config.UseGradient.Load(),
+			LiveOnly:           s.board.config.LiveOnly.Load(),
 		},
 	}, nil
 }

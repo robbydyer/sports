@@ -122,7 +122,8 @@ proto.sport.v1.Status.toObject = function(includeInstance, msg) {
     tightScrollEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 5, false),
     recordRankEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 6, false),
     oddsEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
-    useGradient: jspb.Message.getBooleanFieldWithDefault(msg, 8, false)
+    useGradient: jspb.Message.getBooleanFieldWithDefault(msg, 8, false),
+    liveOnly: jspb.Message.getBooleanFieldWithDefault(msg, 9, false)
   };
 
   if (includeInstance) {
@@ -190,6 +191,10 @@ proto.sport.v1.Status.deserializeBinaryFromReader = function(msg, reader) {
     case 8:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setUseGradient(value);
+      break;
+    case 9:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setLiveOnly(value);
       break;
     default:
       reader.skipField();
@@ -273,6 +278,13 @@ proto.sport.v1.Status.serializeBinaryToWriter = function(message, writer) {
   if (f) {
     writer.writeBool(
       8,
+      f
+    );
+  }
+  f = message.getLiveOnly();
+  if (f) {
+    writer.writeBool(
+      9,
       f
     );
   }
@@ -420,6 +432,24 @@ proto.sport.v1.Status.prototype.getUseGradient = function() {
  */
 proto.sport.v1.Status.prototype.setUseGradient = function(value) {
   return jspb.Message.setProto3BooleanField(this, 8, value);
+};
+
+
+/**
+ * optional bool live_only = 9;
+ * @return {boolean}
+ */
+proto.sport.v1.Status.prototype.getLiveOnly = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 9, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.sport.v1.Status} returns this
+ */
+proto.sport.v1.Status.prototype.setLiveOnly = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 9, value);
 };
 
 
