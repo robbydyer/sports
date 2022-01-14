@@ -81,6 +81,12 @@ sportsMatrixConfig:
     #non-standard wirings
     #disableHardwarePulsing: false
 
+    # See https://github.com/hzeller/rpi-rgb-led-matrix#types-of-displays
+    #panelType: ""
+
+    # See https://github.com/hzeller/rpi-rgb-led-matrix#types-of-displays
+    #rowAddrType: 0
+
   # Hardware runtime options. Pi 4's and possibly 3's might need to set gpioSlowdown to something
   # higher than the default of 0.
   runtimeOptions:
