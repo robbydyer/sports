@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/robbydyer/sports/internal/proto/sportsmatrix"
+	"github.com/robbydyer/sports/pkg/sportboard"
 )
 
 // Server ...
@@ -111,6 +112,17 @@ func (s *Server) RestartService(ctx context.Context, req *emptypb.Empty) (*empty
 			)
 		}
 	}()
+
+	return &emptypb.Empty{}, nil
+}
+
+// SetLiveOnly sets the LiveOnly setting for SportBoards
+func (s *Server) SetLiveOnly(ctx context.Context, req *pb.LiveOnlyReq) (*emptypb.Empty, error) {
+	for _, board := range s.sm.boards {
+		if sportBoard, ok := board.(*sportboard.SportBoard); ok {
+			sportBoard.SetLiveOnly(req.LiveOnly)
+		}
+	}
 
 	return &emptypb.Empty{}, nil
 }

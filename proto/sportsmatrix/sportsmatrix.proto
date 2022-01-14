@@ -12,6 +12,7 @@ service Sportsmatrix {
        rpc Jump(JumpReq) returns (google.protobuf.Empty);
        rpc NextBoard(google.protobuf.Empty) returns (google.protobuf.Empty);
        rpc RestartService(google.protobuf.Empty) returns (google.protobuf.Empty);
+       rpc SetLiveOnly(LiveOnlyReq) returns (google.protobuf.Empty);
 }
 
 message VersionResp {
@@ -29,4 +30,8 @@ message SetAllReq {
 
 message JumpReq {
     string board = 1;
+}
+
+message LiveOnlyReq {
+    bool live_only = 1;
 }

@@ -49,6 +49,13 @@ class Home extends React.Component {
         }))
     }
 
+    handleLiveOnlySwitch = async (switchState) => {
+        var req = new LiveOnlyReq();
+        req.setLiveOnly(switchState)
+        await MatrixPostRet("matrix.v1.Sportsmatrix/SetLiveOnly", JSON.stringify(req.toObject()));
+        this.props.doSync();
+    }
+
     disableAll = async () => {
         var req = new SetAllReq();
         req.setEnabled(false)
@@ -103,6 +110,11 @@ class Home extends React.Component {
                     </Col>
                     <Col>
                         <Button variant="primary" onClick={this.disableAll}>Disable All</Button>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col>
+                        <Button variant="primary" onClick={() => this.handleLiveOnlySwitch(true)}>Live Games Only</Button>
                     </Col>
                 </Row>
                 <Row className="text-left">
