@@ -38,6 +38,7 @@ void set_inverse_colors(struct RGBLedMatrixOptions *o, int inverse_colors) {
 
 */
 import "C"
+
 import (
 	"fmt"
 	"image/color"
@@ -118,6 +119,13 @@ type HardwareConfig struct {
 	// to this matrix. A semicolon-separated list of pixel-mappers with optional
 	// parameter. See https://github.com/hzeller/rpi-rgb-led-matrix#panel-arrangement
 	PixelMapperConfig string `json:"pixelMapperConfig"`
+
+	// PanelType. Defaults to "". See https://github.com/hzeller/rpi-rgb-led-matrix#types-of-displays
+	PanelType string `json:"panelType"`
+
+	// RowAddr Type Adressing of rows; in particular panels with only AB address lines might indicate that this is needed.
+	// See https://github.com/hzeller/rpi-rgb-led-matrix#types-of-displays for more info
+	RowAddrType int `json:"rowAddrType"`
 }
 
 func (c *HardwareConfig) geometry() (width, height int) {
@@ -136,6 +144,11 @@ func (c *HardwareConfig) toC() *C.struct_RGBLedMatrixOptions {
 	o.scan_mode = C.int(c.ScanMode)
 	o.hardware_mapping = C.CString(c.HardwareMapping)
 	o.limit_refresh_rate_hz = C.int(c.LimitRefreshRateHz)
+	o.row_address_type = C.int(c.RowAddrType)
+
+	if c.PanelType != "" {
+		o.panel_type = C.CString(c.PanelType)
+	}
 
 	if c.PixelMapperConfig != "" {
 		o.pixel_mapper_config = C.CString(c.PixelMapperConfig)
