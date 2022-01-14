@@ -140,6 +140,8 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 		webBoardWasOn: atomic.NewBool(false),
 	}
 
+	s.boardCtx, s.boardCancel = context.WithCancel(context.Background())
+
 	// Add an ImgCanvas
 	if s.cfg.WebBoardWidth == 0 {
 		if s.cfg.WebBoardHeight != 0 {
