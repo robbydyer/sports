@@ -57,6 +57,9 @@ sportsMatrixConfig:
     # Lower number uses less CPU and increases refresh rate, but limits colors
     #pwmBits: 11
 
+    # The lower bits can be time-dithered for higher refresh rate.
+    #pwmDitherBits: 0
+
     # High number gives more accurate color, but can reduce frame rate
     #pwmlsbNanoseconds: 130
 
@@ -86,6 +89,9 @@ sportsMatrixConfig:
 
     # See https://github.com/hzeller/rpi-rgb-led-matrix#types-of-displays
     #rowAddrType: 0
+
+    # Type of multiplexing. 0 = direct, 1 = stripe, 2 = checker,...
+    #multiplexing: 0
 
   # Hardware runtime options. Pi 4's and possibly 3's might need to set gpioSlowdown to something
   # higher than the default of 0.
