@@ -88,6 +88,10 @@ type HardwareConfig struct {
 	// limited comic-colors, 1 might be sufficient. Lower require less CPU and
 	// increases refresh-rate.
 	PWMBits int `json:"pwmBits"`
+
+	// The lower bits can be time-dithered for higher refresh rate.
+	PWMDitherBits int `json:"pwmDitherBits"`
+
 	// Change the base time-unit for the on-time in the lowest significant bit in
 	// nanoseconds.  Higher numbers provide better quality (more accurate color,
 	// less ghosting), but have a negative impact on the frame rate.
@@ -115,6 +119,9 @@ type HardwareConfig struct {
 	// to keep a constant refresh rate. <= 0 for no limit.
 	LimitRefreshRateHz int `json:"limitRefreshRateHz"`
 
+	// Type of multiplexing. 0 = direct, 1 = stripe, 2 = checker,...
+	Multiplexing int `json:"multiplexing"`
+
 	// A string describing a sequence of pixel mappers that should be applied
 	// to this matrix. A semicolon-separated list of pixel-mappers with optional
 	// parameter. See https://github.com/hzeller/rpi-rgb-led-matrix#panel-arrangement
@@ -139,12 +146,14 @@ func (c *HardwareConfig) toC() *C.struct_RGBLedMatrixOptions {
 	o.chain_length = C.int(c.ChainLength)
 	o.parallel = C.int(c.Parallel)
 	o.pwm_bits = C.int(c.PWMBits)
+	o.pwm_dither_bits = C.int(c.PWMDitherBits)
 	o.pwm_lsb_nanoseconds = C.int(c.PWMLSBNanoseconds)
 	o.brightness = C.int(c.Brightness)
 	o.scan_mode = C.int(c.ScanMode)
 	o.hardware_mapping = C.CString(c.HardwareMapping)
 	o.limit_refresh_rate_hz = C.int(c.LimitRefreshRateHz)
 	o.row_address_type = C.int(c.RowAddrType)
+	o.multiplexing = C.int(c.Multiplexing)
 
 	if c.PanelType != "" {
 		o.panel_type = C.CString(c.PanelType)
