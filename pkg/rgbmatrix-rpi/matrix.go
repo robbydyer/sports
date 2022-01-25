@@ -43,6 +43,7 @@ import (
 	"fmt"
 	"image/color"
 	"os"
+	"strings"
 	"sync"
 	"unsafe"
 
@@ -136,7 +137,30 @@ type HardwareConfig struct {
 }
 
 func (c *HardwareConfig) geometry() (width, height int) {
-	return c.Cols * c.ChainLength, c.Rows * c.Parallel
+	col := 0
+	row := 0
+	if strings.EqualFold(c.PixelMapperConfig, "u-mapper") {
+		if c.ChainLength > 1 {
+			col = c.Cols * (c.ChainLength / 2)
+			row = c.Rows * 2 * c.Parallel
+		} else {
+			col = c.Cols
+			row = c.Rows * c.Parallel
+		}
+	} else if strings.EqualFold(c.PixelMapperConfig, "v-mapper") {
+		if c.ChainLength > 1 {
+			col = c.Cols * c.Parallel * 2
+			row = c.Rows * (c.ChainLength / 2)
+		} else {
+			col = c.Cols * c.Parallel
+			row = c.Rows
+		}
+	} else {
+		col = c.Cols * c.ChainLength
+		row = c.Rows * c.Parallel
+	}
+
+	return col, row
 }
 
 func (c *HardwareConfig) toC() *C.struct_RGBLedMatrixOptions {
