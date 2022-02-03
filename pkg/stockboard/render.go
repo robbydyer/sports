@@ -21,12 +21,18 @@ var assets embed.FS
 func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board.Canvas) error {
 	canvasBounds := rgbrender.ZeroedBounds(canvas.Bounds())
 
+	maxChartWidth := canvasBounds.Dx() / 2
+
+	if s.config.MaxChartWidthRatio > 0 {
+		maxChartWidth = int(math.Ceil(float64(canvasBounds.Dx()) * s.config.MaxChartWidthRatio))
+	}
+
+	chartWidth, _ := s.chartWidth(maxChartWidth)
+
 	var chartBounds image.Rectangle
 	var symbolBounds image.Rectangle
 	var priceBounds image.Rectangle
-	var chartWidth int
 	if s.config.UseLogos.Load() {
-		chartWidth, _ = s.chartWidth(canvasBounds.Dx() / 2)
 		chartBounds = rgbrender.ZeroedBounds(
 			image.Rect(
 				canvasBounds.Max.X/2,
@@ -47,10 +53,29 @@ func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board
 				canvasBounds.Max.X,
 				canvasBounds.Max.Y/2))
 	} else {
-		chartWidth, _ = s.chartWidth(canvasBounds.Dx())
-		chartBounds = rgbrender.ZeroedBounds(image.Rect(canvasBounds.Min.X, canvasBounds.Max.Y/2, chartWidth+canvasBounds.Min.X, canvasBounds.Max.Y))
-		symbolBounds = rgbrender.ZeroedBounds(image.Rect(canvasBounds.Min.X, canvasBounds.Min.Y, canvasBounds.Max.X/2, canvasBounds.Max.Y/2))
-		priceBounds = rgbrender.ZeroedBounds(image.Rect(canvasBounds.Max.X/2, canvasBounds.Min.Y, canvasBounds.Max.X, canvasBounds.Max.Y/2))
+		chartBounds = rgbrender.ZeroedBounds(
+			image.Rect(
+				canvasBounds.Min.X,
+				canvasBounds.Max.Y/2,
+				chartWidth+canvasBounds.Min.X,
+				canvasBounds.Max.Y,
+			),
+		)
+		symbolBounds = rgbrender.ZeroedBounds(
+			image.Rect(
+				canvasBounds.Min.X,
+				canvasBounds.Min.Y,
+				canvasBounds.Max.X/2,
+				canvasBounds.Max.Y/2,
+			),
+		)
+		priceBounds = rgbrender.ZeroedBounds(
+			image.Rect(canvasBounds.Max.X/2,
+				canvasBounds.Min.Y,
+				canvasBounds.Max.X,
+				canvasBounds.Max.Y/2,
+			),
+		)
 	}
 
 	var chartPrices []*Price
@@ -104,10 +129,12 @@ func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board
 
 	writeSymbol := func() {
 		if err := symbolWriter.WriteAligned(
-			rgbrender.CenterCenter,
+			rgbrender.RightCenter,
 			canvas,
 			symbolBounds,
-			[]string{symbol},
+			[]string{
+				fmt.Sprintf("%s  ", symbol),
+			},
 			color.White,
 		); err != nil {
 			s.log.Error("failed to write symbol",
@@ -132,12 +159,12 @@ func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board
 	}
 
 	if err := priceWriter.WriteAligned(
-		rgbrender.RightCenter,
+		rgbrender.LeftCenter,
 		canvas,
 		priceBounds,
 		[]string{
-			fmt.Sprintf("%.2f ", stock.Price),
-			fmt.Sprintf("%.2f%% ", stock.Change),
+			fmt.Sprintf("  %.2f ", stock.Price),
+			fmt.Sprintf("  %.2f%% ", stock.Change),
 		},
 		clr,
 	); err != nil {

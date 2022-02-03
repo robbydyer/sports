@@ -63,6 +63,7 @@ type Config struct {
 	OnTimes            []string     `json:"onTimes"`
 	OffTimes           []string     `json:"offTimes"`
 	UseLogos           *atomic.Bool `json:"useLogos"`
+	MaxChartWidthRatio float64      `json:"maxChartWidthRatio"`
 }
 
 // Price represents a price of a stock at a particular time
@@ -133,6 +134,10 @@ func (c *Config) SetDefaults() {
 
 	if c.UseLogos == nil {
 		c.UseLogos = atomic.NewBool(false)
+	}
+
+	if c.MaxChartWidthRatio == 0 || c.MaxChartWidthRatio > 1 {
+		c.MaxChartWidthRatio = 1
 	}
 }
 
