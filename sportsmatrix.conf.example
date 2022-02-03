@@ -893,6 +893,11 @@ pga:
 stocksConfig:
   enabled: false
 
+  # This is a ratio of board width to maximum chart size. This is actually calculated based on 1/2
+  # the total width. i.e. A ratio of 0.25 will be (0.25 * 0.5 * total_width)
+  # Set this to a smaller ratio if you want to reduce the size of the chart, i.e. 0.5
+  maxChartWidthRatio: 1
+
   # Set to true to show company logos for stocks. See pkg/stockboard/assets/logos to see which
   # symbols are supported (mostly S&P500)
   useLogos: false
