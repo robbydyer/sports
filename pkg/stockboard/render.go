@@ -24,7 +24,7 @@ func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board
 	maxChartWidth := canvasBounds.Dx() / 2
 
 	if s.config.MaxChartWidthRatio > 0 {
-		maxChartWidth = int(math.Ceil(float64(canvasBounds.Dx()) * s.config.MaxChartWidthRatio))
+		maxChartWidth = int(math.Ceil(float64(canvasBounds.Dx()) * 0.5 * s.config.MaxChartWidthRatio))
 	}
 
 	chartWidth, _ := s.chartWidth(maxChartWidth)
