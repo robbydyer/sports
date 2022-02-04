@@ -984,3 +984,45 @@ weatherConfig:
   #- 00 18 * * *
   #offTimes:
   #- 00 02 * * *
+
+# Formula 1 Racing
+f1Config:
+  enabled: false
+
+  scrollMode: true
+
+  # Set the spacing between the tickers in scroll mode.
+  tightScrollPadding: 10
+
+  # Delay between screen draws in scroll mode. Default is 50ms.
+  #scrollDelay: "50ms"
+
+  # Delay between each screen in non-scroll mode
+  boardDelay: "10s"
+
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *
+
+# IndyCar Racing
+irlConfig:
+  enabled: false
+
+  scrollMode: true
+
+  # Set the spacing between the tickers in scroll mode.
+  tightScrollPadding: 10
+
+  # Delay between screen draws in scroll mode. Default is 50ms.
+  #scrollDelay: "50ms"
+
+  # Delay between each screen in non-scroll mode
+  boardDelay: "10s"
+
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *

@@ -7,6 +7,7 @@ import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Image from 'react-bootstrap/Image';
 import f1logo from './f1.png';
+import irllogo from './irl.png';
 import { MatrixPostRet, JumpToBoard } from './util';
 import { SetStatusReq, Status } from './racingboard/racingboard_pb';
 
@@ -62,6 +63,8 @@ class Sport extends React.Component {
     logosrc() {
         if (this.props.sport === "f1") {
             return f1logo
+        } else if (this.props.sport === "irl") {
+            return irllogo
         }
     }
     render() {

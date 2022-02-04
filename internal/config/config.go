@@ -31,4 +31,5 @@ type Config struct {
 	StocksConfig       *stockboard.Config   `json:"stocksConfig"`
 	WeatherConfig      *weatherboard.Config `json:"weatherConfig"`
 	F1Config           *racingboard.Config  `json:"f1Config"`
+	IRLConfig          *racingboard.Config  `json:"irlConfig"`
 }

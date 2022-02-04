@@ -56,6 +56,7 @@ func (s *RacingBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		if err != nil {
 			return err
 		}
+		scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
 		scrollCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
 	}
 

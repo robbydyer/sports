@@ -321,6 +321,13 @@ func (r *rootArgs) setConfigDefaults() {
 		}
 	}
 	r.config.F1Config.SetDefaults()
+
+	if r.config.IRLConfig == nil {
+		r.config.IRLConfig = &racingboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
+	r.config.IRLConfig.SetDefaults()
 }
 
 func (r *rootArgs) getRGBMatrix(logger *zap.Logger) (rgb.Matrix, error) {
@@ -667,11 +674,23 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 	}
 
 	if r.config.F1Config != nil {
-		api, err := espnracing.New(espnracing.GetLeaguer("f1"), logger)
+		api, err := espnracing.New(&espnracing.F1{}, logger)
 		if err != nil {
 			return nil, err
 		}
 		b, err := racingboard.New(api, logger, r.config.F1Config)
+		if err != nil {
+			return nil, err
+		}
+		boards = append(boards, b)
+	}
+
+	if r.config.IRLConfig != nil {
+		api, err := espnracing.New(&espnracing.IRL{}, logger)
+		if err != nil {
+			return nil, err
+		}
+		b, err := racingboard.New(api, logger, r.config.IRLConfig)
 		if err != nil {
 			return nil, err
 		}
