@@ -8,11 +8,12 @@ import (
 	"image/draw"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
-	"go.uber.org/zap"
 )
 
 // Render ...
@@ -158,7 +159,7 @@ func (s *RacingBoard) renderEvent(ctx context.Context, canvas board.Canvas, even
 		txt,
 		color.White,
 	); err != nil {
-		return err
+		return fmt.Errorf("failed to write schedule: %w", err)
 	}
 
 	return nil

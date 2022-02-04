@@ -61,6 +61,7 @@ type API interface {
 	HTTPPathPrefix() string
 }
 
+// Event ...
 type Event struct {
 	Date time.Time
 	Name string
@@ -138,6 +139,10 @@ func New(api API, logger *zap.Logger, config *Config) (*RacingBoard, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to add cron for sportboard: %w", err)
 		}
+	}
+
+	if _, err := c.AddFunc("0 4 * * *", s.cacheClear); err != nil {
+		return nil, err
 	}
 
 	c.Start()

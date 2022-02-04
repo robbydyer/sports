@@ -3,12 +3,14 @@ package racingboard
 import (
 	"context"
 
-	pb "github.com/robbydyer/sports/internal/proto/racingboard"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/emptypb"
+
+	pb "github.com/robbydyer/sports/internal/proto/racingboard"
 )
 
+// Server ...
 type Server struct {
 	board *RacingBoard
 }

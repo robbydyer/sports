@@ -10,8 +10,9 @@ import (
 	"path/filepath"
 
 	"github.com/disintegration/imaging"
-	"github.com/robbydyer/sports/pkg/logo"
 	"go.uber.org/zap"
+
+	"github.com/robbydyer/sports/pkg/logo"
 )
 
 //go:embed assets
