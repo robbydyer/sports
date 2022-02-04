@@ -37,6 +37,7 @@ class App extends React.Component {
           <Route path="/board" exact component={Board} />
           <Route path="/docs" exact component={() => <SwaggerUI spec={swag} />} />
           <Route path="/f1" exact component={() => <Racing sport="f1" id="f1" key="f1" />} />
+          <Route path="/irl" exact component={() => <Racing sport="irl" id="irl" key="irl" />} />
         </Router>
         <hr />
       </>

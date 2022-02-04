@@ -38,6 +38,8 @@ If you feel so inclined, beer money can be sent to my Venmo (www.venmo.com/u/Rob
   - NCAA Men's Basketball
   - English Premiere League
   - PGA Tour Leaderboards
+- Racing. Currently just shows upcoming event schedule
+  - F1
 - Stock Ticker
 - Weather
 - Player Stats boards- currently supports MLB and NHL.

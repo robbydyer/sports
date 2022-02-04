@@ -106,6 +106,11 @@ func New(api API, logger *zap.Logger, config *Config) (*RacingBoard, error) {
 		log:    logger,
 	}
 
+	s.log.Info("Register Racing Board",
+		zap.String("league", api.LeagueShortName()),
+		zap.String("board name", s.Name()),
+	)
+
 	if s.config.boardDelay < 10*time.Second {
 		s.log.Warn("cannot set sportboard delay below 10 sec")
 		s.config.boardDelay = 10 * time.Second

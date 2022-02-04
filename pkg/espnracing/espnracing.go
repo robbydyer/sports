@@ -71,7 +71,7 @@ func (a *API) LeagueShortName() string {
 
 // HTTPPathPrefix ...
 func (a *API) HTTPPathPrefix() string {
-	return "f1"
+	return a.leaguer.HTTPPathPrefix()
 }
 
 func (a *API) logoSourceGetter(ctx context.Context) (image.Image, error) {

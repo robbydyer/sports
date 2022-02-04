@@ -45,7 +45,7 @@ class All extends React.Component {
                 </Card>
             </Col>
         );
-        var racing = ["f1"].map((sport) =>
+        var racing = ["f1", "irl"].map((sport) =>
             <Col lg="auto" style={styles.col}>
                 <Card style={{ width: { card_border } }}>
                     <Racing sport={sport} id={sport} key={sport + this.state.sync} doSync={this.doSync} />
