@@ -19,11 +19,13 @@ import (
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/clock"
 	"github.com/robbydyer/sports/pkg/espnboard"
+	"github.com/robbydyer/sports/pkg/espnracing"
 	"github.com/robbydyer/sports/pkg/imageboard"
 	"github.com/robbydyer/sports/pkg/mlb"
 	"github.com/robbydyer/sports/pkg/nhl"
 	"github.com/robbydyer/sports/pkg/openweather"
 	"github.com/robbydyer/sports/pkg/pga"
+	"github.com/robbydyer/sports/pkg/racingboard"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
@@ -312,6 +314,13 @@ func (r *rootArgs) setConfigDefaults() {
 		}
 	}
 	r.config.WeatherConfig.SetDefaults()
+
+	if r.config.F1Config == nil {
+		r.config.F1Config = &racingboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
+	r.config.F1Config.SetDefaults()
 }
 
 func (r *rootArgs) getRGBMatrix(logger *zap.Logger) (rgb.Matrix, error) {
@@ -655,6 +664,18 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			}
 			boards = append(boards, b)
 		}
+	}
+
+	if r.config.F1Config != nil {
+		api, err := espnracing.New(espnracing.GetLeaguer("f1"), logger)
+		if err != nil {
+			return nil, err
+		}
+		b, err := racingboard.New(api, logger, r.config.F1Config)
+		if err != nil {
+			return nil, err
+		}
+		boards = append(boards, b)
 	}
 
 	return boards, nil

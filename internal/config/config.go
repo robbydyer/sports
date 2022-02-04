@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/robbydyer/sports/pkg/clock"
 	"github.com/robbydyer/sports/pkg/imageboard"
+	"github.com/robbydyer/sports/pkg/racingboard"
 	"github.com/robbydyer/sports/pkg/sportboard"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
 	"github.com/robbydyer/sports/pkg/statboard"
@@ -29,4 +30,5 @@ type Config struct {
 	SportsMatrixConfig *sportsmatrix.Config `json:"sportsMatrixConfig,omitempty"`
 	StocksConfig       *stockboard.Config   `json:"stocksConfig"`
 	WeatherConfig      *weatherboard.Config `json:"weatherConfig"`
+	F1Config           *racingboard.Config  `json:"f1Config"`
 }

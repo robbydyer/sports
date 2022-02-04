@@ -4,22 +4,34 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/robfig/cron/v3"
+	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
+	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/logo"
 	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/pkg/rgbrender"
+	"github.com/robbydyer/sports/pkg/twirphelpers"
 	"github.com/robbydyer/sports/pkg/util"
+
+	pb "github.com/robbydyer/sports/internal/proto/racingboard"
 )
 
 // RacingBoard implements board.Board
 type RacingBoard struct {
-	config *Config
-	api    API
-	log    *zap.Logger
+	config         *Config
+	api            API
+	log            *zap.Logger
+	scheduleWriter *rgbrender.TextWriter
+	leagueLogo     *logo.Logo
+	events         []*Event
+	rpcServer      pb.TwirpServer
 }
 
 // Todayer is a func that returns a string representing a date
@@ -29,21 +41,24 @@ type Todayer func() []time.Time
 
 // Config ...
 type Config struct {
-	TodayFunc   Todayer
-	boardDelay  time.Duration
-	scrollDelay time.Duration
-	Enabled     *atomic.Bool `json:"enabled"`
-	BoardDelay  string       `json:"boardDelay"`
-	ScrollMode  *atomic.Bool `json:"scrollMode"`
-	ScrollDelay string       `json:"scrollDelay"`
-	OnTimes     []string     `json:"onTimes"`
-	OffTimes    []string     `json:"offTimes"`
+	TodayFunc          Todayer
+	boardDelay         time.Duration
+	scrollDelay        time.Duration
+	Enabled            *atomic.Bool `json:"enabled"`
+	BoardDelay         string       `json:"boardDelay"`
+	ScrollMode         *atomic.Bool `json:"scrollMode"`
+	ScrollDelay        string       `json:"scrollDelay"`
+	OnTimes            []string     `json:"onTimes"`
+	OffTimes           []string     `json:"offTimes"`
+	TightScrollPadding int          `json:"tightScrollPadding"`
 }
 
 // API ...
 type API interface {
-	GetLogo(ctx context.Context) (*logo.Logo, error)
+	LeagueShortName() string
+	GetLogo(ctx context.Context, bounds image.Rectangle) (*logo.Logo, error)
 	GetScheduledEvents(ctx context.Context) ([]*Event, error)
+	HTTPPathPrefix() string
 }
 
 type Event struct {
@@ -81,7 +96,7 @@ func (c *Config) SetDefaults() {
 }
 
 // New ...
-func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logger, config *Config) (*RacingBoard, error) {
+func New(api API, logger *zap.Logger, config *Config) (*RacingBoard, error) {
 	s := &RacingBoard{
 		config: config,
 		api:    api,
@@ -127,7 +142,26 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 
 	c.Start()
 
+	svr := &Server{
+		board: s,
+	}
+	prfx := s.api.HTTPPathPrefix()
+	if !strings.HasPrefix(prfx, "/") {
+		prfx = fmt.Sprintf("/%s", prfx)
+	}
+	s.rpcServer = pb.NewRacingServer(svr,
+		twirp.WithServerPathPrefix(prfx),
+		twirp.ChainHooks(
+			twirphelpers.GetDefaultHooks(s, s.log),
+		),
+	)
+
 	return s, nil
+}
+
+func (s *RacingBoard) cacheClear() {
+	s.events = []*Event{}
+	s.leagueLogo = nil
 }
 
 // Name ...
@@ -163,4 +197,12 @@ func (s *RacingBoard) ScrollMode() bool {
 // HasPriority ...
 func (s *RacingBoard) HasPriority() bool {
 	return false
+}
+
+func (s *RacingBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
+	return nil, nil
+}
+
+func (s *RacingBoard) GetRPCHandler() (string, http.Handler) {
+	return "", nil
 }

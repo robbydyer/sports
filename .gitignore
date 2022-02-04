@@ -17,3 +17,8 @@ sportsmatrix.arm*
 web/src/config.json
 web/build
 docs-base/
+.dockerconfig/
+*.deb
+*.build
+matrix.conf
+release
