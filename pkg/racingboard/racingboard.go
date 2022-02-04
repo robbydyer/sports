@@ -166,7 +166,7 @@ func (s *RacingBoard) cacheClear() {
 
 // Name ...
 func (s *RacingBoard) Name() string {
-	return "RacingBoard"
+	return s.api.HTTPPathPrefix()
 }
 
 // Enabled ...
@@ -199,10 +199,12 @@ func (s *RacingBoard) HasPriority() bool {
 	return false
 }
 
+// GetHTTPHandlers ...
 func (s *RacingBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 	return nil, nil
 }
 
+// GetRPCHandler ...
 func (s *RacingBoard) GetRPCHandler() (string, http.Handler) {
-	return "", nil
+	return s.rpcServer.PathPrefix(), s.rpcServer
 }

@@ -6,6 +6,7 @@ import Col from 'react-bootstrap/Col';
 import Card from 'react-bootstrap/Card';
 import Home from './Home.js';
 import Sport from './Sport.js';
+import Racing from './Racing.js';
 import ImageBoard from './ImageBoard.js';
 import BasicBoard from './BasicBoard';
 import Weather from './Weather.js';
@@ -44,6 +45,13 @@ class All extends React.Component {
                 </Card>
             </Col>
         );
+        var racing = ["f1"].map((sport) =>
+            <Col lg="auto" style={styles.col}>
+                <Card style={{ width: { card_border } }}>
+                    <Racing sport={sport} id={sport} key={sport + this.state.sync} doSync={this.doSync} />
+                </Card>
+            </Col>
+        );
         return (
             <Container fluid="xl">
                 <Row className="justify-content-md-space-between" sm={1} lg={2} xl={3} style={styles.row}>
@@ -73,6 +81,7 @@ class All extends React.Component {
                             <BasicBoard id="stocks" name="stocks" doSync={this.doSync} key={"stocks" + this.state.sync} />
                         </Card>
                     </Col>
+                    {racing}
                     <Col lg="auto" style={styles.col}>
                         <Card style={{ width: { card_border } }}>
                             <BasicBoard id="clock" name="clock" doSync={this.doSync} key={"clock" + this.state.sync} />

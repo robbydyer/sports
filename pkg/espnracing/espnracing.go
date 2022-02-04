@@ -19,6 +19,7 @@ var assets embed.FS
 
 const cacheDir = "/tmp/sportsmatrix/racing"
 
+// API ...
 type API struct {
 	myLogo   *image.Image
 	leaguer  Leaguer
@@ -26,6 +27,7 @@ type API struct {
 	log      *zap.Logger
 }
 
+// Leaguer ...
 type Leaguer interface {
 	ShortName() string
 	LogoSourceURL() string
@@ -34,6 +36,7 @@ type Leaguer interface {
 	LogoAsset() string
 }
 
+// New ...
 func New(leaguer Leaguer, log *zap.Logger) (*API, error) {
 	return &API{
 		leaguer: leaguer,
@@ -63,6 +66,11 @@ func (a *API) GetLogo(ctx context.Context, matrixBounds image.Rectangle) (*logo.
 // LeagueShortName ...
 func (a *API) LeagueShortName() string {
 	return a.leaguer.ShortName()
+}
+
+// HTTPPathPrefix ...
+func (a *API) HTTPPathPrefix() string {
+	return "f1"
 }
 
 func (a *API) logoSourceGetter(ctx context.Context) (image.Image, error) {
