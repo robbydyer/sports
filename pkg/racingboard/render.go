@@ -129,6 +129,8 @@ func (s *RacingBoard) renderEvent(ctx context.Context, canvas board.Canvas, even
 	pt = image.Pt(gradient.Bounds().Min.X, gradient.Bounds().Min.Y)
 	draw.Draw(canvas, gradient.Bounds(), gradient, pt, draw.Over)
 
+	event.Date = event.Date.Local()
+
 	tz, _ := event.Date.Zone()
 	txt := []string{
 		event.Name,
