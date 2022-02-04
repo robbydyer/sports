@@ -32,6 +32,8 @@ type RacingBoard struct {
 	leagueLogo     *logo.Logo
 	events         []*Event
 	rpcServer      pb.TwirpServer
+	boardCtx       context.Context
+	boardCancel    context.CancelFunc
 }
 
 // Todayer is a func that returns a string representing a date

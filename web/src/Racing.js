@@ -50,6 +50,7 @@ class Sport extends React.Component {
         var req = new SetStatusReq();
         req.setStatus(this.state.status);
         await MatrixPostRet(this.props.sport + "/racing.v1.Racing/SetStatus", JSON.stringify(req.toObject()));
+        await this.getStatus();
     }
 
     doJump = async () => {

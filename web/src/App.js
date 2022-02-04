@@ -1,6 +1,7 @@
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Sport from './Sport.js';
+import Racing from './Racing.js';
 import ImageBoard from './ImageBoard.js';
 import Board from './Board.js';
 import Weather from './Weather.js';
@@ -35,6 +36,7 @@ class App extends React.Component {
           <Route path="/weather" exact component={Weather} />
           <Route path="/board" exact component={Board} />
           <Route path="/docs" exact component={() => <SwaggerUI spec={swag} />} />
+          <Route path="/f1" exact component={() => <Racing sport="f1" id="f1" key="f1" />} />
         </Router>
         <hr />
       </>

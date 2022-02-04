@@ -48,6 +48,10 @@ class TopNav extends React.Component {
                             </NavDropDown>
                             <Nav.Link as={Link} to="/stocks">Stocks</Nav.Link>
                             <Nav.Link as={Link} to="/weather">Weather</Nav.Link>
+                            <NavDropDown bg="dark" variant="dark" title="Racing" id="racing-drop">
+
+                                <NavDropDown.Item as={Link} to="/f1">F1</NavDropDown.Item>
+                            </NavDropDown>
                             <Nav.Link as={Link} to="/img">Image Board</Nav.Link>
                             <Nav.Link as={Link} to="/clock">Clock</Nav.Link>
                             <Nav.Link as={Link} to="/sys">System Info</Nav.Link>

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/twitchtv/twirp"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/robbydyer/sports/internal/proto/racingboard"
@@ -17,19 +16,22 @@ type Server struct {
 
 // SetStatus ...
 func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.Empty, error) {
+	cancelBoard := false
 	if req.Status == nil {
 		return &emptypb.Empty{}, twirp.NewError(twirp.InvalidArgument, "nil status sent")
 	}
 
 	if s.board.config.Enabled.CAS(!req.Status.Enabled, req.Status.Enabled) {
-		s.board.log.Debug("racing board status change",
-			zap.Bool("enabled", req.Status.Enabled),
-		)
+		cancelBoard = true
 	}
 	if s.board.config.ScrollMode.CAS(!req.Status.ScrollEnabled, req.Status.ScrollEnabled) {
-		s.board.log.Debug("racing board status change",
-			zap.Bool("scroll", req.Status.ScrollEnabled),
-		)
+		cancelBoard = true
+	}
+
+	if cancelBoard {
+		if s.board.boardCancel != nil {
+			s.board.boardCancel()
+		}
 	}
 
 	return &emptypb.Empty{}, nil

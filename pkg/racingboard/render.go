@@ -18,6 +18,8 @@ import (
 
 // Render ...
 func (s *RacingBoard) Render(ctx context.Context, canvas board.Canvas) error {
+	s.boardCtx, s.boardCancel = context.WithCancel(ctx)
+
 	s.log.Debug("render racing board",
 		zap.String("league", s.api.LeagueShortName()),
 	)
@@ -64,7 +66,12 @@ func (s *RacingBoard) Render(ctx context.Context, canvas board.Canvas) error {
 
 EVENTS:
 	for _, event := range s.events {
-		if err := s.renderEvent(ctx, canvas, event, s.leagueLogo, scheduleWriter); err != nil {
+		select {
+		case <-s.boardCtx.Done():
+			return context.Canceled
+		default:
+		}
+		if err := s.renderEvent(s.boardCtx, canvas, event, s.leagueLogo, scheduleWriter); err != nil {
 			s.log.Error("failed to render racing event",
 				zap.Error(err),
 			)
@@ -77,7 +84,7 @@ EVENTS:
 			continue EVENTS
 		}
 
-		if err := canvas.Render(ctx); err != nil {
+		if err := canvas.Render(s.boardCtx); err != nil {
 			s.log.Error("failed to render racing board",
 				zap.Error(err),
 			)
@@ -95,7 +102,7 @@ EVENTS:
 
 	if canvas.Scrollable() && scrollCanvas != nil {
 		scrollCanvas.Merge(s.config.TightScrollPadding)
-		return scrollCanvas.Render(ctx)
+		return scrollCanvas.Render(s.boardCtx)
 	}
 
 	return nil
