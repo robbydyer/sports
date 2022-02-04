@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+DOCKERCONF="${ROOT}/.dockerconfig"
 
 getsha() {
   if uname -s | grep -i darwin &> /dev/null; then
@@ -23,13 +24,21 @@ latestprotoc() {
   echo "robbydyer/protoc:$(getsha "${ROOT}/Dockerfile.protoc")"
 }
 
+dockerlogin() {
+  if [ -d "${DOCKERCONF}" ]; then
+    return
+  fi
+  docker --config="${DOCKERCONF}" login -u robbydyer
+}
+
 buildpibuilder() {
   cd "${ROOT}"
+  dockerlogin
   img=$(latestpibuilder)
 
   if [ "$(docker images -q ${img})" = "" ]; then
-    docker buildx create --use --name=build --node=build
-    docker buildx build -t "${img}" -t robbydyer/pibuilder:latest \
+    docker --config="${DOCKERCONF}" buildx create --use --name=build --node=build
+    docker --config="${DOCKERCONF}" buildx build -t "${img}" -t robbydyer/pibuilder:latest \
       --builder=build \
       -f Dockerfile.pibuilder \
       --platform=linux/amd64,linux/arm64/v8 \
@@ -40,11 +49,12 @@ buildpibuilder() {
 
 buildprotoc() {
   cd "${ROOT}"
+  dockerlogin
   img=$(latestprotoc)
 
   if [ "$(docker images -q ${img})" = "" ]; then
-    docker buildx create --use --name=build --node=build
-    docker buildx build -t "${img}" -t robbydyer/protoc:latest \
+    docker --config="${DOCKERCONF}" buildx create --use --name=build --node=build
+    docker --config="${DOCKERCONF}" buildx build -t "${img}" -t robbydyer/protoc:latest \
       --builder=build \
       -f Dockerfile.protoc \
       --platform=linux/arm64/v8 \
