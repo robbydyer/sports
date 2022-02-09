@@ -53,6 +53,7 @@ type SportsMatrix struct {
 	serveContext       context.Context
 	webBoardCtx        context.Context
 	webBoardCancel     context.CancelFunc
+	liveOnly           *atomic.Bool
 	sync.Mutex
 }
 
@@ -155,6 +156,7 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 		jumping:       atomic.NewBool(false),
 		screenSwitch:  make(chan struct{}, 1),
 		webBoardWasOn: atomic.NewBool(false),
+		liveOnly:      atomic.NewBool(false),
 	}
 
 	s.boardCtx, s.boardCancel = context.WithCancel(context.Background())
@@ -459,7 +461,11 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 		setServingOnce.Do(setServing)
 
 		if s.cfg.CombinedScroll.Load() {
-			s.doCombinedScroll(s.boardCtx)
+			if err := s.doCombinedScroll(s.boardCtx); err != nil {
+				s.log.Error("combined scroll error",
+					zap.Error(err),
+				)
+			}
 		} else {
 			s.serveLoop(s.boardCtx)
 		}
@@ -510,6 +516,30 @@ BOARDS:
 }
 
 func (s *SportsMatrix) doCombinedScroll(ctx context.Context) error {
+	getBoardCanvas := func(canvas board.Canvas, b board.Board, ch chan *rgb.ScrollCanvas) {
+		if !b.Enabled() {
+			return
+		}
+
+		boardCanvas, err := b.ScrollRender(ctx, canvas, s.cfg.CombinedScrollPadding)
+		if err != nil {
+			s.log.Error("failed to render scroll canvas",
+				zap.String("board", b.Name()),
+				zap.Error(err),
+			)
+			return
+		}
+		scrollBoardCanvas, ok := boardCanvas.(*rgb.ScrollCanvas)
+		if !ok {
+			s.log.Error("unexpected board type in combined scroll",
+				zap.String("board", b.Name()),
+			)
+			return
+		}
+
+		ch <- scrollBoardCanvas
+	}
+
 CANVASES:
 	for _, canvas := range s.canvases {
 		if !canvas.Enabled() || !canvas.Scrollable() {
@@ -528,39 +558,21 @@ CANVASES:
 			return err
 		}
 
-		boardCanvases := []*rgb.ScrollCanvas{}
+		wg := sync.WaitGroup{}
+		ch := make(chan *rgb.ScrollCanvas, len(s.boards))
 
-		totalWidth := 0
-
-	BOARDS:
 		for _, b := range s.boards {
-			select {
-			case <-ctx.Done():
-				return context.Canceled
-			default:
-			}
-
-			if !b.Enabled() {
-				continue BOARDS
-			}
-
-			boardCanvas, err := b.ScrollRender(ctx, canvas, s.cfg.CombinedScrollPadding)
-			if err != nil {
-				return err
-			}
-			scrollBoardCanvas, ok := boardCanvas.(*rgb.ScrollCanvas)
-			if !ok {
-				s.log.Error("unexpected board type in combined scroll",
-					zap.String("board", b.Name()),
-				)
-				continue BOARDS
-			}
-			totalWidth += boardCanvas.GetWidth()
-
-			boardCanvases = append(boardCanvases, scrollBoardCanvas)
+			b := b
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				getBoardCanvas(scrollCanvas, b, ch)
+			}()
 		}
 
-		for _, canvas := range boardCanvases {
+		wg.Wait()
+
+		for canvas := range ch {
 			scrollCanvas.AddCanvas(canvas)
 		}
 

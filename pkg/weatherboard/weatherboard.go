@@ -240,6 +240,7 @@ func (w *WeatherBoard) enablerCancel(ctx context.Context, cancel context.CancelF
 	}
 }
 
+// Render ...
 func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	c, err := w.render(ctx, canvas)
 	if err != nil {
@@ -252,6 +253,7 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	return nil
 }
 
+// ScrollRender ...
 func (w *WeatherBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
 	origScrollMode := w.config.ScrollMode.Load()
 	origPad := w.config.TightScrollPadding

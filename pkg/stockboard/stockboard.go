@@ -256,6 +256,7 @@ func (s *StockBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	return nil
 }
 
+// ScrollRender ...
 func (s *StockBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
 	origScrollMode := s.config.ScrollMode.Load()
 	origPad := s.config.TightScrollPadding

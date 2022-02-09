@@ -31,6 +31,7 @@ func (s *StatBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc
 	}
 }
 
+// ScrollRender ...
 func (s *StatBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
 	return nil, nil
 }

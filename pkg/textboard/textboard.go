@@ -234,6 +234,7 @@ func (s *TextBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	return nil
 }
 
+// ScrollRender ...
 func (s *TextBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
 	origPad := s.config.TightScrollPadding
 	defer func() {

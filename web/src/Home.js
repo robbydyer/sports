@@ -6,14 +6,25 @@ import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Spinner from 'react-bootstrap/Spinner';
 import { MatrixPostRet } from './util.js';
-import { SetAllReq, LiveOnlyReq } from './sportsmatrix/sportsmatrix_pb';
+import { SetAllReq, LiveOnlyReq, Status } from './sportsmatrix/sportsmatrix_pb';
 import 'bootstrap/dist/css/bootstrap.min.css';
+
+function jsonToStatus(jsonDat) {
+    var dat = JSON.parse(jsonDat)
+    var status = new Status();
+    status.setScreenOn(dat.screen_on);
+    status.setWebboardOn(dat.webboard_on);
+    status.setCombinedScroll(dat.combined_scroll);
+
+    return status;
+}
 
 class Home extends React.Component {
     constructor(props) {
         super(props);
+        var status = new Status();
         this.state = {
-            "status": {},
+            "status": status,
             "loading": false,
         };
     }
@@ -22,31 +33,23 @@ class Home extends React.Component {
     }
 
     getStatus = async () => {
-        await MatrixPostRet("matrix.v1.Sportsmatrix/Status", '{}').then((resp) => {
+        await MatrixPostRet("matrix.v1.Sportsmatrix/GetStatus", '{}').then((resp) => {
             if (resp.ok) {
-                return resp.text()
+                return resp.text();
             }
-            throw resp
+            throw resp;
         }).then((data) => {
-            console.log("Got Home MatrixPostRet", data)
+            var dat = jsonToStatus(data);
             this.setState({
-                "status": JSON.parse(data),
+                "status": dat,
             })
-        });
+        })
     }
 
-    handleSwitch = async (stateVar) => {
-        var currentState = this.state.status[stateVar]
-        if (currentState) {
-            await MatrixPostRet("matrix.v1.Sportsmatrix/ScreenOff", '{}')
-        } else {
-            await MatrixPostRet("matrix.v1.Sportsmatrix/ScreenOn", '{}')
-        }
-        this.setState(prev => ({
-            "status": {
-                [stateVar]: !prev.status[stateVar],
-            }
-        }))
+    updateStatus = async () => {
+        var req = this.state.status;
+        await MatrixPostRet("matrix.v1.Sportsmatrix/SetStatus", JSON.stringify(req.toObject()));
+        await this.getStatus();
     }
 
     handleLiveOnlySwitch = async (switchState) => {
@@ -91,25 +94,25 @@ class Home extends React.Component {
             <Container fluid>
                 <Row className="text-left">
                     <Col>
-                        <Form.Switch id="screen" label="Screen On/Off" checked={this.state.status["screen_on"]} onChange={() => this.handleSwitch("screen_on")} />
+                        <Form.Switch id="screen" label="Screen On/Off" checked={this.state.status.getScreenOn()}
+                            onChange={() => { this.state.status.setScreenOn(!this.state.status.getScreenOn()); this.updateStatus(); }} />
                     </Col>
                 </Row>
                 <Row className="text-left">
                     <Col>
-                        <Form.Switch id="webboard" label="Web Board On/Off" checked={this.state.status["webboard_on"]} onChange={() => this.handleSwitch("webboard_on")} />
+                        <Form.Switch id="webboard" label="Web Board On/Off" checked={this.state.status.getWebboardOn()}
+                            onChange={() => { this.state.status.setWebboardOn(!this.state.status.getWebboardOn()); this.updateStatus(); }} />
+                    </Col>
+                </Row>
+                <Row>
+                    <Col>
+                        <Form.Switch id="combinedscroll" label="Combined Scroll Mode" checked={this.state.status.getCombinedScroll()}
+                            onChange={() => { this.state.status.setCombinedScroll(!this.state.status.getCombinedScroll()); this.updateStatus(); }} />
                     </Col>
                 </Row>
                 <Row className="text-left">
                     <Col>
                         <Button variant="primary" onClick={this.nextBoard}>Next Board</Button>
-                    </Col>
-                </Row>
-                <Row className="text-left">
-                    <Col>
-                        <Button variant="primary" onClick={this.enableAll}>Enable All</Button>
-                    </Col>
-                    <Col>
-                        <Button variant="primary" onClick={this.disableAll}>Disable All</Button>
                     </Col>
                 </Row>
                 <Row>
@@ -118,6 +121,14 @@ class Home extends React.Component {
                     </Col>
                     <Col>
                         <Button variant="primary" onClick={() => this.handleLiveOnlySwitch(false)}>All Games</Button>
+                    </Col>
+                </Row>
+                <Row className="text-left">
+                    <Col>
+                        <Button variant="primary" onClick={this.enableAll}>Enable All</Button>
+                    </Col>
+                    <Col>
+                        <Button variant="primary" onClick={this.disableAll}>Disable All</Button>
                     </Col>
                 </Row>
                 <Row className="text-left">

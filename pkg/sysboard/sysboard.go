@@ -147,6 +147,7 @@ func (s *SysBoard) Name() string {
 	return "Sys"
 }
 
+// ScrollRender ...
 func (s *SysBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
 	return nil, nil
 }

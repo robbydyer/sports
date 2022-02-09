@@ -76,11 +76,46 @@ func (s *Server) Jump(ctx context.Context, req *pb.JumpReq) (*emptypb.Empty, err
 	return &emptypb.Empty{}, nil
 }
 
+// SetStatus ...
+func (s *Server) SetStatus(ctx context.Context, req *pb.Status) (*emptypb.Empty, error) {
+	if req.ScreenOn {
+		if _, err := s.ScreenOn(ctx, &emptypb.Empty{}); err != nil {
+			return nil, twirp.NewError(twirp.Internal, err.Error())
+		}
+	} else {
+		if _, err := s.ScreenOff(ctx, &emptypb.Empty{}); err != nil {
+			return nil, twirp.NewError(twirp.Internal, err.Error())
+		}
+	}
+
+	if req.WebboardOn {
+		if !s.sm.webBoardIsOn.Load() {
+			s.sm.startWebBoard(ctx)
+		}
+	} else {
+		if s.sm.webBoardIsOn.Load() {
+			s.sm.stopWebBoard()
+		}
+	}
+
+	if s.sm.cfg.CombinedScroll.CAS(!req.CombinedScroll, req.CombinedScroll) {
+		if _, err := s.ScreenOff(ctx, &emptypb.Empty{}); err != nil {
+			return nil, twirp.NewError(twirp.Internal, err.Error())
+		}
+		if _, err := s.ScreenOn(ctx, &emptypb.Empty{}); err != nil {
+			return nil, twirp.NewError(twirp.Internal, err.Error())
+		}
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
 // Status ...
-func (s *Server) Status(ctx context.Context, req *emptypb.Empty) (*pb.ScreenStatusResp, error) {
-	return &pb.ScreenStatusResp{
-		ScreenOn:   s.sm.screenIsOn.Load(),
-		WebboardOn: s.sm.webBoardIsOn.Load(),
+func (s *Server) GetStatus(ctx context.Context, req *emptypb.Empty) (*pb.Status, error) {
+	return &pb.Status{
+		ScreenOn:       s.sm.screenIsOn.Load(),
+		WebboardOn:     s.sm.webBoardIsOn.Load(),
+		CombinedScroll: s.sm.cfg.CombinedScroll.Load(),
 	}, nil
 }
 
