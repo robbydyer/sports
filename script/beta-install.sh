@@ -17,7 +17,7 @@ trap "rm -rf ${tmp}" EXIT
 cd "${tmp}"
 download="$(curl -s "${latesturl}" | jq -r 'map(select(.prerelease)) | first | .assets | first | .browser_download_url' | sed "s,aarch64,${ARCH},g" | sed "s,armv6l,${ARCH},g" | sed "s,armv7l,${ARCH},g" )"
 
-wget -qi "${download}"
+wget -q "${download}"
 
 sudo dpkg -i --force-confdef --force-confold sportsmatrix*_${ARCH}.deb
 
