@@ -361,9 +361,7 @@ FORECASTS:
 			draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
 			continue FORECASTS
 		}
-		if err := w.doCanvas(boardCtx, canvas, nil); err != nil {
-			return nil, err
-		}
+		return nil, canvas.Render(ctx)
 	}
 
 	if w.config.ScrollMode.Load() && scrollCanvas != nil {
@@ -372,19 +370,6 @@ FORECASTS:
 	}
 
 	return nil, nil
-}
-
-func (w *WeatherBoard) doCanvas(ctx context.Context, canvas board.Canvas, scrollCanvas *rgbmatrix.ScrollCanvas) error {
-	if err := canvas.Render(ctx); err != nil {
-		return err
-	}
-
-	select {
-	case <-ctx.Done():
-		return context.Canceled
-	case <-time.After(w.config.boardDelay):
-		return nil
-	}
 }
 
 // GetHTTPHandlers ...

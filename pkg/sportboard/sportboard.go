@@ -438,6 +438,7 @@ func (s *SportBoard) enablerCancel(ctx context.Context, cancel context.CancelFun
 	}
 }
 
+// Render ...
 func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	c, err := s.render(ctx, canvas)
 	if err != nil {
@@ -450,6 +451,7 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	return nil
 }
 
+// ScrollRender ...
 func (s *SportBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
 	origScrollMode := s.config.ScrollMode.Load()
 	origPad := s.config.TightScrollPadding

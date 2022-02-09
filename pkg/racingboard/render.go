@@ -16,6 +16,7 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
+// ScrollRender ...
 func (s *RacingBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
 	origScrollMode := s.config.ScrollMode.Load()
 	origPad := s.config.TightScrollPadding

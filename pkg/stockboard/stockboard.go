@@ -244,6 +244,7 @@ func (s *StockBoard) enablerCancel(ctx context.Context, cancel context.CancelFun
 	}
 }
 
+// Render ...
 func (s *StockBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	c, err := s.render(ctx, canvas)
 	if err != nil {

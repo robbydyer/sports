@@ -203,6 +203,7 @@ func (i *ImageBoard) ScrollMode() bool {
 	return false
 }
 
+// ScrollRender ...
 func (i *ImageBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
 	return nil, nil
 }

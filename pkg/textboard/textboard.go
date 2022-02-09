@@ -222,6 +222,7 @@ func (s *TextBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc
 	}
 }
 
+// Render ...
 func (s *TextBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	c, err := s.render(ctx, canvas)
 	if err != nil {

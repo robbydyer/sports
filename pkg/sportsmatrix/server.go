@@ -110,7 +110,7 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.Status) (*emptypb.Empty,
 	return &emptypb.Empty{}, nil
 }
 
-// Status ...
+// GetStatus ...
 func (s *Server) GetStatus(ctx context.Context, req *emptypb.Empty) (*pb.Status, error) {
 	return &pb.Status{
 		ScreenOn:       s.sm.screenIsOn.Load(),
