@@ -161,6 +161,10 @@ func (c *Clock) ScrollMode() bool {
 	return false
 }
 
+func (c *Clock) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
+	return nil, nil
+}
+
 // Render ...
 func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
 	if !c.config.Enabled.Load() {

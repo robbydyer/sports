@@ -222,10 +222,33 @@ func (s *TextBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc
 	}
 }
 
-// Render ...
 func (s *TextBoard) Render(ctx context.Context, canvas board.Canvas) error {
+	c, err := s.render(ctx, canvas)
+	if err != nil {
+		return err
+	}
+	if c != nil {
+		return c.Render(ctx)
+	}
+
+	return nil
+}
+
+func (s *TextBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
+	origPad := s.config.TightScrollPadding
+	defer func() {
+		s.config.TightScrollPadding = origPad
+	}()
+
+	s.config.TightScrollPadding = padding
+
+	return s.render(ctx, canvas)
+}
+
+// Render ...
+func (s *TextBoard) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
 	if !canvas.Scrollable() || !s.config.Enabled.Load() {
-		return nil
+		return nil, nil
 	}
 
 	boardCtx, boardCancel := context.WithCancel(ctx)
@@ -235,18 +258,18 @@ func (s *TextBoard) Render(ctx context.Context, canvas board.Canvas) error {
 
 	texts, err := s.api.GetText(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(texts) < 1 {
-		return nil
+		return nil, nil
 	}
 
 	if s.writer == nil {
 		var err error
 		s.writer, err = rgbrender.DefaultTextWriter()
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		bounds := rgbrender.ZeroedBounds(canvas.Bounds())
@@ -267,12 +290,12 @@ func (s *TextBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	var scrollCanvas *rgbmatrix.ScrollCanvas
 	base, ok := canvas.(*rgbmatrix.ScrollCanvas)
 	if !ok {
-		return fmt.Errorf("wat")
+		return nil, fmt.Errorf("wat")
 	}
 
 	scrollCanvas, err = rgbmatrix.NewScrollCanvas(base.Matrix, s.log)
 	if err != nil {
-		return fmt.Errorf("failed to get tight scroll canvas: %w", err)
+		return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
 	}
 	scrollCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
 	scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
@@ -295,7 +318,7 @@ TEXT:
 	for _, text := range texts {
 		select {
 		case <-boardCtx.Done():
-			return context.Canceled
+			return nil, context.Canceled
 		default:
 		}
 		num++
@@ -312,7 +335,7 @@ TEXT:
 		s.log.Debug("render text",
 			zap.String("text", text),
 		)
-		if err := s.render(canvas, text); err != nil {
+		if err := s.doRender(canvas, text); err != nil {
 			s.log.Error("failed to render text",
 				zap.Error(err),
 			)
@@ -332,7 +355,7 @@ TEXT:
 	}
 
 	scrollCanvas.Merge(s.config.TightScrollPadding)
-	return scrollCanvas.Render(boardCtx)
+	return scrollCanvas, nil
 }
 
 // GetHTTPHandlers ...

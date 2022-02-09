@@ -244,8 +244,34 @@ func (s *StockBoard) enablerCancel(ctx context.Context, cancel context.CancelFun
 	}
 }
 
-// Render ...
 func (s *StockBoard) Render(ctx context.Context, canvas board.Canvas) error {
+	c, err := s.render(ctx, canvas)
+	if err != nil {
+		return err
+	}
+	if c != nil {
+		return c.Render(ctx)
+	}
+
+	return nil
+}
+
+func (s *StockBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
+	origScrollMode := s.config.ScrollMode.Load()
+	origPad := s.config.TightScrollPadding
+	defer func() {
+		s.config.ScrollMode.Store(origScrollMode)
+		s.config.TightScrollPadding = origPad
+	}()
+
+	s.config.ScrollMode.Store(true)
+	s.config.TightScrollPadding = padding
+
+	return s.render(ctx, canvas)
+}
+
+// Render ...
+func (s *StockBoard) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
 	boardCtx, boardCancel := context.WithCancel(ctx)
 	defer boardCancel()
 
@@ -258,20 +284,20 @@ func (s *StockBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	)
 	stocks, err := s.api.Get(boardCtx, s.config.Symbols, s.config.updateInterval)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var scrollCanvas *rgbmatrix.ScrollCanvas
 	if canvas.Scrollable() && s.config.ScrollMode.Load() {
 		base, ok := canvas.(*rgbmatrix.ScrollCanvas)
 		if !ok {
-			return fmt.Errorf("wat")
+			return nil, fmt.Errorf("wat")
 		}
 
 		var err error
 		scrollCanvas, err = rgbmatrix.NewScrollCanvas(base.Matrix, s.log)
 		if err != nil {
-			return fmt.Errorf("failed to get tight scroll canvas: %w", err)
+			return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
 		}
 		scrollCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
 	}
@@ -301,7 +327,7 @@ STOCK:
 		if !s.config.ScrollMode.Load() {
 			select {
 			case <-boardCtx.Done():
-				return context.Canceled
+				return nil, context.Canceled
 			case <-time.After(s.config.boardDelay):
 			}
 		}
@@ -309,10 +335,10 @@ STOCK:
 
 	if canvas.Scrollable() && scrollCanvas != nil {
 		scrollCanvas.Merge(s.config.TightScrollPadding)
-		return scrollCanvas.Render(boardCtx)
+		return scrollCanvas, nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 // GetHTTPHandlers ...

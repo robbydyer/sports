@@ -58,16 +58,20 @@ type SportsMatrix struct {
 
 // Config ...
 type Config struct {
-	ServeWebUI     bool                `json:"serveWebUI"`
-	HTTPListenPort int                 `json:"httpListenPort"`
-	HardwareConfig *rgb.HardwareConfig `json:"hardwareConfig"`
-	RuntimeOptions *rgb.RuntimeOptions `json:"runtimeOptions"`
-	ScreenOffTimes []string            `json:"screenOffTimes"`
-	ScreenOnTimes  []string            `json:"screenOnTimes"`
-	WebBoardWidth  int                 `json:"webBoardWidth"`
-	WebBoardHeight int                 `json:"webBoardHeight"`
-	LaunchWebBoard bool                `json:"launchWebBoard"`
-	WebBoardUser   string              `json:"webBoardUser"`
+	combinedScrollDelay   time.Duration
+	ServeWebUI            bool                `json:"serveWebUI"`
+	HTTPListenPort        int                 `json:"httpListenPort"`
+	HardwareConfig        *rgb.HardwareConfig `json:"hardwareConfig"`
+	RuntimeOptions        *rgb.RuntimeOptions `json:"runtimeOptions"`
+	ScreenOffTimes        []string            `json:"screenOffTimes"`
+	ScreenOnTimes         []string            `json:"screenOnTimes"`
+	WebBoardWidth         int                 `json:"webBoardWidth"`
+	WebBoardHeight        int                 `json:"webBoardHeight"`
+	LaunchWebBoard        bool                `json:"launchWebBoard"`
+	WebBoardUser          string              `json:"webBoardUser"`
+	CombinedScroll        *atomic.Bool        `json:"combinedScroll"`
+	CombinedScrollDelay   string              `json:"combinedScrollDelay"`
+	CombinedScrollPadding int                 `json:"combinedScrollPadding"`
 }
 
 // Defaults sets some sane config defaults
@@ -115,6 +119,19 @@ func (c *Config) Defaults() {
 	}
 	if c.HardwareConfig.PWMLSBNanoseconds == 0 {
 		c.HardwareConfig.PWMLSBNanoseconds = 130
+	}
+	if c.CombinedScroll == nil {
+		c.CombinedScroll = atomic.NewBool(false)
+	}
+	if c.CombinedScrollDelay != "" {
+		d, err := time.ParseDuration(c.CombinedScrollDelay)
+		if err != nil {
+			c.combinedScrollDelay = rgb.DefaultScrollDelay
+		} else {
+			c.combinedScrollDelay = d
+		}
+	} else {
+		c.combinedScrollDelay = rgb.DefaultScrollDelay
 	}
 }
 
@@ -441,7 +458,11 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 
 		setServingOnce.Do(setServing)
 
-		s.serveLoop(s.boardCtx)
+		if s.cfg.CombinedScroll.Load() {
+			s.doCombinedScroll(s.boardCtx)
+		} else {
+			s.serveLoop(s.boardCtx)
+		}
 	}
 }
 
@@ -486,6 +507,70 @@ BOARDS:
 
 		s.currentBoardCancel()
 	}
+}
+
+func (s *SportsMatrix) doCombinedScroll(ctx context.Context) error {
+CANVASES:
+	for _, canvas := range s.canvases {
+		if !canvas.Enabled() || !canvas.Scrollable() {
+			continue CANVASES
+		}
+
+		base, ok := canvas.(*rgb.ScrollCanvas)
+		if !ok {
+			continue CANVASES
+		}
+		scrollCanvas, err := rgb.NewScrollCanvas(base.Matrix, s.log,
+			rgb.WithScrollSpeed(s.cfg.combinedScrollDelay),
+			rgb.WithScrollDirection(rgb.RightToLeft),
+		)
+		if err != nil {
+			return err
+		}
+
+		boardCanvases := []*rgb.ScrollCanvas{}
+
+		totalWidth := 0
+
+	BOARDS:
+		for _, b := range s.boards {
+			select {
+			case <-ctx.Done():
+				return context.Canceled
+			default:
+			}
+
+			if !b.Enabled() {
+				continue BOARDS
+			}
+
+			boardCanvas, err := b.ScrollRender(ctx, canvas, s.cfg.CombinedScrollPadding)
+			if err != nil {
+				return err
+			}
+			scrollBoardCanvas, ok := boardCanvas.(*rgb.ScrollCanvas)
+			if !ok {
+				s.log.Error("unexpected board type in combined scroll",
+					zap.String("board", b.Name()),
+				)
+				continue BOARDS
+			}
+			totalWidth += boardCanvas.GetWidth()
+
+			boardCanvases = append(boardCanvases, scrollBoardCanvas)
+		}
+
+		for _, canvas := range boardCanvases {
+			scrollCanvas.AddCanvas(canvas)
+		}
+
+		scrollCanvas.Merge(s.cfg.CombinedScrollPadding)
+		if err := scrollCanvas.Render(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *SportsMatrix) doBoard(ctx context.Context, b board.Board) error {

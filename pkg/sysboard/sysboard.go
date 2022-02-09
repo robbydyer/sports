@@ -147,6 +147,10 @@ func (s *SysBoard) Name() string {
 	return "Sys"
 }
 
+func (s *SysBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
+	return nil, nil
+}
+
 // Render ...
 func (s *SysBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	if !s.config.Enabled.Load() {
