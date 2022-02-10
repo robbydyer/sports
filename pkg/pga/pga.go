@@ -12,8 +12,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/robbydyer/sports/pkg/statboard"
 	"github.com/robfig/cron/v3"
+
+	"github.com/robbydyer/sports/pkg/statboard"
 )
 
 const leaderboardURL = "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
