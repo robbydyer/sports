@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/statboard"
+	"github.com/robfig/cron/v3"
 )
 
 const leaderboardURL = "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
@@ -21,7 +22,8 @@ var rawDatReg = regexp.MustCompile(`\s*([0-9]{1,2})\.{0,1}\s+([a-zA-Z]{1}[a-zA-Z
 
 // PGA ...
 type PGA struct {
-	log *zap.Logger
+	log     *zap.Logger
+	players []*Player
 }
 
 type eventDat struct {
@@ -37,9 +39,21 @@ type eventDat struct {
 
 // New ...
 func New(logger *zap.Logger) (*PGA, error) {
-	return &PGA{
+	p := &PGA{
 		log: logger,
-	}, nil
+	}
+
+	c := cron.New()
+
+	if _, err := c.AddFunc("0 4 * * *", p.cacheClear); err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+func (p *PGA) cacheClear() {
+	p.players = []*Player{}
 }
 
 // FindPlayer ...
@@ -68,13 +82,16 @@ func (p *PGA) StatShortName(stat string) string {
 
 // ListPlayers ...
 func (p *PGA) ListPlayers(ctx context.Context, teamAbbreviation string) ([]statboard.Player, error) {
-	plyrs, err := p.updatePlayers(ctx)
-	if err != nil {
-		return nil, err
+	if len(p.players) < 1 {
+		var err error
+		p.players, err = p.updatePlayers(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	players := []statboard.Player{}
-	for _, player := range plyrs {
+	for _, player := range p.players {
 		players = append(players, player)
 	}
 	return players, nil

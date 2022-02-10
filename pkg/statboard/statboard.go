@@ -38,18 +38,20 @@ type StatBoard struct {
 
 // Config ...
 type Config struct {
-	boardDelay     time.Duration
-	updateInterval time.Duration
-	BoardDelay     string              `json:"boardDelay"`
-	Enabled        *atomic.Bool        `json:"enabled"`
-	Players        []string            `json:"players"`
-	Teams          []string            `json:"teams"`
-	StatOverride   map[string][]string `json:"statOverride"`
-	LimitPlayers   int                 `json:"limitPlayers"`
-	UpdateInterval string              `json:"updateInterval"`
-	OnTimes        []string            `json:"onTimes"`
-	OffTimes       []string            `json:"offTimes"`
-	ScrollMode     *atomic.Bool        `json:"scrollMode"`
+	boardDelay      time.Duration
+	updateInterval  time.Duration
+	BoardDelay      string              `json:"boardDelay"`
+	Enabled         *atomic.Bool        `json:"enabled"`
+	Players         []string            `json:"players"`
+	Teams           []string            `json:"teams"`
+	StatOverride    map[string][]string `json:"statOverride"`
+	LimitPlayers    int                 `json:"limitPlayers"`
+	UpdateInterval  string              `json:"updateInterval"`
+	OnTimes         []string            `json:"onTimes"`
+	OffTimes        []string            `json:"offTimes"`
+	ScrollMode      *atomic.Bool        `json:"scrollMode"`
+	Horizontal      *atomic.Bool        `json:"horizontal"`
+	HorizontalLimit int                 `json:"horizontalLimit"`
 }
 
 // OptionFunc provides options to the StatBoard that are not exposed in a Config
@@ -120,6 +122,13 @@ func (c *Config) SetDefaults() {
 
 	if c.ScrollMode == nil {
 		c.ScrollMode = atomic.NewBool(false)
+	}
+
+	if c.Horizontal == nil {
+		c.Horizontal = atomic.NewBool(false)
+	}
+	if c.HorizontalLimit == 0 {
+		c.HorizontalLimit = 7
 	}
 }
 
