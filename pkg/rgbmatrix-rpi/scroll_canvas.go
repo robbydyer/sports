@@ -42,6 +42,7 @@ type ScrollCanvas struct {
 	log       *zap.Logger
 	pad       int
 	actuals   []*image.RGBA
+	merged    *atomic.Bool
 }
 
 type ScrollCanvasOption func(*ScrollCanvas) error
@@ -56,6 +57,7 @@ func NewScrollCanvas(m Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (
 		interval:  DefaultScrollDelay,
 		log:       logger,
 		direction: RightToLeft,
+		merged:    atomic.NewBool(false),
 	}
 
 	for _, f := range opts {
@@ -84,6 +86,10 @@ func (c *ScrollCanvas) GetWidth() int {
 	return c.w
 }
 
+func (c *ScrollCanvas) GetActual() *image.RGBA {
+	return c.actual
+}
+
 func (c *ScrollCanvas) AddCanvas(add draw.Image) {
 	if c.direction != RightToLeft && c.direction != LeftToRight {
 		return
@@ -96,6 +102,10 @@ func (c *ScrollCanvas) AddCanvas(add draw.Image) {
 }
 
 func (c *ScrollCanvas) Merge(padding int) {
+	if c.merged.CAS(true, true) {
+		return
+	}
+
 	maxX := 0
 	maxY := 0
 	for _, img := range c.actuals {
@@ -440,6 +450,14 @@ func isBlack(c color.Color) bool {
 func WithScrollSpeed(d time.Duration) ScrollCanvasOption {
 	return func(c *ScrollCanvas) error {
 		c.interval = d
+		return nil
+	}
+}
+
+// WithScrollDirection ...
+func WithScrollDirection(direct ScrollDirection) ScrollCanvasOption {
+	return func(c *ScrollCanvas) error {
+		c.SetScrollDirection(direct)
 		return nil
 	}
 }

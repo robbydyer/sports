@@ -31,6 +31,11 @@ func (s *StatBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc
 	}
 }
 
+// ScrollRender ...
+func (s *StatBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
+	return nil, nil
+}
+
 // Render ...
 func (s *StatBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	if len(s.config.Players) == 0 && len(s.config.Teams) == 0 {

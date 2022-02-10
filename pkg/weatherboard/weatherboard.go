@@ -242,9 +242,37 @@ func (w *WeatherBoard) enablerCancel(ctx context.Context, cancel context.CancelF
 
 // Render ...
 func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
+	c, err := w.render(ctx, canvas)
+	if err != nil {
+		return err
+	}
+	if c != nil {
+		return c.Render(ctx)
+	}
+
+	return nil
+}
+
+// ScrollRender ...
+func (w *WeatherBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
+	origScrollMode := w.config.ScrollMode.Load()
+	origPad := w.config.TightScrollPadding
+	defer func() {
+		w.config.ScrollMode.Store(origScrollMode)
+		w.config.TightScrollPadding = origPad
+	}()
+
+	w.config.ScrollMode.Store(true)
+	w.config.TightScrollPadding = padding
+
+	return w.render(ctx, canvas)
+}
+
+// Render ...
+func (w *WeatherBoard) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
 	if !w.config.Enabled.Load() {
 		w.log.Warn("skipping disabled board", zap.String("board", "weather"))
-		return nil
+		return nil, nil
 	}
 
 	boardCtx, boardCancel := context.WithCancel(ctx)
@@ -258,7 +286,7 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		var err error
 		scrollCanvas, err = rgbmatrix.NewScrollCanvas(base.Matrix, w.log)
 		if err != nil {
-			return fmt.Errorf("failed to get tight scroll canvas: %w", err)
+			return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
 		}
 		scrollCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
 	}
@@ -268,14 +296,14 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	if w.config.CurrentForecast.Load() {
 		f, err := w.api.CurrentForecast(ctx, w.config.ZipCode, w.config.Country, zeroed, w.config.MetricUnits.Load())
 		if err != nil {
-			return err
+			return nil, err
 		}
 		forecasts = append(forecasts, f)
 	}
 	if w.config.HourlyForecast.Load() {
 		fs, err := w.api.HourlyForecasts(ctx, w.config.ZipCode, w.config.Country, zeroed, w.config.MetricUnits.Load())
 		if err != nil {
-			return err
+			return nil, err
 		}
 		// sortForecasts(fs)
 		w.log.Debug("found hourly forecasts",
@@ -296,7 +324,7 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	if w.config.DailyForecast.Load() {
 		fs, err := w.api.DailyForecasts(ctx, w.config.ZipCode, w.config.Country, zeroed, w.config.MetricUnits.Load())
 		if err != nil {
-			return err
+			return nil, err
 		}
 		w.log.Debug("found daily forecasts",
 			zap.Int("num", len(fs)),
@@ -326,43 +354,22 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 FORECASTS:
 	for _, f := range forecasts {
 		if err := w.drawForecast(boardCtx, canvas, f); err != nil {
-			return err
+			return nil, err
 		}
 		if scrollCanvas != nil {
 			scrollCanvas.AddCanvas(canvas)
 			draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
 			continue FORECASTS
 		}
-		if err := w.doCanvas(boardCtx, canvas, nil); err != nil {
-			return err
-		}
+		return nil, canvas.Render(ctx)
 	}
 
 	if w.config.ScrollMode.Load() && scrollCanvas != nil {
-		if err := w.doCanvas(boardCtx, canvas, scrollCanvas); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (w *WeatherBoard) doCanvas(ctx context.Context, canvas board.Canvas, scrollCanvas *rgbmatrix.ScrollCanvas) error {
-	if canvas.Scrollable() && scrollCanvas != nil {
 		scrollCanvas.Merge(w.config.TightScrollPadding)
-		return scrollCanvas.Render(ctx)
+		return scrollCanvas, nil
 	}
 
-	if err := canvas.Render(ctx); err != nil {
-		return err
-	}
-
-	select {
-	case <-ctx.Done():
-		return context.Canceled
-	case <-time.After(w.config.boardDelay):
-		return nil
-	}
+	return nil, nil
 }
 
 // GetHTTPHandlers ...

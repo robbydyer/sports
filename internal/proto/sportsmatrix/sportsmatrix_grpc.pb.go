@@ -26,7 +26,8 @@ type SportsmatrixClient interface {
 	Version(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*VersionResp, error)
 	ScreenOn(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
 	ScreenOff(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
-	Status(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ScreenStatusResp, error)
+	GetStatus(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Status, error)
+	SetStatus(ctx context.Context, in *Status, opts ...grpc.CallOption) (*empty.Empty, error)
 	SetAll(ctx context.Context, in *SetAllReq, opts ...grpc.CallOption) (*empty.Empty, error)
 	Jump(ctx context.Context, in *JumpReq, opts ...grpc.CallOption) (*empty.Empty, error)
 	NextBoard(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
@@ -69,9 +70,18 @@ func (c *sportsmatrixClient) ScreenOff(ctx context.Context, in *empty.Empty, opt
 	return out, nil
 }
 
-func (c *sportsmatrixClient) Status(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ScreenStatusResp, error) {
-	out := new(ScreenStatusResp)
-	err := c.cc.Invoke(ctx, "/matrix.v1.Sportsmatrix/Status", in, out, opts...)
+func (c *sportsmatrixClient) GetStatus(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Status, error) {
+	out := new(Status)
+	err := c.cc.Invoke(ctx, "/matrix.v1.Sportsmatrix/GetStatus", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sportsmatrixClient) SetStatus(ctx context.Context, in *Status, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/matrix.v1.Sportsmatrix/SetStatus", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +140,8 @@ type SportsmatrixServer interface {
 	Version(context.Context, *empty.Empty) (*VersionResp, error)
 	ScreenOn(context.Context, *empty.Empty) (*empty.Empty, error)
 	ScreenOff(context.Context, *empty.Empty) (*empty.Empty, error)
-	Status(context.Context, *empty.Empty) (*ScreenStatusResp, error)
+	GetStatus(context.Context, *empty.Empty) (*Status, error)
+	SetStatus(context.Context, *Status) (*empty.Empty, error)
 	SetAll(context.Context, *SetAllReq) (*empty.Empty, error)
 	Jump(context.Context, *JumpReq) (*empty.Empty, error)
 	NextBoard(context.Context, *empty.Empty) (*empty.Empty, error)
@@ -152,8 +163,11 @@ func (UnimplementedSportsmatrixServer) ScreenOn(context.Context, *empty.Empty) (
 func (UnimplementedSportsmatrixServer) ScreenOff(context.Context, *empty.Empty) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ScreenOff not implemented")
 }
-func (UnimplementedSportsmatrixServer) Status(context.Context, *empty.Empty) (*ScreenStatusResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Status not implemented")
+func (UnimplementedSportsmatrixServer) GetStatus(context.Context, *empty.Empty) (*Status, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStatus not implemented")
+}
+func (UnimplementedSportsmatrixServer) SetStatus(context.Context, *Status) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetStatus not implemented")
 }
 func (UnimplementedSportsmatrixServer) SetAll(context.Context, *SetAllReq) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetAll not implemented")
@@ -237,20 +251,38 @@ func _Sportsmatrix_ScreenOff_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Sportsmatrix_Status_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Sportsmatrix_GetStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SportsmatrixServer).Status(ctx, in)
+		return srv.(SportsmatrixServer).GetStatus(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/matrix.v1.Sportsmatrix/Status",
+		FullMethod: "/matrix.v1.Sportsmatrix/GetStatus",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SportsmatrixServer).Status(ctx, req.(*empty.Empty))
+		return srv.(SportsmatrixServer).GetStatus(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Sportsmatrix_SetStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Status)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SportsmatrixServer).SetStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/matrix.v1.Sportsmatrix/SetStatus",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SportsmatrixServer).SetStatus(ctx, req.(*Status))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -365,8 +397,12 @@ var Sportsmatrix_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Sportsmatrix_ScreenOff_Handler,
 		},
 		{
-			MethodName: "Status",
-			Handler:    _Sportsmatrix_Status_Handler,
+			MethodName: "GetStatus",
+			Handler:    _Sportsmatrix_GetStatus_Handler,
+		},
+		{
+			MethodName: "SetStatus",
+			Handler:    _Sportsmatrix_SetStatus_Handler,
 		},
 		{
 			MethodName: "SetAll",

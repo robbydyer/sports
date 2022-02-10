@@ -16,8 +16,36 @@ import (
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
+// ScrollRender ...
+func (s *RacingBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
+	origScrollMode := s.config.ScrollMode.Load()
+	origPad := s.config.TightScrollPadding
+	defer func() {
+		s.config.ScrollMode.Store(origScrollMode)
+		s.config.TightScrollPadding = origPad
+	}()
+
+	s.config.ScrollMode.Store(true)
+	s.config.TightScrollPadding = padding
+
+	return s.render(ctx, canvas)
+}
+
 // Render ...
 func (s *RacingBoard) Render(ctx context.Context, canvas board.Canvas) error {
+	c, err := s.render(ctx, canvas)
+	if err != nil {
+		return err
+	}
+	if c != nil {
+		return c.Render(ctx)
+	}
+
+	return nil
+}
+
+// Render ...
+func (s *RacingBoard) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
 	s.boardCtx, s.boardCancel = context.WithCancel(ctx)
 
 	s.log.Debug("render racing board",
@@ -27,7 +55,7 @@ func (s *RacingBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		var err error
 		s.leagueLogo, err = s.api.GetLogo(ctx, canvas.Bounds())
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -35,26 +63,26 @@ func (s *RacingBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		var err error
 		s.events, err = s.api.GetScheduledEvents(ctx)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	scheduleWriter, err := s.getScheduleWriter(rgbrender.ZeroedBounds(canvas.Bounds()))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var scrollCanvas *rgbmatrix.ScrollCanvas
 	if canvas.Scrollable() && s.config.ScrollMode.Load() {
 		base, ok := canvas.(*rgbmatrix.ScrollCanvas)
 		if !ok {
-			return fmt.Errorf("invalid scroll canvas")
+			return nil, fmt.Errorf("invalid scroll canvas")
 		}
 
 		var err error
 		scrollCanvas, err = rgbmatrix.NewScrollCanvas(base.Matrix, s.log)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
 		scrollCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
@@ -69,7 +97,7 @@ EVENTS:
 	for _, event := range s.events {
 		select {
 		case <-s.boardCtx.Done():
-			return context.Canceled
+			return nil, context.Canceled
 		default:
 		}
 		if err := s.renderEvent(s.boardCtx, canvas, event, s.leagueLogo, scheduleWriter); err != nil {
@@ -95,7 +123,7 @@ EVENTS:
 		if !s.config.ScrollMode.Load() {
 			select {
 			case <-ctx.Done():
-				return context.Canceled
+				return nil, context.Canceled
 			case <-time.After(s.config.boardDelay):
 			}
 		}
@@ -103,10 +131,10 @@ EVENTS:
 
 	if canvas.Scrollable() && scrollCanvas != nil {
 		scrollCanvas.Merge(s.config.TightScrollPadding)
-		return scrollCanvas.Render(s.boardCtx)
+		return scrollCanvas, nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (s *RacingBoard) renderEvent(ctx context.Context, canvas board.Canvas, event *Event, leagueLogo *logo.Logo, scheduleWriter *rgbrender.TextWriter) error {

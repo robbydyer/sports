@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -53,21 +54,26 @@ type SportsMatrix struct {
 	serveContext       context.Context
 	webBoardCtx        context.Context
 	webBoardCancel     context.CancelFunc
+	liveOnly           *atomic.Bool
 	sync.Mutex
 }
 
 // Config ...
 type Config struct {
-	ServeWebUI     bool                `json:"serveWebUI"`
-	HTTPListenPort int                 `json:"httpListenPort"`
-	HardwareConfig *rgb.HardwareConfig `json:"hardwareConfig"`
-	RuntimeOptions *rgb.RuntimeOptions `json:"runtimeOptions"`
-	ScreenOffTimes []string            `json:"screenOffTimes"`
-	ScreenOnTimes  []string            `json:"screenOnTimes"`
-	WebBoardWidth  int                 `json:"webBoardWidth"`
-	WebBoardHeight int                 `json:"webBoardHeight"`
-	LaunchWebBoard bool                `json:"launchWebBoard"`
-	WebBoardUser   string              `json:"webBoardUser"`
+	combinedScrollDelay   time.Duration
+	ServeWebUI            bool                `json:"serveWebUI"`
+	HTTPListenPort        int                 `json:"httpListenPort"`
+	HardwareConfig        *rgb.HardwareConfig `json:"hardwareConfig"`
+	RuntimeOptions        *rgb.RuntimeOptions `json:"runtimeOptions"`
+	ScreenOffTimes        []string            `json:"screenOffTimes"`
+	ScreenOnTimes         []string            `json:"screenOnTimes"`
+	WebBoardWidth         int                 `json:"webBoardWidth"`
+	WebBoardHeight        int                 `json:"webBoardHeight"`
+	LaunchWebBoard        bool                `json:"launchWebBoard"`
+	WebBoardUser          string              `json:"webBoardUser"`
+	CombinedScroll        *atomic.Bool        `json:"combinedScroll"`
+	CombinedScrollDelay   string              `json:"combinedScrollDelay"`
+	CombinedScrollPadding int                 `json:"combinedScrollPadding"`
 }
 
 // Defaults sets some sane config defaults
@@ -116,6 +122,19 @@ func (c *Config) Defaults() {
 	if c.HardwareConfig.PWMLSBNanoseconds == 0 {
 		c.HardwareConfig.PWMLSBNanoseconds = 130
 	}
+	if c.CombinedScroll == nil {
+		c.CombinedScroll = atomic.NewBool(false)
+	}
+	if c.CombinedScrollDelay != "" {
+		d, err := time.ParseDuration(c.CombinedScrollDelay)
+		if err != nil {
+			c.combinedScrollDelay = rgb.DefaultScrollDelay
+		} else {
+			c.combinedScrollDelay = d
+		}
+	} else {
+		c.combinedScrollDelay = rgb.DefaultScrollDelay
+	}
 }
 
 // New ...
@@ -138,6 +157,7 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 		jumping:       atomic.NewBool(false),
 		screenSwitch:  make(chan struct{}, 1),
 		webBoardWasOn: atomic.NewBool(false),
+		liveOnly:      atomic.NewBool(false),
 	}
 
 	s.boardCtx, s.boardCancel = context.WithCancel(context.Background())
@@ -441,7 +461,15 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 
 		setServingOnce.Do(setServing)
 
-		s.serveLoop(s.boardCtx)
+		if s.cfg.CombinedScroll.Load() {
+			if err := s.doCombinedScroll(s.boardCtx); err != nil {
+				s.log.Error("combined scroll error",
+					zap.Error(err),
+				)
+			}
+		} else {
+			s.serveLoop(s.boardCtx)
+		}
 	}
 }
 
@@ -486,6 +514,118 @@ BOARDS:
 
 		s.currentBoardCancel()
 	}
+}
+
+// doCombinedScroll gets a scrollCanvas version of each board, then combines them
+// into one large ScrollCanvas. It maintains ordering
+func (s *SportsMatrix) doCombinedScroll(ctx context.Context) error {
+	type orderedBoards struct {
+		order        int
+		board        board.Board
+		scrollCanvas *rgb.ScrollCanvas
+	}
+
+	getBoardCanvas := func(baseCanvas board.Canvas, scrollBoardCanvas *orderedBoards, ch chan *orderedBoards) {
+		defer func() {
+			ch <- scrollBoardCanvas
+		}()
+
+		if !scrollBoardCanvas.board.Enabled() {
+			return
+		}
+
+		boardCanvas, err := scrollBoardCanvas.board.ScrollRender(ctx, baseCanvas, s.cfg.CombinedScrollPadding)
+		if err != nil {
+			s.log.Error("failed to render scroll canvas",
+				zap.String("board", scrollBoardCanvas.board.Name()),
+				zap.Error(err),
+			)
+			return
+		}
+		var ok bool
+		scrollBoardCanvas.scrollCanvas, ok = boardCanvas.(*rgb.ScrollCanvas)
+		if !ok {
+			s.log.Error("unexpected board type in combined scroll",
+				zap.String("board", scrollBoardCanvas.board.Name()),
+			)
+			return
+		}
+	}
+
+CANVASES:
+	for _, canvas := range s.canvases {
+		if !canvas.Enabled() || !canvas.Scrollable() {
+			continue CANVASES
+		}
+
+		base, ok := canvas.(*rgb.ScrollCanvas)
+		if !ok {
+			continue CANVASES
+		}
+		scrollCanvas, err := rgb.NewScrollCanvas(base.Matrix, s.log,
+			rgb.WithScrollSpeed(s.cfg.combinedScrollDelay),
+			rgb.WithScrollDirection(rgb.RightToLeft),
+		)
+		if err != nil {
+			return err
+		}
+
+		wg := sync.WaitGroup{}
+		ch := make(chan *orderedBoards, len(s.boards))
+
+		index := 0
+		for _, b := range s.boards {
+			b := b
+			myBase, err := rgb.NewScrollCanvas(base.Matrix, s.log,
+				rgb.WithScrollDirection(rgb.RightToLeft),
+				rgb.WithScrollSpeed(s.cfg.combinedScrollDelay),
+			)
+			if err != nil {
+				return err
+			}
+			brd := &orderedBoards{
+				order: index,
+				board: b,
+			}
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				getBoardCanvas(myBase, brd, ch)
+			}()
+			index++
+		}
+
+		s.log.Debug("wait for boards",
+			zap.Int("total", len(s.boards)),
+		)
+		wg.Wait()
+		close(ch)
+		s.log.Debug("done waiting for boards")
+
+		allOrderedBoards := []*orderedBoards{}
+	SCR:
+		for scrCanvas := range ch {
+			if scrCanvas.scrollCanvas == nil {
+				continue SCR
+			}
+			allOrderedBoards = append(allOrderedBoards, scrCanvas)
+		}
+
+		sort.SliceStable(allOrderedBoards, func(i, j int) bool {
+			return allOrderedBoards[i].order < allOrderedBoards[j].order
+		})
+
+		for _, ordered := range allOrderedBoards {
+			scrollCanvas.AddCanvas(ordered.scrollCanvas)
+		}
+
+		scrollCanvas.Merge(s.cfg.CombinedScrollPadding)
+		if err := scrollCanvas.Render(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *SportsMatrix) doBoard(ctx context.Context, b board.Board) error {

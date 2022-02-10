@@ -59,7 +59,7 @@ func (s *TextBoard) renderLogo(ctx context.Context, canvas board.Canvas) error {
 	return nil
 }
 
-func (s *TextBoard) render(canvas board.Canvas, text string) error {
+func (s *TextBoard) doRender(canvas board.Canvas, text string) error {
 	zeroed := rgbrender.ZeroedBounds(canvas.Bounds())
 	lengths, err := s.writer.MeasureStrings(canvas, []string{text})
 	if err != nil {

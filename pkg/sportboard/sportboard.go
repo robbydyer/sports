@@ -440,9 +440,40 @@ func (s *SportBoard) enablerCancel(ctx context.Context, cancel context.CancelFun
 
 // Render ...
 func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
+	c, err := s.render(ctx, canvas)
+	if err != nil {
+		return err
+	}
+	if c != nil {
+		return c.Render(ctx)
+	}
+
+	return nil
+}
+
+// ScrollRender ...
+func (s *SportBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
+	origScrollMode := s.config.ScrollMode.Load()
+	origPad := s.config.TightScrollPadding
+	origTight := s.config.TightScroll.Load()
+	defer func() {
+		s.config.ScrollMode.Store(origScrollMode)
+		s.config.TightScrollPadding = origPad
+		s.config.TightScroll.Store(origTight)
+	}()
+
+	s.config.ScrollMode.Store(true)
+	s.config.TightScrollPadding = padding
+	s.config.TightScroll.Store(true)
+
+	return s.render(ctx, canvas)
+}
+
+// Render ...
+func (s *SportBoard) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
 	if !s.config.Enabled.Load() {
 		s.log.Warn("skipping disabled board", zap.String("board", s.api.League()))
-		return nil
+		return nil, nil
 	}
 
 	s.logCanvas(canvas, "sportboard Render() called canvas")
@@ -462,18 +493,18 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 			zap.String("league", s.api.League()),
 			zap.Error(err),
 		)
-		return err
+		return nil, err
 	}
 
 	if len(allGames) < 1 {
 		s.log.Debug("no games scheduled",
 			zap.String("league", s.api.League()),
 		)
-		return nil
+		return nil, nil
 	}
 
 	if _, err := s.api.GetTeams(ctx); err != nil {
-		return err
+		return nil, err
 	}
 
 	// Determine which games are watched so that the game counter is accurate
@@ -536,7 +567,7 @@ OUTER:
 
 	select {
 	case <-boardCtx.Done():
-		return context.Canceled
+		return nil, context.Canceled
 	default:
 	}
 
@@ -559,7 +590,7 @@ OUTER:
 				zap.Int("cell height", height),
 			)
 			loadCancel()
-			return s.renderGrid(boardCtx, canvas, games, w, h)
+			return nil, s.renderGrid(boardCtx, canvas, games, w, h)
 		}
 	}
 
@@ -568,11 +599,11 @@ OUTER:
 		s.log.Debug("no scheduled games, not rendering", zap.String("league", s.api.League()))
 		if !s.config.ShowNoScheduledLogo.Load() {
 			loadCancel()
-			return nil
+			return nil, nil
 		}
 
 		loadCancel()
-		return s.renderNoScheduled(boardCtx, canvas)
+		return nil, s.renderNoScheduled(boardCtx, canvas)
 	}
 
 	preloader := make(map[int]chan struct{})
@@ -590,13 +621,13 @@ OUTER:
 	if canvas.Scrollable() && s.config.TightScroll.Load() {
 		base, ok := canvas.(*rgbmatrix.ScrollCanvas)
 		if !ok {
-			return fmt.Errorf("wat")
+			return nil, fmt.Errorf("wat")
 		}
 
 		var err error
 		tightCanvas, err = rgbmatrix.NewScrollCanvas(base.Matrix, s.log)
 		if err != nil {
-			return fmt.Errorf("failed to get tight scroll canvas: %w", err)
+			return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
 		}
 
 		tightCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
@@ -618,13 +649,13 @@ GAMES:
 	for gameIndex, game := range games {
 		select {
 		case <-boardCtx.Done():
-			return context.Canceled
+			return nil, context.Canceled
 		default:
 		}
 
 		if !s.config.Enabled.Load() {
 			s.log.Warn("skipping disabled board", zap.String("board", s.api.League()))
-			return nil
+			return nil, nil
 		}
 
 		nextGameIndex := gameIndex + 1
@@ -643,7 +674,7 @@ GAMES:
 		// Wait for the preloader to finish getting data, but with a timeout.
 		select {
 		case <-boardCtx.Done():
-			return context.Canceled
+			return nil, context.Canceled
 		case <-preloader[game.GetID()]:
 			s.log.Debug("preloader marked ready", zap.Int("game ID", game.GetID()))
 		case <-time.After(preloaderTimeout):
@@ -695,7 +726,7 @@ GAMES:
 		if !s.config.ScrollMode.Load() {
 			select {
 			case <-boardCtx.Done():
-				return context.Canceled
+				return nil, context.Canceled
 			case <-time.After(s.config.boardDelay):
 			}
 		}
@@ -703,11 +734,10 @@ GAMES:
 
 	if canvas.Scrollable() && tightCanvas != nil {
 		tightCanvas.Merge(s.config.TightScrollPadding)
-		s.log.Debug("rendering tight scroll canvas")
-		return tightCanvas.Render(boardCtx)
+		return tightCanvas, nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (s *SportBoard) renderGrid(ctx context.Context, canvas board.Canvas, games []Game, cols int, rows int) error {

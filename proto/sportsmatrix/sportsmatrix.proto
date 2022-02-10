@@ -7,7 +7,8 @@ service Sportsmatrix {
        rpc Version(google.protobuf.Empty) returns (VersionResp);
        rpc ScreenOn(google.protobuf.Empty) returns (google.protobuf.Empty);
        rpc ScreenOff(google.protobuf.Empty) returns (google.protobuf.Empty);
-       rpc Status(google.protobuf.Empty) returns (ScreenStatusResp);
+       rpc GetStatus(google.protobuf.Empty) returns (Status);
+       rpc SetStatus(Status) returns (google.protobuf.Empty);
        rpc SetAll(SetAllReq) returns (google.protobuf.Empty);
        rpc Jump(JumpReq) returns (google.protobuf.Empty);
        rpc NextBoard(google.protobuf.Empty) returns (google.protobuf.Empty);
@@ -19,9 +20,10 @@ message VersionResp {
     string version = 1;
 }
 
-message ScreenStatusResp {
+message Status {
     bool screen_on = 1;
     bool webboard_on = 2;
+    bool combined_scroll = 3;
 }
 
 message SetAllReq {

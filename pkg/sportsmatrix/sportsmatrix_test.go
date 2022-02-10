@@ -44,6 +44,10 @@ func (b *TestBoard) Name() string {
 	return "Blank Board"
 }
 
+func (b *TestBoard) ScrollRender(ctx context.Context, canvas board.Canvas, pad int) (board.Canvas, error) {
+	return nil, nil
+}
+
 func (b *TestBoard) Render(ctx context.Context, canvases board.Canvas) error {
 	defer b.log.Info("TestBoard done rendering")
 	if b.tester != nil {
