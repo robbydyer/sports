@@ -33,13 +33,36 @@ func (s *StatBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc
 
 // ScrollRender ...
 func (s *StatBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
-	return nil, nil
+	origScrollMode := s.config.ScrollMode.Load()
+	origHoriz := s.config.Horizontal.Load()
+	defer func() {
+		s.config.ScrollMode.Store(origScrollMode)
+		s.config.Horizontal.Store(origHoriz)
+	}()
+
+	s.config.ScrollMode.Store(true)
+	s.config.Horizontal.Store(true)
+
+	return s.render(ctx, canvas)
 }
 
 // Render ...
 func (s *StatBoard) Render(ctx context.Context, canvas board.Canvas) error {
+	c, err := s.render(ctx, canvas)
+	if err != nil {
+		return err
+	}
+	if c != nil {
+		return c.Render(ctx)
+	}
+
+	return nil
+}
+
+// Render ...
+func (s *StatBoard) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
 	if len(s.config.Players) == 0 && len(s.config.Teams) == 0 {
-		return fmt.Errorf("no players or teams configured for stats %s", s.api.LeagueShortName())
+		return nil, fmt.Errorf("no players or teams configured for stats %s", s.api.LeagueShortName())
 	}
 
 	boardCtx, boardCancel := context.WithCancel(ctx)
@@ -58,7 +81,7 @@ func (s *StatBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	for _, abbrev := range s.config.Teams {
 		p, err := s.api.ListPlayers(ctx, abbrev)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		for _, player := range p {
 			cat := player.GetCategory()
@@ -103,6 +126,13 @@ func (s *StatBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		players[cat] = append(players[cat], player)
 	}
 
+	if s.config.Horizontal.Load() {
+		if err := s.doHorizontal(ctx, canvas, players); err != nil {
+			return nil, err
+		}
+		return canvas, nil
+	}
+
 PLAYERS:
 	for cat, p := range players {
 		s.log.Debug("rendering category",
@@ -112,17 +142,17 @@ PLAYERS:
 
 		if s.config.ScrollMode.Load() && canvas.Scrollable() {
 			if err := s.doScroll(boardCtx, canvas, p); err != nil {
-				return err
+				return nil, err
 			}
 			continue PLAYERS
 		}
 
 		if err := s.doRender(boardCtx, canvas, p); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (s *StatBoard) doRender(ctx context.Context, canvas board.Canvas, players []Player) error {
