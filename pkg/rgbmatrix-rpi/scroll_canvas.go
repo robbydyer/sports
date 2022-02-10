@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"math"
 	"sort"
 	"time"
 
@@ -34,18 +35,19 @@ const (
 )
 
 type ScrollCanvas struct {
-	w, h        int
-	Matrix      Matrix
-	enabled     *atomic.Bool
-	actual      *image.RGBA
-	direction   ScrollDirection
-	interval    time.Duration
-	log         *zap.Logger
-	pad         int
-	actuals     []*image.RGBA
-	merged      *atomic.Bool
-	subCanvases []*subCanvasHorizontal
-	mergePad    int
+	w, h         int
+	Matrix       Matrix
+	enabled      *atomic.Bool
+	actual       *image.RGBA
+	direction    ScrollDirection
+	interval     time.Duration
+	log          *zap.Logger
+	pad          int
+	actuals      []*image.RGBA
+	merged       *atomic.Bool
+	subCanvases  []*subCanvasHorizontal
+	mergePad     int
+	scrollStatus chan float64
 }
 
 type subCanvasHorizontal struct {
@@ -160,6 +162,7 @@ func (c *ScrollCanvas) Merge(padding int) {
 	c.actual = merged
 }
 
+// Append the actual canvases of another ScrollCanvas to this one
 func (c *ScrollCanvas) Append(other *ScrollCanvas) {
 	for _, actual := range other.actuals {
 		c.actuals = append(c.actuals, actual)
@@ -265,7 +268,8 @@ func (c *ScrollCanvas) Render(ctx context.Context) error {
 }
 
 // RenderNoMerge update the display with the data from the LED buffer
-func (c *ScrollCanvas) RenderNoMerge(ctx context.Context, pad int) error {
+func (c *ScrollCanvas) RenderNoMerge(ctx context.Context, pad int, status chan float64) error {
+	c.scrollStatus = status
 	switch c.direction {
 	case RightToLeft:
 		c.log.Debug("scrolling right to left")
@@ -377,6 +381,8 @@ func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
 		zap.Int("finish", finish),
 	)
 
+	pctDone := float64(0)
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -387,8 +393,8 @@ func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
 			return nil
 		}
 
-		for x := 0; x <= c.w; x++ {
-			for y := 0; y <= c.h; y++ {
+		for x := 0; x < c.w; x++ {
+			for y := 0; y < c.h; y++ {
 				thisVirtualX := x + virtualX
 
 				c.Matrix.Set(c.position(x, y), c.getActualPixel(thisVirtualX, y))
@@ -398,6 +404,15 @@ func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
 
 		if err := c.Matrix.Render(); err != nil {
 			return err
+		}
+
+		pctDone = float64(virtualX) / float64(finish)
+
+		if math.Floor(pctDone/0.1) == pctDone/0.1 {
+			select {
+			case c.scrollStatus <- pctDone:
+			default:
+			}
 		}
 	}
 	return nil
@@ -411,20 +426,9 @@ func (c *ScrollCanvas) getActualPixel(virtualX int, virtualY int) color.Color {
 	for _, sub := range c.subCanvases {
 		if virtualX >= sub.virtualStartX && virtualX <= sub.virtualEndX {
 			actualX := (virtualX - sub.virtualStartX) + sub.actualStartX
-			/*
-				c.log.Debug("found pixel",
-					zap.Int("myX", x-diff),
-					zap.Int("virtualX", x),
-				)
-			*/
 			return sub.img.At(actualX, virtualY)
 		}
 	}
-
-	c.log.Debug("no pixel found",
-		zap.Int("x", virtualX),
-		zap.Int("y", virtualY),
-	)
 
 	return color.Black
 }
@@ -514,10 +518,6 @@ SUBS:
 	c.log.Debug("done defining sub canvases")
 }
 
-func (c *ScrollCanvas) subCanvasEndX() int {
-	return c.subCanvases[len(c.subCanvases)-1].virtualEndX
-}
-
 func (c *ScrollCanvas) prevSub(me *subCanvasHorizontal) *subCanvasHorizontal {
 	if me.index == 0 {
 		return nil
@@ -528,14 +528,6 @@ func (c *ScrollCanvas) prevSub(me *subCanvasHorizontal) *subCanvasHorizontal {
 		}
 	}
 	return nil
-}
-
-func (c *ScrollCanvas) prevXSum(me *subCanvasHorizontal) int {
-	prev := c.prevSub(me)
-	if prev == nil {
-		return 0
-	}
-	return me.actualEndX + c.prevXSum(me)
 }
 
 func (c *ScrollCanvas) topToBottom(ctx context.Context) error {
