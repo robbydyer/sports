@@ -3,6 +3,17 @@
 
 # Main matrix config
 sportsMatrixConfig:
+
+  # Enabling this will string together all the boards into one long scroll
+  # instead of blanking the screen between each
+  combinedScroll: false
+
+  # Padding between items in combined scroll mode
+  combinedScrollPadding: 7
+
+  # Decrease this interval to speed up the scroll speed on the combined mode
+  combinedScrollDelay: "50ms"
+
   # Serves the single page web UI for controlling the matrix
   # accessible at http://[IP or hostname of Pi]
   serveWebUI: true
