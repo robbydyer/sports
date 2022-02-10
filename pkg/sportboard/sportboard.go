@@ -454,16 +454,13 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 // ScrollRender ...
 func (s *SportBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
 	origScrollMode := s.config.ScrollMode.Load()
-	origPad := s.config.TightScrollPadding
 	origTight := s.config.TightScroll.Load()
 	defer func() {
 		s.config.ScrollMode.Store(origScrollMode)
-		s.config.TightScrollPadding = origPad
 		s.config.TightScroll.Store(origTight)
 	}()
 
 	s.config.ScrollMode.Store(true)
-	s.config.TightScrollPadding = padding
 	s.config.TightScroll.Store(true)
 
 	return s.render(ctx, canvas)

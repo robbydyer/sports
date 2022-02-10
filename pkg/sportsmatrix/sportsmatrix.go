@@ -619,8 +619,8 @@ CANVASES:
 			scrollCanvas.AddCanvas(ordered.scrollCanvas)
 		}
 
-		scrollCanvas.Merge(s.cfg.CombinedScrollPadding)
-		if err := scrollCanvas.Render(ctx); err != nil {
+		// scrollCanvas.Merge(s.cfg.CombinedScrollPadding)
+		if err := scrollCanvas.RenderNoMerge(ctx, s.cfg.CombinedScrollPadding); err != nil {
 			return err
 		}
 	}
