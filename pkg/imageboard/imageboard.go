@@ -236,7 +236,7 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	if i.config.UseDiskCache.Load() {
 		if _, err := os.Stat(diskCacheDir); err != nil {
 			if os.IsNotExist(err) {
-				if err := os.MkdirAll(diskCacheDir, 0755); err != nil {
+				if err := os.MkdirAll(diskCacheDir, 0o755); err != nil {
 					return err
 				}
 			}

@@ -60,7 +60,7 @@ func (e *ESPNBoard) logoCacheDir() (string, error) {
 	cacheDir := fmt.Sprintf("/tmp/sportsmatrix_logos/%s", e.leaguer.APIPath())
 	if _, err := os.Stat(cacheDir); err != nil {
 		if os.IsNotExist(err) {
-			return cacheDir, os.MkdirAll(cacheDir, 0755)
+			return cacheDir, os.MkdirAll(cacheDir, 0o755)
 		}
 	}
 	return cacheDir, nil

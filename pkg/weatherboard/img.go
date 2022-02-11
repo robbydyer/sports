@@ -22,7 +22,7 @@ func cacheDir() (string, error) {
 	d := "/tmp/sportsmatrix_logos/weathericons"
 	if _, err := os.Stat(d); err != nil {
 		if os.IsNotExist(err) {
-			if err := os.MkdirAll(d, 0755); err != nil {
+			if err := os.MkdirAll(d, 0o755); err != nil {
 				return "", err
 			}
 			return d, nil

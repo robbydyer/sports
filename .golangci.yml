@@ -4,6 +4,7 @@ run:
   skip-dirs:
   - vendor
   - pkg/rgbmatrix-rpi
+  - internal/proto
   timeout: 5m
 linters:
   disable-all: true
@@ -14,17 +15,18 @@ linters:
   - durationcheck
   - errcheck
   - exportloopref
+  - importas
+  - ineffassign
   - goconst
   - gofumpt
   - goimports
-  - revive
   - gosimple
   - govet
-  - importas
-  - ineffassign
   - misspell
-  - nilerr
   - nakedret
+  - nilerr
+  - promlinter
+  - revive
   - staticcheck
   - structcheck
   - tparallel
@@ -36,6 +38,7 @@ linters:
 linters-settings:
   govet:
     check-shadowing: true
+    enabled-all: true
   goimports:
     local-prefixes: github.com/robbydyer/sports
 issues:
