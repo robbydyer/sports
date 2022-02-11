@@ -20,7 +20,7 @@ func GradientXRectangle(bounds image.Rectangle, fillPercentage float64, baseColo
 	maxFull := bounds.Max.X - (outerWidth / 2)
 
 	gradientStep := uint8(1)
-	if outerWidth < 128 {
+	if outerWidth < 128 && (outerWidth/2) > 0 {
 		gradientStep = uint8(255 / (outerWidth / 2))
 	}
 	if gradientStep == 0 {

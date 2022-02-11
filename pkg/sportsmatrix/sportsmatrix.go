@@ -556,6 +556,19 @@ func (s *SportsMatrix) doCombinedScroll(ctx context.Context) error {
 		}
 	}
 
+	boards := []board.Board{}
+
+	for _, board := range s.boards {
+		if board.Enabled() {
+			boards = append(boards, board)
+			for _, b := range s.betweenBoards {
+				if b.Enabled() {
+					boards = append(boards, b)
+				}
+			}
+		}
+	}
+
 CANVASES:
 	for _, canvas := range s.canvases {
 		if !canvas.Enabled() || !canvas.Scrollable() {
@@ -569,17 +582,22 @@ CANVASES:
 		scrollCanvas, err := rgb.NewScrollCanvas(base.Matrix, s.log,
 			rgb.WithScrollSpeed(s.cfg.combinedScrollDelay),
 			rgb.WithScrollDirection(rgb.RightToLeft),
+			rgb.WithMergePadding(s.cfg.CombinedScrollPadding),
 		)
 		if err != nil {
 			return err
 		}
 
 		wg := sync.WaitGroup{}
-		ch := make(chan *orderedBoards, len(s.boards))
+		ch := make(chan *orderedBoards, len(boards))
 
 		index := 0
-		for _, b := range s.boards {
+	BOARDS:
+		for _, b := range boards {
 			b := b
+			if !b.Enabled() {
+				continue BOARDS
+			}
 			myBase, err := rgb.NewScrollCanvas(base.Matrix, s.log,
 				rgb.WithScrollDirection(rgb.RightToLeft),
 				rgb.WithScrollSpeed(s.cfg.combinedScrollDelay),
@@ -648,7 +666,12 @@ CANVASES:
 				cancel()
 			}()
 
-			if err := scrollCanvas.RenderNoMerge(ctx, s.cfg.CombinedScrollPadding, s.scrollStatus); err != nil {
+			s.log.Debug("performing combined scroll",
+				zap.Int("pad", s.cfg.CombinedScrollPadding),
+				zap.Duration("scroll delay", s.cfg.combinedScrollDelay),
+			)
+
+			if err := scrollCanvas.RenderNoMerge(ctx, s.scrollStatus); err != nil {
 				s.log.Error("combined scroll failed",
 					zap.Error(err),
 				)
