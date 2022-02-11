@@ -557,7 +557,6 @@ func (s *SportsMatrix) doCombinedScroll(ctx context.Context) error {
 	}
 
 	scrollCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
 
 	boards := []board.Board{}
 
@@ -668,6 +667,7 @@ CANVASES:
 		go func() {
 			defer func() {
 				s.scrollInProgress.Store(false)
+				cancel()
 			}()
 
 			s.log.Debug("performing combined scroll",
