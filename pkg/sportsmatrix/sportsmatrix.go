@@ -556,6 +556,7 @@ func (s *SportsMatrix) doCombinedScroll(ctx context.Context) error {
 		}
 	}
 
+	// nolint: govet
 	scrollCtx, cancel := context.WithCancel(ctx)
 
 	boards := []board.Board{}
@@ -590,6 +591,7 @@ CANVASES:
 			rgb.WithMergePadding(s.cfg.CombinedScrollPadding),
 		)
 		if err != nil {
+			cancel()
 			return err
 		}
 
@@ -608,6 +610,7 @@ CANVASES:
 				rgb.WithScrollSpeed(s.cfg.combinedScrollDelay),
 			)
 			if err != nil {
+				cancel()
 				return err
 			}
 			brd := &orderedBoards{
@@ -658,6 +661,7 @@ CANVASES:
 			}
 			select {
 			case <-scrollCtx.Done():
+				cancel()
 				return context.Canceled
 			case <-ticker.C:
 			}
@@ -686,6 +690,7 @@ CANVASES:
 		s.log.Debug("done waiting for combined scroll")
 	}
 
+	// nolint: govet
 	return nil
 }
 
