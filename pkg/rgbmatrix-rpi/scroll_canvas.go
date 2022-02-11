@@ -267,12 +267,11 @@ func (c *ScrollCanvas) Render(ctx context.Context) error {
 }
 
 // RenderNoMerge update the display with the data from the LED buffer
-func (c *ScrollCanvas) RenderNoMerge(ctx context.Context, pad int, status chan float64) error {
+func (c *ScrollCanvas) RenderNoMerge(ctx context.Context, status chan float64) error {
 	c.scrollStatus = status
 	switch c.direction {
 	case RightToLeft:
 		c.log.Debug("scrolling right to left")
-		c.mergePad = pad
 		if err := c.rightToLeftNoMerge(ctx); err != nil {
 			return err
 		}
@@ -668,6 +667,14 @@ func WithScrollSpeed(d time.Duration) ScrollCanvasOption {
 func WithScrollDirection(direct ScrollDirection) ScrollCanvasOption {
 	return func(c *ScrollCanvas) error {
 		c.SetScrollDirection(direct)
+		return nil
+	}
+}
+
+// WithMergePadding ...
+func WithMergePadding(pad int) ScrollCanvasOption {
+	return func(c *ScrollCanvas) error {
+		c.mergePad = pad
 		return nil
 	}
 }
