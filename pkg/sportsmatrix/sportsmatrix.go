@@ -556,13 +556,19 @@ func (s *SportsMatrix) doCombinedScroll(ctx context.Context) error {
 		}
 	}
 
+	scrollCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	boards := []board.Board{}
 
 	for _, board := range s.boards {
+		board.SetStateChangeNotifier(func() { cancel() })
 		if board.Enabled() {
 			boards = append(boards, board)
 			for _, b := range s.betweenBoards {
+				board.SetStateChangeNotifier(func() { cancel() })
 				if b.Enabled() {
+					board.SetStateChangeNotifier(func() { cancel() })
 					boards = append(boards, b)
 				}
 			}
@@ -652,18 +658,16 @@ CANVASES:
 				break WAIT
 			}
 			select {
-			case <-ctx.Done():
+			case <-scrollCtx.Done():
 				return context.Canceled
 			case <-ticker.C:
 			}
 		}
 
-		waitCtx, cancel := context.WithCancel(ctx)
 		s.scrollInProgress.Store(true)
 		go func() {
 			defer func() {
 				s.scrollInProgress.Store(false)
-				cancel()
 			}()
 
 			s.log.Debug("performing combined scroll",
@@ -671,14 +675,14 @@ CANVASES:
 				zap.Duration("scroll delay", s.cfg.combinedScrollDelay),
 			)
 
-			if err := scrollCanvas.RenderNoMerge(ctx, s.scrollStatus); err != nil {
+			if err := scrollCanvas.RenderNoMerge(scrollCtx, s.scrollStatus); err != nil {
 				s.log.Error("combined scroll failed",
 					zap.Error(err),
 				)
 			}
 		}()
 
-		s.waitForScroll(waitCtx, 0.7, 5*time.Minute)
+		s.waitForScroll(scrollCtx, 0.7, 5*time.Minute)
 		s.log.Debug("done waiting for combined scroll")
 	}
 

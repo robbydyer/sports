@@ -25,15 +25,16 @@ import (
 
 // RacingBoard implements board.Board
 type RacingBoard struct {
-	config         *Config
-	api            API
-	log            *zap.Logger
-	scheduleWriter *rgbrender.TextWriter
-	leagueLogo     *logo.Logo
-	events         []*Event
-	rpcServer      pb.TwirpServer
-	boardCtx       context.Context
-	boardCancel    context.CancelFunc
+	config              *Config
+	api                 API
+	log                 *zap.Logger
+	scheduleWriter      *rgbrender.TextWriter
+	leagueLogo          *logo.Logo
+	events              []*Event
+	rpcServer           pb.TwirpServer
+	boardCtx            context.Context
+	boardCancel         context.CancelFunc
+	stateChangeNotifier board.StateChangeNotifier
 }
 
 // Todayer is a func that returns a string representing a date
@@ -187,8 +188,12 @@ func (s *RacingBoard) Enabled() bool {
 }
 
 // Enable ...
-func (s *RacingBoard) Enable() {
-	s.config.Enabled.Store(true)
+func (s *RacingBoard) Enable() bool {
+	if s.config.Enabled.CAS(false, true) {
+		s.stateChangeNotifier()
+		return true
+	}
+	return false
 }
 
 // InBetween ...
@@ -197,8 +202,17 @@ func (s *RacingBoard) InBetween() bool {
 }
 
 // Disable ...
-func (s *RacingBoard) Disable() {
-	s.config.Enabled.Store(false)
+func (s *RacingBoard) Disable() bool {
+	if s.config.Enabled.CAS(true, false) {
+		s.stateChangeNotifier()
+		return true
+	}
+	return false
+}
+
+// SetStateChangeNotifier ...
+func (s *RacingBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
+	s.stateChangeNotifier = st
 }
 
 // ScrollMode ...

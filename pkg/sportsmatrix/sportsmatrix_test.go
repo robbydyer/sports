@@ -28,16 +28,16 @@ func (b *TestBoard) Enabled() bool {
 	return b.enabled.Load()
 }
 
-func (b *TestBoard) Enable() {
-	b.enabled.Store(true)
+func (b *TestBoard) Enable() bool {
+	return b.enabled.CAS(false, true)
 }
 
 func (b *TestBoard) InBetween() bool {
 	return false
 }
 
-func (b *TestBoard) Disable() {
-	b.enabled.Store(false)
+func (b *TestBoard) Disable() bool {
+	return b.enabled.CAS(true, false)
 }
 
 func (b *TestBoard) Name() string {
@@ -72,6 +72,9 @@ func (b *TestBoard) HasRendered() bool {
 
 func (b *TestBoard) ScrollMode() bool {
 	return false
+}
+
+func (b *TestBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
 }
 
 func TestSportsMatrix(t *testing.T) {

@@ -236,7 +236,7 @@ OUTER:
 func ensureCacheDir() error {
 	if _, err := os.Stat(cacheDir); err != nil {
 		if os.IsNotExist(err) {
-			return os.MkdirAll(cacheDir, 0755)
+			return os.MkdirAll(cacheDir, 0o755)
 		}
 	}
 	return nil

@@ -91,7 +91,7 @@ func (l *Logo) GetThumbnail(ctx context.Context, size image.Rectangle) (image.Im
 		if os.IsNotExist(err) {
 			if _, err := os.Stat(l.targetDirectory); err != nil {
 				if os.IsNotExist(err) {
-					if err := os.MkdirAll(l.targetDirectory, 0755); err != nil {
+					if err := os.MkdirAll(l.targetDirectory, 0o755); err != nil {
 						return nil, fmt.Errorf("failed to create logo cache dir: %w", err)
 					}
 				}

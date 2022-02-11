@@ -104,13 +104,13 @@ func (c *Canvas) Enabled() bool {
 }
 
 // Enable ...
-func (c *Canvas) Enable() {
-	c.enabled.Store(true)
+func (c *Canvas) Enable() bool {
+	return c.enabled.CAS(false, true)
 }
 
 // Disable ...
-func (c *Canvas) Disable() {
-	c.enabled.Store(false)
+func (c *Canvas) Disable() bool {
+	return c.enabled.CAS(true, false)
 }
 
 // GetHTTPHandlers ...

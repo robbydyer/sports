@@ -37,24 +37,25 @@ const (
 
 // SportBoard implements board.Board
 type SportBoard struct {
-	config          *Config
-	api             API
-	cachedLiveGames map[int]Game
-	logos           map[string]*logo.Logo
-	log             *zap.Logger
-	logoDrawCache   map[string]image.Image
-	scoreWriters    map[string]*rgbrender.TextWriter
-	timeWriters     map[string]*rgbrender.TextWriter
-	teamInfoWidths  map[string]map[string]int
-	watchTeams      []string
-	teamInfoLock    sync.RWMutex
-	drawLock        sync.RWMutex
-	logoLock        sync.RWMutex
-	enablerLock     sync.Mutex
-	cancelBoard     chan struct{}
-	previousScores  []*previousScore
-	prevScoreLock   sync.Mutex
-	rpcServer       pb.TwirpServer
+	config              *Config
+	api                 API
+	cachedLiveGames     map[int]Game
+	logos               map[string]*logo.Logo
+	log                 *zap.Logger
+	logoDrawCache       map[string]image.Image
+	scoreWriters        map[string]*rgbrender.TextWriter
+	timeWriters         map[string]*rgbrender.TextWriter
+	teamInfoWidths      map[string]map[string]int
+	watchTeams          []string
+	teamInfoLock        sync.RWMutex
+	drawLock            sync.RWMutex
+	logoLock            sync.RWMutex
+	enablerLock         sync.Mutex
+	cancelBoard         chan struct{}
+	previousScores      []*previousScore
+	prevScoreLock       sync.Mutex
+	rpcServer           pb.TwirpServer
+	stateChangeNotifier board.StateChangeNotifier
 	sync.Mutex
 }
 
@@ -358,8 +359,12 @@ func (s *SportBoard) Enabled() bool {
 }
 
 // Enable ...
-func (s *SportBoard) Enable() {
-	s.config.Enabled.Store(true)
+func (s *SportBoard) Enable() bool {
+	if s.config.Enabled.CAS(false, true) {
+		s.stateChangeNotifier()
+		return true
+	}
+	return false
 }
 
 // InBetween ...
@@ -368,8 +373,17 @@ func (s *SportBoard) InBetween() bool {
 }
 
 // Disable ...
-func (s *SportBoard) Disable() {
-	s.config.Enabled.Store(false)
+func (s *SportBoard) Disable() bool {
+	if s.config.Enabled.CAS(true, false) {
+		s.stateChangeNotifier()
+		return true
+	}
+	return false
+}
+
+// SetStateChangeNotifier ...
+func (s *SportBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
+	s.stateChangeNotifier = st
 }
 
 // ScrollMode ...

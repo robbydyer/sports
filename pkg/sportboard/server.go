@@ -32,7 +32,9 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 	if s.board.config.HideFavoriteScore.CAS(!req.Status.FavoriteHidden, req.Status.FavoriteHidden) {
 		cancelBoard = true
 	}
-	if s.board.config.Enabled.CAS(!req.Status.Enabled, req.Status.Enabled) {
+	if req.Status.Enabled && s.board.Enable() {
+		cancelBoard = true
+	} else if s.board.Disable() {
 		cancelBoard = true
 	}
 	if s.board.config.FavoriteSticky.CAS(!req.Status.FavoriteSticky, req.Status.FavoriteSticky) {

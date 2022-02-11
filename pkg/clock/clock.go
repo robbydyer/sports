@@ -27,11 +27,12 @@ var Name = "Clock"
 
 // Clock implements board.Board
 type Clock struct {
-	config      *Config
-	font        *truetype.Font
-	textWriters map[int]*rgbrender.TextWriter
-	log         *zap.Logger
-	rpcServer   pb.TwirpServer
+	config              *Config
+	font                *truetype.Font
+	textWriters         map[int]*rgbrender.TextWriter
+	log                 *zap.Logger
+	rpcServer           pb.TwirpServer
+	stateChangeNotifier board.StateChangeNotifier
 	sync.Mutex
 }
 
@@ -162,13 +163,26 @@ func (c *Clock) Enabled() bool {
 }
 
 // Enable ...
-func (c *Clock) Enable() {
-	c.config.Enabled.Store(true)
+func (c *Clock) Enable() bool {
+	if c.config.Enabled.CAS(false, true) {
+		c.stateChangeNotifier()
+		return true
+	}
+	return false
 }
 
 // Disable ...
-func (c *Clock) Disable() {
-	c.config.Enabled.Store(false)
+func (c *Clock) Disable() bool {
+	if c.config.Enabled.CAS(true, false) {
+		c.stateChangeNotifier()
+		return true
+	}
+	return false
+}
+
+// SetStateChangeNotifier ...
+func (c *Clock) SetStateChangeNotifier(st board.StateChangeNotifier) {
+	c.stateChangeNotifier = st
 }
 
 // Cleanup ...
