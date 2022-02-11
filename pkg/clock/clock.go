@@ -278,7 +278,7 @@ func (c *Clock) render(ctx context.Context, canvas board.Canvas) (board.Canvas, 
 
 	go func() {
 		prevTime := ""
-		thisTime := currentTimeStr()
+		thisTime := ""
 		ticker := time.NewTicker(500 * time.Millisecond)
 		for {
 			select {
