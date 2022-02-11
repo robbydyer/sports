@@ -6,7 +6,6 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"math"
 	"sort"
 	"time"
 
@@ -370,7 +369,9 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 }
 
 func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
-	c.PrepareSubCanvases()
+	if len(c.subCanvases) < 1 {
+		c.PrepareSubCanvases()
+	}
 
 	finish := c.subCanvases[len(c.subCanvases)-1].virtualEndX
 
@@ -383,13 +384,8 @@ func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
 
 	pctDone := float64(0)
 
-	defer func() {
-		select {
-		case c.scrollStatus <- 1.0:
-		default:
-		}
-	}()
-
+	reportInterval := finish / 20
+	count := 0
 	for {
 		select {
 		case <-ctx.Done():
@@ -415,7 +411,12 @@ func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
 
 		pctDone = float64(virtualX) / float64(finish)
 
-		if math.Floor(pctDone/0.1) == pctDone/0.1 {
+		count++
+		if count == reportInterval {
+			count = 0
+			c.log.Debug("non merged scroll progress",
+				zap.Float64("percentage", pctDone*100),
+			)
 			select {
 			case c.scrollStatus <- pctDone:
 			default:

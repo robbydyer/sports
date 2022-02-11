@@ -640,10 +640,12 @@ CANVASES:
 			}
 		}
 
+		waitCtx, cancel := context.WithCancel(ctx)
+		s.scrollInProgress.Store(true)
 		go func() {
-			s.scrollInProgress.Store(true)
 			defer func() {
 				s.scrollInProgress.Store(false)
+				cancel()
 			}()
 
 			if err := scrollCanvas.RenderNoMerge(ctx, s.cfg.CombinedScrollPadding, s.scrollStatus); err != nil {
@@ -653,7 +655,7 @@ CANVASES:
 			}
 		}()
 
-		s.waitForScroll(ctx, 0.7, 5*time.Minute)
+		s.waitForScroll(waitCtx, 0.7, 5*time.Minute)
 		s.log.Debug("done waiting for combined scroll")
 	}
 
@@ -661,20 +663,22 @@ CANVASES:
 }
 
 func (s *SportsMatrix) waitForScroll(ctx context.Context, waitFor float64, timeout time.Duration) {
-	select {
-	case <-ctx.Done():
-		return
-	case <-time.After(timeout):
-		s.log.Error("timed out waiting for scroll",
-			zap.Duration("timeout", timeout),
-		)
-		return
-	case status := <-s.scrollStatus:
-		s.log.Debug("scroll progress",
-			zap.Float64("percentage", status*100),
-		)
-		if status >= waitFor {
+	for {
+		select {
+		case <-ctx.Done():
 			return
+		case <-time.After(timeout):
+			s.log.Error("timed out waiting for scroll",
+				zap.Duration("timeout", timeout),
+			)
+			return
+		case status := <-s.scrollStatus:
+			s.log.Debug("scroll progress",
+				zap.Float64("percentage", status*100),
+			)
+			if status >= waitFor {
+				return
+			}
 		}
 	}
 }
