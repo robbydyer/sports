@@ -623,6 +623,10 @@ CANVASES:
 			scrollCanvas.AddCanvas(ordered.scrollCanvas)
 		}
 
+		scrollCanvas.PrepareSubCanvases()
+
+		s.log.Debug("prepared combined canvas, waiting for previous to finish")
+
 		ticker := time.NewTicker(500 * time.Millisecond)
 	WAIT:
 		for {
@@ -650,6 +654,7 @@ CANVASES:
 		}()
 
 		s.waitForScroll(ctx, 0.7, 5*time.Minute)
+		s.log.Debug("done waiting for combined scroll")
 	}
 
 	return nil
@@ -665,7 +670,10 @@ func (s *SportsMatrix) waitForScroll(ctx context.Context, waitFor float64, timeo
 		)
 		return
 	case status := <-s.scrollStatus:
-		if status > waitFor {
+		s.log.Debug("scroll progress",
+			zap.Float64("percentage", status*100),
+		)
+		if status >= waitFor {
 			return
 		}
 	}

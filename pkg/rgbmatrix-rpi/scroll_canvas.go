@@ -370,7 +370,7 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 }
 
 func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
-	c.setSubCanvases()
+	c.PrepareSubCanvases()
 
 	finish := c.subCanvases[len(c.subCanvases)-1].virtualEndX
 
@@ -382,6 +382,13 @@ func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
 	)
 
 	pctDone := float64(0)
+
+	defer func() {
+		select {
+		case c.scrollStatus <- 1.0:
+		default:
+		}
+	}()
 
 	for {
 		select {
@@ -420,7 +427,7 @@ func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
 
 func (c *ScrollCanvas) getActualPixel(virtualX int, virtualY int) color.Color {
 	if len(c.subCanvases) < 1 {
-		c.setSubCanvases()
+		c.PrepareSubCanvases()
 	}
 
 	for _, sub := range c.subCanvases {
@@ -433,7 +440,8 @@ func (c *ScrollCanvas) getActualPixel(virtualX int, virtualY int) color.Color {
 	return color.Black
 }
 
-func (c *ScrollCanvas) setSubCanvases() {
+// PrepareSubCanvases
+func (c *ScrollCanvas) PrepareSubCanvases() {
 	if len(c.actuals) < 1 {
 		return
 	}
