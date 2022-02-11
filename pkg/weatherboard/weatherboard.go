@@ -256,14 +256,11 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 // ScrollRender ...
 func (w *WeatherBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
 	origScrollMode := w.config.ScrollMode.Load()
-	origPad := w.config.TightScrollPadding
 	defer func() {
 		w.config.ScrollMode.Store(origScrollMode)
-		w.config.TightScrollPadding = origPad
 	}()
 
 	w.config.ScrollMode.Store(true)
-	w.config.TightScrollPadding = padding
 
 	return w.render(ctx, canvas)
 }

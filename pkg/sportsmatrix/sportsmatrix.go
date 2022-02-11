@@ -55,6 +55,8 @@ type SportsMatrix struct {
 	webBoardCtx        context.Context
 	webBoardCancel     context.CancelFunc
 	liveOnly           *atomic.Bool
+	scrollStatus       chan float64
+	scrollInProgress   *atomic.Bool
 	sync.Mutex
 }
 
@@ -142,22 +144,24 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 	cfg.Defaults()
 
 	s := &SportsMatrix{
-		boards:        boards,
-		cfg:           cfg,
-		log:           logger,
-		serveBlock:    make(chan struct{}),
-		close:         make(chan struct{}),
-		screenIsOn:    atomic.NewBool(true),
-		webBoardIsOn:  atomic.NewBool(false),
-		webBoardOn:    make(chan struct{}),
-		webBoardOff:   make(chan struct{}),
-		isServing:     make(chan struct{}, 1),
-		jumpTo:        make(chan string, 1),
-		canvases:      canvases,
-		jumping:       atomic.NewBool(false),
-		screenSwitch:  make(chan struct{}, 1),
-		webBoardWasOn: atomic.NewBool(false),
-		liveOnly:      atomic.NewBool(false),
+		boards:           boards,
+		cfg:              cfg,
+		log:              logger,
+		serveBlock:       make(chan struct{}),
+		close:            make(chan struct{}),
+		screenIsOn:       atomic.NewBool(true),
+		webBoardIsOn:     atomic.NewBool(false),
+		webBoardOn:       make(chan struct{}),
+		webBoardOff:      make(chan struct{}),
+		isServing:        make(chan struct{}, 1),
+		jumpTo:           make(chan string, 1),
+		canvases:         canvases,
+		jumping:          atomic.NewBool(false),
+		screenSwitch:     make(chan struct{}, 1),
+		webBoardWasOn:    atomic.NewBool(false),
+		liveOnly:         atomic.NewBool(false),
+		scrollStatus:     make(chan float64),
+		scrollInProgress: atomic.NewBool(false),
 	}
 
 	s.boardCtx, s.boardCancel = context.WithCancel(context.Background())
@@ -619,13 +623,64 @@ CANVASES:
 			scrollCanvas.AddCanvas(ordered.scrollCanvas)
 		}
 
-		scrollCanvas.Merge(s.cfg.CombinedScrollPadding)
-		if err := scrollCanvas.Render(ctx); err != nil {
-			return err
+		scrollCanvas.PrepareSubCanvases()
+
+		s.log.Debug("prepared combined canvas, waiting for previous to finish")
+
+		ticker := time.NewTicker(500 * time.Millisecond)
+	WAIT:
+		for {
+			if !s.scrollInProgress.Load() {
+				break WAIT
+			}
+			select {
+			case <-ctx.Done():
+				return context.Canceled
+			case <-ticker.C:
+			}
 		}
+
+		waitCtx, cancel := context.WithCancel(ctx)
+		s.scrollInProgress.Store(true)
+		go func() {
+			defer func() {
+				s.scrollInProgress.Store(false)
+				cancel()
+			}()
+
+			if err := scrollCanvas.RenderNoMerge(ctx, s.cfg.CombinedScrollPadding, s.scrollStatus); err != nil {
+				s.log.Error("combined scroll failed",
+					zap.Error(err),
+				)
+			}
+		}()
+
+		s.waitForScroll(waitCtx, 0.7, 5*time.Minute)
+		s.log.Debug("done waiting for combined scroll")
 	}
 
 	return nil
+}
+
+func (s *SportsMatrix) waitForScroll(ctx context.Context, waitFor float64, timeout time.Duration) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(timeout):
+			s.log.Error("timed out waiting for scroll",
+				zap.Duration("timeout", timeout),
+			)
+			return
+		case status := <-s.scrollStatus:
+			s.log.Debug("scroll progress",
+				zap.Float64("percentage", status*100),
+			)
+			if status >= waitFor {
+				return
+			}
+		}
+	}
 }
 
 func (s *SportsMatrix) doBoard(ctx context.Context, b board.Board) error {

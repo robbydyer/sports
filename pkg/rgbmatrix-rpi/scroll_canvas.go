@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"sort"
 	"time"
 
 	"github.com/robbydyer/sports/pkg/board"
@@ -33,16 +34,28 @@ const (
 )
 
 type ScrollCanvas struct {
-	w, h      int
-	Matrix    Matrix
-	enabled   *atomic.Bool
-	actual    *image.RGBA
-	direction ScrollDirection
-	interval  time.Duration
-	log       *zap.Logger
-	pad       int
-	actuals   []*image.RGBA
-	merged    *atomic.Bool
+	w, h         int
+	Matrix       Matrix
+	enabled      *atomic.Bool
+	actual       *image.RGBA
+	direction    ScrollDirection
+	interval     time.Duration
+	log          *zap.Logger
+	pad          int
+	actuals      []*image.RGBA
+	merged       *atomic.Bool
+	subCanvases  []*subCanvasHorizontal
+	mergePad     int
+	scrollStatus chan float64
+}
+
+type subCanvasHorizontal struct {
+	actualStartX  int
+	actualEndX    int
+	virtualStartX int
+	virtualEndX   int
+	img           *image.RGBA
+	index         int
 }
 
 type ScrollCanvasOption func(*ScrollCanvas) error
@@ -148,6 +161,13 @@ func (c *ScrollCanvas) Merge(padding int) {
 	c.actual = merged
 }
 
+// Append the actual canvases of another ScrollCanvas to this one
+func (c *ScrollCanvas) Append(other *ScrollCanvas) {
+	for _, actual := range other.actuals {
+		c.actuals = append(c.actuals, actual)
+	}
+}
+
 func (c *ScrollCanvas) position(x, y int) int {
 	return x + (y * c.w)
 }
@@ -246,6 +266,25 @@ func (c *ScrollCanvas) Render(ctx context.Context) error {
 	return nil
 }
 
+// RenderNoMerge update the display with the data from the LED buffer
+func (c *ScrollCanvas) RenderNoMerge(ctx context.Context, pad int, status chan float64) error {
+	c.scrollStatus = status
+	switch c.direction {
+	case RightToLeft:
+		c.log.Debug("scrolling right to left")
+		c.mergePad = pad
+		if err := c.rightToLeftNoMerge(ctx); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("unsupported scroll direction")
+	}
+
+	draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Src)
+
+	return nil
+}
+
 // ColorModel returns the canvas' color model, always color.RGBAModel
 func (c *ScrollCanvas) ColorModel() color.Model {
 	return color.RGBAModel
@@ -327,6 +366,177 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 		}
 		thisX--
 	}
+}
+
+func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
+	if len(c.subCanvases) < 1 {
+		c.PrepareSubCanvases()
+	}
+
+	finish := c.subCanvases[len(c.subCanvases)-1].virtualEndX
+
+	virtualX := c.subCanvases[0].virtualStartX
+
+	c.log.Debug("performing right to left scroll without canvas merge",
+		zap.Int("virtualX start", virtualX),
+		zap.Int("finish", finish),
+	)
+
+	pctDone := float64(0)
+
+	reportInterval := finish / 20
+	count := 0
+	for {
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		case <-time.After(c.interval):
+		}
+		if virtualX == finish {
+			return nil
+		}
+
+		for x := 0; x < c.w; x++ {
+			for y := 0; y < c.h; y++ {
+				thisVirtualX := x + virtualX
+
+				c.Matrix.Set(c.position(x, y), c.getActualPixel(thisVirtualX, y))
+			}
+		}
+		virtualX++
+
+		if err := c.Matrix.Render(); err != nil {
+			return err
+		}
+
+		pctDone = float64(virtualX) / float64(finish)
+
+		count++
+		if count == reportInterval {
+			count = 0
+			c.log.Debug("non merged scroll progress",
+				zap.Float64("percentage", pctDone*100),
+			)
+			select {
+			case c.scrollStatus <- pctDone:
+			default:
+			}
+		}
+	}
+	return nil
+}
+
+func (c *ScrollCanvas) getActualPixel(virtualX int, virtualY int) color.Color {
+	if len(c.subCanvases) < 1 {
+		c.PrepareSubCanvases()
+	}
+
+	for _, sub := range c.subCanvases {
+		if virtualX >= sub.virtualStartX && virtualX <= sub.virtualEndX {
+			actualX := (virtualX - sub.virtualStartX) + sub.actualStartX
+			return sub.img.At(actualX, virtualY)
+		}
+	}
+
+	return color.Black
+}
+
+// PrepareSubCanvases
+func (c *ScrollCanvas) PrepareSubCanvases() {
+	if len(c.actuals) < 1 {
+		return
+	}
+	c.subCanvases = []*subCanvasHorizontal{
+		{
+			index:         0,
+			actualStartX:  0,
+			actualEndX:    c.w,
+			virtualStartX: 0,
+			virtualEndX:   c.w,
+			img:           image.NewRGBA(image.Rect(0, 0, c.w, c.h)),
+		},
+	}
+
+	index := 1
+	for _, actual := range c.actuals {
+		c.subCanvases = append(c.subCanvases,
+			&subCanvasHorizontal{
+				actualStartX: firstNonBlankX(actual),
+				actualEndX:   lastNonBlankX(actual),
+				img:          actual,
+				index:        index,
+			},
+		)
+		index++
+		c.subCanvases = append(c.subCanvases,
+			&subCanvasHorizontal{
+				actualStartX: 0,
+				actualEndX:   c.mergePad,
+				img:          image.NewRGBA(image.Rect(0, 0, c.mergePad, c.h)),
+				index:        index,
+			},
+		)
+		index++
+	}
+
+	c.subCanvases = append(c.subCanvases,
+		&subCanvasHorizontal{
+			index:        index,
+			actualStartX: 0,
+			actualEndX:   c.w,
+			img:          image.NewRGBA(image.Rect(0, 0, c.w, c.h)),
+		},
+	)
+
+	sort.SliceStable(c.subCanvases, func(i int, j int) bool {
+		return c.subCanvases[i].index < c.subCanvases[j].index
+	})
+
+	c.log.Debug("done initializing sub canvases",
+		zap.Int("num", len(c.subCanvases)),
+	)
+
+SUBS:
+	for _, sub := range c.subCanvases {
+		if sub.index == 0 {
+			continue SUBS
+		}
+
+		prev := c.prevSub(sub)
+
+		if prev == nil {
+			continue SUBS
+		}
+
+		sub.virtualStartX = prev.virtualEndX + 1
+		diff := sub.actualEndX - sub.actualStartX
+		if sub.actualStartX < 1 {
+			diff = sub.actualEndX - (sub.actualStartX * -1)
+		}
+		sub.virtualEndX = sub.virtualStartX + diff
+
+		c.log.Debug("define sub canvas",
+			zap.Int("index", sub.index),
+			zap.Int("actualstartX", sub.actualStartX),
+			zap.Int("actualendX", sub.actualEndX),
+			zap.Int("virtualstartX", sub.virtualStartX),
+			zap.Int("virtualendx", sub.virtualEndX),
+			zap.Int("actual canvas Width", c.w),
+		)
+	}
+	c.log.Debug("done defining sub canvases")
+}
+
+func (c *ScrollCanvas) prevSub(me *subCanvasHorizontal) *subCanvasHorizontal {
+	if me.index == 0 {
+		return nil
+	}
+	for _, sub := range c.subCanvases {
+		if sub.index == me.index-1 {
+			return sub
+		}
+	}
+	return nil
 }
 
 func (c *ScrollCanvas) topToBottom(ctx context.Context) error {
