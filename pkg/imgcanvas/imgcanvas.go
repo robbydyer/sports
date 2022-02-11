@@ -169,13 +169,13 @@ func (i *ImgCanvas) Enabled() bool {
 }
 
 // Enable ...
-func (i *ImgCanvas) Enable() {
-	i.enabled.Store(true)
+func (i *ImgCanvas) Enable() bool {
+	return i.enabled.CAS(false, true)
 }
 
 // Disable ...
-func (i *ImgCanvas) Disable() {
-	i.enabled.Store(false)
+func (i *ImgCanvas) Disable() bool {
+	return i.enabled.CAS(true, false)
 }
 
 func (i *ImgCanvas) position(x, y int) int {

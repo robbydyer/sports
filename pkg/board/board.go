@@ -16,8 +16,8 @@ type HTTPHandler struct {
 // Enabler is an interface for basic Enable/Disable functions
 type Enabler interface {
 	Enabled() bool
-	Enable()
-	Disable()
+	Enable() bool
+	Disable() bool
 }
 
 // Board is the interface to implement for displaying on the matrix
@@ -30,6 +30,7 @@ type Board interface {
 	ScrollMode() bool
 	GetRPCHandler() (string, http.Handler)
 	InBetween() bool
+	SetStateChangeNotifier(StateChangeNotifier)
 }
 
 // Canvas ...
@@ -47,3 +48,7 @@ type Canvas interface {
 	SetWidth(int)
 	GetWidth() int
 }
+
+// StateChangeNotifier is a func that an Enabler uses to notify when its
+// enabled/disabled state changes
+type StateChangeNotifier func()

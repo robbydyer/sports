@@ -33,16 +33,17 @@ var (
 
 // StockBoard displays stocks
 type StockBoard struct {
-	config       *Config
-	api          API
-	log          *zap.Logger
-	symbolWriter *rgbrender.TextWriter
-	priceWriter  *rgbrender.TextWriter
-	enablerLock  sync.Mutex
-	cancelBoard  chan struct{}
-	rpcServer    pb.TwirpServer
-	logos        map[string]*logo.Logo
-	logoLock     sync.Mutex
+	config              *Config
+	api                 API
+	log                 *zap.Logger
+	symbolWriter        *rgbrender.TextWriter
+	priceWriter         *rgbrender.TextWriter
+	enablerLock         sync.Mutex
+	cancelBoard         chan struct{}
+	rpcServer           pb.TwirpServer
+	logos               map[string]*logo.Logo
+	logoLock            sync.Mutex
+	stateChangeNotifier board.StateChangeNotifier
 	sync.Mutex
 }
 
@@ -205,8 +206,12 @@ func (s *StockBoard) Enabled() bool {
 }
 
 // Enable ...
-func (s *StockBoard) Enable() {
-	s.config.Enabled.Store(true)
+func (s *StockBoard) Enable() bool {
+	if s.config.Enabled.CAS(false, true) {
+		s.stateChangeNotifier()
+		return true
+	}
+	return false
 }
 
 // InBetween ...
@@ -215,8 +220,17 @@ func (s *StockBoard) InBetween() bool {
 }
 
 // Disable ...
-func (s *StockBoard) Disable() {
-	s.config.Enabled.Store(false)
+func (s *StockBoard) Disable() bool {
+	if s.config.Enabled.CAS(true, false) {
+		s.stateChangeNotifier()
+		return true
+	}
+	return false
+}
+
+// SetStateChangeNotifier ...
+func (s *StockBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
+	s.stateChangeNotifier = st
 }
 
 // Name ...

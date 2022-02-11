@@ -30,10 +30,11 @@ const cpuTempFile = "/sys/class/thermal/thermal_zone0/temp"
 
 // SysBoard implements board.Board. Provides System info
 type SysBoard struct {
-	config      *Config
-	log         *zap.Logger
-	textWriters map[int]*rgbrender.TextWriter
-	rpcServer   pb.TwirpServer
+	config              *Config
+	log                 *zap.Logger
+	textWriters         map[int]*rgbrender.TextWriter
+	rpcServer           pb.TwirpServer
+	stateChangeNotifier board.StateChangeNotifier
 	sync.Mutex
 }
 
@@ -232,18 +233,31 @@ func (s *SysBoard) Enabled() bool {
 }
 
 // Enable ...
-func (s *SysBoard) Enable() {
-	s.config.Enabled.Store(true)
+func (s *SysBoard) Enable() bool {
+	if s.config.Enabled.CAS(false, true) {
+		s.stateChangeNotifier()
+		return true
+	}
+	return false
 }
 
 // Disable ...
-func (s *SysBoard) Disable() {
-	s.config.Enabled.Store(false)
+func (s *SysBoard) Disable() bool {
+	if s.config.Enabled.CAS(true, false) {
+		s.stateChangeNotifier()
+		return true
+	}
+	return false
 }
 
 // ScrollMode ...
 func (s *SysBoard) ScrollMode() bool {
 	return false
+}
+
+// SetStateChangeNotifier ...
+func (s *SysBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
+	s.stateChangeNotifier = st
 }
 
 // GetHTTPHandlers ...

@@ -28,7 +28,9 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 	}
 
 	cancelBoard := false
-	if s.board.config.Enabled.CAS(!req.Status.Enabled, req.Status.Enabled) {
+	if req.Status.Enabled && s.board.Enable() {
+		cancelBoard = true
+	} else if s.board.Disable() {
 		cancelBoard = true
 	}
 

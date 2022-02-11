@@ -74,6 +74,9 @@ func (b *TestBoard) ScrollMode() bool {
 	return false
 }
 
+func (b *TestBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
+}
+
 func TestSportsMatrix(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

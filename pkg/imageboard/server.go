@@ -29,7 +29,12 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 		return &emptypb.Empty{}, twirp.NewError(twirp.InvalidArgument, "nil status sent")
 	}
 
-	s.board.config.Enabled.Store(req.Status.Enabled)
+	if req.Status.Enabled {
+		s.board.Enable()
+	} else {
+		s.board.Disable()
+	}
+
 	s.board.config.UseDiskCache.Store(req.Status.DiskcacheEnabled)
 	s.board.config.UseMemCache.Store(req.Status.MemcacheEnabled)
 

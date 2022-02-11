@@ -39,19 +39,20 @@ type Jumper func(ctx context.Context, boardName string) error
 
 // ImageBoard is a board for displaying image files
 type ImageBoard struct {
-	config         *Config
-	log            *zap.Logger
-	imageCache     map[string]image.Image
-	gifCacheLock   sync.Mutex
-	gifCache       map[string]*gif.GIF
-	lockers        map[string]*sync.Mutex
-	preloaders     map[string]chan struct{}
-	preloadLock    sync.Mutex
-	jumpLock       sync.Mutex
-	jumper         Jumper
-	jumpTo         chan string
-	rpcServer      pb.TwirpServer
-	priorJumpState *atomic.Bool
+	config              *Config
+	log                 *zap.Logger
+	imageCache          map[string]image.Image
+	gifCacheLock        sync.Mutex
+	gifCache            map[string]*gif.GIF
+	lockers             map[string]*sync.Mutex
+	preloaders          map[string]chan struct{}
+	preloadLock         sync.Mutex
+	jumpLock            sync.Mutex
+	jumper              Jumper
+	jumpTo              chan string
+	rpcServer           pb.TwirpServer
+	priorJumpState      *atomic.Bool
+	stateChangeNotifier board.StateChangeNotifier
 	sync.Mutex
 }
 
@@ -189,13 +190,26 @@ func (i *ImageBoard) InBetween() bool {
 }
 
 // Enable ...
-func (i *ImageBoard) Enable() {
-	i.config.Enabled.Store(true)
+func (i *ImageBoard) Enable() bool {
+	if i.config.Enabled.CAS(false, true) {
+		i.stateChangeNotifier()
+		return true
+	}
+	return false
 }
 
 // Disable ...
-func (i *ImageBoard) Disable() {
-	i.config.Enabled.Store(false)
+func (i *ImageBoard) Disable() bool {
+	if i.config.Enabled.CAS(true, false) {
+		i.stateChangeNotifier()
+		return true
+	}
+	return false
+}
+
+// SetStateChangeNotifier ...
+func (i *ImageBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
+	i.stateChangeNotifier = st
 }
 
 // ScrollMode ...

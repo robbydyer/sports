@@ -26,16 +26,17 @@ import (
 
 // WeatherBoard displays weather
 type WeatherBoard struct {
-	config      *Config
-	api         API
-	log         *zap.Logger
-	enablerLock sync.Mutex
-	iconLock    sync.Mutex
-	iconCache   map[string]*logo.Logo
-	cancelBoard chan struct{}
-	bigWriter   *rgbrender.TextWriter
-	smallWriter *rgbrender.TextWriter
-	rpcServer   pb.TwirpServer
+	config              *Config
+	api                 API
+	log                 *zap.Logger
+	enablerLock         sync.Mutex
+	iconLock            sync.Mutex
+	iconCache           map[string]*logo.Logo
+	cancelBoard         chan struct{}
+	bigWriter           *rgbrender.TextWriter
+	smallWriter         *rgbrender.TextWriter
+	rpcServer           pb.TwirpServer
+	stateChangeNotifier board.StateChangeNotifier
 	sync.Mutex
 }
 
@@ -201,8 +202,12 @@ func (w *WeatherBoard) Enabled() bool {
 }
 
 // Enable ...
-func (w *WeatherBoard) Enable() {
-	w.config.Enabled.Store(true)
+func (w *WeatherBoard) Enable() bool {
+	if w.config.Enabled.CAS(false, true) {
+		w.stateChangeNotifier()
+		return true
+	}
+	return false
 }
 
 // InBetween ...
@@ -211,8 +216,17 @@ func (w *WeatherBoard) InBetween() bool {
 }
 
 // Disable ...
-func (w *WeatherBoard) Disable() {
-	w.config.Enabled.Store(false)
+func (w *WeatherBoard) Disable() bool {
+	if w.config.Enabled.CAS(true, false) {
+		w.stateChangeNotifier()
+		return true
+	}
+	return false
+}
+
+// SetStateChangeNotifier ...
+func (w *WeatherBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
+	w.stateChangeNotifier = st
 }
 
 // Name ...

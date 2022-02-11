@@ -28,14 +28,15 @@ var defaultScrollDelay = 15 * time.Millisecond
 
 // TextBoard displays stocks
 type TextBoard struct {
-	config      *Config
-	api         API
-	log         *zap.Logger
-	writer      *rgbrender.TextWriter
-	enablerLock sync.Mutex
-	cancelBoard chan struct{}
-	rpcServer   pb.TwirpServer
-	logos       map[string]*logo.Logo
+	config              *Config
+	api                 API
+	log                 *zap.Logger
+	writer              *rgbrender.TextWriter
+	enablerLock         sync.Mutex
+	cancelBoard         chan struct{}
+	rpcServer           pb.TwirpServer
+	logos               map[string]*logo.Logo
+	stateChangeNotifier board.StateChangeNotifier
 	sync.Mutex
 }
 
@@ -183,8 +184,12 @@ func (s *TextBoard) Enabled() bool {
 }
 
 // Enable ...
-func (s *TextBoard) Enable() {
-	s.config.Enabled.Store(true)
+func (s *TextBoard) Enable() bool {
+	if s.config.Enabled.CAS(false, true) {
+		s.stateChangeNotifier()
+		return true
+	}
+	return false
 }
 
 // InBetween ...
@@ -193,8 +198,17 @@ func (s *TextBoard) InBetween() bool {
 }
 
 // Disable ...
-func (s *TextBoard) Disable() {
-	s.config.Enabled.Store(false)
+func (s *TextBoard) Disable() bool {
+	if s.config.Enabled.CAS(true, false) {
+		s.stateChangeNotifier()
+		return true
+	}
+	return false
+}
+
+// SetStateChangeNotifier ...
+func (s *TextBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
+	s.stateChangeNotifier = st
 }
 
 // Name ...

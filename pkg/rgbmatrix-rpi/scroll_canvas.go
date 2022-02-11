@@ -310,13 +310,13 @@ func (c *ScrollCanvas) Enabled() bool {
 }
 
 // Enable ...
-func (c *ScrollCanvas) Enable() {
-	c.enabled.Store(true)
+func (c *ScrollCanvas) Enable() bool {
+	return c.enabled.CAS(false, true)
 }
 
 // Disable ...
-func (c *ScrollCanvas) Disable() {
-	c.enabled.Store(false)
+func (c *ScrollCanvas) Disable() bool {
+	return c.enabled.CAS(true, false)
 }
 
 // GetHTTPHandlers ...

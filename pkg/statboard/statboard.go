@@ -17,22 +17,24 @@ import (
 	"github.com/twitchtv/twirp"
 
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
+	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 	"github.com/robbydyer/sports/pkg/twirphelpers"
 )
 
 // StatBoard ...
 type StatBoard struct {
-	config        *Config
-	log           *zap.Logger
-	api           API
-	writers       map[string]*rgbrender.TextWriter
-	sorter        Sorter
-	withTitleRow  bool
-	withPrefixCol bool
-	lastUpdate    time.Time
-	cancelBoard   chan struct{}
-	rpcServer     pb.TwirpServer
+	config              *Config
+	log                 *zap.Logger
+	api                 API
+	writers             map[string]*rgbrender.TextWriter
+	sorter              Sorter
+	withTitleRow        bool
+	withPrefixCol       bool
+	lastUpdate          time.Time
+	cancelBoard         chan struct{}
+	rpcServer           pb.TwirpServer
+	stateChangeNotifier board.StateChangeNotifier
 	sync.Mutex
 }
 
@@ -235,8 +237,12 @@ func (s *StatBoard) Enabled() bool {
 }
 
 // Enable ...
-func (s *StatBoard) Enable() {
-	s.config.Enabled.Store(true)
+func (s *StatBoard) Enable() bool {
+	if s.config.Enabled.CAS(false, true) {
+		s.stateChangeNotifier()
+		return true
+	}
+	return false
 }
 
 // InBetween ...
@@ -245,8 +251,12 @@ func (s *StatBoard) InBetween() bool {
 }
 
 // Disable ..
-func (s *StatBoard) Disable() {
-	s.config.Enabled.Store(false)
+func (s *StatBoard) Disable() bool {
+	if s.config.Enabled.CAS(true, false) {
+		s.stateChangeNotifier()
+		return true
+	}
+	return false
 }
 
 // Name ...
@@ -267,6 +277,11 @@ func (s *StatBoard) Close() error {
 // ScrollMode ...
 func (s *StatBoard) ScrollMode() bool {
 	return s.config.ScrollMode.Load()
+}
+
+// SetStateChangeNotifier ...
+func (s *StatBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
+	s.stateChangeNotifier = st
 }
 
 // WithSorter ...
