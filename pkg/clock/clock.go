@@ -16,6 +16,7 @@ import (
 
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
@@ -35,11 +36,14 @@ type Clock struct {
 // Config is a Clock configuration
 type Config struct {
 	boardDelay  time.Duration
+	scrollDelay time.Duration
 	Enabled     *atomic.Bool `json:"enabled"`
 	BoardDelay  string       `json:"boardDelay"`
 	OnTimes     []string     `json:"onTimes"`
 	OffTimes    []string     `json:"offTimes"`
 	ShowBetween *atomic.Bool `json:"showBetween"`
+	ScrollMode  *atomic.Bool `json:"scrollMode"`
+	ScrollDelay string       `json:"scrollDelay"`
 }
 
 // SetDefaults ...
@@ -60,6 +64,18 @@ func (c *Config) SetDefaults() {
 
 	if c.ShowBetween == nil {
 		c.ShowBetween = atomic.NewBool(false)
+	}
+	if c.ScrollMode == nil {
+		c.ScrollMode = atomic.NewBool(false)
+	}
+	if c.ScrollDelay != "" {
+		d, err := time.ParseDuration(c.ScrollDelay)
+		if err != nil {
+			c.scrollDelay = rgbmatrix.DefaultScrollDelay
+		}
+		c.scrollDelay = d
+	} else {
+		c.scrollDelay = rgbmatrix.DefaultScrollDelay
 	}
 }
 
@@ -168,13 +184,57 @@ func (c *Clock) ScrollRender(ctx context.Context, canvas board.Canvas, padding i
 
 // Render ...
 func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
+	canv, err := c.render(ctx, canvas)
+	if err != nil {
+		return err
+	}
+	if canv != nil {
+		return canv.Render(ctx)
+	}
+
+	return nil
+}
+
+// Render ...
+func (c *Clock) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
 	if !c.config.Enabled.Load() {
-		return nil
+		return nil, nil
 	}
 
 	writer, err := c.getWriter(rgbrender.ZeroedBounds(canvas.Bounds()).Dy())
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	if c.config.ScrollMode.Load() {
+		ampm := ""
+		h, m, _ := time.Now().Local().Clock()
+		if h >= 12 {
+			h = h - 12
+			ampm = "PM"
+		} else {
+			ampm = "AM"
+		}
+		if h == 0 {
+			h = 12
+		}
+		z := ""
+		if m < 10 {
+			z = "0"
+		}
+		if err := writer.WriteAligned(
+			rgbrender.CenterCenter,
+			canvas,
+			canvas.Bounds(),
+			[]string{
+				fmt.Sprintf("%d:%s%d%s", h, z, m, ampm),
+			},
+			color.White,
+		); err != nil {
+			return nil, err
+		}
+
+		return canvas, nil
 	}
 
 	update := make(chan struct{})
@@ -255,11 +315,11 @@ func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
 
 	select {
 	case <-ctx.Done():
-		return context.Canceled
+		return nil, context.Canceled
 	case <-time.After(c.config.boardDelay):
 	}
 
-	return nil
+	return nil, nil
 }
 
 // HasPriority ...
