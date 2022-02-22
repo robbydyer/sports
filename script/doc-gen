@@ -4,7 +4,7 @@ set -eou pipefail
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 cd "${ROOT}"
 
-for full in $(find proto -name '*.proto' | sort | uniq | grep -v ^proto/google); do
+for full in $(find proto -name '*.proto' | sort | uniq); do
   dir="$(dirname "${full}")"
   cd "${dir}"
   basefile="$(basename "${full}")"

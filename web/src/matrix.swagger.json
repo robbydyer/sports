@@ -594,6 +594,9 @@
         }
       }
     },
+    "google.protobuf_Empty": {
+      "type": "object"
+    },
     "imageboard.v1_JumpReq": {
       "description": "Fields: name",
       "type": "object",
