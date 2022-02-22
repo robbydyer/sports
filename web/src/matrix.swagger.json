@@ -28,7 +28,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/board.v1google.protobuf.Empty"
+              "$ref": "#/definitions/board.v1_google.protobuf.Empty"
             }
           }
         ],
@@ -36,7 +36,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/board.v1StatusResp"
+              "$ref": "#/definitions/board.v1_StatusResp"
             }
           }
         }
@@ -54,7 +54,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/board.v1SetStatusReq"
+              "$ref": "#/definitions/board.v1_SetStatusReq"
             }
           }
         ],
@@ -62,7 +62,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/board.v1google.protobuf.Empty"
+              "$ref": "#/definitions/board.v1_google.protobuf.Empty"
             }
           }
         }
@@ -80,7 +80,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/imageboard.v1google.protobuf.Empty"
+              "$ref": "#/definitions/imageboard.v1_google.protobuf.Empty"
             }
           }
         ],
@@ -88,7 +88,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/imageboard.v1StatusResp"
+              "$ref": "#/definitions/imageboard.v1_StatusResp"
             }
           }
         }
@@ -106,7 +106,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/imageboard.v1JumpReq"
+              "$ref": "#/definitions/imageboard.v1_JumpReq"
             }
           }
         ],
@@ -114,7 +114,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/imageboard.v1google.protobuf.Empty"
+              "$ref": "#/definitions/imageboard.v1_google.protobuf.Empty"
             }
           }
         }
@@ -132,7 +132,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/imageboard.v1SetStatusReq"
+              "$ref": "#/definitions/imageboard.v1_SetStatusReq"
             }
           }
         ],
@@ -140,7 +140,59 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/imageboard.v1google.protobuf.Empty"
+              "$ref": "#/definitions/imageboard.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/f1/racing.v1.Racing/GetStatus": {
+      "post": {
+        "tags": [
+          "Racing"
+        ],
+        "operationId": "GetStatus",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/racing.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/racing.v1_StatusResp"
+            }
+          }
+        }
+      }
+    },
+    "/f1/racing.v1.Racing/SetStatus": {
+      "post": {
+        "tags": [
+          "Racing"
+        ],
+        "operationId": "SetStatus",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/racing.v1_SetStatusReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/racing.v1_google.protobuf.Empty"
             }
           }
         }
@@ -158,7 +210,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/sport.v1google.protobuf.Empty"
+              "$ref": "#/definitions/sport.v1_google.protobuf.Empty"
             }
           }
         ],
@@ -166,7 +218,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/sport.v1StatusResp"
+              "$ref": "#/definitions/sport.v1_StatusResp"
             }
           }
         }
@@ -184,7 +236,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/sport.v1SetStatusReq"
+              "$ref": "#/definitions/sport.v1_SetStatusReq"
             }
           }
         ],
@@ -192,7 +244,33 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/sport.v1google.protobuf.Empty"
+              "$ref": "#/definitions/sport.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/matrix.v1.Sportsmatrix/GetStatus": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "GetStatus",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_Status"
             }
           }
         }
@@ -210,7 +288,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/matrix.v1JumpReq"
+              "$ref": "#/definitions/matrix.v1_JumpReq"
             }
           }
         ],
@@ -218,7 +296,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/matrix.v1google.protobuf.Empty"
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
             }
           }
         }
@@ -236,7 +314,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/matrix.v1google.protobuf.Empty"
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
             }
           }
         ],
@@ -244,7 +322,33 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/matrix.v1google.protobuf.Empty"
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/matrix.v1.Sportsmatrix/RestartService": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "RestartService",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
             }
           }
         }
@@ -262,7 +366,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/matrix.v1google.protobuf.Empty"
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
             }
           }
         ],
@@ -270,7 +374,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/matrix.v1google.protobuf.Empty"
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
             }
           }
         }
@@ -288,7 +392,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/matrix.v1google.protobuf.Empty"
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
             }
           }
         ],
@@ -296,7 +400,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/matrix.v1google.protobuf.Empty"
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
             }
           }
         }
@@ -314,7 +418,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/matrix.v1SetAllReq"
+              "$ref": "#/definitions/matrix.v1_SetAllReq"
             }
           }
         ],
@@ -322,25 +426,25 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/matrix.v1google.protobuf.Empty"
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
             }
           }
         }
       }
     },
-    "/matrix.v1.Sportsmatrix/Status": {
+    "/matrix.v1.Sportsmatrix/SetLiveOnly": {
       "post": {
         "tags": [
           "Sportsmatrix"
         ],
-        "operationId": "Status",
+        "operationId": "SetLiveOnly",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/matrix.v1google.protobuf.Empty"
+              "$ref": "#/definitions/matrix.v1_LiveOnlyReq"
             }
           }
         ],
@@ -348,7 +452,33 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/matrix.v1ScreenStatusResp"
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/matrix.v1.Sportsmatrix/SetStatus": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "SetStatus",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
             }
           }
         }
@@ -366,7 +496,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/matrix.v1google.protobuf.Empty"
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
             }
           }
         ],
@@ -374,7 +504,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/matrix.v1VersionResp"
+              "$ref": "#/definitions/matrix.v1_VersionResp"
             }
           }
         }
@@ -392,7 +522,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/weather.v1google.protobuf.Empty"
+              "$ref": "#/definitions/weather.v1_google.protobuf.Empty"
             }
           }
         ],
@@ -400,7 +530,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/weather.v1StatusResp"
+              "$ref": "#/definitions/weather.v1_StatusResp"
             }
           }
         }
@@ -418,7 +548,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/weather.v1SetStatusReq"
+              "$ref": "#/definitions/weather.v1_SetStatusReq"
             }
           }
         ],
@@ -426,7 +556,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/weather.v1google.protobuf.Empty"
+              "$ref": "#/definitions/weather.v1_google.protobuf.Empty"
             }
           }
         }
@@ -434,39 +564,37 @@
     }
   },
   "definitions": {
-    "board.v1SetStatusReq": {
+    "board.v1_SetStatusReq": {
       "description": "Fields: status",
       "type": "object",
       "properties": {
         "status": {
-          "$ref": "#/definitions/boardv1Status"
+          "$ref": "#/definitions/board.v1_Status"
         }
       }
     },
-    "board.v1Status": {
+    "board.v1_Status": {
       "description": "Fields: enabled, scroll_enabled",
       "type": "object",
       "properties": {
         "enabled": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "scroll_enabled": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
-    "board.v1StatusResp": {
+    "board.v1_StatusResp": {
       "description": "Fields: status",
       "type": "object",
       "properties": {
         "status": {
-          "$ref": "#/definitions/boardv1Status"
+          "$ref": "#/definitions/board.v1_Status"
         }
       }
     },
-    "imageboard.v1JumpReq": {
+    "imageboard.v1_JumpReq": {
       "description": "Fields: name",
       "type": "object",
       "properties": {
@@ -475,95 +603,121 @@
         }
       }
     },
-    "imageboard.v1SetStatusReq": {
+    "imageboard.v1_SetStatusReq": {
       "description": "Fields: status",
       "type": "object",
       "properties": {
         "status": {
-          "$ref": "#/definitions/imageboardv1Status"
+          "$ref": "#/definitions/imageboard.v1_Status"
         }
       }
     },
-    "imageboard.v1Status": {
+    "imageboard.v1_Status": {
       "description": "Fields: enabled, diskcache_enabled, memcache_enabled",
       "type": "object",
       "properties": {
         "diskcache_enabled": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "enabled": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "memcache_enabled": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
-    "imageboard.v1StatusResp": {
+    "imageboard.v1_StatusResp": {
       "description": "Fields: status",
       "type": "object",
       "properties": {
         "status": {
-          "$ref": "#/definitions/imageboardv1Status"
+          "$ref": "#/definitions/imageboard.v1_Status"
         }
       }
     },
-    "sport.v1SetStatusReq": {
+    "racing.v1_SetStatusReq": {
       "description": "Fields: status",
       "type": "object",
       "properties": {
         "status": {
-          "$ref": "#/definitions/sportv1Status"
+          "$ref": "#/definitions/racing.v1_Status"
         }
       }
     },
-    "sport.v1Status": {
-      "description": "Fields: enabled, favorite_hidden, favorite_sticky, scroll_enabled, tight_scroll_enabled, record_rank_enabled, odds_enabled",
+    "racing.v1_Status": {
+      "description": "Fields: enabled, scroll_enabled",
       "type": "object",
       "properties": {
         "enabled": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "favorite_hidden": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "favorite_sticky": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "odds_enabled": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "record_rank_enabled": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "scroll_enabled": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "tight_scroll_enabled": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
-    "sport.v1StatusResp": {
+    "racing.v1_StatusResp": {
       "description": "Fields: status",
       "type": "object",
       "properties": {
         "status": {
-          "$ref": "#/definitions/sportv1Status"
+          "$ref": "#/definitions/racing.v1_Status"
         }
       }
     },
-    "matrix.v1JumpReq": {
+    "sport.v1_SetStatusReq": {
+      "description": "Fields: status",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/sport.v1_Status"
+        }
+      }
+    },
+    "sport.v1_Status": {
+      "description": "Fields: enabled, favorite_hidden, favorite_sticky, scroll_enabled, tight_scroll_enabled, record_rank_enabled, odds_enabled, use_gradient, live_only",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "favorite_hidden": {
+          "type": "boolean"
+        },
+        "favorite_sticky": {
+          "type": "boolean"
+        },
+        "live_only": {
+          "type": "boolean"
+        },
+        "odds_enabled": {
+          "type": "boolean"
+        },
+        "record_rank_enabled": {
+          "type": "boolean"
+        },
+        "scroll_enabled": {
+          "type": "boolean"
+        },
+        "tight_scroll_enabled": {
+          "type": "boolean"
+        },
+        "use_gradient": {
+          "type": "boolean"
+        }
+      }
+    },
+    "sport.v1_StatusResp": {
+      "description": "Fields: status",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/sport.v1_Status"
+        }
+      }
+    },
+    "matrix.v1_JumpReq": {
       "description": "Fields: board",
       "type": "object",
       "properties": {
@@ -572,31 +726,40 @@
         }
       }
     },
-    "matrix.v1ScreenStatusResp": {
-      "description": "Fields: screen_on, webboard_on",
+    "matrix.v1_LiveOnlyReq": {
+      "description": "Fields: live_only",
       "type": "object",
       "properties": {
-        "screen_on": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "webboard_on": {
-          "type": "boolean",
-          "format": "boolean"
+        "live_only": {
+          "type": "boolean"
         }
       }
     },
-    "matrix.v1SetAllReq": {
+    "matrix.v1_SetAllReq": {
       "description": "Fields: enabled",
       "type": "object",
       "properties": {
         "enabled": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
-    "matrix.v1VersionResp": {
+    "matrix.v1_Status": {
+      "description": "Fields: screen_on, webboard_on, combined_scroll",
+      "type": "object",
+      "properties": {
+        "combined_scroll": {
+          "type": "boolean"
+        },
+        "screen_on": {
+          "type": "boolean"
+        },
+        "webboard_on": {
+          "type": "boolean"
+        }
+      }
+    },
+    "matrix.v1_VersionResp": {
       "description": "Fields: version",
       "type": "object",
       "properties": {
@@ -605,43 +768,39 @@
         }
       }
     },
-    "weather.v1SetStatusReq": {
+    "weather.v1_SetStatusReq": {
       "description": "Fields: status",
       "type": "object",
       "properties": {
         "status": {
-          "$ref": "#/definitions/weatherv1Status"
+          "$ref": "#/definitions/weather.v1_Status"
         }
       }
     },
-    "weather.v1Status": {
+    "weather.v1_Status": {
       "description": "Fields: enabled, scroll_enabled, daily_enabled, hourly_enabled",
       "type": "object",
       "properties": {
         "daily_enabled": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "enabled": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "hourly_enabled": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "scroll_enabled": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
-    "weather.v1StatusResp": {
+    "weather.v1_StatusResp": {
       "description": "Fields: status",
       "type": "object",
       "properties": {
         "status": {
-          "$ref": "#/definitions/weatherv1Status"
+          "$ref": "#/definitions/weather.v1_Status"
         }
       }
     }
