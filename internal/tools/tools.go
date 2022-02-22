@@ -4,6 +4,7 @@
 package tools
 
 import (
+	_ "github.com/go-bridget/twirp-swagger-gen/cmd/twirp-swagger-gen"
 	_ "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2"
 	_ "github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc"
 	_ "github.com/srikrsna/protoc-gen-gotag"

@@ -4,16 +4,17 @@ set -eou pipefail
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 cd "${ROOT}"
 
-for full in $(find proto -name '*.proto' | sort | uniq | grep -v ^proto/google); do
+for full in $(find proto -name '*.proto' | sort | uniq); do
   dir="$(dirname "${full}")"
   cd "${dir}"
   basefile="$(basename "${full}")"
   base="$(echo "${basefile}" | cut -f1 -d.)"
   set -x
-  go run github.com/go-bridget/twirp-swagger-gen \
+  go run github.com/go-bridget/twirp-swagger-gen/cmd/twirp-swagger-gen \
     -in "${basefile}" \
     -out "${ROOT}/docs-base/${base}.swagger.json" \
-    -host localhost:8080
+    -host localhost:8080 \
+    -pathPrefix ""
   cd "${ROOT}"
 done
 
@@ -22,6 +23,7 @@ cat "${ROOT}"/docs-base/* | jq -s 'reduce .[] as $item ({}; . * $item)' > "${src
 
 gsed -i 's,/twirp/matrix.v1.Sportsmatrix,/matrix.v1.Sportsmatrix,g' "${src}"
 gsed -i 's,/twirp/board.v1.BasicBoard,/stocks/board.v1.BasicBoard,g' "${src}"
+gsed -i 's,/twirp/racing.v1.Racing,/f1/racing.v1.Racing,g' "${src}"
 gsed -i 's,"title": "weatherboard.proto","title": "Sportsmatrix API",g' "${src}"
 gsed -i 's,/twirp/imageboard,/imageboard,g' "${src}"
 gsed -i 's,/twirp/sport.v1,/nhl/sport.v1,g' "${src}"
