@@ -79,7 +79,7 @@ github.com/google/uuid
 # github.com/gorilla/mux v1.8.0
 ## explicit
 github.com/gorilla/mux
-# github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.3
+# github.com/grpc-ecosystem/grpc-gateway/v2 v2.8.0
 ## explicit
 github.com/grpc-ecosystem/grpc-gateway/v2/internal/casing
 github.com/grpc-ecosystem/grpc-gateway/v2/internal/codegenerator
@@ -122,7 +122,6 @@ github.com/jezek/xgb/xproto
 # github.com/josharian/intern v1.0.0
 github.com/josharian/intern
 # github.com/kr/text v0.2.0
-## explicit
 github.com/kr/text
 # github.com/lyft/protoc-gen-star v0.5.3
 github.com/lyft/protoc-gen-star
@@ -145,7 +144,6 @@ github.com/mwitkow/go-proto-validators
 ## explicit
 github.com/nfnt/resize
 # github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e
-## explicit
 github.com/niemeyer/pretty
 # github.com/pelletier/go-toml v1.9.4
 github.com/pelletier/go-toml
@@ -269,7 +267,6 @@ golang.org/x/mobile/event/size
 golang.org/x/mobile/geom
 golang.org/x/mobile/gl
 # golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
-## explicit
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
@@ -286,7 +283,7 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# google.golang.org/genproto v0.0.0-20220118154757-00ab72f36ad5
+# google.golang.org/genproto v0.0.0-20220302033224-9aa15565e42a
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.44.0
