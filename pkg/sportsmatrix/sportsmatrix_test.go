@@ -2,7 +2,6 @@ package sportsmatrix
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"sync"
 	"testing"
@@ -162,6 +161,7 @@ func TestSportsMatrix(t *testing.T) {
 func TestScreenSwitch(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
 	logger := zaptest.NewLogger(t, zaptest.Level(zapcore.ErrorLevel))
 	cfg := &Config{
 		ServeWebUI:     false,
@@ -188,7 +188,11 @@ func TestScreenSwitch(t *testing.T) {
 	require.NoError(t, err)
 	defer s.Close()
 
+	serveWg := sync.WaitGroup{}
+
+	serveWg.Add(1)
 	go func() {
+		defer serveWg.Done()
 		err := s.Serve(ctx)
 		require.ErrorIs(t, err, context.Canceled)
 	}()
@@ -199,8 +203,8 @@ func TestScreenSwitch(t *testing.T) {
 		require.NotNil(t, nil, "timed out waiting for matrix to serve")
 	}
 
-	switchCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
+	switchCtx, switchCancel := context.WithTimeout(ctx, 30*time.Second)
+	defer switchCancel()
 
 	s.switchTestSleep = true
 
@@ -235,8 +239,22 @@ func TestScreenSwitch(t *testing.T) {
 	select {
 	case <-done:
 	case <-time.After(20 * time.Second):
-		require.NoError(t, fmt.Errorf("timed out waiting for ScreenOn calls"))
+		require.NotNil(t, nil, "timed out waiting for ScreenOn calls")
 	}
 
+	cancel()
+
 	require.Equal(t, 2, s.switchedOn)
+
+	serveDone := make(chan struct{})
+	go func() {
+		defer close(serveDone)
+		serveWg.Wait()
+	}()
+
+	select {
+	case <-serveDone:
+	case <-time.After(6 * time.Second):
+		require.NotNil(t, nil, "timed out waiting for serve to close")
+	}
 }
