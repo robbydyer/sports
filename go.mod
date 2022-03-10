@@ -28,7 +28,7 @@ require (
 	go.uber.org/zap v1.21.0
 	golang.org/x/image v0.0.0-20201208152932-35266b937fa6
 	golang.org/x/mobile v0.0.0-20201217150744-e6ae53a27f4f
-	google.golang.org/grpc v1.44.0
+	google.golang.org/grpc v1.45.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b
