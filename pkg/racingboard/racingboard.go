@@ -190,7 +190,9 @@ func (s *RacingBoard) Enabled() bool {
 // Enable ...
 func (s *RacingBoard) Enable() bool {
 	if s.config.Enabled.CAS(false, true) {
-		s.stateChangeNotifier()
+		if s.stateChangeNotifier != nil {
+			s.stateChangeNotifier()
+		}
 		return true
 	}
 	return false
@@ -204,7 +206,9 @@ func (s *RacingBoard) InBetween() bool {
 // Disable ...
 func (s *RacingBoard) Disable() bool {
 	if s.config.Enabled.CAS(true, false) {
-		s.stateChangeNotifier()
+		if s.stateChangeNotifier != nil {
+			s.stateChangeNotifier()
+		}
 		return true
 	}
 	return false

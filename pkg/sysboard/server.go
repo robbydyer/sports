@@ -27,7 +27,7 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 		return &emptypb.Empty{}, twirp.NewError(twirp.InvalidArgument, "nil status sent")
 	}
 
-	if req.Status.Enabled && s.board.Enable() {
+	if req.Status.Enabled {
 		s.board.Enable()
 	} else {
 		s.board.Disable()

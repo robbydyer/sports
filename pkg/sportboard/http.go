@@ -101,10 +101,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: fmt.Sprintf("/%s/scrollon", s.api.HTTPPathPrefix()),
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				s.log.Info("enabling scroll mode", zap.String("board", s.api.League()))
-				select {
-				case s.cancelBoard <- struct{}{}:
-				default:
-				}
+				s.callCancelBoard()
 				s.config.ScrollMode.Store(true)
 				s.api.CacheClear(context.Background())
 			},
@@ -113,10 +110,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: fmt.Sprintf("/%s/scrolloff", s.api.HTTPPathPrefix()),
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				s.log.Info("disabling scroll mode", zap.String("board", s.api.League()))
-				select {
-				case s.cancelBoard <- struct{}{}:
-				default:
-				}
+				s.callCancelBoard()
 				s.config.ScrollMode.Store(false)
 				s.api.CacheClear(context.Background())
 			},
@@ -137,10 +131,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: fmt.Sprintf("/%s/tightscrollon", s.api.HTTPPathPrefix()),
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				s.log.Info("enabling tight scroll mode", zap.String("board", s.api.League()))
-				select {
-				case s.cancelBoard <- struct{}{}:
-				default:
-				}
+				s.callCancelBoard()
 				s.config.TightScroll.Store(true)
 				s.api.CacheClear(context.Background())
 			},
@@ -149,10 +140,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: fmt.Sprintf("/%s/tightscrolloff", s.api.HTTPPathPrefix()),
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				s.log.Info("disabling scroll mode", zap.String("board", s.api.League()))
-				select {
-				case s.cancelBoard <- struct{}{}:
-				default:
-				}
+				s.callCancelBoard()
 				s.config.TightScroll.Store(false)
 				s.api.CacheClear(context.Background())
 			},
@@ -173,10 +161,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: fmt.Sprintf("/%s/recordrankon", s.api.HTTPPathPrefix()),
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				s.log.Info("enabling team record/rank mode", zap.String("board", s.api.League()))
-				select {
-				case s.cancelBoard <- struct{}{}:
-				default:
-				}
+				s.callCancelBoard()
 				s.config.ShowRecord.Store(true)
 				s.api.CacheClear(context.Background())
 			},
@@ -185,10 +170,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: fmt.Sprintf("/%s/recordrankoff", s.api.HTTPPathPrefix()),
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				s.log.Info("disabling team record/rank mode", zap.String("board", s.api.League()))
-				select {
-				case s.cancelBoard <- struct{}{}:
-				default:
-				}
+				s.callCancelBoard()
 				s.config.ShowRecord.Store(false)
 				s.api.CacheClear(context.Background())
 			},
@@ -209,10 +191,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: fmt.Sprintf("/%s/oddson", s.api.HTTPPathPrefix()),
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				s.log.Info("enabling odds mode", zap.String("board", s.api.League()))
-				select {
-				case s.cancelBoard <- struct{}{}:
-				default:
-				}
+				s.callCancelBoard()
 				s.config.GamblingSpread.Store(true)
 				s.api.CacheClear(context.Background())
 			},
@@ -221,10 +200,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: fmt.Sprintf("/%s/oddsoff", s.api.HTTPPathPrefix()),
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				s.log.Info("disabling odds mode", zap.String("board", s.api.League()))
-				select {
-				case s.cancelBoard <- struct{}{}:
-				default:
-				}
+				s.callCancelBoard()
 				s.config.GamblingSpread.Store(false)
 				s.api.CacheClear(context.Background())
 			},

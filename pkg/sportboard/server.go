@@ -32,10 +32,14 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 	if s.board.config.HideFavoriteScore.CAS(!req.Status.FavoriteHidden, req.Status.FavoriteHidden) {
 		cancelBoard = true
 	}
-	if req.Status.Enabled && s.board.Enable() {
-		cancelBoard = true
-	} else if s.board.Disable() {
-		cancelBoard = true
+	if req.Status.Enabled {
+		if s.board.Enable() {
+			cancelBoard = true
+		}
+	} else {
+		if s.board.Disable() {
+			cancelBoard = true
+		}
 	}
 	if s.board.config.FavoriteSticky.CAS(!req.Status.FavoriteSticky, req.Status.FavoriteSticky) {
 		cancelBoard = true
@@ -69,11 +73,7 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 	}
 
 	if cancelBoard {
-		select {
-		case s.board.cancelBoard <- struct{}{}:
-			s.board.log.Info("sent cancel board signal on status change")
-		default:
-		}
+		s.board.callCancelBoard()
 	}
 
 	return &emptypb.Empty{}, nil

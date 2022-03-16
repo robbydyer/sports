@@ -235,7 +235,9 @@ func (s *SysBoard) Enabled() bool {
 // Enable ...
 func (s *SysBoard) Enable() bool {
 	if s.config.Enabled.CAS(false, true) {
-		s.stateChangeNotifier()
+		if s.stateChangeNotifier != nil {
+			s.stateChangeNotifier()
+		}
 		return true
 	}
 	return false
@@ -244,7 +246,9 @@ func (s *SysBoard) Enable() bool {
 // Disable ...
 func (s *SysBoard) Disable() bool {
 	if s.config.Enabled.CAS(true, false) {
-		s.stateChangeNotifier()
+		if s.stateChangeNotifier != nil {
+			s.stateChangeNotifier()
+		}
 		return true
 	}
 	return false

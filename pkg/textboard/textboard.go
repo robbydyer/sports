@@ -186,7 +186,9 @@ func (s *TextBoard) Enabled() bool {
 // Enable ...
 func (s *TextBoard) Enable() bool {
 	if s.config.Enabled.CAS(false, true) {
-		s.stateChangeNotifier()
+		if s.stateChangeNotifier != nil {
+			s.stateChangeNotifier()
+		}
 		return true
 	}
 	return false
@@ -200,7 +202,9 @@ func (s *TextBoard) InBetween() bool {
 // Disable ...
 func (s *TextBoard) Disable() bool {
 	if s.config.Enabled.CAS(true, false) {
-		s.stateChangeNotifier()
+		if s.stateChangeNotifier != nil {
+			s.stateChangeNotifier()
+		}
 		return true
 	}
 	return false

@@ -51,8 +51,14 @@ func (s *Server) SetAll(ctx context.Context, req *pb.SetAllReq) (*emptypb.Empty,
 		for _, board := range s.sm.boards {
 			board.Enable()
 		}
+		for _, board := range s.sm.betweenBoards {
+			board.Enable()
+		}
 	} else {
 		for _, board := range s.sm.boards {
+			board.Disable()
+		}
+		for _, board := range s.sm.betweenBoards {
 			board.Disable()
 		}
 	}

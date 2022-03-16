@@ -268,6 +268,11 @@ func (c *ScrollCanvas) Render(ctx context.Context) error {
 
 // RenderNoMerge update the display with the data from the LED buffer
 func (c *ScrollCanvas) RenderNoMerge(ctx context.Context, status chan float64) error {
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	default:
+	}
 	c.scrollStatus = status
 	switch c.direction {
 	case RightToLeft:
@@ -370,6 +375,9 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
 	if len(c.subCanvases) < 1 {
 		c.PrepareSubCanvases()
+	}
+	if len(c.subCanvases) < 1 {
+		return fmt.Errorf("not enough subcanvases to merge")
 	}
 
 	finish := c.subCanvases[len(c.subCanvases)-1].virtualEndX

@@ -192,7 +192,9 @@ func (i *ImageBoard) InBetween() bool {
 // Enable ...
 func (i *ImageBoard) Enable() bool {
 	if i.config.Enabled.CAS(false, true) {
-		i.stateChangeNotifier()
+		if i.stateChangeNotifier != nil {
+			i.stateChangeNotifier()
+		}
 		return true
 	}
 	return false
@@ -201,7 +203,9 @@ func (i *ImageBoard) Enable() bool {
 // Disable ...
 func (i *ImageBoard) Disable() bool {
 	if i.config.Enabled.CAS(true, false) {
-		i.stateChangeNotifier()
+		if i.stateChangeNotifier != nil {
+			i.stateChangeNotifier()
+		}
 		return true
 	}
 	return false
