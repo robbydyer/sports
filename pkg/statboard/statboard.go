@@ -233,7 +233,9 @@ func (s *StatBoard) Enabled() bool {
 // Enable ...
 func (s *StatBoard) Enable() bool {
 	if s.config.Enabled.CAS(false, true) {
-		s.stateChangeNotifier()
+		if s.stateChangeNotifier != nil {
+			s.stateChangeNotifier()
+		}
 		return true
 	}
 	return false
@@ -247,7 +249,9 @@ func (s *StatBoard) InBetween() bool {
 // Disable ..
 func (s *StatBoard) Disable() bool {
 	if s.config.Enabled.CAS(true, false) {
-		s.stateChangeNotifier()
+		if s.stateChangeNotifier != nil {
+			s.stateChangeNotifier()
+		}
 		return true
 	}
 	return false

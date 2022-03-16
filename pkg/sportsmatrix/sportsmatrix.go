@@ -561,14 +561,17 @@ func (s *SportsMatrix) doCombinedScroll(ctx context.Context) error {
 
 	boards := []board.Board{}
 
+	canceler := func() {
+		cancel()
+	}
 	for _, board := range s.boards {
-		board.SetStateChangeNotifier(func() { cancel() })
+		board.SetStateChangeNotifier(canceler)
 		if board.Enabled() {
 			boards = append(boards, board)
 			for _, b := range s.betweenBoards {
-				board.SetStateChangeNotifier(func() { cancel() })
+				board.SetStateChangeNotifier(canceler)
 				if b.Enabled() {
-					board.SetStateChangeNotifier(func() { cancel() })
+					board.SetStateChangeNotifier(canceler)
 					boards = append(boards, b)
 				}
 			}

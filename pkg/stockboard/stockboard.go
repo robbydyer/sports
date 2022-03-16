@@ -208,7 +208,9 @@ func (s *StockBoard) Enabled() bool {
 // Enable ...
 func (s *StockBoard) Enable() bool {
 	if s.config.Enabled.CAS(false, true) {
-		s.stateChangeNotifier()
+		if s.stateChangeNotifier != nil {
+			s.stateChangeNotifier()
+		}
 		return true
 	}
 	return false
@@ -222,7 +224,9 @@ func (s *StockBoard) InBetween() bool {
 // Disable ...
 func (s *StockBoard) Disable() bool {
 	if s.config.Enabled.CAS(true, false) {
-		s.stateChangeNotifier()
+		if s.stateChangeNotifier != nil {
+			s.stateChangeNotifier()
+		}
 		return true
 	}
 	return false

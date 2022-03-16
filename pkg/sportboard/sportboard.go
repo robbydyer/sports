@@ -50,12 +50,13 @@ type SportBoard struct {
 	teamInfoLock        sync.RWMutex
 	drawLock            sync.RWMutex
 	logoLock            sync.RWMutex
-	enablerLock         sync.Mutex
 	cancelBoard         chan struct{}
 	previousScores      []*previousScore
 	prevScoreLock       sync.Mutex
 	rpcServer           pb.TwirpServer
 	stateChangeNotifier board.StateChangeNotifier
+	renderCtx           context.Context
+	renderCancel        context.CancelFunc
 	sync.Mutex
 }
 
@@ -361,7 +362,9 @@ func (s *SportBoard) Enabled() bool {
 // Enable ...
 func (s *SportBoard) Enable() bool {
 	if s.config.Enabled.CAS(false, true) {
-		s.stateChangeNotifier()
+		if s.stateChangeNotifier != nil {
+			s.stateChangeNotifier()
+		}
 		return true
 	}
 	return false
@@ -375,7 +378,10 @@ func (s *SportBoard) InBetween() bool {
 // Disable ...
 func (s *SportBoard) Disable() bool {
 	if s.config.Enabled.CAS(true, false) {
-		s.stateChangeNotifier()
+		s.callCancelBoard()
+		if s.stateChangeNotifier != nil {
+			s.stateChangeNotifier()
+		}
 		return true
 	}
 	return false
@@ -393,10 +399,8 @@ func (s *SportBoard) ScrollMode() bool {
 
 // SetLiveOnly sets this board to show only live games or not
 func (s *SportBoard) SetLiveOnly(live bool) {
-	s.config.LiveOnly.Store(live)
-	select {
-	case s.cancelBoard <- struct{}{}:
-	default:
+	if s.config.LiveOnly.CAS(!live, live) {
+		s.callCancelBoard()
 	}
 }
 
@@ -432,24 +436,14 @@ func (s *SportBoard) GridSize(bounds image.Rectangle) (int, int) {
 	return width, height
 }
 
-func (s *SportBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc) {
-	s.enablerLock.Lock()
-	defer s.enablerLock.Unlock()
-	ticker := time.NewTicker(500 * time.Millisecond)
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-s.cancelBoard:
-			cancel()
-			return
-		case <-ticker.C:
-			if !s.config.Enabled.Load() {
-				cancel()
-				return
-			}
-		}
+func (s *SportBoard) callCancelBoard() {
+	if s.renderCancel != nil {
+		s.log.Info("cancel render context for sportboard",
+			zap.String("league", s.api.League()),
+		)
+		s.renderCancel()
 	}
+	s.stateChangeNotifier()
 }
 
 // Render ...
@@ -489,16 +483,14 @@ func (s *SportBoard) render(ctx context.Context, canvas board.Canvas) (board.Can
 
 	s.logCanvas(canvas, "sportboard Render() called canvas")
 
-	boardCtx, boardCancel := context.WithCancel(ctx)
-	defer boardCancel()
+	s.renderCtx, s.renderCancel = context.WithCancel(ctx)
+	defer s.renderCancel()
 
-	go s.enablerCancel(boardCtx, boardCancel)
-
-	loadCtx, loadCancel := context.WithTimeout(boardCtx, 10*time.Minute)
+	loadCtx, loadCancel := context.WithTimeout(s.renderCtx, 10*time.Minute)
 	defer loadCancel()
 	go s.renderLoading(loadCtx, canvas)
 
-	allGames, err := s.api.GetScheduledGames(boardCtx, s.config.TodayFunc())
+	allGames, err := s.api.GetScheduledGames(s.renderCtx, s.config.TodayFunc())
 	if err != nil {
 		s.log.Error("failed to get scheduled games",
 			zap.String("league", s.api.League()),
@@ -557,8 +549,8 @@ OUTER:
 					games = append(games, game)
 
 					// Ensures the daily data for this team has been fetched
-					_ = s.api.TeamRecord(boardCtx, home, s.season())
-					_ = s.api.TeamRecord(boardCtx, away, s.season())
+					_ = s.api.TeamRecord(s.renderCtx, home, s.season())
+					_ = s.api.TeamRecord(s.renderCtx, away, s.season())
 				}
 				continue OUTER
 			}
@@ -577,7 +569,7 @@ OUTER:
 	)
 
 	select {
-	case <-boardCtx.Done():
+	case <-s.renderCtx.Done():
 		return nil, context.Canceled
 	default:
 	}
@@ -601,7 +593,7 @@ OUTER:
 				zap.Int("cell height", height),
 			)
 			loadCancel()
-			return nil, s.renderGrid(boardCtx, canvas, games, w, h)
+			return nil, s.renderGrid(s.renderCtx, canvas, games, w, h)
 		}
 	}
 
@@ -614,7 +606,7 @@ OUTER:
 		}
 
 		loadCancel()
-		return nil, s.renderNoScheduled(boardCtx, canvas)
+		return nil, s.renderNoScheduled(s.renderCtx, canvas)
 	}
 
 	preloader := make(map[int]chan struct{})
@@ -659,7 +651,7 @@ OUTER:
 GAMES:
 	for gameIndex, game := range games {
 		select {
-		case <-boardCtx.Done():
+		case <-s.renderCtx.Done():
 			return nil, context.Canceled
 		default:
 		}
@@ -676,7 +668,7 @@ GAMES:
 			nextID := games[nextGameIndex].GetID()
 			preloader[nextID] = make(chan struct{}, 1)
 			go func() {
-				if err := s.preloadLiveGame(boardCtx, games[nextGameIndex], preloader[nextID]); err != nil {
+				if err := s.preloadLiveGame(s.renderCtx, games[nextGameIndex], preloader[nextID]); err != nil {
 					s.log.Error("error while preloading next game", zap.Error(err))
 				}
 			}()
@@ -684,7 +676,7 @@ GAMES:
 
 		// Wait for the preloader to finish getting data, but with a timeout.
 		select {
-		case <-boardCtx.Done():
+		case <-s.renderCtx.Done():
 			return nil, context.Canceled
 		case <-preloader[game.GetID()]:
 			s.log.Debug("preloader marked ready", zap.Int("game ID", game.GetID()))
@@ -714,7 +706,7 @@ GAMES:
 
 		loadCancel()
 
-		if err := s.renderGame(boardCtx, canvas, cachedGame, counter); err != nil {
+		if err := s.renderGame(s.renderCtx, canvas, cachedGame, counter); err != nil {
 			s.log.Error("failed to render sportboard game", zap.Error(err))
 			continue GAMES
 		}
@@ -729,14 +721,14 @@ GAMES:
 			continue GAMES
 		}
 
-		if err := canvas.Render(boardCtx); err != nil {
+		if err := canvas.Render(s.renderCtx); err != nil {
 			s.log.Error("failed to render", zap.Error(err))
 			continue GAMES
 		}
 
 		if !s.config.ScrollMode.Load() {
 			select {
-			case <-boardCtx.Done():
+			case <-s.renderCtx.Done():
 				return nil, context.Canceled
 			case <-time.After(s.config.boardDelay):
 			}

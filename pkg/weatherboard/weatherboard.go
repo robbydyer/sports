@@ -204,7 +204,9 @@ func (w *WeatherBoard) Enabled() bool {
 // Enable ...
 func (w *WeatherBoard) Enable() bool {
 	if w.config.Enabled.CAS(false, true) {
-		w.stateChangeNotifier()
+		if w.stateChangeNotifier != nil {
+			w.stateChangeNotifier()
+		}
 		return true
 	}
 	return false
@@ -218,7 +220,9 @@ func (w *WeatherBoard) InBetween() bool {
 // Disable ...
 func (w *WeatherBoard) Disable() bool {
 	if w.config.Enabled.CAS(true, false) {
-		w.stateChangeNotifier()
+		if w.stateChangeNotifier != nil {
+			w.stateChangeNotifier()
+		}
 		return true
 	}
 	return false

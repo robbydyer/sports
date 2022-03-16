@@ -165,7 +165,9 @@ func (c *Clock) Enabled() bool {
 // Enable ...
 func (c *Clock) Enable() bool {
 	if c.config.Enabled.CAS(false, true) {
-		c.stateChangeNotifier()
+		if c.stateChangeNotifier != nil {
+			c.stateChangeNotifier()
+		}
 		return true
 	}
 	return false
@@ -174,7 +176,9 @@ func (c *Clock) Enable() bool {
 // Disable ...
 func (c *Clock) Disable() bool {
 	if c.config.Enabled.CAS(true, false) {
-		c.stateChangeNotifier()
+		if c.stateChangeNotifier != nil {
+			c.stateChangeNotifier()
+		}
 		return true
 	}
 	return false
