@@ -208,7 +208,7 @@ github.com/spf13/viper/internal/encoding/yaml
 github.com/srikrsna/protoc-gen-gotag
 github.com/srikrsna/protoc-gen-gotag/module
 github.com/srikrsna/protoc-gen-gotag/tagger
-# github.com/stretchr/testify v1.7.0
+# github.com/stretchr/testify v1.7.1
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
