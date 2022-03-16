@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -23,8 +24,10 @@ var rawDatReg = regexp.MustCompile(`\s*([0-9]{1,2})\.{0,1}\s+([a-zA-Z]{1}[a-zA-Z
 
 // PGA ...
 type PGA struct {
-	log     *zap.Logger
-	players []*Player
+	log            *zap.Logger
+	players        []*Player
+	updateInterval time.Duration
+	lastUpdate     time.Time
 }
 
 type eventDat struct {
@@ -39,9 +42,11 @@ type eventDat struct {
 }
 
 // New ...
-func New(logger *zap.Logger) (*PGA, error) {
+func New(logger *zap.Logger, updateInterval time.Duration) (*PGA, error) {
 	p := &PGA{
-		log: logger,
+		log:            logger,
+		updateInterval: updateInterval,
+		lastUpdate:     time.Now().Add(-1 * updateInterval),
 	}
 
 	c := cron.New()
@@ -83,8 +88,12 @@ func (p *PGA) StatShortName(stat string) string {
 
 // ListPlayers ...
 func (p *PGA) ListPlayers(ctx context.Context, teamAbbreviation string) ([]statboard.Player, error) {
-	if len(p.players) < 1 {
+	if len(p.players) < 1 || time.Since(p.lastUpdate) > p.updateInterval {
 		var err error
+		p.log.Debug("updating PGA leaderboard",
+			zap.Duration("update interval", p.updateInterval),
+			zap.Duration("since last update", time.Since(p.lastUpdate)),
+		)
 		p.players, err = p.updatePlayers(ctx)
 		if err != nil {
 			return nil, err
@@ -145,10 +154,12 @@ func (p *PGA) updatePlayers(ctx context.Context) ([]*Player, error) {
 
 	comp := dat.Events[0].Competitions[0]
 	if len(comp.Competitors) > 1 {
+		p.lastUpdate = time.Now()
 		return comp.Competitors, nil
 	}
 
 	if strings.Contains(comp.DataFormat, "RAW") && comp.RawData != "" {
+		p.lastUpdate = time.Now()
 		return p.parseRaw(comp.RawData)
 	}
 

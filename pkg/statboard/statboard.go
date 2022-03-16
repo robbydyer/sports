@@ -22,6 +22,8 @@ import (
 	"github.com/robbydyer/sports/pkg/twirphelpers"
 )
 
+var defaultUpdateInterval = 5 * time.Minute
+
 // StatBoard ...
 type StatBoard struct {
 	config              *Config
@@ -110,12 +112,12 @@ func (c *Config) SetDefaults() {
 	if c.UpdateInterval != "" {
 		d, err := time.ParseDuration(c.UpdateInterval)
 		if err != nil {
-			c.updateInterval = 10 * time.Minute
+			c.updateInterval = defaultUpdateInterval
 		} else {
 			c.updateInterval = d
 		}
 	} else {
-		c.updateInterval = 10 * time.Minute
+		c.updateInterval = defaultUpdateInterval
 	}
 
 	if c.StatOverride == nil {
@@ -136,14 +138,6 @@ func (c *Config) SetDefaults() {
 
 // New ...
 func New(ctx context.Context, api API, config *Config, logger *zap.Logger, opts ...OptionFunc) (*StatBoard, error) {
-	if config.updateInterval < 10*time.Minute {
-		logger.Warn("statboard updateInterval was too low, using defaults",
-			zap.String("league", api.LeagueShortName()),
-			zap.String("configured", config.updateInterval.String()),
-			zap.String("minimum", "10m"),
-		)
-		config.updateInterval = 10 * time.Minute
-	}
 	s := &StatBoard{
 		config:        config,
 		log:           logger,

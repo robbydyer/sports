@@ -72,8 +72,17 @@ func (s *StatBoard) render(ctx context.Context, canvas board.Canvas) (board.Canv
 
 	doUpdate := false
 	if time.Since(s.lastUpdate) > s.config.updateInterval {
+		s.log.Debug("statboard updating",
+			zap.Duration("since last update", time.Since(s.lastUpdate)),
+			zap.Duration("configured interval", s.config.updateInterval),
+		)
 		doUpdate = true
 		s.lastUpdate = time.Now()
+	} else {
+		s.log.Debug("statboard not updating",
+			zap.Duration("since last update", time.Since(s.lastUpdate)),
+			zap.Duration("configured interval", s.config.updateInterval),
+		)
 	}
 
 	// var players []Player

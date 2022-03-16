@@ -38,6 +38,8 @@ import (
 	"github.com/robbydyer/sports/pkg/yahoo"
 )
 
+var defaultPGAUpdateInterval = 2 * time.Minute
+
 const defaultConfigFile = "/etc/sportsmatrix.conf"
 
 type rootArgs struct {
@@ -297,6 +299,10 @@ func (r *rootArgs) setConfigDefaults() {
 		r.config.PGA = &statboard.Config{
 			Enabled: atomic.NewBool(false),
 		}
+	}
+	if r.config.PGA.UpdateInterval == "" {
+		// Set PGA to a lower update interval than the default for Statboard
+		r.config.PGA.UpdateInterval = defaultPGAUpdateInterval.String()
 	}
 	r.config.PGA.SetDefaults()
 	r.config.PGA.Teams = append(r.config.PGA.Teams, "players")
@@ -629,7 +635,14 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 	}
 
 	if r.config.PGA != nil {
-		api, err := pga.New(logger)
+		update := defaultPGAUpdateInterval
+		if r.config.PGA.UpdateInterval != "" {
+			d, err := time.ParseDuration(r.config.PGA.UpdateInterval)
+			if err == nil {
+				update = d
+			}
+		}
+		api, err := pga.New(logger, update)
 		if err != nil {
 			return nil, err
 		}
