@@ -48,8 +48,19 @@ If you feel so inclined, beer money can be sent to my Venmo (www.venmo.com/u/Rob
 - Sys: Displays basic system info. Currently Mem and CPU usage
 
 ## Installation
+
+### Supported Pi
+This project currently supports all Raspberry Pi's with an armv7l or aarch64 architecture. This includes Pi 3b, 4, Zero 2. Pi's with the armv6 architecture are no longer supported,
+but those can run version v0.0.83 and older- this would include the original Pi Zero.
+
+You can check your Pi's architecture by running the following command:
+```shell
+uname -m
+```
+
+### Install script
 There's a helper install script that pulls the latest release's .deb package and installs it and starts the service. Obviously, piping a
-remote script to `sudo bash` is risky, so please take a look at `script/install.sh` to verify nothing nefarious is going on. You can always manually download the .deb package in the [Releases Section](https://github.com/robbydyer/sports/releases/latest). Just make sure to pick the correct one for your architecture (armv7l for all but Pi Zero).
+remote script to `sudo bash` is risky, so please take a look at `script/install.sh` to verify nothing nefarious is going on. You can always manually download the .deb package in the [Releases Section](https://github.com/robbydyer/sports/releases/latest). Just make sure to pick the correct one for your architecture.
 
 Run the following command in a Terminal on your Pi
 ```shell
