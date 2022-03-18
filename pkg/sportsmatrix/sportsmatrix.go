@@ -916,6 +916,13 @@ func (s *SportsMatrix) prepBetweenCanvases(ctx context.Context, canvas board.Can
 				rgb.WithScrollDirection(rgb.RightToLeft),
 				rgb.WithScrollSpeed(s.cfg.combinedScrollDelay),
 			)
+			if err != nil {
+				s.log.Error("failed to create scroll canvas",
+					zap.Error(err),
+					zap.String("board", thisBoard.Name()),
+				)
+				return
+			}
 			boardCanvas, err := thisBoard.ScrollRender(ctx, myBase, s.cfg.CombinedScrollPadding)
 			if err != nil {
 				s.log.Error("failed to render between board scroll canvas",

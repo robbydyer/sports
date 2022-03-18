@@ -16,7 +16,7 @@ linter=$(latestlinter)
 
 if [ "$(docker images -q ${linter})" = "" ]; then
   echo "==> Building linter image"
-  docker --config="${DOCKERCONF}" buildx build -t robbydyer/rgbmatrixlint:latest \
+  docker --config="${DOCKERCONF}" buildx build -t "${linter}" \
     --builder=build \
     -f Dockerfile.lint \
     --platform=linux/amd64,linux/arm64/v8 \

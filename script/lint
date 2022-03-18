@@ -3,7 +3,8 @@ set -euo pipefail
 
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 IN_DOCKER="${IN_DOCKER:-no}"
-IMG="robbydyer/rgbmatrixlint:latest"
+source "${ROOT}/script/build.pibuilder"
+IMG=$(latestlinter)
 
 if [ "${IN_DOCKER}" = "no" ]; then
   MOUNTOPTION=""
