@@ -114,6 +114,11 @@ func (c *ScrollCanvas) AddCanvas(add draw.Image) {
 	c.actuals = append(c.actuals, img)
 }
 
+// Len returns the number of canvases
+func (c *ScrollCanvas) Len() int {
+	return len(c.actuals)
+}
+
 func (c *ScrollCanvas) Merge(padding int) {
 	if c.merged.CAS(true, true) {
 		return
@@ -587,9 +592,6 @@ func (c *ScrollCanvas) bottomToTop(ctx context.Context) error {
 			return context.Canceled
 		case <-time.After(c.interval):
 		}
-		c.log.Debug("scrolling",
-			zap.Int("thisY", thisY),
-		)
 		if thisY == finish {
 			return nil
 		}

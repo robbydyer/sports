@@ -565,16 +565,14 @@ func (s *SportsMatrix) doCombinedScroll(ctx context.Context) error {
 		cancel()
 	}
 	for _, board := range s.boards {
-		board.SetStateChangeNotifier(canceler)
 		if board.Enabled() {
+			board.SetStateChangeNotifier(canceler)
 			boards = append(boards, board)
-			for _, b := range s.betweenBoards {
-				board.SetStateChangeNotifier(canceler)
-				if b.Enabled() {
-					board.SetStateChangeNotifier(canceler)
-					boards = append(boards, b)
-				}
-			}
+		}
+	}
+	for _, board := range s.betweenBoards {
+		if board.Enabled() {
+			board.SetStateChangeNotifier(canceler)
 		}
 	}
 
@@ -583,6 +581,9 @@ CANVASES:
 		if !canvas.Enabled() || !canvas.Scrollable() {
 			continue CANVASES
 		}
+
+		betweenCh := make(chan *rgb.ScrollCanvas, len(s.betweenBoards))
+		s.prepBetweenCanvases(ctx, canvas, betweenCh)
 
 		base, ok := canvas.(*rgb.ScrollCanvas)
 		if !ok {
@@ -644,12 +645,25 @@ CANVASES:
 			allOrderedBoards = append(allOrderedBoards, scrCanvas)
 		}
 
+		betweenCanvases := []*rgb.ScrollCanvas{}
+
+		for c := range betweenCh {
+			if c != nil {
+				betweenCanvases = append(betweenCanvases, c)
+			}
+		}
+
 		sort.SliceStable(allOrderedBoards, func(i, j int) bool {
 			return allOrderedBoards[i].order < allOrderedBoards[j].order
 		})
 
 		for _, ordered := range allOrderedBoards {
-			scrollCanvas.AddCanvas(ordered.scrollCanvas)
+			if ordered.scrollCanvas.Len() > 0 {
+				scrollCanvas.AddCanvas(ordered.scrollCanvas)
+				for _, c := range betweenCanvases {
+					scrollCanvas.AddCanvas(c)
+				}
+			}
 		}
 
 		scrollCanvas.PrepareSubCanvases()
@@ -759,6 +773,8 @@ func (s *SportsMatrix) doBoard(ctx context.Context, b board.Board) error {
 
 	var wg sync.WaitGroup
 
+	var boardErr error
+
 CANVASES:
 	for _, canvas := range s.canvases {
 		if !canvas.Enabled() {
@@ -777,6 +793,7 @@ CANVASES:
 			defer wg.Done()
 			s.log.Debug("rendering board", zap.String("board", b.Name()))
 			if err := b.Render(s.currentBoardCtx, canvas); err != nil {
+				boardErr = err
 				s.log.Error("board render returned error",
 					zap.Error(err),
 				)
@@ -799,7 +816,7 @@ CANVASES:
 	}
 	s.log.Debug("done waiting for canvases")
 
-	return nil
+	return boardErr
 }
 
 // Close closes the matrix
@@ -869,4 +886,52 @@ func (s *SportsMatrix) JumpTo(ctx context.Context, boardName string) error {
 	}
 
 	return fmt.Errorf("could not find board %s to jump to", boardName)
+}
+
+func (s *SportsMatrix) prepBetweenCanvases(ctx context.Context, canvas board.Canvas, canvases chan *rgb.ScrollCanvas) {
+	base, ok := canvas.(*rgb.ScrollCanvas)
+	if !ok {
+		return
+	}
+
+	wg := sync.WaitGroup{}
+
+	for _, b := range s.betweenBoards {
+		if !b.Enabled() {
+			continue
+		}
+
+		wg.Add(1)
+		go func(thisBoard board.Board) {
+			defer wg.Done()
+			s.log.Debug("preparing between board",
+				zap.String("board", thisBoard.Name()),
+			)
+			myBase, err := rgb.NewScrollCanvas(base.Matrix, s.log,
+				rgb.WithScrollDirection(rgb.RightToLeft),
+				rgb.WithScrollSpeed(s.cfg.combinedScrollDelay),
+			)
+			boardCanvas, err := thisBoard.ScrollRender(ctx, myBase, s.cfg.CombinedScrollPadding)
+			if err != nil {
+				s.log.Error("failed to render between board scroll canvas",
+					zap.Error(err),
+				)
+				return
+			}
+			myCanvas, ok := boardCanvas.(*rgb.ScrollCanvas)
+			if !ok {
+				s.log.Error("unexpected board type in between board combined scroll",
+					zap.String("board", thisBoard.Name()),
+				)
+				return
+			}
+			canvases <- myCanvas
+			s.log.Debug("done preparing between board",
+				zap.String("board", thisBoard.Name()),
+			)
+		}(b)
+	}
+
+	wg.Wait()
+	close(canvases)
 }
