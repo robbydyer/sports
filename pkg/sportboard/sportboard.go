@@ -503,7 +503,7 @@ func (s *SportBoard) render(ctx context.Context, canvas board.Canvas) (board.Can
 		s.log.Debug("no games scheduled",
 			zap.String("league", s.api.League()),
 		)
-		return nil, nil
+		return nil, fmt.Errorf("no games scheduled for %s", s.api.League())
 	}
 
 	if _, err := s.api.GetTeams(ctx); err != nil {
@@ -602,7 +602,7 @@ OUTER:
 		s.log.Debug("no scheduled games, not rendering", zap.String("league", s.api.League()))
 		if !s.config.ShowNoScheduledLogo.Load() {
 			loadCancel()
-			return nil, nil
+			return nil, fmt.Errorf("no schedule games for %s", s.api.League())
 		}
 
 		loadCancel()

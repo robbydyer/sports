@@ -78,6 +78,12 @@ type Config struct {
 	CombinedScrollPadding int                 `json:"combinedScrollPadding"`
 }
 
+type orderedBoard struct {
+	order        int
+	board        board.Board
+	scrollCanvas *rgb.ScrollCanvas
+}
+
 // Defaults sets some sane config defaults
 func (c *Config) Defaults() {
 	if c.RuntimeOptions == nil {
@@ -523,39 +529,6 @@ BOARDS:
 // doCombinedScroll gets a scrollCanvas version of each board, then combines them
 // into one large ScrollCanvas. It maintains ordering
 func (s *SportsMatrix) doCombinedScroll(ctx context.Context) error {
-	type orderedBoards struct {
-		order        int
-		board        board.Board
-		scrollCanvas *rgb.ScrollCanvas
-	}
-
-	getBoardCanvas := func(baseCanvas board.Canvas, scrollBoardCanvas *orderedBoards, ch chan *orderedBoards) {
-		defer func() {
-			ch <- scrollBoardCanvas
-		}()
-
-		if !scrollBoardCanvas.board.Enabled() {
-			return
-		}
-
-		boardCanvas, err := scrollBoardCanvas.board.ScrollRender(ctx, baseCanvas, s.cfg.CombinedScrollPadding)
-		if err != nil {
-			s.log.Error("failed to render scroll canvas",
-				zap.String("board", scrollBoardCanvas.board.Name()),
-				zap.Error(err),
-			)
-			return
-		}
-		var ok bool
-		scrollBoardCanvas.scrollCanvas, ok = boardCanvas.(*rgb.ScrollCanvas)
-		if !ok {
-			s.log.Error("unexpected board type in combined scroll",
-				zap.String("board", scrollBoardCanvas.board.Name()),
-			)
-			return
-		}
-	}
-
 	// nolint: govet
 	scrollCtx, cancel := context.WithCancel(ctx)
 
@@ -565,16 +538,14 @@ func (s *SportsMatrix) doCombinedScroll(ctx context.Context) error {
 		cancel()
 	}
 	for _, board := range s.boards {
-		board.SetStateChangeNotifier(canceler)
 		if board.Enabled() {
+			board.SetStateChangeNotifier(canceler)
 			boards = append(boards, board)
-			for _, b := range s.betweenBoards {
-				board.SetStateChangeNotifier(canceler)
-				if b.Enabled() {
-					board.SetStateChangeNotifier(canceler)
-					boards = append(boards, b)
-				}
-			}
+		}
+	}
+	for _, board := range s.betweenBoards {
+		if board.Enabled() {
+			board.SetStateChangeNotifier(canceler)
 		}
 	}
 
@@ -588,6 +559,7 @@ CANVASES:
 		if !ok {
 			continue CANVASES
 		}
+
 		scrollCanvas, err := rgb.NewScrollCanvas(base.Matrix, s.log,
 			rgb.WithScrollSpeed(s.cfg.combinedScrollDelay),
 			rgb.WithScrollDirection(rgb.RightToLeft),
@@ -598,44 +570,13 @@ CANVASES:
 			return err
 		}
 
-		wg := sync.WaitGroup{}
-		ch := make(chan *orderedBoards, len(boards))
+		ch := make(chan *orderedBoard, len(boards))
+		s.prepOrderedBoards(ctx, s.boards, base.Matrix, ch)
 
-		index := 0
-	BOARDS:
-		for _, b := range boards {
-			b := b
-			if !b.Enabled() {
-				continue BOARDS
-			}
-			myBase, err := rgb.NewScrollCanvas(base.Matrix, s.log,
-				rgb.WithScrollDirection(rgb.RightToLeft),
-				rgb.WithScrollSpeed(s.cfg.combinedScrollDelay),
-			)
-			if err != nil {
-				cancel()
-				return err
-			}
-			brd := &orderedBoards{
-				order: index,
-				board: b,
-			}
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				getBoardCanvas(myBase, brd, ch)
-			}()
-			index++
-		}
+		betweenCh := make(chan *orderedBoard, len(boards))
+		s.prepOrderedBoards(ctx, s.betweenBoards, base.Matrix, betweenCh)
 
-		s.log.Debug("wait for boards",
-			zap.Int("total", len(s.boards)),
-		)
-		wg.Wait()
-		close(ch)
-		s.log.Debug("done waiting for boards")
-
-		allOrderedBoards := []*orderedBoards{}
+		allOrderedBoards := []*orderedBoard{}
 	SCR:
 		for scrCanvas := range ch {
 			if scrCanvas.scrollCanvas == nil {
@@ -644,12 +585,33 @@ CANVASES:
 			allOrderedBoards = append(allOrderedBoards, scrCanvas)
 		}
 
+		betweenBoards := []*orderedBoard{}
+
+		for c := range betweenCh {
+			if c != nil {
+				betweenBoards = append(betweenBoards, c)
+			}
+		}
+
 		sort.SliceStable(allOrderedBoards, func(i, j int) bool {
 			return allOrderedBoards[i].order < allOrderedBoards[j].order
 		})
+		sort.SliceStable(betweenBoards, func(i, j int) bool {
+			return betweenBoards[i].order < betweenBoards[j].order
+		})
 
 		for _, ordered := range allOrderedBoards {
-			scrollCanvas.AddCanvas(ordered.scrollCanvas)
+			if ordered.scrollCanvas.Len() > 0 {
+				scrollCanvas.AddCanvas(ordered.scrollCanvas)
+				for _, c := range betweenBoards {
+					scrollCanvas.AddCanvas(c.scrollCanvas)
+				}
+			} else {
+				s.log.Debug("board had less than 1 canvas rendered",
+					zap.String("board", ordered.board.Name()),
+					zap.Int("number", ordered.scrollCanvas.Len()),
+				)
+			}
 		}
 
 		scrollCanvas.PrepareSubCanvases()
@@ -759,6 +721,8 @@ func (s *SportsMatrix) doBoard(ctx context.Context, b board.Board) error {
 
 	var wg sync.WaitGroup
 
+	var boardErr error
+
 CANVASES:
 	for _, canvas := range s.canvases {
 		if !canvas.Enabled() {
@@ -777,6 +741,7 @@ CANVASES:
 			defer wg.Done()
 			s.log.Debug("rendering board", zap.String("board", b.Name()))
 			if err := b.Render(s.currentBoardCtx, canvas); err != nil {
+				boardErr = err
 				s.log.Error("board render returned error",
 					zap.Error(err),
 				)
@@ -799,7 +764,7 @@ CANVASES:
 	}
 	s.log.Debug("done waiting for canvases")
 
-	return nil
+	return boardErr
 }
 
 // Close closes the matrix
@@ -869,4 +834,59 @@ func (s *SportsMatrix) JumpTo(ctx context.Context, boardName string) error {
 	}
 
 	return fmt.Errorf("could not find board %s to jump to", boardName)
+}
+
+func (s *SportsMatrix) prepOrderedBoards(ctx context.Context, boards []board.Board, matrix rgb.Matrix, canvases chan *orderedBoard) {
+	wg := sync.WaitGroup{}
+
+	index := 0
+	for _, b := range boards {
+		if !b.Enabled() {
+			continue
+		}
+
+		wg.Add(1)
+		go func(thisBoard board.Board, i int) {
+			defer wg.Done()
+			myBase, err := rgb.NewScrollCanvas(matrix, s.log,
+				rgb.WithScrollDirection(rgb.RightToLeft),
+				rgb.WithScrollSpeed(s.cfg.combinedScrollDelay),
+			)
+			if err != nil {
+				s.log.Error("failed to create scroll canvas",
+					zap.Error(err),
+					zap.String("board", thisBoard.Name()),
+				)
+				return
+			}
+			boardCanvas, err := thisBoard.ScrollRender(ctx, myBase, s.cfg.CombinedScrollPadding)
+			if err != nil {
+				s.log.Error("failed to render between board scroll canvas",
+					zap.Error(err),
+				)
+				return
+			}
+			myCanvas, ok := boardCanvas.(*rgb.ScrollCanvas)
+			if !ok {
+				s.log.Error("unexpected board type in combined scroll",
+					zap.String("board", thisBoard.Name()),
+				)
+				return
+			}
+			s.log.Debug("ordered board prepped",
+				zap.String("board", thisBoard.Name()),
+				zap.Int("index", i),
+			)
+			canvases <- &orderedBoard{
+				order:        i,
+				board:        thisBoard,
+				scrollCanvas: myCanvas,
+			}
+		}(b, index)
+
+		index++
+	}
+
+	wg.Wait()
+	close(canvases)
 }
