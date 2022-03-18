@@ -663,6 +663,11 @@ CANVASES:
 				for _, c := range betweenCanvases {
 					scrollCanvas.AddCanvas(c)
 				}
+			} else {
+				s.log.Debug("board had less than 1 canvas rendered",
+					zap.String("board", ordered.board.Name()),
+					zap.Int("number", ordered.scrollCanvas.Len()),
+				)
 			}
 		}
 

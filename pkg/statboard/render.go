@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/rgbrender"
 )
 
@@ -136,10 +137,22 @@ func (s *StatBoard) render(ctx context.Context, canvas board.Canvas) (board.Canv
 	}
 
 	if s.config.Horizontal.Load() {
+		base, ok := canvas.(*rgbmatrix.ScrollCanvas)
+		if !ok {
+			return nil, fmt.Errorf("unexpected canvas type for statboard")
+		}
+		tightCanvas, err := rgbmatrix.NewScrollCanvas(base.Matrix, s.log)
+		if err != nil {
+			return nil, err
+		}
+		tightCanvas.SetScrollSpeed(base.GetScrollSpeed())
+		tightCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
 		if err := s.doHorizontal(ctx, canvas, players); err != nil {
 			return nil, err
 		}
-		return canvas, nil
+		tightCanvas.AddCanvas(canvas)
+		tightCanvas.Merge(0)
+		return tightCanvas, nil
 	}
 
 PLAYERS:
