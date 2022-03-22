@@ -79,7 +79,7 @@ github.com/google/uuid
 # github.com/gorilla/mux v1.8.0
 ## explicit
 github.com/gorilla/mux
-# github.com/grpc-ecosystem/grpc-gateway/v2 v2.9.0
+# github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.0
 ## explicit
 github.com/grpc-ecosystem/grpc-gateway/v2/internal/casing
 github.com/grpc-ecosystem/grpc-gateway/v2/internal/codegenerator
@@ -283,7 +283,7 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# google.golang.org/genproto v0.0.0-20220314164441-57ef72a4c106
+# google.golang.org/genproto v0.0.0-20220317150908-0efb43f6373e
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/visibility
 google.golang.org/genproto/googleapis/rpc/status
