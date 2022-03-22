@@ -72,6 +72,25 @@ To try out the latest beta release, run the following on your Pi:
 curl https://raw.githubusercontent.com/robbydyer/sports/master/script/beta-install.sh | sudo bash
 ```
 
+### Installing from source
+If you wish to install from source (either you don't trust the released .deb or you have a non-supported Pi), you can
+compile the binary on your own Pi. There are two options:
+
+#### Just Compile the binary
+You can just compile the binary, skipping the systemctl configuration. Clone the repo to your Pi, then run the build script. This will result in a file named `sportsmatrix.bin`
+
+```shell
+script/build.local
+```
+
+#### Build your own DEB package
+You can build your own copy of the DEB package- these are what are distributed with official releases and are what
+`script/install.sh` and `script/beta-install.sh` install. You must set a `VERSION` env var, but it can be anything you want.
+
+```shell
+VERSION=1.0.0 script/deb-build.sh
+```
+
 ## Configuration
 You can run the app without passing any configuration, it will just use some sane defaults. Currently it only defaults to showing the NHL board. Each board that is enabled will be rotated through. The default location for the config file is `/etc/sportsmatrix.conf`
 

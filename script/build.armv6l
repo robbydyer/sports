@@ -17,7 +17,7 @@ SUFFIX="armv6l"
 if [ "${IN_DOCKER}" = "no" ]; then
   if ! uname -a | grep raspberry &> /dev/null; then
     set -x
-    source "${ROOT}/script/build.pibuilder"
+    source "${ROOT}/script/common"
     pibuilder=$(latestpibuilder)
 
     exec docker run -t --rm \

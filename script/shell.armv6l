@@ -9,7 +9,7 @@ pibuilder="pibuilder"
 
 if [ "${IN_DOCKER}" = "no" ]; then
   set -x
-  source "${ROOT}/script/build.pibuilder"
+  source "${ROOT}/script/common"
   pibuilder=$(latestpibuilder)
   buildpibuilder
 

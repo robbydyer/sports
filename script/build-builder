@@ -1,9 +1,10 @@
 #!/bin/bash
+# This script is used to build the docker image that is used to run builds.
 set -euo pipefail
 
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 
-source "${ROOT}/script/build.pibuilder"
+source "${ROOT}/script/common"
 
 set -x
 cd "${ROOT}"
@@ -22,5 +23,3 @@ if [ "$(docker images -q ${img})" = "" ]; then
     --push \
     .
 fi
-
-"${ROOT}/script/build-linter"

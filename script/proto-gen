@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 cd "${ROOT}"
 
-source "${ROOT}/script/build.pibuilder"
+source "${ROOT}/script/common"
 buildprotoc
 
 rm -rf "${ROOT}"/internal/proto/*

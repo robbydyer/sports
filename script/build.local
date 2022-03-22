@@ -3,11 +3,14 @@
 set -euo pipefail
 
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+source "${ROOT}/script/common"
 cd "${ROOT}"
 SUFFIX="bin"
 VERSION="${VERSION:-devbuild}"
 
 set -x
+install_go
+
 export CGO_ENABLED=1
 export GOCACHE=${ROOT}/.cache
 
