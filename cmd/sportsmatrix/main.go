@@ -131,6 +131,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 	rootCmd.AddCommand(newAbbrevCmd(args))
 	rootCmd.AddCommand(newStockCmd(args))
 	rootCmd.AddCommand(newWeatherCmd(args))
+	rootCmd.AddCommand(newCalCmd(args))
 
 	return rootCmd
 }
