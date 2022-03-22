@@ -10,7 +10,7 @@ if ! dpkg -l | grep docker.io; then
   apt-get install -y docker.io
 fi
 
-source "${ROOT}/script/build.pibuilder"
+source "${ROOT}/script/common"
 IMG="matrixweb:$(getsha ${ROOT}/Dockerfile.web)"
 
 if [ "$(docker images -q ${IMG})" = "" ]; then
