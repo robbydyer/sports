@@ -328,6 +328,7 @@ func (c *ColorChar) validate() error {
 	return nil
 }
 
+// BreakText breaks text into lines based on a max pixel width
 func (t *TextWriter) BreakText(canvas draw.Image, maxPixWidth int, text string) ([]string, error) {
 	max, err := t.MaxChars(canvas, maxPixWidth)
 	if err != nil {

@@ -64,6 +64,7 @@ type API interface {
 	DailyEvents(ctx context.Context, date time.Time) ([]*Event, error)
 }
 
+// Event is a calendar event
 type Event struct {
 	Time  time.Time
 	Title string

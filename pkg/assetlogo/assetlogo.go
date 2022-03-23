@@ -8,12 +8,14 @@ import (
 	"path/filepath"
 
 	"github.com/disintegration/imaging"
+
 	"github.com/robbydyer/sports/pkg/logo"
 )
 
 //go:embed assets
 var assets embed.FS
 
+// GetLogo gets a logo based on a filename of an asset
 func GetLogo(fileName string, bounds image.Rectangle) (*logo.Logo, error) {
 	getter := func(ctx context.Context) (image.Image, error) {
 		b, err := assets.ReadFile(filepath.Join("assets", fileName))

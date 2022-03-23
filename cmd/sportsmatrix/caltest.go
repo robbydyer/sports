@@ -5,13 +5,14 @@ import (
 	"image"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/robbydyer/sports/pkg/assetlogo"
 	"github.com/robbydyer/sports/pkg/board"
 	"github.com/robbydyer/sports/pkg/calendarboard"
 	"github.com/robbydyer/sports/pkg/logo"
 	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/pkg/sportsmatrix"
-	"github.com/spf13/cobra"
 )
 
 type calCmd struct {
