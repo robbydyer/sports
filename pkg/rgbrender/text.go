@@ -185,6 +185,26 @@ func (t *TextWriter) MeasureStrings(canvas draw.Image, str []string) ([]int, err
 	return lengths, nil
 }
 
+// MaxChars returns the maximum number of characters that can fit a given pixel width
+func (t *TextWriter) MaxChars(canvas draw.Image, pixWidth int) (int, error) {
+	s := "M"
+	num := 0
+	for {
+		l, err := t.MeasureStrings(canvas, []string{s})
+		if err != nil {
+			return 0, err
+		}
+		if len(l) < 1 {
+			return 0, fmt.Errorf("unexpected MeaureStrings return")
+		}
+		if l[0] > pixWidth {
+			return num, nil
+		}
+		num++
+		s += "M"
+	}
+}
+
 // WriteAlignedBoxed writes text aligned within a given bounds and draws a box sized to the text width
 func (t *TextWriter) WriteAlignedBoxed(align Align, canvas draw.Image, bounds image.Rectangle, str []string, clr color.Color, boxColor color.Color) error {
 	drawer, err := t.getDrawer(canvas, clr)
@@ -306,4 +326,54 @@ func (c *ColorChar) validate() error {
 	}
 
 	return nil
+}
+
+// BreakText breaks text into lines based on a max pixel width
+func (t *TextWriter) BreakText(canvas draw.Image, maxPixWidth int, text string) ([]string, error) {
+	max, err := t.MaxChars(canvas, maxPixWidth)
+	if err != nil {
+		return []string{}, err
+	}
+
+	return breakText(max, text), nil
+}
+
+func breakText(maxLineLen int, text string) []string {
+	lines := [][]string{}
+	lines = append(lines, []string{})
+	words := strings.Fields(text)
+
+	lineIndex := 0
+	num := 0
+	for i, s := range words {
+		if num+len(s) >= maxLineLen {
+			lines = append(lines, []string{})
+			lines[lineIndex+1] = append(lines[lineIndex+1], s)
+			lineIndex++
+			num = len(s)
+		} else {
+			lines[lineIndex] = append(lines[lineIndex], s)
+			num += len(s)
+			if i != 0 && i != len(words)-1 {
+				num++
+			}
+		}
+	}
+
+	retLines := []string{}
+
+	for _, line := range lines {
+		nonEmpty := false
+		for _, l := range line {
+			if l != "" {
+				nonEmpty = true
+			}
+		}
+		if !nonEmpty {
+			continue
+		}
+		retLines = append(retLines, strings.Join(line, " "))
+	}
+
+	return retLines
 }

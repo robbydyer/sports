@@ -17,6 +17,7 @@ import (
 
 	"github.com/robbydyer/sports/internal/config"
 	"github.com/robbydyer/sports/pkg/board"
+	"github.com/robbydyer/sports/pkg/calendarboard"
 	"github.com/robbydyer/sports/pkg/clock"
 	"github.com/robbydyer/sports/pkg/espnboard"
 	"github.com/robbydyer/sports/pkg/espnracing"
@@ -131,6 +132,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 	rootCmd.AddCommand(newAbbrevCmd(args))
 	rootCmd.AddCommand(newStockCmd(args))
 	rootCmd.AddCommand(newWeatherCmd(args))
+	rootCmd.AddCommand(newCalCmd(args))
 
 	return rootCmd
 }
@@ -334,6 +336,13 @@ func (r *rootArgs) setConfigDefaults() {
 		}
 	}
 	r.config.IRLConfig.SetDefaults()
+
+	if r.config.CalenderConfig == nil {
+		r.config.CalenderConfig = &calendarboard.Config{
+			Enabled: atomic.NewBool(false),
+		}
+	}
+	r.config.CalenderConfig.SetDefaults()
 }
 
 func (r *rootArgs) getRGBMatrix(logger *zap.Logger) (rgb.Matrix, error) {
