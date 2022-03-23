@@ -111,11 +111,6 @@ func New(api API, logger *zap.Logger, config *Config) (*CalendarBoard, error) {
 		zap.String("board name", s.Name()),
 	)
 
-	if s.config.boardDelay < 10*time.Second {
-		s.log.Warn("cannot set sportboard delay below 10 sec")
-		s.config.boardDelay = 10 * time.Second
-	}
-
 	if s.config.TodayFunc == nil {
 		s.config.TodayFunc = util.Today
 	}
@@ -123,11 +118,11 @@ func New(api API, logger *zap.Logger, config *Config) (*CalendarBoard, error) {
 	c := cron.New()
 
 	for _, on := range config.OnTimes {
-		s.log.Info("racingboard will be schedule to turn on",
+		s.log.Info("calendarboard will be schedule to turn on",
 			zap.String("turn on", on),
 		)
 		_, err := c.AddFunc(on, func() {
-			s.log.Info("sportboard turning on")
+			s.log.Info("calendarboard turning on")
 			s.Enable()
 		})
 		if err != nil {
@@ -136,11 +131,11 @@ func New(api API, logger *zap.Logger, config *Config) (*CalendarBoard, error) {
 	}
 
 	for _, off := range config.OffTimes {
-		s.log.Info("racingboard will be schedule to turn off",
+		s.log.Info("calendarboard will be schedule to turn off",
 			zap.String("turn on", off),
 		)
 		_, err := c.AddFunc(off, func() {
-			s.log.Info("racingboard turning off")
+			s.log.Info("calendarboard turning off")
 			s.Disable()
 		})
 		if err != nil {
