@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"math"
 	"time"
 
 	"go.uber.org/zap"
@@ -132,7 +133,7 @@ EVENTS:
 func (s *CalendarBoard) renderEvent(ctx context.Context, canvas board.Canvas, event *Event, writer *rgbrender.TextWriter) error {
 	canvasBounds := rgbrender.ZeroedBounds(canvas.Bounds())
 
-	logoHeight := canvasBounds.Dy() / 2
+	logoHeight := int(writer.FontSize * 2.0)
 	logoBounds := image.Rect(canvasBounds.Min.X, canvasBounds.Min.Y, canvasBounds.Min.X+logoHeight, canvasBounds.Min.Y+logoHeight)
 
 	dateBounds := image.Rect(canvasBounds.Min.X+logoHeight+2, canvasBounds.Min.Y, canvasBounds.Max.X, canvasBounds.Min.Y+logoHeight)
@@ -164,8 +165,15 @@ func (s *CalendarBoard) renderEvent(ctx context.Context, canvas board.Canvas, ev
 		return err
 	}
 
+	maxLines := int(math.Ceil(float64(titleBounds.Dy()) / writer.FontSize))
+
+	if len(lines) > maxLines {
+		lines = lines[0:maxLines]
+	}
+
 	s.log.Debug("calendar event",
 		zap.Strings("titles", lines),
+		zap.Int("max lines", maxLines),
 		zap.Int("X min", titleBounds.Min.X),
 		zap.Int("Y min", titleBounds.Min.Y),
 		zap.Int("X max", titleBounds.Max.X),

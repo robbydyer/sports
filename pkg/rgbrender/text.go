@@ -187,7 +187,7 @@ func (t *TextWriter) MeasureStrings(canvas draw.Image, str []string) ([]int, err
 
 // MaxChars returns the maximum number of characters that can fit a given pixel width
 func (t *TextWriter) MaxChars(canvas draw.Image, pixWidth int) (int, error) {
-	s := "E"
+	s := "M"
 	num := 0
 	for {
 		l, err := t.MeasureStrings(canvas, []string{s})
@@ -201,7 +201,7 @@ func (t *TextWriter) MaxChars(canvas draw.Image, pixWidth int) (int, error) {
 			return num, nil
 		}
 		num++
-		s += "E"
+		s += "M"
 	}
 }
 
@@ -329,34 +329,50 @@ func (c *ColorChar) validate() error {
 }
 
 func (t *TextWriter) BreakText(canvas draw.Image, maxPixWidth int, text string) ([]string, error) {
-	lines := [][]string{}
-	lines = append(lines, []string{})
-	words := strings.Fields(text)
-
 	max, err := t.MaxChars(canvas, maxPixWidth)
 	if err != nil {
 		return []string{}, err
 	}
 
+	return breakText(max, text), nil
+}
+
+func breakText(maxLineLen int, text string) []string {
+	lines := [][]string{}
+	lines = append(lines, []string{})
+	words := strings.Fields(text)
+
 	lineIndex := 0
 	num := 0
-	for _, s := range words {
-		if num+len(s) > max {
+	for i, s := range words {
+		if num+len(s) >= maxLineLen {
 			lines = append(lines, []string{})
 			lines[lineIndex+1] = append(lines[lineIndex+1], s)
 			lineIndex++
-			num = 0
+			num = len(s)
 		} else {
 			lines[lineIndex] = append(lines[lineIndex], s)
 			num += len(s)
+			if i != 0 && i != len(words)-1 {
+				num++
+			}
 		}
 	}
 
 	retLines := []string{}
 
 	for _, line := range lines {
+		nonEmpty := false
+		for _, l := range line {
+			if l != "" {
+				nonEmpty = true
+			}
+		}
+		if !nonEmpty {
+			continue
+		}
 		retLines = append(retLines, strings.Join(line, " "))
 	}
 
-	return retLines, nil
+	return retLines
 }
