@@ -376,7 +376,14 @@ FORECASTS:
 			draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
 			continue FORECASTS
 		}
-		return nil, canvas.Render(ctx)
+		if err := canvas.Render(ctx); err != nil {
+			return nil, err
+		}
+		select {
+		case <-boardCtx.Done():
+			return nil, context.Canceled
+		case <-time.After(w.config.boardDelay):
+		}
 	}
 
 	if w.config.ScrollMode.Load() && scrollCanvas != nil {
