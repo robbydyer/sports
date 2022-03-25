@@ -12,7 +12,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.0
 	github.com/hashicorp/go-multierror v1.1.0
-	github.com/mackerelio/go-osstat v0.2.1
+	github.com/mackerelio/go-osstat v0.2.2
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/pseudomuto/protoc-gen-doc v1.5.1
 	github.com/robbydyer/exp v0.1.2
