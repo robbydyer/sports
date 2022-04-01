@@ -57,7 +57,6 @@ type SportBoard struct {
 	stateChangeNotifier board.StateChangeNotifier
 	renderCtx           context.Context
 	renderCancel        context.CancelFunc
-	stickyStart         time.Time
 	sync.Mutex
 }
 
