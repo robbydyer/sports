@@ -315,7 +315,6 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 		}
 
 		layers.ClearLayers()
-
 	}
 }
 
