@@ -195,6 +195,10 @@ ncaafConfig:
   # Tells the matrix to lock onto a live game that a favorite team is playing in
   favoriteSticky: false
 
+  # If this is set and favoriteSticky is enabled, live sticky games will exit the sticky
+  # cycle every stickyDelay interval. They will re-stick the favorited games once the cycle comes back around.
+  #stickyDelay: "5m"
+
   # Set to true to show a team's record on the scoreboard
   showRecord: false
 
@@ -291,6 +295,10 @@ nhlConfig:
 
   # Tells the matrix to lock onto a live game that a favorite team is playing in
   favoriteSticky: false
+
+  # If this is set and favoriteSticky is enabled, live sticky games will exit the sticky
+  # cycle every stickyDelay interval. They will re-stick the favorited games once the cycle comes back around.
+  #stickyDelay: "5m"
 
   # WARNING: This setting is currently unsupported for NHL
   # Set to true to show a team's record on the scoreboard
@@ -394,6 +402,10 @@ mlbConfig:
   # Tells the matrix to lock onto a live game that a favorite team is playing in
   favoriteSticky: false
 
+  # If this is set and favoriteSticky is enabled, live sticky games will exit the sticky
+  # cycle every stickyDelay interval. They will re-stick the favorited games once the cycle comes back around.
+  #stickyDelay: "5m"
+
   # WARNING: This setting is currently unsupported for MLB
   # Set to true to show a team's record on the scoreboard
   showRecord: false
@@ -487,6 +499,10 @@ ncaamConfig:
   # Tells the matrix to lock onto a live game that a favorite team is playing in
   favoriteSticky: false
 
+  # If this is set and favoriteSticky is enabled, live sticky games will exit the sticky
+  # cycle every stickyDelay interval. They will re-stick the favorited games once the cycle comes back around.
+  #stickyDelay: "5m"
+
   # Set to true to show a team's record on the scoreboard
   showRecord: false
 
@@ -574,6 +590,10 @@ nbaConfig:
 
   # Tells the matrix to lock onto a live game that a favorite team is playing in
   favoriteSticky: false
+
+  # If this is set and favoriteSticky is enabled, live sticky games will exit the sticky
+  # cycle every stickyDelay interval. They will re-stick the favorited games once the cycle comes back around.
+  #stickyDelay: "5m"
 
   # Set to true to show a team's record on the scoreboard
   showRecord: false
@@ -663,6 +683,10 @@ nflConfig:
   # Tells the matrix to lock onto a live game that a favorite team is playing in
   favoriteSticky: false
 
+  # If this is set and favoriteSticky is enabled, live sticky games will exit the sticky
+  # cycle every stickyDelay interval. They will re-stick the favorited games once the cycle comes back around.
+  #stickyDelay: "5m"
+
   # Set to true to show a team's record on the scoreboard
   showRecord: false
 
@@ -751,6 +775,10 @@ mlsConfig:
   # Tells the matrix to lock onto a live game that a favorite team is playing in
   favoriteSticky: false
 
+  # If this is set and favoriteSticky is enabled, live sticky games will exit the sticky
+  # cycle every stickyDelay interval. They will re-stick the favorited games once the cycle comes back around.
+  #stickyDelay: "5m"
+
   # Set to true to show a team's record on the scoreboard
   showRecord: false
 
@@ -838,6 +866,10 @@ eplConfig:
 
   # Tells the matrix to lock onto a live game that a favorite team is playing in
   favoriteSticky: false
+
+  # If this is set and favoriteSticky is enabled, live sticky games will exit the sticky
+  # cycle every stickyDelay interval. They will re-stick the favorited games once the cycle comes back around.
+  #stickyDelay: "5m"
 
   # Set to true to show a team's record on the scoreboard
   showRecord: false

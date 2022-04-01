@@ -57,6 +57,7 @@ type SportBoard struct {
 	stateChangeNotifier board.StateChangeNotifier
 	renderCtx           context.Context
 	renderCancel        context.CancelFunc
+	stickyStart         time.Time
 	sync.Mutex
 }
 
@@ -70,11 +71,13 @@ type Config struct {
 	TodayFunc            Todayer
 	boardDelay           time.Duration
 	scrollDelay          time.Duration
+	stickyDelay          *time.Duration
 	TimeColor            color.Color
 	ScoreColor           color.Color
 	Enabled              *atomic.Bool      `json:"enabled"`
 	BoardDelay           string            `json:"boardDelay"`
 	FavoriteSticky       *atomic.Bool      `json:"favoriteSticky"`
+	StickyDelay          string            `json:"stickyDelay"`
 	ScoreFont            *FontConfig       `json:"scoreFont"`
 	TimeFont             *FontConfig       `json:"timeFont"`
 	LogoConfigs          []*logo.Config    `json:"logoConfigs"`
@@ -1025,4 +1028,23 @@ func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload cha
 		s.log.Debug("successfully set preloader data", zap.Int("game ID", game.GetID()))
 		return nil
 	}
+}
+
+func (s *SportBoard) getStickyDelay() *time.Duration {
+	if s.config.StickyDelay == "" {
+		return nil
+	}
+	if s.config.stickyDelay != nil {
+		return s.config.stickyDelay
+	}
+	d, err := time.ParseDuration(s.config.StickyDelay)
+	if err != nil {
+		s.log.Error("failed to parse sticky delay",
+			zap.Error(err),
+		)
+	}
+
+	s.config.stickyDelay = &d
+
+	return s.config.stickyDelay
 }

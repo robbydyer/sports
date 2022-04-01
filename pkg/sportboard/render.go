@@ -116,6 +116,9 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 		gradientLayers = s.gradientLayer(rgbrender.ZeroedBounds(canvas.Bounds()), len(strings.ReplaceAll(score, " ", "")))
 	}
 
+	stickyStart := time.Now()
+	stickyDelay := s.getStickyDelay()
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -281,6 +284,12 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 			return nil
 		}
 
+		if stickyDelay != nil {
+			if time.Since(stickyStart) > *stickyDelay {
+				return nil
+			}
+		}
+
 		if err := canvas.Render(ctx); err != nil {
 			return err
 		}
@@ -306,6 +315,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 		}
 
 		layers.ClearLayers()
+
 	}
 }
 
