@@ -23,7 +23,7 @@ require (
 	github.com/srikrsna/protoc-gen-gotag v0.6.2
 	github.com/stretchr/testify v1.7.1
 	github.com/thechriswalker/protoc-gen-twirp_js v0.0.0-20190627152235-0fe8731d4d8f
-	github.com/twitchtv/twirp v8.1.1+incompatible
+	github.com/twitchtv/twirp v8.1.2+incompatible
 	go.uber.org/atomic v1.9.0
 	go.uber.org/zap v1.21.0
 	golang.org/x/image v0.0.0-20201208152932-35266b937fa6
