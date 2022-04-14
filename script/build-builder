@@ -5,21 +5,51 @@ set -euo pipefail
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 
 source "${ROOT}/script/common"
+BUILDARCH="${BUILDARCH:-all}"
 
 set -x
-cd "${ROOT}"
-img=$(latestpibuilder)
+
+dobuild() {
+  buildarch="$1"
+  cd "${ROOT}"
+
+  case "${buildarch}" in
+    aarch64|arm64)
+      base="multiarch/debian-debootstrap:arm64-bullseye-slim"
+      ;;
+    armv7l|armhf|armv6l)
+      base="multiarch/debian-debootstrap:armhf-buster-slim"
+      ;;
+    *)
+      echo "Unsupported arch ${buildarch}"
+      exit 1
+      ;;
+  esac
+
+  img=$(latestpibuilder ${buildarch})
+
+  if [ "$(docker images -q ${img})" = "" ]; then
+    echo "==> Building ${img}"
+    docker --config="${DOCKERCONF}" buildx build -t "${img}" \
+      --builder=build \
+      -f Dockerfile.pibuilder \
+      --build-arg BASE=${base} \
+      --platform=linux/amd64,linux/arm64/v8 \
+      --push \
+      .
+  fi
+}
+
+# Install qemu emulators
+docker run --privileged --rm tonistiigi/binfmt --install all
 
 dockerlogin
 
 docker --config="${DOCKERCONF}" buildx create --use --name=build --node=build
 
-if [ "$(docker images -q ${img})" = "" ]; then
-  echo "==> Building pibuilder image"
-  docker --config="${DOCKERCONF}" buildx build -t "${img}" -t robbydyer/pibuilder:latest \
-    --builder=build \
-    -f Dockerfile.pibuilder \
-    --platform=linux/amd64,linux/arm64/v8 \
-    --push \
-    .
+if [ "${BUILDARCH}" = "all" ]; then
+  dobuild aarch64
+  dobuild armv7l
+else
+  dobuild "${BUILDARCH}"
 fi

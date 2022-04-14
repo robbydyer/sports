@@ -8,7 +8,7 @@ SUFFIX="build"
 
 if [ "${IN_DOCKER}" = "no" ]; then
   source "${ROOT}/script/common"
-  pibuilder=$(latestpibuilder)
+  pibuilder=$(latestpibuilder aarch64)
 
   exec docker run -t --rm \
     -e IN_DOCKER=yes \

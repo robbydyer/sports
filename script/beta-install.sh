@@ -9,6 +9,20 @@ fi
 
 ARCH="$(uname -m)"
 
+case "${ARCH}" in
+aarch64|armv7l)
+  echo "Installing sportsmatrix for ${ARCH}"
+  ;;
+armv6l)
+  echo "WARNING! Installing armv7l version, which might not work"
+  ARCH=armv7l
+  ;;
+*)
+  echo "Unsupported architecture '${ARCH}'"
+  exit 1
+  ;;
+esac
+
 latesturl="https://api.github.com/repos/robbydyer/sports/releases"
 
 tmp="$(mktemp -d /tmp/sportsinstall.XXXX)"

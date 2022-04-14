@@ -4,43 +4,55 @@ set -x
 
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 cd "${ROOT}"
+source script/common
 IN_DOCKER="${IN_DOCKER:-no}"
-SUFFIX="build"
+VERSION="${VERSION:-devbuild}"
+DEB_BUILD="${DEB_BUILD:-no}"
+
+BUILDARCH="${BUILDARCH:-aarch64}"
+
+img=$(latestpibuilder ${BUILDARCH})
 
 if [ "${IN_DOCKER}" = "no" ]; then
-  if ! uname -a | grep raspberry &> /dev/null; then
-    source "${ROOT}/script/common"
-    pibuilder=$(latestpibuilder)
+  docker run -t --rm \
+    -e IN_DOCKER=yes \
+    -e BUILDARCH="${BUILDARCH}" \
+    -e VERSION="${VERSION}" \
+    -e DEB_BUILD="${DEB_BUILD}" \
+    -v "${ROOT}":/app \
+    -w /src \
+    ${img} \
+    /app/script/$(basename $0)
 
-    exec docker run -t --rm \
-      -e IN_DOCKER=yes \
-      -v "${ROOT}":/src \
-      -w /src \
-      ${pibuilder} \
-      /src/script/$(basename $0)
+  if [ "${DEB_BUILD}" = "yes" ]; then
+    echo "Deb build complete"
+    git log --decorate --oneline --pretty=%s ${OLD}...master
   fi
+  exit
 fi
 
-# Inside docker
-ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+# Everything below is inside docker
+
+cd /app
+cp -r \
+  cmd \
+  internal \
+  vendor \
+  go.mod \
+  go.sum \
+  /src/
+
+cp -r /sportslibs/rpi-rgb-led-matrix /src/internal/rgbmatrix-rpi/lib/
+
+cd /src
 
 export CGO_ENABLED=1
-export GOCACHE=/src/.cache
 
-if [ ! -d "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" ]; then
-  if [ -d "${ROOT}/internal/rgmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" ]; then
-    mv "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
-  else
-    cp -r "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE" "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
-  fi
+go build -o /app/sportsmatrix.${BUILDARCH} -ldflags="-X github.com/robbydyer/sports/internal/sportsmatrix.version=devbuild" ./cmd/sportsmatrix
+
+echo "=> DONE created ${ROOT}/sportsmatrix.${BUILDARCH}"
+
+if [ "${DEB_BUILD}" = "yes" ];
+then
+  BUILDARCH="${BUILDARCH}" VERSION="${VERSION}" /app/script/deb-build.sh
 fi
-
-if [ ! -f "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/lib/librgbmatrix.so.1" ]; then
-  cd "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
-  make
-fi
-
-trap "mv ${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX} || true" EXIT
-
-cd "${ROOT}"
-go build -o sportsmatrix.${SUFFIX}  ./cmd/sportsmatrix

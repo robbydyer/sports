@@ -6,6 +6,7 @@ internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.*
 !internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE/
 sportsmatrix.bin
 sportsmatrix.arm*
+sportsmatrix.aar*
 *.swp
 .cache
 *.o
@@ -22,3 +23,4 @@ docs-base/
 *.build
 matrix.conf
 release
+update-matrix

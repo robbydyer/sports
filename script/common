@@ -14,7 +14,8 @@ getsha() {
 }
 
 latestpibuilder() {
-  echo "robbydyer/pibuilder:$(getsha "${ROOT}/Dockerfile.pibuilder")"
+  arch="$1"
+  echo "robbydyer/pibuilder-${arch}:$(getsha "${ROOT}/Dockerfile.pibuilder")"
 }
 
 latestlinter() {
