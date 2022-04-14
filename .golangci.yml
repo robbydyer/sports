@@ -3,7 +3,7 @@ run:
   modules-download-mode: vendor
   skip-dirs:
   - vendor
-  - pkg/rgbmatrix-rpi
+  - internal/rgbmatrix-rpi
   - internal/proto
   timeout: 5m
 linters:

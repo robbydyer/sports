@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/robbydyer/sports/pkg/board"
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
-	"github.com/robbydyer/sports/pkg/sportsmatrix"
-	"github.com/robbydyer/sports/pkg/stockboard"
+	"github.com/robbydyer/sports/internal/board"
+	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/internal/sportsmatrix"
+	"github.com/robbydyer/sports/internal/stockboard"
 )
 
 type stockCmd struct {

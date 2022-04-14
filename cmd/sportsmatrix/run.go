@@ -11,10 +11,10 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	"github.com/robbydyer/sports/pkg/board"
-	"github.com/robbydyer/sports/pkg/imageboard"
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
-	"github.com/robbydyer/sports/pkg/sportsmatrix"
+	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/imageboard"
+	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/internal/sportsmatrix"
 )
 
 type runCmd struct {

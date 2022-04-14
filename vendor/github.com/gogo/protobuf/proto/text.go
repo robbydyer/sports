@@ -364,7 +364,7 @@ func (tm *TextMarshaler) writeStruct(w *textWriter, sv reflect.Value) error {
 						return err
 					}
 				}
-				if err := tm.writeAny(w, key, props.MapKeyProp); err != nil {
+				if err := tm.writeAny(w, key, props.mkeyprop); err != nil {
 					return err
 				}
 				if err := w.WriteByte('\n'); err != nil {
@@ -381,7 +381,7 @@ func (tm *TextMarshaler) writeStruct(w *textWriter, sv reflect.Value) error {
 							return err
 						}
 					}
-					if err := tm.writeAny(w, val, props.MapValProp); err != nil {
+					if err := tm.writeAny(w, val, props.mvalprop); err != nil {
 						return err
 					}
 					if err := w.WriteByte('\n'); err != nil {
@@ -475,8 +475,6 @@ func (tm *TextMarshaler) writeStruct(w *textWriter, sv reflect.Value) error {
 
 	return nil
 }
-
-var textMarshalerType = reflect.TypeOf((*encoding.TextMarshaler)(nil)).Elem()
 
 // writeAny writes an arbitrary field.
 func (tm *TextMarshaler) writeAny(w *textWriter, v reflect.Value, props *Properties) error {
@@ -591,8 +589,8 @@ func (tm *TextMarshaler) writeAny(w *textWriter, v reflect.Value, props *Propert
 			// mutating this value.
 			v = v.Addr()
 		}
-		if v.Type().Implements(textMarshalerType) {
-			text, err := v.Interface().(encoding.TextMarshaler).MarshalText()
+		if etm, ok := v.Interface().(encoding.TextMarshaler); ok {
+			text, err := etm.MarshalText()
 			if err != nil {
 				return err
 			}

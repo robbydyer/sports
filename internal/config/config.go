@@ -1,16 +1,16 @@
 package config
 
 import (
-	"github.com/robbydyer/sports/pkg/calendarboard"
-	"github.com/robbydyer/sports/pkg/clock"
-	"github.com/robbydyer/sports/pkg/imageboard"
-	"github.com/robbydyer/sports/pkg/racingboard"
-	"github.com/robbydyer/sports/pkg/sportboard"
-	"github.com/robbydyer/sports/pkg/sportsmatrix"
-	"github.com/robbydyer/sports/pkg/statboard"
-	"github.com/robbydyer/sports/pkg/stockboard"
-	"github.com/robbydyer/sports/pkg/sysboard"
-	"github.com/robbydyer/sports/pkg/weatherboard"
+	"github.com/robbydyer/sports/internal/calendarboard"
+	"github.com/robbydyer/sports/internal/clock"
+	"github.com/robbydyer/sports/internal/imageboard"
+	"github.com/robbydyer/sports/internal/racingboard"
+	"github.com/robbydyer/sports/internal/sportboard"
+	"github.com/robbydyer/sports/internal/sportsmatrix"
+	"github.com/robbydyer/sports/internal/statboard"
+	"github.com/robbydyer/sports/internal/stockboard"
+	"github.com/robbydyer/sports/internal/sysboard"
+	"github.com/robbydyer/sports/internal/weatherboard"
 )
 
 // Config holds configuration for the RGB matrix and all of its supported Boards

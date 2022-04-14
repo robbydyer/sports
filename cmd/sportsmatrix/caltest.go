@@ -7,12 +7,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/robbydyer/sports/pkg/assetlogo"
-	"github.com/robbydyer/sports/pkg/board"
-	"github.com/robbydyer/sports/pkg/calendarboard"
-	"github.com/robbydyer/sports/pkg/logo"
-	rgb "github.com/robbydyer/sports/pkg/rgbmatrix-rpi"
-	"github.com/robbydyer/sports/pkg/sportsmatrix"
+	"github.com/robbydyer/sports/internal/assetlogo"
+	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/calendarboard"
+	"github.com/robbydyer/sports/internal/logo"
+	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/internal/sportsmatrix"
 )
 
 type calCmd struct {

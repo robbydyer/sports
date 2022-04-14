@@ -26,10 +26,10 @@ export GOCACHE=/src/.cache
 set -x
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 
-if [ ! -d ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ]; then
+if [ ! -d ${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ]; then
   if [ -d /sportslibs/rpi-rgb-led-matrix ]; then
-    cp -r /sportslibs/rpi-rgb-led-matrix ${ROOT}/pkg/rgbmatrix-rpi/lib/
-    trap "rm -rf ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" EXIT
+    cp -r /sportslibs/rpi-rgb-led-matrix ${ROOT}/internal/rgbmatrix-rpi/lib/
+    trap "rm -rf ${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" EXIT
   fi
 fi
 
