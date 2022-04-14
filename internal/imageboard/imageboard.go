@@ -18,8 +18,8 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
-	pb "github.com/robbydyer/sports/internal/proto/imageboard"
 	"github.com/robbydyer/sports/internal/board"
+	pb "github.com/robbydyer/sports/internal/proto/imageboard"
 	"github.com/robbydyer/sports/internal/rgbrender"
 	"github.com/robbydyer/sports/internal/twirphelpers"
 	"github.com/robbydyer/sports/internal/util"

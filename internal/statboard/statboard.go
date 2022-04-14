@@ -16,8 +16,8 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 
-	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/internal/board"
+	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/internal/rgbrender"
 	"github.com/robbydyer/sports/internal/twirphelpers"
 )

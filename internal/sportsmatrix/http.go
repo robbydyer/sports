@@ -15,8 +15,8 @@ import (
 	"github.com/twitchtv/twirp"
 	"go.uber.org/zap"
 
-	pb "github.com/robbydyer/sports/internal/proto/sportsmatrix"
 	"github.com/robbydyer/sports/internal/board"
+	pb "github.com/robbydyer/sports/internal/proto/sportsmatrix"
 	"github.com/robbydyer/sports/internal/twirphelpers"
 )
 
