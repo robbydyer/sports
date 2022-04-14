@@ -33,22 +33,6 @@ dockerlogin() {
   docker --config="${DOCKERCONF}" login -u robbydyer
 }
 
-buildpibuilder() {
-  cd "${ROOT}"
-  dockerlogin
-  img=$(latestpibuilder)
-
-  if [ "$(docker images -q ${img})" = "" ]; then
-    docker --config="${DOCKERCONF}" buildx create --use --name=build --node=build
-    docker --config="${DOCKERCONF}" buildx build -t "${img}" -t robbydyer/pibuilder:latest \
-      --builder=build \
-      -f Dockerfile.pibuilder \
-      --platform=linux/amd64,linux/arm64/v8 \
-      --push \
-      .
-  fi
-}
-
 buildprotoc() {
   cd "${ROOT}"
   dockerlogin
