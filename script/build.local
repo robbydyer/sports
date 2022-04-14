@@ -14,15 +14,15 @@ install_go
 export CGO_ENABLED=1
 export GOCACHE=${ROOT}/.cache
 
-if [ ! -d "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" ]; then
-  cp -r "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
+if [ ! -d "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" ]; then
+  cp -r "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE" "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
 fi
 
-if [ ! -f ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/lib/librgbmatrix.so.1 ]; then
-  cd ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix
+if [ ! -f ${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/lib/librgbmatrix.so.1 ]; then
+  cd ${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix
   make
 fi
 
 cd "${ROOT}"
 set -x
-go build -mod=vendor -o sportsmatrix.${SUFFIX} -ldflags="-X github.com/robbydyer/sports/pkg/sportsmatrix.version=${VERSION}" ./cmd/sportsmatrix
+go build -mod=vendor -o sportsmatrix.${SUFFIX} -ldflags="-X github.com/robbydyer/sports/internal/sportsmatrix.version=${VERSION}" ./cmd/sportsmatrix

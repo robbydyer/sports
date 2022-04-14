@@ -27,20 +27,20 @@ ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd 
 export CGO_ENABLED=1
 export GOCACHE=/src/.cache
 
-if [ ! -d "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" ]; then
-  if [ -d "${ROOT}/pkg/rgmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" ]; then
-    mv "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
+if [ ! -d "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" ]; then
+  if [ -d "${ROOT}/internal/rgmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" ]; then
+    mv "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX}" "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
   else
-    cp -r "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE" "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
+    cp -r "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE" "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
   fi
 fi
 
-if [ ! -f "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/lib/librgbmatrix.so.1" ]; then
-  cd "${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
+if [ ! -f "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix/lib/librgbmatrix.so.1" ]; then
+  cd "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
   make
 fi
 
-trap "mv ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ${ROOT}/pkg/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX} || true" EXIT
+trap "mv ${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.${SUFFIX} || true" EXIT
 
 cd "${ROOT}"
 go build -o sportsmatrix.${SUFFIX}  ./cmd/sportsmatrix

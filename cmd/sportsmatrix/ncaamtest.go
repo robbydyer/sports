@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/robbydyer/sports/pkg/espnboard"
+	"github.com/robbydyer/sports/internal/espnboard"
 )
 
 type ncaamCmd struct {

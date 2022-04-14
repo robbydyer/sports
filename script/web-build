@@ -9,5 +9,5 @@ cd "${ROOT}/web"
 npm run build
 
 cd "${ROOT}"
-rm -rf pkg/sportsmatrix/assets/web
-mv web/build pkg/sportsmatrix/assets/web
+rm -rf internal/sportsmatrix/assets/web
+mv web/build internal/sportsmatrix/assets/web
