@@ -37,27 +37,26 @@ const (
 
 // SportBoard implements board.Board
 type SportBoard struct {
-	config              *Config
-	api                 API
-	cachedLiveGames     map[int]Game
-	logos               map[string]*logo.Logo
-	log                 *zap.Logger
-	logoDrawCache       map[string]image.Image
-	scoreWriters        map[string]*rgbrender.TextWriter
-	timeWriters         map[string]*rgbrender.TextWriter
-	teamInfoWidths      map[string]map[string]int
-	watchTeams          []string
-	teamInfoLock        sync.RWMutex
-	drawLock            sync.RWMutex
-	logoLock            sync.RWMutex
-	cancelBoard         chan struct{}
-	previousScores      []*previousScore
-	prevScoreLock       sync.Mutex
-	rpcServer           pb.TwirpServer
-	stateChangeNotifier board.StateChangeNotifier
-	renderCtx           context.Context
-	renderCancel        context.CancelFunc
-	enabler             board.Enabler
+	config          *Config
+	api             API
+	cachedLiveGames map[int]Game
+	logos           map[string]*logo.Logo
+	log             *zap.Logger
+	logoDrawCache   map[string]image.Image
+	scoreWriters    map[string]*rgbrender.TextWriter
+	timeWriters     map[string]*rgbrender.TextWriter
+	teamInfoWidths  map[string]map[string]int
+	watchTeams      []string
+	teamInfoLock    sync.RWMutex
+	drawLock        sync.RWMutex
+	logoLock        sync.RWMutex
+	cancelBoard     chan struct{}
+	previousScores  []*previousScore
+	prevScoreLock   sync.Mutex
+	rpcServer       pb.TwirpServer
+	renderCtx       context.Context
+	renderCancel    context.CancelFunc
+	enabler         board.Enabler
 	sync.Mutex
 }
 
@@ -402,7 +401,6 @@ func (s *SportBoard) callCancelBoard() {
 		)
 		s.renderCancel()
 	}
-	s.stateChangeNotifier()
 }
 
 // Render ...

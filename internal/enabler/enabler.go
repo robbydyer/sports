@@ -18,23 +18,11 @@ func (e *Enabler) Enabled() bool {
 }
 
 func (e *Enabler) Enable() bool {
-	if e.enabled.CAS(false, true) {
-		if e.stateChangeCallback != nil {
-			e.stateChangeCallback()
-		}
-		return true
-	}
-	return false
+	return e.Store(true)
 }
 
 func (e *Enabler) Disable() bool {
-	if e.enabled.CAS(true, false) {
-		if e.stateChangeCallback != nil {
-			e.stateChangeCallback()
-		}
-		return true
-	}
-	return false
+	return e.Store(false)
 }
 
 func (e *Enabler) Store(set bool) bool {
