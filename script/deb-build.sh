@@ -9,7 +9,7 @@ cd "${ROOT}"
 tmp="$(mktemp -d /tmp/sportsbuild.XXXX)"
 echo "Build Dir: ${tmp}"
 
-d="sportsmatrix-${VERSION}_${ARCH}"
+d="sportsmatrix-${VERSION}_${BUILDARCH}"
 
 mkdir "${tmp}/${d}"
 cd "${tmp}/${d}"
@@ -17,6 +17,7 @@ cd "${tmp}/${d}"
 mkdir -p DEBIAN etc/systemd/system usr/local/bin etc/logrotate.d
 
 cp "${ROOT}/sportsmatrix.${BUILDARCH}" usr/local/bin/sportsmatrix
+chmod 755 usr/local/bin/sportsmatrix
 
 cat <<EOF > DEBIAN/control
 Package: sportsmatrix
@@ -84,7 +85,6 @@ chmod 755 DEBIAN/postinst
 
 cp "${ROOT}/sportsmatrix.conf.example" etc/sportsmatrix.conf
 
-chmod 755 usr/local/bin/sportsmatrix
 chmod 666 etc/sportsmatrix.conf
 
 cd "${tmp}"
