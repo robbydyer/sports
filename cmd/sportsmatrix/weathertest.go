@@ -9,9 +9,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/robbydyer/sports/internal/board"
+	weatherboard "github.com/robbydyer/sports/internal/board/weather"
 	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
-	"github.com/robbydyer/sports/internal/weatherboard"
 )
 
 type weatherCmd struct {

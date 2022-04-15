@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
-	"github.com/robbydyer/sports/internal/imageboard"
+	imageboard "github.com/robbydyer/sports/internal/board/image"
 	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
 )

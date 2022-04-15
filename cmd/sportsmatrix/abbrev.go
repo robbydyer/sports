@@ -12,8 +12,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	sportboard "github.com/robbydyer/sports/internal/board/sport"
 	"github.com/robbydyer/sports/internal/espnboard"
-	"github.com/robbydyer/sports/internal/sportboard"
 )
 
 type abbrevCmd struct {

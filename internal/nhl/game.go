@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/robbydyer/sports/internal/sportboard"
+	sportboard "github.com/robbydyer/sports/internal/board/sport"
 )
 
 // LiveGameGetter retrieves a live game from a game link

@@ -9,7 +9,7 @@ import (
 
 	"github.com/robbydyer/sports/internal/assetlogo"
 	"github.com/robbydyer/sports/internal/board"
-	"github.com/robbydyer/sports/internal/calendarboard"
+	calendarboard "github.com/robbydyer/sports/internal/board/calendar"
 	"github.com/robbydyer/sports/internal/logo"
 	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
