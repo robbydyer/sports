@@ -32,8 +32,10 @@ func GetDefaultHooks(board board.Board, logger *zap.Logger) *twirp.ServerHooks {
 		Error: func(ctx context.Context, err twirp.Error) context.Context {
 			pkg, _ := twirp.PackageName(ctx)
 			svc, _ := twirp.ServiceName(ctx)
+			method, _ := twirp.MethodName(ctx)
 			logger.Error("twirp API error",
 				zap.Error(err),
+				zap.String("method", method),
 				zap.String("service", svc),
 				zap.String("package", pkg),
 				zap.String("board", boardName),

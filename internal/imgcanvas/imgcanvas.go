@@ -174,7 +174,6 @@ func (i *ImgCanvas) Enable() bool {
 }
 
 func (i *ImgCanvas) SetStateChangeCallback(s func()) {
-	return
 }
 
 // Disable ...

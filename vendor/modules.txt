@@ -68,8 +68,8 @@ github.com/go-openapi/spec
 # github.com/go-openapi/swag v0.21.1
 ## explicit; go 1.11
 github.com/go-openapi/swag
-# github.com/gogo/protobuf v1.1.1
-## explicit
+# github.com/gogo/protobuf v1.3.2
+## explicit; go 1.15
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 # github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0

@@ -29,7 +29,6 @@ type CalendarBoard struct {
 	api            API
 	log            *zap.Logger
 	scheduleWriter *rgbrender.TextWriter
-	leagueLogo     *logo.Logo
 	events         []*Event
 	rpcServer      pb.TwirpServer
 	boardCtx       context.Context
@@ -148,11 +147,6 @@ func New(api API, logger *zap.Logger, config *Config) (*CalendarBoard, error) {
 	)
 
 	return s, nil
-}
-
-func (s *CalendarBoard) cacheClear() {
-	s.events = []*Event{}
-	s.leagueLogo = nil
 }
 
 // Name ...

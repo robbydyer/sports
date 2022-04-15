@@ -127,7 +127,6 @@ func (i *BlankCanvas) Store(s bool) bool {
 }
 
 func (i *BlankCanvas) SetStateChangeCallback(s func()) {
-	return
 }
 
 func (i *BlankCanvas) position(x, y int) int {

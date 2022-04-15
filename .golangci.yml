@@ -26,6 +26,7 @@ linters:
   - nakedret
   - nilerr
   - promlinter
+  - revive
   - staticcheck
   - structcheck
   - tparallel
@@ -40,6 +41,10 @@ linters-settings:
     enabled-all: true
   goimports:
     local-prefixes: github.com/robbydyer/sports
+  revive:
+    rules:
+    - name: exported
+      disabled: true
 issues:
   exclude-use-default: false
   exclude:
