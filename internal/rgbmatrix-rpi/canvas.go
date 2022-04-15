@@ -113,6 +113,10 @@ func (c *Canvas) Disable() bool {
 	return c.enabled.CAS(true, false)
 }
 
+func (c *Canvas) SetStateChangeCallback(s func()) {
+	return
+}
+
 // GetHTTPHandlers ...
 func (c *Canvas) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 	return nil, nil

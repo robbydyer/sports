@@ -329,6 +329,10 @@ func (c *ScrollCanvas) Disable() bool {
 	return c.enabled.CAS(true, false)
 }
 
+func (c *ScrollCanvas) SetStateChangeCallback(s func()) {
+	return
+}
+
 // GetHTTPHandlers ...
 func (c *ScrollCanvas) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 	return nil, nil

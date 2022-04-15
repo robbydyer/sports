@@ -122,6 +122,10 @@ func (i *BlankCanvas) Disable() bool {
 	return i.enabled.CAS(true, false)
 }
 
+func (i *BlankCanvas) SetStateChangeCallback(s func()) {
+	return
+}
+
 func (i *BlankCanvas) position(x, y int) int {
 	return x + (y * i.width)
 }

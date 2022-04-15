@@ -17,6 +17,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/enabler"
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
@@ -27,12 +28,12 @@ var Name = "Clock"
 
 // Clock implements board.Board
 type Clock struct {
-	config              *Config
-	font                *truetype.Font
-	textWriters         map[int]*rgbrender.TextWriter
-	log                 *zap.Logger
-	rpcServer           pb.TwirpServer
-	stateChangeNotifier board.StateChangeNotifier
+	config      *Config
+	font        *truetype.Font
+	textWriters map[int]*rgbrender.TextWriter
+	log         *zap.Logger
+	rpcServer   pb.TwirpServer
+	enabler     board.Enabler
 	sync.Mutex
 }
 
@@ -93,6 +94,11 @@ func New(config *Config, logger *zap.Logger) (*Clock, error) {
 		config:      config,
 		log:         logger,
 		textWriters: make(map[int]*rgbrender.TextWriter),
+		enabler:     enabler.New(),
+	}
+
+	if config.Enabled.Load() {
+		c.enabler.Enable()
 	}
 
 	svr := &Server{
@@ -121,7 +127,7 @@ func New(config *Config, logger *zap.Logger) (*Clock, error) {
 			)
 			_, err := cr.AddFunc(on, func() {
 				c.log.Info("clock turning on")
-				c.Enable()
+				c.Enabler().Enable()
 			})
 			if err != nil {
 				return nil, fmt.Errorf("failed to add cron for clock: %w", err)
@@ -134,7 +140,7 @@ func New(config *Config, logger *zap.Logger) (*Clock, error) {
 			)
 			_, err := cr.AddFunc(off, func() {
 				c.log.Info("clock turning off")
-				c.Disable()
+				c.Enabler().Disable()
 			})
 			if err != nil {
 				return nil, fmt.Errorf("failed to add cron for clock: %w", err)
@@ -157,36 +163,8 @@ func (c *Clock) Name() string {
 	return Name
 }
 
-// Enabled ...
-func (c *Clock) Enabled() bool {
-	return c.config.Enabled.Load()
-}
-
-// Enable ...
-func (c *Clock) Enable() bool {
-	if c.config.Enabled.CAS(false, true) {
-		if c.stateChangeNotifier != nil {
-			c.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
-}
-
-// Disable ...
-func (c *Clock) Disable() bool {
-	if c.config.Enabled.CAS(true, false) {
-		if c.stateChangeNotifier != nil {
-			c.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
-}
-
-// SetStateChangeNotifier ...
-func (c *Clock) SetStateChangeNotifier(st board.StateChangeNotifier) {
-	c.stateChangeNotifier = st
+func (c *Clock) Enabler() board.Enabler {
+	return c.enabler
 }
 
 // Cleanup ...
@@ -369,21 +347,21 @@ func (c *Clock) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 		Path: "/clock/disable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			c.log.Info("disabling clock board")
-			c.Disable()
+			c.Enabler().Disable()
 		},
 	}
 	enable := &board.HTTPHandler{
 		Path: "/clock/enable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			c.log.Info("enabling clock board")
-			c.Enable()
+			c.Enabler().Enable()
 		},
 	}
 	status := &board.HTTPHandler{
 		Path: "/clock/status",
 		Handler: func(w http.ResponseWriter, req *http.Request) {
 			w.Header().Set("Content-Type", "text/plain")
-			if c.Enabled() {
+			if c.Enabler().Enabled() {
 				_, _ = w.Write([]byte("true"))
 				return
 			}

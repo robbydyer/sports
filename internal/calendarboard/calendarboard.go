@@ -14,6 +14,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/enabler"
 	"github.com/robbydyer/sports/internal/logo"
 	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
@@ -25,17 +26,17 @@ import (
 
 // CalendarBoard implements board.Board
 type CalendarBoard struct {
-	config              *Config
-	api                 API
-	log                 *zap.Logger
-	scheduleWriter      *rgbrender.TextWriter
-	leagueLogo          *logo.Logo
-	events              []*Event
-	rpcServer           pb.TwirpServer
-	boardCtx            context.Context
-	boardCancel         context.CancelFunc
-	stateChangeNotifier board.StateChangeNotifier
-	logo                *logo.Logo
+	config         *Config
+	api            API
+	log            *zap.Logger
+	scheduleWriter *rgbrender.TextWriter
+	leagueLogo     *logo.Logo
+	events         []*Event
+	rpcServer      pb.TwirpServer
+	boardCtx       context.Context
+	boardCancel    context.CancelFunc
+	logo           *logo.Logo
+	enabler        board.Enabler
 }
 
 // Todayer is a func that returns a string representing a date
@@ -102,9 +103,14 @@ func (c *Config) SetDefaults() {
 // New ...
 func New(api API, logger *zap.Logger, config *Config) (*CalendarBoard, error) {
 	s := &CalendarBoard{
-		config: config,
-		api:    api,
-		log:    logger,
+		config:  config,
+		api:     api,
+		log:     logger,
+		enabler: enabler.New(),
+	}
+
+	if config.Enabled.Load() {
+		s.enabler.Enable()
 	}
 
 	s.log.Info("Register Calendar Board",
@@ -123,7 +129,7 @@ func New(api API, logger *zap.Logger, config *Config) (*CalendarBoard, error) {
 		)
 		_, err := c.AddFunc(on, func() {
 			s.log.Info("calendarboard turning on")
-			s.Enable()
+			s.Enabler().Enable()
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to add cron for sportboard: %w", err)
@@ -136,7 +142,7 @@ func New(api API, logger *zap.Logger, config *Config) (*CalendarBoard, error) {
 		)
 		_, err := c.AddFunc(off, func() {
 			s.log.Info("calendarboard turning off")
-			s.Disable()
+			s.Enabler().Disable()
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to add cron for sportboard: %w", err)
@@ -176,41 +182,13 @@ func (s *CalendarBoard) Name() string {
 	return s.api.HTTPPathPrefix()
 }
 
-// Enabled ...
-func (s *CalendarBoard) Enabled() bool {
-	return s.config.Enabled.Load()
-}
-
-// Enable ...
-func (s *CalendarBoard) Enable() bool {
-	if s.config.Enabled.CAS(false, true) {
-		if s.stateChangeNotifier != nil {
-			s.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
+func (s *CalendarBoard) Enabler() board.Enabler {
+	return s.enabler
 }
 
 // InBetween ...
 func (s *CalendarBoard) InBetween() bool {
 	return false
-}
-
-// Disable ...
-func (s *CalendarBoard) Disable() bool {
-	if s.config.Enabled.CAS(true, false) {
-		if s.stateChangeNotifier != nil {
-			s.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
-}
-
-// SetStateChangeNotifier ...
-func (s *CalendarBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
-	s.stateChangeNotifier = st
 }
 
 // ScrollMode ...

@@ -19,6 +19,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/enabler"
 	pb "github.com/robbydyer/sports/internal/proto/imageboard"
 	"github.com/robbydyer/sports/internal/rgbrender"
 	"github.com/robbydyer/sports/internal/twirphelpers"
@@ -39,20 +40,20 @@ type Jumper func(ctx context.Context, boardName string) error
 
 // ImageBoard is a board for displaying image files
 type ImageBoard struct {
-	config              *Config
-	log                 *zap.Logger
-	imageCache          map[string]image.Image
-	gifCacheLock        sync.Mutex
-	gifCache            map[string]*gif.GIF
-	lockers             map[string]*sync.Mutex
-	preloaders          map[string]chan struct{}
-	preloadLock         sync.Mutex
-	jumpLock            sync.Mutex
-	jumper              Jumper
-	jumpTo              chan string
-	rpcServer           pb.TwirpServer
-	priorJumpState      *atomic.Bool
-	stateChangeNotifier board.StateChangeNotifier
+	config         *Config
+	log            *zap.Logger
+	imageCache     map[string]image.Image
+	gifCacheLock   sync.Mutex
+	gifCache       map[string]*gif.GIF
+	lockers        map[string]*sync.Mutex
+	preloaders     map[string]chan struct{}
+	preloadLock    sync.Mutex
+	jumpLock       sync.Mutex
+	jumper         Jumper
+	jumpTo         chan string
+	rpcServer      pb.TwirpServer
+	priorJumpState *atomic.Bool
+	enabler        board.Enabler
 	sync.Mutex
 }
 
@@ -115,6 +116,10 @@ func New(config *Config, logger *zap.Logger) (*ImageBoard, error) {
 		jumpTo:         make(chan string, 1),
 		preloaders:     make(map[string]chan struct{}),
 		priorJumpState: atomic.NewBool(config.Enabled.Load()),
+		enabler:        enabler.New(),
+	}
+	if config.Enabled.Load() {
+		i.enabler.Enable()
 	}
 
 	if err := i.validateDirectories(); err != nil {
@@ -139,7 +144,7 @@ func New(config *Config, logger *zap.Logger) (*ImageBoard, error) {
 			)
 			_, err := c.AddFunc(on, func() {
 				i.log.Info("imageboard turning on")
-				i.Enable()
+				i.Enabler().Enable()
 			})
 			if err != nil {
 				return nil, fmt.Errorf("failed to add cron for imageboard: %w", err)
@@ -152,7 +157,7 @@ func New(config *Config, logger *zap.Logger) (*ImageBoard, error) {
 			)
 			_, err := c.AddFunc(off, func() {
 				i.log.Info("imageboard turning off")
-				i.Disable()
+				i.Enabler().Disable()
 			})
 			if err != nil {
 				return nil, fmt.Errorf("failed to add cron for imageboard: %w", err)
@@ -179,41 +184,13 @@ func (i *ImageBoard) Name() string {
 	return Name
 }
 
-// Enabled ...
-func (i *ImageBoard) Enabled() bool {
-	return i.config.Enabled.Load()
+func (i *ImageBoard) Enabler() board.Enabler {
+	return i.enabler
 }
 
 // InBetween ...
 func (i *ImageBoard) InBetween() bool {
 	return false
-}
-
-// Enable ...
-func (i *ImageBoard) Enable() bool {
-	if i.config.Enabled.CAS(false, true) {
-		if i.stateChangeNotifier != nil {
-			i.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
-}
-
-// Disable ...
-func (i *ImageBoard) Disable() bool {
-	if i.config.Enabled.CAS(true, false) {
-		if i.stateChangeNotifier != nil {
-			i.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
-}
-
-// SetStateChangeNotifier ...
-func (i *ImageBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
-	i.stateChangeNotifier = st
 }
 
 // ScrollMode ...

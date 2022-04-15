@@ -240,7 +240,7 @@ func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
 				defer s.Unlock()
 				s.log.Info("disabling all boards")
 				for _, board := range s.boards {
-					board.Disable()
+					board.Enabler().Disable()
 				}
 				s.log.Info("all boards disabled")
 			},
@@ -251,7 +251,7 @@ func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
 				s.Lock()
 				defer s.Unlock()
 				for _, board := range s.boards {
-					board.Enable()
+					board.Enabler().Enable()
 				}
 				s.log.Info("all boards enabled")
 			},

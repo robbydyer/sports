@@ -17,6 +17,7 @@ import (
 	"github.com/twitchtv/twirp"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/enabler"
 	"github.com/robbydyer/sports/internal/logo"
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
@@ -28,15 +29,15 @@ var defaultScrollDelay = 15 * time.Millisecond
 
 // TextBoard displays stocks
 type TextBoard struct {
-	config              *Config
-	api                 API
-	log                 *zap.Logger
-	writer              *rgbrender.TextWriter
-	enablerLock         sync.Mutex
-	cancelBoard         chan struct{}
-	rpcServer           pb.TwirpServer
-	logos               map[string]*logo.Logo
-	stateChangeNotifier board.StateChangeNotifier
+	config      *Config
+	api         API
+	log         *zap.Logger
+	writer      *rgbrender.TextWriter
+	enablerLock sync.Mutex
+	cancelBoard chan struct{}
+	rpcServer   pb.TwirpServer
+	logos       map[string]*logo.Logo
+	enabler     board.Enabler
 	sync.Mutex
 }
 
@@ -117,6 +118,11 @@ func New(api API, config *Config, log *zap.Logger, opts ...OptionFunc) (*TextBoa
 		log:         log,
 		cancelBoard: make(chan struct{}),
 		logos:       make(map[string]*logo.Logo),
+		enabler:     enabler.New(),
+	}
+
+	if config.Enabled.Load() {
+		s.enabler.Enable()
 	}
 
 	if len(config.OffTimes) > 0 || len(config.OnTimes) > 0 {
@@ -127,7 +133,7 @@ func New(api API, config *Config, log *zap.Logger, opts ...OptionFunc) (*TextBoa
 			)
 			_, err := c.AddFunc(on, func() {
 				s.log.Info("textboard turning on")
-				s.Enable()
+				s.Enabler().Enable()
 			})
 			if err != nil {
 				return nil, fmt.Errorf("failed to add cron for textboard: %w", err)
@@ -140,7 +146,7 @@ func New(api API, config *Config, log *zap.Logger, opts ...OptionFunc) (*TextBoa
 			)
 			_, err := c.AddFunc(off, func() {
 				s.log.Info("textboard turning off")
-				s.Disable()
+				s.Enabler().Disable()
 			})
 			if err != nil {
 				return nil, fmt.Errorf("failed to add cron for textboard: %w", err)
@@ -178,41 +184,13 @@ func New(api API, config *Config, log *zap.Logger, opts ...OptionFunc) (*TextBoa
 	return s, nil
 }
 
-// Enabled ...
-func (s *TextBoard) Enabled() bool {
-	return s.config.Enabled.Load()
-}
-
-// Enable ...
-func (s *TextBoard) Enable() bool {
-	if s.config.Enabled.CAS(false, true) {
-		if s.stateChangeNotifier != nil {
-			s.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
+func (s *TextBoard) Enabler() board.Enabler {
+	return s.enabler
 }
 
 // InBetween ...
 func (s *TextBoard) InBetween() bool {
 	return false
-}
-
-// Disable ...
-func (s *TextBoard) Disable() bool {
-	if s.config.Enabled.CAS(true, false) {
-		if s.stateChangeNotifier != nil {
-			s.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
-}
-
-// SetStateChangeNotifier ...
-func (s *TextBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
-	s.stateChangeNotifier = st
 }
 
 // Name ...

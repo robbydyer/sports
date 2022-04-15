@@ -17,6 +17,7 @@ import (
 	"github.com/twitchtv/twirp"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/enabler"
 	"github.com/robbydyer/sports/internal/logo"
 	pb "github.com/robbydyer/sports/internal/proto/weatherboard"
 	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
@@ -26,17 +27,17 @@ import (
 
 // WeatherBoard displays weather
 type WeatherBoard struct {
-	config              *Config
-	api                 API
-	log                 *zap.Logger
-	enablerLock         sync.Mutex
-	iconLock            sync.Mutex
-	iconCache           map[string]*logo.Logo
-	cancelBoard         chan struct{}
-	bigWriter           *rgbrender.TextWriter
-	smallWriter         *rgbrender.TextWriter
-	rpcServer           pb.TwirpServer
-	stateChangeNotifier board.StateChangeNotifier
+	config      *Config
+	api         API
+	log         *zap.Logger
+	enablerLock sync.Mutex
+	iconLock    sync.Mutex
+	iconCache   map[string]*logo.Logo
+	cancelBoard chan struct{}
+	bigWriter   *rgbrender.TextWriter
+	smallWriter *rgbrender.TextWriter
+	rpcServer   pb.TwirpServer
+	enabler     board.Enabler
 	sync.Mutex
 }
 
@@ -146,6 +147,11 @@ func New(api API, config *Config, log *zap.Logger) (*WeatherBoard, error) {
 		log:         log,
 		cancelBoard: make(chan struct{}),
 		iconCache:   make(map[string]*logo.Logo),
+		enabler:     enabler.New(),
+	}
+
+	if config.Enabled.Load() {
+		s.enabler.Enable()
 	}
 
 	svr := &Server{
@@ -166,7 +172,7 @@ func New(api API, config *Config, log *zap.Logger) (*WeatherBoard, error) {
 			)
 			_, err := c.AddFunc(on, func() {
 				s.log.Info("weatherboard turning on")
-				s.Enable()
+				s.Enabler().Enable()
 			})
 			if err != nil {
 				return nil, fmt.Errorf("failed to add cron for weatherboard: %w", err)
@@ -179,7 +185,7 @@ func New(api API, config *Config, log *zap.Logger) (*WeatherBoard, error) {
 			)
 			_, err := c.AddFunc(off, func() {
 				s.log.Info("weatherboard turning off")
-				s.Disable()
+				s.Enabler().Disable()
 			})
 			if err != nil {
 				return nil, fmt.Errorf("failed to add cron for weatherboard: %w", err)
@@ -196,41 +202,13 @@ func (w *WeatherBoard) cacheClear() {
 	w.api.CacheClear()
 }
 
-// Enabled ...
-func (w *WeatherBoard) Enabled() bool {
-	return w.config.Enabled.Load()
-}
-
-// Enable ...
-func (w *WeatherBoard) Enable() bool {
-	if w.config.Enabled.CAS(false, true) {
-		if w.stateChangeNotifier != nil {
-			w.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
+func (w *WeatherBoard) Enabler() board.Enabler {
+	return w.enabler
 }
 
 // InBetween ...
 func (w *WeatherBoard) InBetween() bool {
 	return w.config.ShowBetween.Load()
-}
-
-// Disable ...
-func (w *WeatherBoard) Disable() bool {
-	if w.config.Enabled.CAS(true, false) {
-		if w.stateChangeNotifier != nil {
-			w.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
-}
-
-// SetStateChangeNotifier ...
-func (w *WeatherBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
-	w.stateChangeNotifier = st
 }
 
 // Name ...
@@ -401,7 +379,7 @@ func (w *WeatherBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: "/weather/enable",
 			Handler: func(wrtr http.ResponseWriter, req *http.Request) {
 				w.log.Info("enabling board", zap.String("board", w.Name()))
-				w.Enable()
+				w.Enabler().Enable()
 			},
 		},
 		{
@@ -412,7 +390,7 @@ func (w *WeatherBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				case w.cancelBoard <- struct{}{}:
 				default:
 				}
-				w.Disable()
+				w.Enabler().Disable()
 				w.cacheClear()
 			},
 		},
@@ -421,7 +399,7 @@ func (w *WeatherBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Handler: func(wrtr http.ResponseWriter, req *http.Request) {
 				w.log.Debug("get board status", zap.String("board", w.Name()))
 				wrtr.Header().Set("Content-Type", "text/plain")
-				if w.Enabled() {
+				if w.Enabler().Enabled() {
 					_, _ = wrtr.Write([]byte("true"))
 					return
 				}

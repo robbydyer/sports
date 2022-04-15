@@ -30,9 +30,9 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 	}
 
 	if req.Status.Enabled {
-		s.board.Enable()
+		s.board.Enabler().Enable()
 	} else {
-		s.board.Disable()
+		s.board.Enabler().Disable()
 	}
 
 	s.board.config.UseDiskCache.Store(req.Status.DiskcacheEnabled)

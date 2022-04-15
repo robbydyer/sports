@@ -17,6 +17,7 @@ import (
 	"github.com/twitchtv/twirp"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/enabler"
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/internal/rgbrender"
 	"github.com/robbydyer/sports/internal/twirphelpers"
@@ -26,17 +27,17 @@ var defaultUpdateInterval = 5 * time.Minute
 
 // StatBoard ...
 type StatBoard struct {
-	config              *Config
-	log                 *zap.Logger
-	api                 API
-	writers             map[string]*rgbrender.TextWriter
-	sorter              Sorter
-	withTitleRow        bool
-	withPrefixCol       bool
-	lastUpdate          time.Time
-	cancelBoard         chan struct{}
-	rpcServer           pb.TwirpServer
-	stateChangeNotifier board.StateChangeNotifier
+	config        *Config
+	log           *zap.Logger
+	api           API
+	writers       map[string]*rgbrender.TextWriter
+	sorter        Sorter
+	withTitleRow  bool
+	withPrefixCol bool
+	lastUpdate    time.Time
+	cancelBoard   chan struct{}
+	rpcServer     pb.TwirpServer
+	enabler       board.Enabler
 	sync.Mutex
 }
 
@@ -146,6 +147,11 @@ func New(ctx context.Context, api API, config *Config, logger *zap.Logger, opts 
 		withTitleRow:  true,
 		withPrefixCol: false,
 		cancelBoard:   make(chan struct{}),
+		enabler:       enabler.New(),
+	}
+
+	if config.Enabled.Load() {
+		s.enabler.Enable()
 	}
 
 	for _, f := range opts {
@@ -170,7 +176,7 @@ func New(ctx context.Context, api API, config *Config, logger *zap.Logger, opts 
 				s.log.Warn("statboard turning off",
 					zap.String("league", s.api.LeagueShortName()),
 				)
-				s.Disable()
+				s.Enabler().Disable()
 			})
 			if err != nil {
 				return nil, fmt.Errorf("failed to add cron for statboard off time: %w", err)
@@ -185,7 +191,7 @@ func New(ctx context.Context, api API, config *Config, logger *zap.Logger, opts 
 				s.log.Warn("statboard turning on",
 					zap.String("league", s.api.LeagueShortName()),
 				)
-				s.Enable()
+				s.Enabler().Enable()
 			})
 			if err != nil {
 				return nil, fmt.Errorf("failed to add cron for statboard on time: %w", err)
@@ -225,35 +231,12 @@ func defaultSorter(players []Player) []Player {
 	return players
 }
 
-// Enabled ...
-func (s *StatBoard) Enabled() bool {
-	return s.config.Enabled.Load()
-}
-
-// Enable ...
-func (s *StatBoard) Enable() bool {
-	if s.config.Enabled.CAS(false, true) {
-		if s.stateChangeNotifier != nil {
-			s.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
+func (s *StatBoard) Enabler() board.Enabler {
+	return s.enabler
 }
 
 // InBetween ...
 func (s *StatBoard) InBetween() bool {
-	return false
-}
-
-// Disable ..
-func (s *StatBoard) Disable() bool {
-	if s.config.Enabled.CAS(true, false) {
-		if s.stateChangeNotifier != nil {
-			s.stateChangeNotifier()
-		}
-		return true
-	}
 	return false
 }
 
@@ -275,11 +258,6 @@ func (s *StatBoard) Close() error {
 // ScrollMode ...
 func (s *StatBoard) ScrollMode() bool {
 	return s.config.ScrollMode.Load()
-}
-
-// SetStateChangeNotifier ...
-func (s *StatBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
-	s.stateChangeNotifier = st
 }
 
 // WithSorter ...

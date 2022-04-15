@@ -17,6 +17,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/enabler"
 	"github.com/robbydyer/sports/internal/logo"
 	pb "github.com/robbydyer/sports/internal/proto/sportboard"
 	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
@@ -57,6 +58,7 @@ type SportBoard struct {
 	stateChangeNotifier board.StateChangeNotifier
 	renderCtx           context.Context
 	renderCancel        context.CancelFunc
+	enabler             board.Enabler
 	sync.Mutex
 }
 
@@ -236,6 +238,11 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		scoreWriters:    make(map[string]*rgbrender.TextWriter),
 		cancelBoard:     make(chan struct{}),
 		teamInfoWidths:  make(map[string]map[string]int),
+		enabler:         enabler.New(),
+	}
+
+	if config.Enabled.Load() {
+		s.enabler.Enable()
 	}
 
 	if s.config.boardDelay < 10*time.Second {
@@ -292,7 +299,7 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 			s.log.Info("sportboard turning on",
 				zap.String("league", s.api.League()),
 			)
-			s.Enable()
+			s.Enabler().Enable()
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to add cron for sportboard: %w", err)
@@ -308,7 +315,7 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 			s.log.Info("sportboard turning off",
 				zap.String("league", s.api.League()),
 			)
-			s.Disable()
+			s.Enabler().Disable()
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to add cron for sportboard: %w", err)
@@ -356,42 +363,13 @@ func (s *SportBoard) Name() string {
 	return "SportBoard"
 }
 
-// Enabled ...
-func (s *SportBoard) Enabled() bool {
-	return s.config.Enabled.Load()
-}
-
-// Enable ...
-func (s *SportBoard) Enable() bool {
-	if s.config.Enabled.CAS(false, true) {
-		if s.stateChangeNotifier != nil {
-			s.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
+func (s *SportBoard) Enabler() board.Enabler {
+	return s.enabler
 }
 
 // InBetween ...
 func (s *SportBoard) InBetween() bool {
 	return false
-}
-
-// Disable ...
-func (s *SportBoard) Disable() bool {
-	if s.config.Enabled.CAS(true, false) {
-		s.callCancelBoard()
-		if s.stateChangeNotifier != nil {
-			s.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
-}
-
-// SetStateChangeNotifier ...
-func (s *SportBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
-	s.stateChangeNotifier = st
 }
 
 // ScrollMode ...

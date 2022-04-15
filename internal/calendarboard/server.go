@@ -22,11 +22,11 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 	}
 
 	if req.Status.Enabled {
-		if s.board.Enable() {
+		if s.board.Enabler().Enable() {
 			cancelBoard = true
 		}
 	} else {
-		if s.board.Disable() {
+		if s.board.Enabler().Disable() {
 			cancelBoard = true
 		}
 	}
