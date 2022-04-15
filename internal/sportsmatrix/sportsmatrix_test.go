@@ -14,17 +14,18 @@ import (
 	"go.uber.org/zap/zaptest"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/enabler"
 )
 
 type TestBoard struct {
 	log         *zap.Logger
-	enabled     *atomic.Bool
 	hasRendered *atomic.Bool
 	tester      *testing.T
+	enabler     board.Enabler
 }
 
 func (b *TestBoard) Enabler() board.Enabler {
-	return nil
+	return b.enabler
 }
 
 func (b *TestBoard) InBetween() bool {
@@ -88,7 +89,9 @@ func TestSportsMatrix(t *testing.T) {
 		log:         logger,
 		hasRendered: atomic.NewBool(false),
 		tester:      t,
+		enabler:     enabler.New(),
 	}
+	b.enabler.Enable()
 
 	s, err := New(ctx, logger, cfg, []board.Canvas{canvas}, b)
 	require.NoError(t, err)
@@ -168,7 +171,9 @@ func TestScreenSwitch(t *testing.T) {
 		log:         logger,
 		hasRendered: atomic.NewBool(false),
 		tester:      t,
+		enabler:     enabler.New(),
 	}
+	b.enabler.Enable()
 
 	s, err := New(ctx, logger, cfg, []board.Canvas{canvas}, b)
 	require.NoError(t, err)

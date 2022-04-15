@@ -190,15 +190,15 @@ func New(ctx context.Context, api API, config *Config, logger *zap.Logger, opts 
 	}
 	prfx = fmt.Sprintf("/stat%s", prfx)
 
-	s.log.Info("registering RPC server for Statboard",
-		zap.String("league", s.api.LeagueShortName()),
-		zap.String("prefix", prfx),
-	)
 	s.rpcServer = pb.NewBasicBoardServer(svr,
 		twirp.WithServerPathPrefix(prfx),
 		twirp.ChainHooks(
 			twirphelpers.GetDefaultHooks(s, s.log),
 		),
+	)
+	s.log.Info("registering RPC server for Statboard",
+		zap.String("league", s.api.LeagueShortName()),
+		zap.String("prefix", s.rpcServer.PathPrefix()),
 	)
 
 	return s, nil

@@ -20,6 +20,7 @@ import (
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
+	"github.com/robbydyer/sports/internal/twirphelpers"
 	"github.com/robbydyer/sports/internal/util"
 )
 
@@ -85,11 +86,6 @@ func (c *Config) SetDefaults() {
 
 // New returns a new Clock board
 func New(config *Config, logger *zap.Logger) (*Clock, error) {
-	if config == nil {
-		config = &Config{
-			StartEnabled: atomic.NewBool(true),
-		}
-	}
 	c := &Clock{
 		config:      config,
 		log:         logger,
@@ -107,17 +103,14 @@ func New(config *Config, logger *zap.Logger) (*Clock, error) {
 	c.rpcServer = pb.NewBasicBoardServer(svr,
 		twirp.WithServerPathPrefix("/clock"),
 		twirp.ChainHooks(
-			&twirp.ServerHooks{
-				Error: func(ctx context.Context, err twirp.Error) context.Context {
-					c.log.Error("twirp API error",
-						zap.Error(err),
-						zap.String("board", "clock"),
-					)
-					return ctx
-				},
-			},
+			twirphelpers.GetDefaultHooks(c, c.log),
 		),
 	)
+
+	c.log.Debug("registering RPC server for Clock",
+		zap.String("prefix", c.rpcServer.PathPrefix()),
+	)
+
 	if err := util.SetCrons(config.OnTimes, func() {
 		c.log.Info("clock turning on")
 		c.Enabler().Enable()

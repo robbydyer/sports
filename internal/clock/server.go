@@ -28,12 +28,7 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 	}
 
 	s.board.config.ScrollMode.Store(req.Status.ScrollEnabled)
-
-	if req.Status.Enabled {
-		s.board.Enabler().Enable()
-	} else {
-		s.board.Enabler().Disable()
-	}
+	_ = s.board.Enabler().Store(req.Status.Enabled)
 
 	return &emptypb.Empty{}, nil
 }

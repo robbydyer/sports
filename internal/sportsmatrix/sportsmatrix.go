@@ -538,8 +538,8 @@ func (s *SportsMatrix) doCombinedScroll(ctx context.Context) error {
 		cancel()
 	}
 	for _, board := range s.boards {
+		board.Enabler().SetStateChangeCallback(canceler)
 		if board.Enabler().Enabled() {
-			board.Enabler().SetStateChangeCallback(canceler)
 			boards = append(boards, board)
 		}
 	}
