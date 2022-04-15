@@ -2,12 +2,9 @@
 set -euo pipefail
 
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
-ARCH="$(uname -m)"
-
-sudo apt-get install -y build-essential
+BUILDARCH="${BUILDARCH:-}"
 
 cd "${ROOT}"
-VERSION="${VERSION}" script/build.local
 
 tmp="$(mktemp -d /tmp/sportsbuild.XXXX)"
 echo "Build Dir: ${tmp}"
@@ -18,6 +15,8 @@ mkdir "${tmp}/${d}"
 cd "${tmp}/${d}"
 
 mkdir -p DEBIAN etc/systemd/system usr/local/bin etc/logrotate.d
+
+cp "${ROOT}/sportsmatrix.${BUILDARCH}" usr/local/bin/sportsmatrix
 
 cat <<EOF > DEBIAN/control
 Package: sportsmatrix
@@ -83,7 +82,6 @@ EOF
 
 chmod 755 DEBIAN/postinst
 
-cp "${ROOT}/sportsmatrix.bin" usr/local/bin/sportsmatrix
 cp "${ROOT}/sportsmatrix.conf.example" etc/sportsmatrix.conf
 
 chmod 755 usr/local/bin/sportsmatrix

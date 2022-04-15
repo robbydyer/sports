@@ -6,12 +6,11 @@ ROOT=$(git rev-parse --show-toplevel)
 cd "${ROOT}"
 IN_DOCKER="${IN_DOCKER:-no}"
 SUFFIX="console"
-pibuilder="pibuilder"
 
 if [ "${IN_DOCKER}" = "no" ]; then
   set -x
   source "${ROOT}/script/common"
-  pibuilder=$(latestpibuilder)
+  pibuilder=$(latestpibuilder aarch64)
 
   exec docker run -it --rm \
     -e IN_DOCKER=yes \

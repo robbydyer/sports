@@ -5,11 +5,17 @@ on:
     branches: [ master ]
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+
+    - name: Set up QEMU
+      id: qemu
+      uses: docker/setup-qemu-action@v1.2.0
+      with:
+        image: tonistiigi/binfmt:latest
+        platforms: all
 
     - name: Lint
       run: ./script/lint
@@ -18,4 +24,4 @@ jobs:
       run: ./script/test
 
     - name: Build
-      run: ./script/build.arm7
+      run: ./script/build

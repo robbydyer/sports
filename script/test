@@ -1,21 +1,24 @@
 #!/bin/bash
 set -euo pipefail
+set -x
 
 ROOT=$(git rev-parse --show-toplevel)
 cd "${ROOT}"
 IN_DOCKER="${IN_DOCKER:-no}"
 SUFFIX="build"
+BUILDARCH="${BUILDARCH:-$(uname -m)}"
 
 if [ "${IN_DOCKER}" = "no" ]; then
   source "${ROOT}/script/common"
-  pibuilder=$(latestpibuilder)
+  pibuilder=$(latestpibuilder ${BUILDARCH})
 
-  exec docker run -t --rm \
+  docker run -t --rm \
     -e IN_DOCKER=yes \
     -v "${ROOT}":/src \
     -w /src \
     ${pibuilder} \
     /src/script/$(basename $0)
+  exit
 fi
 
 # Inside docker

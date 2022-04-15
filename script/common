@@ -14,7 +14,18 @@ getsha() {
 }
 
 latestpibuilder() {
-  echo "robbydyer/pibuilder:$(getsha "${ROOT}/Dockerfile.pibuilder")"
+  arch="$1"
+  case "${arch}" in
+    amd64|x86_64)
+      arch=amd64
+      ;;
+    arm64)
+      arch=aarch64
+      ;;
+    *)
+    ;;
+  esac
+  echo "robbydyer/pibuilder-${arch}:$(getsha "${ROOT}/Dockerfile.pibuilder")"
 }
 
 latestlinter() {
@@ -30,22 +41,6 @@ dockerlogin() {
     return
   fi
   docker --config="${DOCKERCONF}" login -u robbydyer
-}
-
-buildpibuilder() {
-  cd "${ROOT}"
-  dockerlogin
-  img=$(latestpibuilder)
-
-  if [ "$(docker images -q ${img})" = "" ]; then
-    docker --config="${DOCKERCONF}" buildx create --use --name=build --node=build
-    docker --config="${DOCKERCONF}" buildx build -t "${img}" -t robbydyer/pibuilder:latest \
-      --builder=build \
-      -f Dockerfile.pibuilder \
-      --platform=linux/amd64,linux/arm64/v8 \
-      --push \
-      .
-  fi
 }
 
 buildprotoc() {
