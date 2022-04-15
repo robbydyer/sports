@@ -20,6 +20,9 @@ dobuild() {
     armv7l|armhf|armv6l)
       base="multiarch/debian-debootstrap:armhf-buster-slim"
       ;;
+    amd64)
+      base="multiarch/debian-debootstrap:amd64-bullseye"
+      ;;
     *)
       echo "Unsupported arch ${buildarch}"
       exit 1
@@ -50,6 +53,7 @@ docker --config="${DOCKERCONF}" buildx create --use --name=build --node=build
 if [ "${BUILDARCH}" = "all" ]; then
   dobuild aarch64
   dobuild armv7l
+  dobuild amd64
 else
   dobuild "${BUILDARCH}"
 fi
