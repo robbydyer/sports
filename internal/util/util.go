@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/robfig/cron/v3"
 )
 
 // Today is sometimes actually yesterday
@@ -131,4 +133,20 @@ func FileExists(fileName string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func SetCrons(times []string, f func()) error {
+	if len(times) < 1 {
+		return nil
+	}
+
+	c := cron.New()
+	for _, t := range times {
+		if _, err := c.AddFunc(t, f); err != nil {
+			return fmt.Errorf("failed to add cron func: %w", err)
+		}
+	}
+	c.Start()
+
+	return nil
 }

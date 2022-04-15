@@ -24,3 +24,4 @@ docs-base/
 matrix.conf
 release
 update-matrix
+test-matrix

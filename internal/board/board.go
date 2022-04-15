@@ -18,11 +18,12 @@ type Enabler interface {
 	Enabled() bool
 	Enable() bool
 	Disable() bool
+	Store(bool) bool
+	SetStateChangeCallback(func())
 }
 
 // Board is the interface to implement for displaying on the matrix
 type Board interface {
-	Enabler
 	Name() string
 	Render(ctx context.Context, canvases Canvas) error
 	ScrollRender(ctx context.Context, canvas Canvas, padding int) (Canvas, error)
@@ -30,7 +31,7 @@ type Board interface {
 	ScrollMode() bool
 	GetRPCHandler() (string, http.Handler)
 	InBetween() bool
-	SetStateChangeNotifier(StateChangeNotifier)
+	Enabler() Enabler
 }
 
 // Canvas ...

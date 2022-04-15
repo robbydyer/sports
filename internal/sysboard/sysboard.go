@@ -15,36 +15,37 @@ import (
 
 	"github.com/mackerelio/go-osstat/cpu"
 	"github.com/mackerelio/go-osstat/memory"
-	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/enabler"
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/internal/rgbrender"
 	"github.com/robbydyer/sports/internal/twirphelpers"
+	"github.com/robbydyer/sports/internal/util"
 )
 
 const cpuTempFile = "/sys/class/thermal/thermal_zone0/temp"
 
 // SysBoard implements board.Board. Provides System info
 type SysBoard struct {
-	config              *Config
-	log                 *zap.Logger
-	textWriters         map[int]*rgbrender.TextWriter
-	rpcServer           pb.TwirpServer
-	stateChangeNotifier board.StateChangeNotifier
+	config      *Config
+	log         *zap.Logger
+	textWriters map[int]*rgbrender.TextWriter
+	rpcServer   pb.TwirpServer
+	enabler     board.Enabler
 	sync.Mutex
 }
 
 // Config ...
 type Config struct {
-	boardDelay time.Duration
-	Enabled    *atomic.Bool `json:"enabled"`
-	BoardDelay string       `json:"boardDelay"`
-	OnTimes    []string     `json:"onTimes"`
-	OffTimes   []string     `json:"offTimes"`
+	boardDelay   time.Duration
+	StartEnabled *atomic.Bool `json:"enabled"`
+	BoardDelay   string       `json:"boardDelay"`
+	OnTimes      []string     `json:"onTimes"`
+	OffTimes     []string     `json:"offTimes"`
 }
 
 // SetDefaults ...
@@ -59,8 +60,8 @@ func (c *Config) SetDefaults() {
 		c.boardDelay = 10 * time.Second
 	}
 
-	if c.Enabled == nil {
-		c.Enabled = atomic.NewBool(false)
+	if c.StartEnabled == nil {
+		c.StartEnabled = atomic.NewBool(false)
 	}
 }
 
@@ -70,6 +71,11 @@ func New(logger *zap.Logger, config *Config) (*SysBoard, error) {
 		config:      config,
 		log:         logger,
 		textWriters: make(map[int]*rgbrender.TextWriter),
+		enabler:     enabler.New(),
+	}
+
+	if config.StartEnabled.Load() {
+		s.enabler.Enable()
 	}
 
 	svr := &Server{
@@ -82,35 +88,17 @@ func New(logger *zap.Logger, config *Config) (*SysBoard, error) {
 		),
 	)
 
-	if len(config.OffTimes) > 0 || len(config.OnTimes) > 0 {
-		c := cron.New()
-		for _, on := range config.OnTimes {
-			s.log.Info("sysboard will be schedule to turn on",
-				zap.String("turn on", on),
-			)
-			_, err := c.AddFunc(on, func() {
-				s.log.Info("sysboard turning on")
-				s.Enable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for sysboard: %w", err)
-			}
-		}
-
-		for _, off := range config.OffTimes {
-			s.log.Info("sysboard will be schedule to turn off",
-				zap.String("turn on", off),
-			)
-			_, err := c.AddFunc(off, func() {
-				s.log.Info("sysboard turning off")
-				s.Disable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for sysboard: %w", err)
-			}
-		}
-
-		c.Start()
+	if err := util.SetCrons(config.OnTimes, func() {
+		s.log.Info("sysboard turning on")
+		s.Enabler().Enable()
+	}); err != nil {
+		return nil, err
+	}
+	if err := util.SetCrons(config.OffTimes, func() {
+		s.log.Info("sysboard turning off")
+		s.Enabler().Disable()
+	}); err != nil {
+		return nil, err
 	}
 
 	return s, nil
@@ -155,7 +143,7 @@ func (s *SysBoard) ScrollRender(ctx context.Context, canvas board.Canvas, paddin
 
 // Render ...
 func (s *SysBoard) Render(ctx context.Context, canvas board.Canvas) error {
-	if !s.config.Enabled.Load() {
+	if !s.Enabler().Enabled() {
 		return nil
 	}
 
@@ -227,41 +215,13 @@ func (s *SysBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	return nil
 }
 
-// Enabled ...
-func (s *SysBoard) Enabled() bool {
-	return s.config.Enabled.Load()
-}
-
-// Enable ...
-func (s *SysBoard) Enable() bool {
-	if s.config.Enabled.CAS(false, true) {
-		if s.stateChangeNotifier != nil {
-			s.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
-}
-
-// Disable ...
-func (s *SysBoard) Disable() bool {
-	if s.config.Enabled.CAS(true, false) {
-		if s.stateChangeNotifier != nil {
-			s.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
+func (s *SysBoard) Enabler() board.Enabler {
+	return s.enabler
 }
 
 // ScrollMode ...
 func (s *SysBoard) ScrollMode() bool {
 	return false
-}
-
-// SetStateChangeNotifier ...
-func (s *SysBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
-	s.stateChangeNotifier = st
 }
 
 // GetHTTPHandlers ...
@@ -270,14 +230,14 @@ func (s *SysBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 		Path: "/sys/disable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			s.log.Info("disabling sys board")
-			s.Disable()
+			s.Enabler().Disable()
 		},
 	}
 	enable := &board.HTTPHandler{
 		Path: "/sys/enable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			s.log.Info("enabling sys board")
-			s.Enable()
+			s.Enabler().Enable()
 		},
 	}
 	status := &board.HTTPHandler{
@@ -285,7 +245,7 @@ func (s *SysBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 		Handler: func(w http.ResponseWriter, req *http.Request) {
 			s.log.Debug("get board status", zap.String("board", s.Name()))
 			w.Header().Set("Content-Type", "text/plain")
-			if s.Enabled() {
+			if s.Enabler().Enabled() {
 				_, _ = w.Write([]byte("true"))
 				return
 			}

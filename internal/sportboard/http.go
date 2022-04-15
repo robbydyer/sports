@@ -67,14 +67,14 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: fmt.Sprintf("/%s/disable", s.api.HTTPPathPrefix()),
 			Handler: func(wrter http.ResponseWriter, req *http.Request) {
 				s.log.Info("disabling board", zap.String("board", s.Name()))
-				s.Disable()
+				s.Enabler().Disable()
 			},
 		},
 		{
 			Path: fmt.Sprintf("/%s/enable", s.api.HTTPPathPrefix()),
 			Handler: func(wrter http.ResponseWriter, req *http.Request) {
 				s.log.Info("enabling board", zap.String("board", s.Name()))
-				s.Enable()
+				s.Enabler().Enable()
 			},
 		},
 		{
@@ -82,7 +82,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				s.log.Debug("get board status", zap.String("board", s.Name()))
 				w.Header().Set("Content-Type", "text/plain")
-				if s.Enabled() {
+				if s.Enabler().Enabled() {
 					_, _ = w.Write([]byte("true"))
 					return
 				}

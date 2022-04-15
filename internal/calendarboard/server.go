@@ -21,14 +21,8 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 		return &emptypb.Empty{}, twirp.NewError(twirp.InvalidArgument, "nil status sent")
 	}
 
-	if req.Status.Enabled {
-		if s.board.Enable() {
-			cancelBoard = true
-		}
-	} else {
-		if s.board.Disable() {
-			cancelBoard = true
-		}
+	if s.board.Enabler().Store(req.Status.Enabled) {
+		cancelBoard = true
 	}
 	if s.board.config.ScrollMode.CAS(!req.Status.ScrollEnabled, req.Status.ScrollEnabled) {
 		cancelBoard = true
@@ -47,7 +41,7 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 func (s *Server) GetStatus(ctx context.Context, req *emptypb.Empty) (*pb.StatusResp, error) {
 	return &pb.StatusResp{
 		Status: &pb.Status{
-			Enabled:       s.board.config.Enabled.Load(),
+			Enabled:       s.board.Enabler().Enabled(),
 			ScrollEnabled: s.board.config.ScrollMode.Load(),
 		},
 	}, nil

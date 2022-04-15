@@ -173,9 +173,16 @@ func (i *ImgCanvas) Enable() bool {
 	return i.enabled.CAS(false, true)
 }
 
+func (i *ImgCanvas) SetStateChangeCallback(s func()) {
+}
+
 // Disable ...
 func (i *ImgCanvas) Disable() bool {
 	return i.enabled.CAS(true, false)
+}
+
+func (i *ImgCanvas) Store(s bool) bool {
+	return i.enabled.CAS(!s, s)
 }
 
 func (i *ImgCanvas) position(x, y int) int {

@@ -11,15 +11,17 @@ import (
 	"time"
 
 	"github.com/golang/freetype/truetype"
-	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/enabler"
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
+	"github.com/robbydyer/sports/internal/twirphelpers"
+	"github.com/robbydyer/sports/internal/util"
 )
 
 // Name is the default board name for this Clock
@@ -27,26 +29,26 @@ var Name = "Clock"
 
 // Clock implements board.Board
 type Clock struct {
-	config              *Config
-	font                *truetype.Font
-	textWriters         map[int]*rgbrender.TextWriter
-	log                 *zap.Logger
-	rpcServer           pb.TwirpServer
-	stateChangeNotifier board.StateChangeNotifier
+	config      *Config
+	font        *truetype.Font
+	textWriters map[int]*rgbrender.TextWriter
+	log         *zap.Logger
+	rpcServer   pb.TwirpServer
+	enabler     board.Enabler
 	sync.Mutex
 }
 
 // Config is a Clock configuration
 type Config struct {
-	boardDelay  time.Duration
-	scrollDelay time.Duration
-	Enabled     *atomic.Bool `json:"enabled"`
-	BoardDelay  string       `json:"boardDelay"`
-	OnTimes     []string     `json:"onTimes"`
-	OffTimes    []string     `json:"offTimes"`
-	ShowBetween *atomic.Bool `json:"showBetween"`
-	ScrollMode  *atomic.Bool `json:"scrollMode"`
-	ScrollDelay string       `json:"scrollDelay"`
+	boardDelay   time.Duration
+	scrollDelay  time.Duration
+	StartEnabled *atomic.Bool `json:"enabled"`
+	BoardDelay   string       `json:"boardDelay"`
+	OnTimes      []string     `json:"onTimes"`
+	OffTimes     []string     `json:"offTimes"`
+	ShowBetween  *atomic.Bool `json:"showBetween"`
+	ScrollMode   *atomic.Bool `json:"scrollMode"`
+	ScrollDelay  string       `json:"scrollDelay"`
 }
 
 // SetDefaults ...
@@ -61,8 +63,8 @@ func (c *Config) SetDefaults() {
 		c.boardDelay = 10 * time.Second
 	}
 
-	if c.Enabled == nil {
-		c.Enabled = atomic.NewBool(false)
+	if c.StartEnabled == nil {
+		c.StartEnabled = atomic.NewBool(false)
 	}
 
 	if c.ShowBetween == nil {
@@ -84,15 +86,15 @@ func (c *Config) SetDefaults() {
 
 // New returns a new Clock board
 func New(config *Config, logger *zap.Logger) (*Clock, error) {
-	if config == nil {
-		config = &Config{
-			Enabled: atomic.NewBool(true),
-		}
-	}
 	c := &Clock{
 		config:      config,
 		log:         logger,
 		textWriters: make(map[int]*rgbrender.TextWriter),
+		enabler:     enabler.New(),
+	}
+
+	if config.StartEnabled.Load() {
+		c.enabler.Enable()
 	}
 
 	svr := &Server{
@@ -101,47 +103,25 @@ func New(config *Config, logger *zap.Logger) (*Clock, error) {
 	c.rpcServer = pb.NewBasicBoardServer(svr,
 		twirp.WithServerPathPrefix("/clock"),
 		twirp.ChainHooks(
-			&twirp.ServerHooks{
-				Error: func(ctx context.Context, err twirp.Error) context.Context {
-					c.log.Error("twirp API error",
-						zap.Error(err),
-						zap.String("board", "clock"),
-					)
-					return ctx
-				},
-			},
+			twirphelpers.GetDefaultHooks(c, c.log),
 		),
 	)
 
-	if len(config.OffTimes) > 0 || len(config.OnTimes) > 0 {
-		cr := cron.New()
-		for _, on := range config.OnTimes {
-			c.log.Info("clock will be schedule to turn on",
-				zap.String("turn on", on),
-			)
-			_, err := cr.AddFunc(on, func() {
-				c.log.Info("clock turning on")
-				c.Enable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for clock: %w", err)
-			}
-		}
+	c.log.Debug("registering RPC server for Clock",
+		zap.String("prefix", c.rpcServer.PathPrefix()),
+	)
 
-		for _, off := range config.OffTimes {
-			c.log.Info("clock will be schedule to turn off",
-				zap.String("turn on", off),
-			)
-			_, err := cr.AddFunc(off, func() {
-				c.log.Info("clock turning off")
-				c.Disable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for clock: %w", err)
-			}
-		}
-
-		cr.Start()
+	if err := util.SetCrons(config.OnTimes, func() {
+		c.log.Info("clock turning on")
+		c.Enabler().Enable()
+	}); err != nil {
+		return nil, err
+	}
+	if err := util.SetCrons(config.OffTimes, func() {
+		c.log.Info("clock turning off")
+		c.Enabler().Disable()
+	}); err != nil {
+		return nil, err
 	}
 
 	return c, nil
@@ -157,36 +137,8 @@ func (c *Clock) Name() string {
 	return Name
 }
 
-// Enabled ...
-func (c *Clock) Enabled() bool {
-	return c.config.Enabled.Load()
-}
-
-// Enable ...
-func (c *Clock) Enable() bool {
-	if c.config.Enabled.CAS(false, true) {
-		if c.stateChangeNotifier != nil {
-			c.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
-}
-
-// Disable ...
-func (c *Clock) Disable() bool {
-	if c.config.Enabled.CAS(true, false) {
-		if c.stateChangeNotifier != nil {
-			c.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
-}
-
-// SetStateChangeNotifier ...
-func (c *Clock) SetStateChangeNotifier(st board.StateChangeNotifier) {
-	c.stateChangeNotifier = st
+func (c *Clock) Enabler() board.Enabler {
+	return c.enabler
 }
 
 // Cleanup ...
@@ -243,7 +195,7 @@ func currentTimeStr() string {
 
 // Render ...
 func (c *Clock) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
-	if !c.config.Enabled.Load() {
+	if !c.Enabler().Enabled() {
 		return nil, nil
 	}
 
@@ -369,21 +321,21 @@ func (c *Clock) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 		Path: "/clock/disable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			c.log.Info("disabling clock board")
-			c.Disable()
+			c.Enabler().Disable()
 		},
 	}
 	enable := &board.HTTPHandler{
 		Path: "/clock/enable",
 		Handler: func(http.ResponseWriter, *http.Request) {
 			c.log.Info("enabling clock board")
-			c.Enable()
+			c.Enabler().Enable()
 		},
 	}
 	status := &board.HTTPHandler{
 		Path: "/clock/status",
 		Handler: func(w http.ResponseWriter, req *http.Request) {
 			w.Header().Set("Content-Type", "text/plain")
-			if c.Enabled() {
+			if c.Enabler().Enabled() {
 				_, _ = w.Write([]byte("true"))
 				return
 			}

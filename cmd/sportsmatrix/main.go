@@ -161,17 +161,17 @@ func (r *rootArgs) setConfigDefaults() {
 
 	if r.config.NHLConfig == nil {
 		r.config.NHLConfig = &sportboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	if r.config.NHLConfig.Stats == nil {
 		r.config.NHLConfig.Stats = &statboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	if r.config.NHLConfig.Headlines == nil {
 		r.config.NHLConfig.Headlines = &textboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 
@@ -181,31 +181,31 @@ func (r *rootArgs) setConfigDefaults() {
 
 	if r.config.ImageConfig == nil {
 		r.config.ImageConfig = &imageboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	r.config.ImageConfig.SetDefaults()
 
 	if r.config.ClockConfig == nil {
 		r.config.ClockConfig = &clock.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	r.config.ClockConfig.SetDefaults()
 
 	if r.config.MLBConfig == nil {
 		r.config.MLBConfig = &sportboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	if r.config.MLBConfig.Stats == nil {
 		r.config.MLBConfig.Stats = &statboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	if r.config.MLBConfig.Headlines == nil {
 		r.config.MLBConfig.Headlines = &textboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	r.config.MLBConfig.SetDefaults()
@@ -214,12 +214,12 @@ func (r *rootArgs) setConfigDefaults() {
 
 	if r.config.NCAAMConfig == nil {
 		r.config.NCAAMConfig = &sportboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	if r.config.NCAAMConfig.Headlines == nil {
 		r.config.NCAAMConfig.Headlines = &textboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	r.config.NCAAMConfig.SetDefaults()
@@ -227,12 +227,12 @@ func (r *rootArgs) setConfigDefaults() {
 
 	if r.config.NCAAFConfig == nil {
 		r.config.NCAAFConfig = &sportboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	if r.config.NCAAFConfig.Headlines == nil {
 		r.config.NCAAFConfig.Headlines = &textboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	r.config.NCAAFConfig.SetDefaults()
@@ -240,12 +240,12 @@ func (r *rootArgs) setConfigDefaults() {
 
 	if r.config.NBAConfig == nil {
 		r.config.NBAConfig = &sportboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	if r.config.NBAConfig.Headlines == nil {
 		r.config.NBAConfig.Headlines = &textboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	r.config.NBAConfig.SetDefaults()
@@ -253,12 +253,12 @@ func (r *rootArgs) setConfigDefaults() {
 
 	if r.config.NFLConfig == nil {
 		r.config.NFLConfig = &sportboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	if r.config.NFLConfig.Headlines == nil {
 		r.config.NFLConfig.Headlines = &textboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	r.config.NFLConfig.SetDefaults()
@@ -266,12 +266,12 @@ func (r *rootArgs) setConfigDefaults() {
 
 	if r.config.MLSConfig == nil {
 		r.config.MLSConfig = &sportboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	if r.config.MLSConfig.Headlines == nil {
 		r.config.MLSConfig.Headlines = &textboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	r.config.MLSConfig.SetDefaults()
@@ -279,12 +279,12 @@ func (r *rootArgs) setConfigDefaults() {
 
 	if r.config.EPLConfig == nil {
 		r.config.EPLConfig = &sportboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	if r.config.EPLConfig.Headlines == nil {
 		r.config.EPLConfig.Headlines = &textboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	r.config.EPLConfig.SetDefaults()
@@ -292,14 +292,14 @@ func (r *rootArgs) setConfigDefaults() {
 
 	if r.config.SysConfig == nil {
 		r.config.SysConfig = &sysboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	r.config.SysConfig.SetDefaults()
 
 	if r.config.PGA == nil {
 		r.config.PGA = &statboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	if r.config.PGA.UpdateInterval == "" {
@@ -311,35 +311,35 @@ func (r *rootArgs) setConfigDefaults() {
 
 	if r.config.StocksConfig == nil {
 		r.config.StocksConfig = &stockboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	r.config.StocksConfig.SetDefaults()
 
 	if r.config.WeatherConfig == nil {
 		r.config.WeatherConfig = &weatherboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	r.config.WeatherConfig.SetDefaults()
 
 	if r.config.F1Config == nil {
 		r.config.F1Config = &racingboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	r.config.F1Config.SetDefaults()
 
 	if r.config.IRLConfig == nil {
 		r.config.IRLConfig = &racingboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	r.config.IRLConfig.SetDefaults()
 
 	if r.config.CalenderConfig == nil {
 		r.config.CalenderConfig = &calendarboard.Config{
-			Enabled: atomic.NewBool(false),
+			StartEnabled: atomic.NewBool(false),
 		}
 	}
 	r.config.CalenderConfig.SetDefaults()

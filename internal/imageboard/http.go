@@ -24,14 +24,14 @@ func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: "/img/disable",
 			Handler: func(http.ResponseWriter, *http.Request) {
 				i.log.Info("disabling image board")
-				i.Disable()
+				i.Enabler().Disable()
 			},
 		},
 		{
 			Path: "/img/enable",
 			Handler: func(http.ResponseWriter, *http.Request) {
 				i.log.Info("enabling image board")
-				i.Enable()
+				i.Enabler().Enable()
 			},
 		},
 		{
@@ -97,7 +97,7 @@ func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: "/img/status",
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				w.Header().Set("Content-Type", "text/plain")
-				if i.Enabled() {
+				if i.Enabler().Enabled() {
 					_, _ = w.Write([]byte("true"))
 					return
 				}

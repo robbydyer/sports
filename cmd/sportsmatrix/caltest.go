@@ -77,7 +77,7 @@ func (c *calCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	calBoard.Enable()
+	calBoard.Enabler().Enable()
 
 	var canvases []board.Canvas
 	var matrix rgb.Matrix

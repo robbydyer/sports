@@ -14,29 +14,22 @@ import (
 	"go.uber.org/zap/zaptest"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/enabler"
 )
 
 type TestBoard struct {
 	log         *zap.Logger
-	enabled     *atomic.Bool
 	hasRendered *atomic.Bool
 	tester      *testing.T
+	enabler     board.Enabler
 }
 
-func (b *TestBoard) Enabled() bool {
-	return b.enabled.Load()
-}
-
-func (b *TestBoard) Enable() bool {
-	return b.enabled.CAS(false, true)
+func (b *TestBoard) Enabler() board.Enabler {
+	return b.enabler
 }
 
 func (b *TestBoard) InBetween() bool {
 	return false
-}
-
-func (b *TestBoard) Disable() bool {
-	return b.enabled.CAS(true, false)
 }
 
 func (b *TestBoard) Name() string {
@@ -94,12 +87,11 @@ func TestSportsMatrix(t *testing.T) {
 
 	b := &TestBoard{
 		log:         logger,
-		enabled:     atomic.NewBool(true),
 		hasRendered: atomic.NewBool(false),
 		tester:      t,
+		enabler:     enabler.New(),
 	}
-
-	require.True(t, b.Enabled())
+	b.enabler.Enable()
 
 	s, err := New(ctx, logger, cfg, []board.Canvas{canvas}, b)
 	require.NoError(t, err)
@@ -177,12 +169,11 @@ func TestScreenSwitch(t *testing.T) {
 
 	b := &TestBoard{
 		log:         logger,
-		enabled:     atomic.NewBool(true),
 		hasRendered: atomic.NewBool(false),
 		tester:      t,
+		enabler:     enabler.New(),
 	}
-
-	require.True(t, b.Enabled())
+	b.enabler.Enable()
 
 	s, err := New(ctx, logger, cfg, []board.Canvas{canvas}, b)
 	require.NoError(t, err)

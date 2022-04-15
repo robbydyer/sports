@@ -13,30 +13,31 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
-	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/enabler"
 	"github.com/robbydyer/sports/internal/logo"
 	pb "github.com/robbydyer/sports/internal/proto/weatherboard"
 	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
 	"github.com/robbydyer/sports/internal/twirphelpers"
+	"github.com/robbydyer/sports/internal/util"
 )
 
 // WeatherBoard displays weather
 type WeatherBoard struct {
-	config              *Config
-	api                 API
-	log                 *zap.Logger
-	enablerLock         sync.Mutex
-	iconLock            sync.Mutex
-	iconCache           map[string]*logo.Logo
-	cancelBoard         chan struct{}
-	bigWriter           *rgbrender.TextWriter
-	smallWriter         *rgbrender.TextWriter
-	rpcServer           pb.TwirpServer
-	stateChangeNotifier board.StateChangeNotifier
+	config      *Config
+	api         API
+	log         *zap.Logger
+	enablerLock sync.Mutex
+	iconLock    sync.Mutex
+	iconCache   map[string]*logo.Logo
+	cancelBoard chan struct{}
+	bigWriter   *rgbrender.TextWriter
+	smallWriter *rgbrender.TextWriter
+	rpcServer   pb.TwirpServer
+	enabler     board.Enabler
 	sync.Mutex
 }
 
@@ -44,7 +45,7 @@ type WeatherBoard struct {
 type Config struct {
 	boardDelay         time.Duration
 	scrollDelay        time.Duration
-	Enabled            *atomic.Bool `json:"enabled"`
+	StartEnabled       *atomic.Bool `json:"enabled"`
 	BoardDelay         string       `json:"boardDelay"`
 	ScrollMode         *atomic.Bool `json:"scrollMode"`
 	TightScrollPadding int          `json:"tightScrollPadding"`
@@ -87,8 +88,8 @@ type API interface {
 
 // SetDefaults ...
 func (c *Config) SetDefaults() {
-	if c.Enabled == nil {
-		c.Enabled = atomic.NewBool(false)
+	if c.StartEnabled == nil {
+		c.StartEnabled = atomic.NewBool(false)
 	}
 	if c.ScrollMode == nil {
 		c.ScrollMode = atomic.NewBool(false)
@@ -146,6 +147,11 @@ func New(api API, config *Config, log *zap.Logger) (*WeatherBoard, error) {
 		log:         log,
 		cancelBoard: make(chan struct{}),
 		iconCache:   make(map[string]*logo.Logo),
+		enabler:     enabler.New(),
+	}
+
+	if config.StartEnabled.Load() {
+		s.enabler.Enable()
 	}
 
 	svr := &Server{
@@ -158,35 +164,17 @@ func New(api API, config *Config, log *zap.Logger) (*WeatherBoard, error) {
 		),
 	)
 
-	if len(config.OffTimes) > 0 || len(config.OnTimes) > 0 {
-		c := cron.New()
-		for _, on := range config.OnTimes {
-			s.log.Info("weatherboard will be schedule to turn on",
-				zap.String("turn on", on),
-			)
-			_, err := c.AddFunc(on, func() {
-				s.log.Info("weatherboard turning on")
-				s.Enable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for weatherboard: %w", err)
-			}
-		}
-
-		for _, off := range config.OffTimes {
-			s.log.Info("weatherboard will be schedule to turn off",
-				zap.String("turn on", off),
-			)
-			_, err := c.AddFunc(off, func() {
-				s.log.Info("weatherboard turning off")
-				s.Disable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for weatherboard: %w", err)
-			}
-		}
-
-		c.Start()
+	if err := util.SetCrons(config.OnTimes, func() {
+		s.log.Info("weatherboard turning on")
+		s.Enabler().Enable()
+	}); err != nil {
+		return nil, err
+	}
+	if err := util.SetCrons(config.OffTimes, func() {
+		s.log.Info("weatherboard turning off")
+		s.Enabler().Disable()
+	}); err != nil {
+		return nil, err
 	}
 
 	return s, nil
@@ -196,41 +184,13 @@ func (w *WeatherBoard) cacheClear() {
 	w.api.CacheClear()
 }
 
-// Enabled ...
-func (w *WeatherBoard) Enabled() bool {
-	return w.config.Enabled.Load()
-}
-
-// Enable ...
-func (w *WeatherBoard) Enable() bool {
-	if w.config.Enabled.CAS(false, true) {
-		if w.stateChangeNotifier != nil {
-			w.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
+func (w *WeatherBoard) Enabler() board.Enabler {
+	return w.enabler
 }
 
 // InBetween ...
 func (w *WeatherBoard) InBetween() bool {
 	return w.config.ShowBetween.Load()
-}
-
-// Disable ...
-func (w *WeatherBoard) Disable() bool {
-	if w.config.Enabled.CAS(true, false) {
-		if w.stateChangeNotifier != nil {
-			w.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
-}
-
-// SetStateChangeNotifier ...
-func (w *WeatherBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
-	w.stateChangeNotifier = st
 }
 
 // Name ...
@@ -250,7 +210,7 @@ func (w *WeatherBoard) enablerCancel(ctx context.Context, cancel context.CancelF
 			cancel()
 			return
 		case <-ticker.C:
-			if !w.config.Enabled.Load() {
+			if !w.Enabler().Enabled() {
 				cancel()
 				return
 			}
@@ -285,7 +245,7 @@ func (w *WeatherBoard) ScrollRender(ctx context.Context, canvas board.Canvas, pa
 
 // Render ...
 func (w *WeatherBoard) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
-	if !w.config.Enabled.Load() {
+	if !w.Enabler().Enabled() {
 		w.log.Warn("skipping disabled board", zap.String("board", "weather"))
 		return nil, nil
 	}
@@ -401,7 +361,7 @@ func (w *WeatherBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: "/weather/enable",
 			Handler: func(wrtr http.ResponseWriter, req *http.Request) {
 				w.log.Info("enabling board", zap.String("board", w.Name()))
-				w.Enable()
+				w.Enabler().Enable()
 			},
 		},
 		{
@@ -412,7 +372,7 @@ func (w *WeatherBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				case w.cancelBoard <- struct{}{}:
 				default:
 				}
-				w.Disable()
+				w.Enabler().Disable()
 				w.cacheClear()
 			},
 		},
@@ -421,7 +381,7 @@ func (w *WeatherBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Handler: func(wrtr http.ResponseWriter, req *http.Request) {
 				w.log.Debug("get board status", zap.String("board", w.Name()))
 				wrtr.Header().Set("Content-Type", "text/plain")
-				if w.Enabled() {
+				if w.Enabler().Enabled() {
 					_, _ = wrtr.Write([]byte("true"))
 					return
 				}

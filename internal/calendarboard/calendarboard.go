@@ -8,12 +8,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/enabler"
 	"github.com/robbydyer/sports/internal/logo"
 	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
@@ -25,17 +25,16 @@ import (
 
 // CalendarBoard implements board.Board
 type CalendarBoard struct {
-	config              *Config
-	api                 API
-	log                 *zap.Logger
-	scheduleWriter      *rgbrender.TextWriter
-	leagueLogo          *logo.Logo
-	events              []*Event
-	rpcServer           pb.TwirpServer
-	boardCtx            context.Context
-	boardCancel         context.CancelFunc
-	stateChangeNotifier board.StateChangeNotifier
-	logo                *logo.Logo
+	config         *Config
+	api            API
+	log            *zap.Logger
+	scheduleWriter *rgbrender.TextWriter
+	events         []*Event
+	rpcServer      pb.TwirpServer
+	boardCtx       context.Context
+	boardCancel    context.CancelFunc
+	logo           *logo.Logo
+	enabler        board.Enabler
 }
 
 // Todayer is a func that returns a string representing a date
@@ -48,7 +47,7 @@ type Config struct {
 	TodayFunc          Todayer
 	boardDelay         time.Duration
 	scrollDelay        time.Duration
-	Enabled            *atomic.Bool `json:"enabled"`
+	StartEnabled       *atomic.Bool `json:"enabled"`
 	BoardDelay         string       `json:"boardDelay"`
 	ScrollMode         *atomic.Bool `json:"scrollMode"`
 	ScrollDelay        string       `json:"scrollDelay"`
@@ -82,8 +81,8 @@ func (c *Config) SetDefaults() {
 		c.boardDelay = 10 * time.Second
 	}
 
-	if c.Enabled == nil {
-		c.Enabled = atomic.NewBool(false)
+	if c.StartEnabled == nil {
+		c.StartEnabled = atomic.NewBool(false)
 	}
 	if c.ScrollMode == nil {
 		c.ScrollMode = atomic.NewBool(false)
@@ -102,9 +101,14 @@ func (c *Config) SetDefaults() {
 // New ...
 func New(api API, logger *zap.Logger, config *Config) (*CalendarBoard, error) {
 	s := &CalendarBoard{
-		config: config,
-		api:    api,
-		log:    logger,
+		config:  config,
+		api:     api,
+		log:     logger,
+		enabler: enabler.New(),
+	}
+
+	if config.StartEnabled.Load() {
+		s.enabler.Enable()
 	}
 
 	s.log.Info("Register Calendar Board",
@@ -115,39 +119,18 @@ func New(api API, logger *zap.Logger, config *Config) (*CalendarBoard, error) {
 		s.config.TodayFunc = util.Today
 	}
 
-	c := cron.New()
-
-	for _, on := range config.OnTimes {
-		s.log.Info("calendarboard will be schedule to turn on",
-			zap.String("turn on", on),
-		)
-		_, err := c.AddFunc(on, func() {
-			s.log.Info("calendarboard turning on")
-			s.Enable()
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to add cron for sportboard: %w", err)
-		}
-	}
-
-	for _, off := range config.OffTimes {
-		s.log.Info("calendarboard will be schedule to turn off",
-			zap.String("turn on", off),
-		)
-		_, err := c.AddFunc(off, func() {
-			s.log.Info("calendarboard turning off")
-			s.Disable()
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to add cron for sportboard: %w", err)
-		}
-	}
-
-	if _, err := c.AddFunc("0 4 * * *", s.cacheClear); err != nil {
+	if err := util.SetCrons(config.OnTimes, func() {
+		s.log.Info("calendarboard turning on")
+		s.Enabler().Enable()
+	}); err != nil {
 		return nil, err
 	}
-
-	c.Start()
+	if err := util.SetCrons(config.OffTimes, func() {
+		s.log.Info("calendarboard turning off")
+		s.Enabler().Disable()
+	}); err != nil {
+		return nil, err
+	}
 
 	svr := &Server{
 		board: s,
@@ -166,51 +149,18 @@ func New(api API, logger *zap.Logger, config *Config) (*CalendarBoard, error) {
 	return s, nil
 }
 
-func (s *CalendarBoard) cacheClear() {
-	s.events = []*Event{}
-	s.leagueLogo = nil
-}
-
 // Name ...
 func (s *CalendarBoard) Name() string {
 	return s.api.HTTPPathPrefix()
 }
 
-// Enabled ...
-func (s *CalendarBoard) Enabled() bool {
-	return s.config.Enabled.Load()
-}
-
-// Enable ...
-func (s *CalendarBoard) Enable() bool {
-	if s.config.Enabled.CAS(false, true) {
-		if s.stateChangeNotifier != nil {
-			s.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
+func (s *CalendarBoard) Enabler() board.Enabler {
+	return s.enabler
 }
 
 // InBetween ...
 func (s *CalendarBoard) InBetween() bool {
 	return false
-}
-
-// Disable ...
-func (s *CalendarBoard) Disable() bool {
-	if s.config.Enabled.CAS(true, false) {
-		if s.stateChangeNotifier != nil {
-			s.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
-}
-
-// SetStateChangeNotifier ...
-func (s *CalendarBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
-	s.stateChangeNotifier = st
 }
 
 // ScrollMode ...

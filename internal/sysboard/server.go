@@ -27,11 +27,7 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 		return &emptypb.Empty{}, twirp.NewError(twirp.InvalidArgument, "nil status sent")
 	}
 
-	if req.Status.Enabled {
-		s.board.Enable()
-	} else {
-		s.board.Disable()
-	}
+	s.board.Enabler().Store(req.Status.Enabled)
 
 	return &emptypb.Empty{}, nil
 }
@@ -40,7 +36,7 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 func (s *Server) GetStatus(ctx context.Context, req *emptypb.Empty) (*pb.StatusResp, error) {
 	return &pb.StatusResp{
 		Status: &pb.Status{
-			Enabled: s.board.config.Enabled.Load(),
+			Enabled: s.board.Enabler().Enabled(),
 		},
 	}, nil
 }

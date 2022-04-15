@@ -13,15 +13,16 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
-	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/enabler"
 	"github.com/robbydyer/sports/internal/logo"
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
 	"github.com/robbydyer/sports/internal/twirphelpers"
+	"github.com/robbydyer/sports/internal/util"
 )
 
 var (
@@ -33,17 +34,17 @@ var (
 
 // StockBoard displays stocks
 type StockBoard struct {
-	config              *Config
-	api                 API
-	log                 *zap.Logger
-	symbolWriter        *rgbrender.TextWriter
-	priceWriter         *rgbrender.TextWriter
-	enablerLock         sync.Mutex
-	cancelBoard         chan struct{}
-	rpcServer           pb.TwirpServer
-	logos               map[string]*logo.Logo
-	logoLock            sync.Mutex
-	stateChangeNotifier board.StateChangeNotifier
+	config       *Config
+	api          API
+	log          *zap.Logger
+	symbolWriter *rgbrender.TextWriter
+	priceWriter  *rgbrender.TextWriter
+	enablerLock  sync.Mutex
+	cancelBoard  chan struct{}
+	rpcServer    pb.TwirpServer
+	logos        map[string]*logo.Logo
+	logoLock     sync.Mutex
+	enabler      board.Enabler
 	sync.Mutex
 }
 
@@ -53,7 +54,7 @@ type Config struct {
 	updateInterval     time.Duration
 	scrollDelay        time.Duration
 	adjustedResolution int
-	Enabled            *atomic.Bool `json:"enabled"`
+	StartEnabled       *atomic.Bool `json:"enabled"`
 	Symbols            []string     `json:"symbols"`
 	ChartResolution    int          `json:"chartResolution"`
 	BoardDelay         string       `json:"boardDelay"`
@@ -92,8 +93,8 @@ type API interface {
 
 // SetDefaults ...
 func (c *Config) SetDefaults() {
-	if c.Enabled == nil {
-		c.Enabled = atomic.NewBool(false)
+	if c.StartEnabled == nil {
+		c.StartEnabled = atomic.NewBool(false)
 	}
 	if c.ScrollMode == nil {
 		c.ScrollMode = atomic.NewBool(false)
@@ -150,6 +151,11 @@ func New(api API, config *Config, log *zap.Logger) (*StockBoard, error) {
 		log:         log,
 		cancelBoard: make(chan struct{}),
 		logos:       make(map[string]*logo.Logo),
+		enabler:     enabler.New(),
+	}
+
+	if config.StartEnabled.Load() {
+		s.enabler.Enable()
 	}
 
 	svr := &Server{
@@ -162,35 +168,17 @@ func New(api API, config *Config, log *zap.Logger) (*StockBoard, error) {
 		),
 	)
 
-	if len(config.OffTimes) > 0 || len(config.OnTimes) > 0 {
-		c := cron.New()
-		for _, on := range config.OnTimes {
-			s.log.Info("stockboard will be schedule to turn on",
-				zap.String("turn on", on),
-			)
-			_, err := c.AddFunc(on, func() {
-				s.log.Info("stockboard turning on")
-				s.Enable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for stockboard: %w", err)
-			}
-		}
-
-		for _, off := range config.OffTimes {
-			s.log.Info("stockboard will be schedule to turn off",
-				zap.String("turn on", off),
-			)
-			_, err := c.AddFunc(off, func() {
-				s.log.Info("stockboard turning off")
-				s.Disable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for stockboard: %w", err)
-			}
-		}
-
-		c.Start()
+	if err := util.SetCrons(config.OnTimes, func() {
+		s.log.Info("stockboard turning on")
+		s.Enabler().Enable()
+	}); err != nil {
+		return nil, err
+	}
+	if err := util.SetCrons(config.OffTimes, func() {
+		s.log.Info("stockboard turning off")
+		s.Enabler().Disable()
+	}); err != nil {
+		return nil, err
 	}
 
 	return s, nil
@@ -200,41 +188,13 @@ func (s *StockBoard) cacheClear() {
 	s.api.CacheClear()
 }
 
-// Enabled ...
-func (s *StockBoard) Enabled() bool {
-	return s.config.Enabled.Load()
-}
-
-// Enable ...
-func (s *StockBoard) Enable() bool {
-	if s.config.Enabled.CAS(false, true) {
-		if s.stateChangeNotifier != nil {
-			s.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
+func (s *StockBoard) Enabler() board.Enabler {
+	return s.enabler
 }
 
 // InBetween ...
 func (s *StockBoard) InBetween() bool {
 	return false
-}
-
-// Disable ...
-func (s *StockBoard) Disable() bool {
-	if s.config.Enabled.CAS(true, false) {
-		if s.stateChangeNotifier != nil {
-			s.stateChangeNotifier()
-		}
-		return true
-	}
-	return false
-}
-
-// SetStateChangeNotifier ...
-func (s *StockBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
-	s.stateChangeNotifier = st
 }
 
 // Name ...
@@ -254,7 +214,7 @@ func (s *StockBoard) enablerCancel(ctx context.Context, cancel context.CancelFun
 			cancel()
 			return
 		case <-ticker.C:
-			if !s.config.Enabled.Load() {
+			if !s.Enabler().Enabled() {
 				cancel()
 				return
 			}
@@ -365,7 +325,7 @@ func (s *StockBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Path: "/stocks/enable",
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				s.log.Info("enabling board", zap.String("board", s.Name()))
-				s.Enable()
+				s.Enabler().Enable()
 			},
 		},
 		{
@@ -376,7 +336,7 @@ func (s *StockBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				case s.cancelBoard <- struct{}{}:
 				default:
 				}
-				s.Disable()
+				s.Enabler().Disable()
 				s.cacheClear()
 			},
 		},
@@ -385,7 +345,7 @@ func (s *StockBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			Handler: func(w http.ResponseWriter, req *http.Request) {
 				s.log.Debug("get board status", zap.String("board", s.Name()))
 				w.Header().Set("Content-Type", "text/plain")
-				if s.Enabled() {
+				if s.Enabler().Enabled() {
 					_, _ = w.Write([]byte("true"))
 					return
 				}

@@ -498,7 +498,7 @@ BOARDS:
 			continue BOARDS
 		}
 
-		if b.Enabled() {
+		if b.Enabler().Enabled() {
 		BETWEEN_BOARDS:
 			for _, between := range s.betweenBoards {
 				select {
@@ -538,14 +538,14 @@ func (s *SportsMatrix) doCombinedScroll(ctx context.Context) error {
 		cancel()
 	}
 	for _, board := range s.boards {
-		if board.Enabled() {
-			board.SetStateChangeNotifier(canceler)
+		board.Enabler().SetStateChangeCallback(canceler)
+		if board.Enabler().Enabled() {
 			boards = append(boards, board)
 		}
 	}
 	for _, board := range s.betweenBoards {
-		if board.Enabled() {
-			board.SetStateChangeNotifier(canceler)
+		if board.Enabler().Enabled() {
+			board.Enabler().SetStateChangeCallback(canceler)
 		}
 	}
 
@@ -714,7 +714,7 @@ func (s *SportsMatrix) doBoard(ctx context.Context, b board.Board) error {
 
 	s.log.Debug("Processing board", zap.String("board", b.Name()))
 
-	if !b.Enabled() {
+	if !b.Enabler().Enabled() {
 		// s.log.Debug("skipping disabled board", zap.String("board", b.Name()))
 		return nil
 	}
@@ -775,7 +775,7 @@ func (s *SportsMatrix) Close() {
 
 func (s *SportsMatrix) allDisabled() bool {
 	for _, b := range s.boards {
-		if b.Enabled() {
+		if b.Enabler().Enabled() {
 			return false
 		}
 	}
@@ -795,7 +795,7 @@ func (s *SportsMatrix) JumpTo(ctx context.Context, boardName string) error {
 
 	for _, b := range boards {
 		if strings.EqualFold(b.Name(), boardName) {
-			b.Enable()
+			b.Enabler().Enable()
 
 			defer func() {
 				if err := s.ScreenOn(context.Background()); err != nil {
@@ -841,7 +841,7 @@ func (s *SportsMatrix) prepOrderedBoards(ctx context.Context, boards []board.Boa
 
 	index := 0
 	for _, b := range boards {
-		if !b.Enabled() {
+		if !b.Enabler().Enabled() {
 			continue
 		}
 
