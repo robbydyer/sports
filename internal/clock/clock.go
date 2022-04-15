@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/golang/freetype/truetype"
-	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
@@ -21,6 +20,7 @@ import (
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
+	"github.com/robbydyer/sports/internal/util"
 )
 
 // Name is the default board name for this Clock
@@ -39,15 +39,15 @@ type Clock struct {
 
 // Config is a Clock configuration
 type Config struct {
-	boardDelay  time.Duration
-	scrollDelay time.Duration
-	Enabled     *atomic.Bool `json:"enabled"`
-	BoardDelay  string       `json:"boardDelay"`
-	OnTimes     []string     `json:"onTimes"`
-	OffTimes    []string     `json:"offTimes"`
-	ShowBetween *atomic.Bool `json:"showBetween"`
-	ScrollMode  *atomic.Bool `json:"scrollMode"`
-	ScrollDelay string       `json:"scrollDelay"`
+	boardDelay   time.Duration
+	scrollDelay  time.Duration
+	StartEnabled *atomic.Bool `json:"enabled"`
+	BoardDelay   string       `json:"boardDelay"`
+	OnTimes      []string     `json:"onTimes"`
+	OffTimes     []string     `json:"offTimes"`
+	ShowBetween  *atomic.Bool `json:"showBetween"`
+	ScrollMode   *atomic.Bool `json:"scrollMode"`
+	ScrollDelay  string       `json:"scrollDelay"`
 }
 
 // SetDefaults ...
@@ -62,8 +62,8 @@ func (c *Config) SetDefaults() {
 		c.boardDelay = 10 * time.Second
 	}
 
-	if c.Enabled == nil {
-		c.Enabled = atomic.NewBool(false)
+	if c.StartEnabled == nil {
+		c.StartEnabled = atomic.NewBool(false)
 	}
 
 	if c.ShowBetween == nil {
@@ -87,7 +87,7 @@ func (c *Config) SetDefaults() {
 func New(config *Config, logger *zap.Logger) (*Clock, error) {
 	if config == nil {
 		config = &Config{
-			Enabled: atomic.NewBool(true),
+			StartEnabled: atomic.NewBool(true),
 		}
 	}
 	c := &Clock{
@@ -97,7 +97,7 @@ func New(config *Config, logger *zap.Logger) (*Clock, error) {
 		enabler:     enabler.New(),
 	}
 
-	if config.Enabled.Load() {
+	if config.StartEnabled.Load() {
 		c.enabler.Enable()
 	}
 
@@ -118,36 +118,17 @@ func New(config *Config, logger *zap.Logger) (*Clock, error) {
 			},
 		),
 	)
-
-	if len(config.OffTimes) > 0 || len(config.OnTimes) > 0 {
-		cr := cron.New()
-		for _, on := range config.OnTimes {
-			c.log.Info("clock will be schedule to turn on",
-				zap.String("turn on", on),
-			)
-			_, err := cr.AddFunc(on, func() {
-				c.log.Info("clock turning on")
-				c.Enabler().Enable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for clock: %w", err)
-			}
-		}
-
-		for _, off := range config.OffTimes {
-			c.log.Info("clock will be schedule to turn off",
-				zap.String("turn on", off),
-			)
-			_, err := cr.AddFunc(off, func() {
-				c.log.Info("clock turning off")
-				c.Enabler().Disable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for clock: %w", err)
-			}
-		}
-
-		cr.Start()
+	if err := util.SetCrons(config.OnTimes, func() {
+		c.log.Info("clock turning on")
+		c.Enabler().Enable()
+	}); err != nil {
+		return nil, err
+	}
+	if err := util.SetCrons(config.OffTimes, func() {
+		c.log.Info("clock turning off")
+		c.Enabler().Disable()
+	}); err != nil {
+		return nil, err
 	}
 
 	return c, nil
@@ -221,7 +202,7 @@ func currentTimeStr() string {
 
 // Render ...
 func (c *Clock) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
-	if !c.config.Enabled.Load() {
+	if !c.Enabler().Enabled() {
 		return nil, nil
 	}
 

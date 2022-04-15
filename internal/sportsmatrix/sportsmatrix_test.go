@@ -23,20 +23,12 @@ type TestBoard struct {
 	tester      *testing.T
 }
 
-func (b *TestBoard) Enabled() bool {
-	return b.enabled.Load()
-}
-
-func (b *TestBoard) Enable() bool {
-	return b.enabled.CAS(false, true)
+func (b *TestBoard) Enabler() board.Enabler {
+	return nil
 }
 
 func (b *TestBoard) InBetween() bool {
 	return false
-}
-
-func (b *TestBoard) Disable() bool {
-	return b.enabled.CAS(true, false)
 }
 
 func (b *TestBoard) Name() string {
@@ -94,12 +86,9 @@ func TestSportsMatrix(t *testing.T) {
 
 	b := &TestBoard{
 		log:         logger,
-		enabled:     atomic.NewBool(true),
 		hasRendered: atomic.NewBool(false),
 		tester:      t,
 	}
-
-	require.True(t, b.Enabled())
 
 	s, err := New(ctx, logger, cfg, []board.Canvas{canvas}, b)
 	require.NoError(t, err)
@@ -177,12 +166,9 @@ func TestScreenSwitch(t *testing.T) {
 
 	b := &TestBoard{
 		log:         logger,
-		enabled:     atomic.NewBool(true),
 		hasRendered: atomic.NewBool(false),
 		tester:      t,
 	}
-
-	require.True(t, b.Enabled())
 
 	s, err := New(ctx, logger, cfg, []board.Canvas{canvas}, b)
 	require.NoError(t, err)

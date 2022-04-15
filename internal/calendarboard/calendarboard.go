@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
@@ -49,7 +48,7 @@ type Config struct {
 	TodayFunc          Todayer
 	boardDelay         time.Duration
 	scrollDelay        time.Duration
-	Enabled            *atomic.Bool `json:"enabled"`
+	StartEnabled       *atomic.Bool `json:"enabled"`
 	BoardDelay         string       `json:"boardDelay"`
 	ScrollMode         *atomic.Bool `json:"scrollMode"`
 	ScrollDelay        string       `json:"scrollDelay"`
@@ -83,8 +82,8 @@ func (c *Config) SetDefaults() {
 		c.boardDelay = 10 * time.Second
 	}
 
-	if c.Enabled == nil {
-		c.Enabled = atomic.NewBool(false)
+	if c.StartEnabled == nil {
+		c.StartEnabled = atomic.NewBool(false)
 	}
 	if c.ScrollMode == nil {
 		c.ScrollMode = atomic.NewBool(false)
@@ -109,7 +108,7 @@ func New(api API, logger *zap.Logger, config *Config) (*CalendarBoard, error) {
 		enabler: enabler.New(),
 	}
 
-	if config.Enabled.Load() {
+	if config.StartEnabled.Load() {
 		s.enabler.Enable()
 	}
 
@@ -121,39 +120,18 @@ func New(api API, logger *zap.Logger, config *Config) (*CalendarBoard, error) {
 		s.config.TodayFunc = util.Today
 	}
 
-	c := cron.New()
-
-	for _, on := range config.OnTimes {
-		s.log.Info("calendarboard will be schedule to turn on",
-			zap.String("turn on", on),
-		)
-		_, err := c.AddFunc(on, func() {
-			s.log.Info("calendarboard turning on")
-			s.Enabler().Enable()
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to add cron for sportboard: %w", err)
-		}
-	}
-
-	for _, off := range config.OffTimes {
-		s.log.Info("calendarboard will be schedule to turn off",
-			zap.String("turn on", off),
-		)
-		_, err := c.AddFunc(off, func() {
-			s.log.Info("calendarboard turning off")
-			s.Enabler().Disable()
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to add cron for sportboard: %w", err)
-		}
-	}
-
-	if _, err := c.AddFunc("0 4 * * *", s.cacheClear); err != nil {
+	if err := util.SetCrons(config.OnTimes, func() {
+		s.log.Info("calendarboard turning on")
+		s.Enabler().Enable()
+	}); err != nil {
 		return nil, err
 	}
-
-	c.Start()
+	if err := util.SetCrons(config.OffTimes, func() {
+		s.log.Info("calendarboard turning off")
+		s.Enabler().Disable()
+	}); err != nil {
+		return nil, err
+	}
 
 	svr := &Server{
 		board: s,

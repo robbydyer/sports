@@ -24,7 +24,7 @@ func (s *StatBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc
 			cancel()
 			return
 		case <-ticker.C:
-			if !s.config.Enabled.Load() {
+			if !s.Enabler().Enabled() {
 				cancel()
 				return
 			}

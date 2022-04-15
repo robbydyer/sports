@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/disintegration/imaging"
-	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
@@ -67,7 +66,7 @@ type ImageDirectory struct {
 type Config struct {
 	boardDelay    time.Duration
 	BoardDelay    string            `json:"boardDelay"`
-	Enabled       *atomic.Bool      `json:"enabled"`
+	StartEnabled  *atomic.Bool      `json:"enabled"`
 	Directories   []string          `json:"directories"`
 	DirectoryList []*ImageDirectory `json:"directoryList"`
 	UseDiskCache  *atomic.Bool      `json:"useDiskCache"`
@@ -94,8 +93,8 @@ func (c *Config) SetDefaults() {
 		c.boardDelay = 10 * time.Second
 	}
 
-	if c.Enabled == nil {
-		c.Enabled = atomic.NewBool(false)
+	if c.StartEnabled == nil {
+		c.StartEnabled = atomic.NewBool(false)
 	}
 	if c.UseDiskCache == nil {
 		c.UseDiskCache = atomic.NewBool(true)
@@ -115,10 +114,10 @@ func New(config *Config, logger *zap.Logger) (*ImageBoard, error) {
 		lockers:        make(map[string]*sync.Mutex),
 		jumpTo:         make(chan string, 1),
 		preloaders:     make(map[string]chan struct{}),
-		priorJumpState: atomic.NewBool(config.Enabled.Load()),
+		priorJumpState: atomic.NewBool(config.StartEnabled.Load()),
 		enabler:        enabler.New(),
 	}
-	if config.Enabled.Load() {
+	if config.StartEnabled.Load() {
 		i.enabler.Enable()
 	}
 
@@ -136,35 +135,17 @@ func New(config *Config, logger *zap.Logger) (*ImageBoard, error) {
 		),
 	)
 
-	if len(config.OffTimes) > 0 || len(config.OnTimes) > 0 {
-		c := cron.New()
-		for _, on := range config.OnTimes {
-			i.log.Info("imageboard will be schedule to turn on",
-				zap.String("turn on", on),
-			)
-			_, err := c.AddFunc(on, func() {
-				i.log.Info("imageboard turning on")
-				i.Enabler().Enable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for imageboard: %w", err)
-			}
-		}
-
-		for _, off := range config.OffTimes {
-			i.log.Info("imageboard will be schedule to turn off",
-				zap.String("turn on", off),
-			)
-			_, err := c.AddFunc(off, func() {
-				i.log.Info("imageboard turning off")
-				i.Enabler().Disable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for imageboard: %w", err)
-			}
-		}
-
-		c.Start()
+	if err := util.SetCrons(config.OnTimes, func() {
+		i.log.Info("imageboard turning on")
+		i.Enabler().Enable()
+	}); err != nil {
+		return nil, err
+	}
+	if err := util.SetCrons(config.OffTimes, func() {
+		i.log.Info("imageboard turning off")
+		i.Enabler().Disable()
+	}); err != nil {
+		return nil, err
 	}
 
 	return i, nil
@@ -205,7 +186,7 @@ func (i *ImageBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padd
 
 // Render ...
 func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
-	if !i.config.Enabled.Load() {
+	if !i.Enabler().Enabled() {
 		i.log.Warn("ImageBoard is disabled, not rendering")
 		return nil
 	}
@@ -311,7 +292,7 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	}
 
 	if isJumping {
-		i.config.Enabled.Store(i.priorJumpState.Load())
+		i.Enabler().Store(i.priorJumpState.Load())
 	}
 
 	return nil
@@ -354,7 +335,7 @@ func (i *ImageBoard) renderGIFs(ctx context.Context, canvas board.Canvas, images
 IMAGES:
 	for index, thisImg := range images {
 		p := thisImg.path
-		if !i.config.Enabled.Load() {
+		if !i.enabler.Enabled() {
 			i.log.Warn("ImageBoard is disabled, not rendering")
 			return nil
 		}
@@ -461,7 +442,7 @@ func (i *ImageBoard) renderImages(ctx context.Context, canvas board.Canvas, imag
 IMAGES:
 	for index, thisImg := range images {
 		p := thisImg.path
-		if !i.config.Enabled.Load() {
+		if !i.enabler.Enabled() {
 			i.log.Warn("ImageBoard is disabled, not rendering")
 			return nil
 		}

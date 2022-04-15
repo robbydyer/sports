@@ -13,7 +13,6 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
-	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 
 	"github.com/robbydyer/sports/internal/board"
@@ -23,6 +22,7 @@ import (
 	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
 	"github.com/robbydyer/sports/internal/twirphelpers"
+	"github.com/robbydyer/sports/internal/util"
 )
 
 var defaultScrollDelay = 15 * time.Millisecond
@@ -47,7 +47,7 @@ type Config struct {
 	updateInterval     time.Duration
 	scrollDelay        time.Duration
 	halfSizeLogo       bool
-	Enabled            *atomic.Bool `json:"enabled"`
+	StartEnabled       *atomic.Bool `json:"enabled"`
 	BoardDelay         string       `json:"boardDelay"`
 	UpdateInterval     string       `json:"updateInterval"`
 	TightScrollPadding int          `json:"tightScrollPadding"`
@@ -70,8 +70,8 @@ type API interface {
 
 // SetDefaults ...
 func (c *Config) SetDefaults() {
-	if c.Enabled == nil {
-		c.Enabled = atomic.NewBool(false)
+	if c.StartEnabled == nil {
+		c.StartEnabled = atomic.NewBool(false)
 	}
 	if c.BoardDelay != "" {
 		d, err := time.ParseDuration(c.BoardDelay)
@@ -121,39 +121,21 @@ func New(api API, config *Config, log *zap.Logger, opts ...OptionFunc) (*TextBoa
 		enabler:     enabler.New(),
 	}
 
-	if config.Enabled.Load() {
+	if config.StartEnabled.Load() {
 		s.enabler.Enable()
 	}
 
-	if len(config.OffTimes) > 0 || len(config.OnTimes) > 0 {
-		c := cron.New()
-		for _, on := range config.OnTimes {
-			s.log.Info("textboard will be schedule to turn on",
-				zap.String("turn on", on),
-			)
-			_, err := c.AddFunc(on, func() {
-				s.log.Info("textboard turning on")
-				s.Enabler().Enable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for textboard: %w", err)
-			}
-		}
-
-		for _, off := range config.OffTimes {
-			s.log.Info("textboard will be schedule to turn off",
-				zap.String("turn on", off),
-			)
-			_, err := c.AddFunc(off, func() {
-				s.log.Info("textboard turning off")
-				s.Enabler().Disable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for textboard: %w", err)
-			}
-		}
-
-		c.Start()
+	if err := util.SetCrons(config.OnTimes, func() {
+		s.log.Info("textboard turning on")
+		s.Enabler().Enable()
+	}); err != nil {
+		return nil, err
+	}
+	if err := util.SetCrons(config.OffTimes, func() {
+		s.log.Info("textboard turning off")
+		s.Enabler().Disable()
+	}); err != nil {
+		return nil, err
 	}
 
 	for _, o := range opts {
@@ -210,7 +192,7 @@ func (s *TextBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc
 			cancel()
 			return
 		case <-ticker.C:
-			if !s.config.Enabled.Load() {
+			if !s.Enabler().Enabled() {
 				cancel()
 				return
 			}
@@ -245,7 +227,7 @@ func (s *TextBoard) ScrollRender(ctx context.Context, canvas board.Canvas, paddi
 
 // Render ...
 func (s *TextBoard) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
-	if !canvas.Scrollable() || !s.config.Enabled.Load() {
+	if !canvas.Scrollable() || !s.Enabler().Enabled() {
 		return nil, nil
 	}
 

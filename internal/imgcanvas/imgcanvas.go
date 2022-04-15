@@ -182,6 +182,10 @@ func (i *ImgCanvas) Disable() bool {
 	return i.enabled.CAS(true, false)
 }
 
+func (i *ImgCanvas) Store(s bool) bool {
+	return i.enabled.CAS(!s, s)
+}
+
 func (i *ImgCanvas) position(x, y int) int {
 	return x + (y * i.width)
 }

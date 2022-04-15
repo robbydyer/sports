@@ -113,6 +113,10 @@ func (c *Canvas) Disable() bool {
 	return c.enabled.CAS(true, false)
 }
 
+func (c *Canvas) Store(s bool) bool {
+	return c.enabled.CAS(!s, s)
+}
+
 func (c *Canvas) SetStateChangeCallback(s func()) {
 	return
 }

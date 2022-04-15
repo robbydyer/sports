@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
@@ -75,7 +74,7 @@ type Config struct {
 	stickyDelay          *time.Duration
 	TimeColor            color.Color
 	ScoreColor           color.Color
-	Enabled              *atomic.Bool      `json:"enabled"`
+	StartEnabled         *atomic.Bool      `json:"enabled"`
 	BoardDelay           string            `json:"boardDelay"`
 	FavoriteSticky       *atomic.Bool      `json:"favoriteSticky"`
 	StickyDelay          string            `json:"stickyDelay"`
@@ -179,8 +178,8 @@ func (c *Config) SetDefaults() {
 	if c.FavoriteSticky == nil {
 		c.FavoriteSticky = atomic.NewBool(false)
 	}
-	if c.Enabled == nil {
-		c.Enabled = atomic.NewBool(false)
+	if c.StartEnabled == nil {
+		c.StartEnabled = atomic.NewBool(false)
 	}
 	if c.ShowRecord == nil {
 		c.ShowRecord = atomic.NewBool(false)
@@ -241,7 +240,7 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		enabler:         enabler.New(),
 	}
 
-	if config.Enabled.Load() {
+	if config.StartEnabled.Load() {
 		s.enabler.Enable()
 	}
 
@@ -270,12 +269,6 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		config.WatchTeams = []string{"ALL"}
 	}
 
-	c := cron.New()
-
-	if _, err := c.AddFunc("0 4 * * *", s.cacheClear); err != nil {
-		return nil, fmt.Errorf("failed to set cron for cacheClear: %w", err)
-	}
-
 	svr := &Server{
 		board: s,
 	}
@@ -290,39 +283,25 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		),
 	)
 
-	for _, on := range config.OnTimes {
-		s.log.Info("sportboard will be schedule to turn on",
-			zap.String("league", s.api.League()),
-			zap.String("turn on", on),
-		)
-		_, err := c.AddFunc(on, func() {
-			s.log.Info("sportboard turning on",
-				zap.String("league", s.api.League()),
-			)
-			s.Enabler().Enable()
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to add cron for sportboard: %w", err)
-		}
+	if err := util.SetCrons([]string{"0 4 * * *"}, s.cacheClear); err != nil {
+		return nil, fmt.Errorf("failed to set cron for cacheClear: %w", err)
 	}
-
-	for _, off := range config.OffTimes {
-		s.log.Info("sportboard will be schedule to turn off",
+	if err := util.SetCrons(config.OnTimes, func() {
+		s.log.Info("sportboard turning on",
 			zap.String("league", s.api.League()),
-			zap.String("turn on", off),
 		)
-		_, err := c.AddFunc(off, func() {
-			s.log.Info("sportboard turning off",
-				zap.String("league", s.api.League()),
-			)
-			s.Enabler().Disable()
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to add cron for sportboard: %w", err)
-		}
+		s.Enabler().Enable()
+	}); err != nil {
+		return nil, err
 	}
-
-	c.Start()
+	if err := util.SetCrons(config.OffTimes, func() {
+		s.log.Info("sportboard turning off",
+			zap.String("league", s.api.League()),
+		)
+		s.Enabler().Disable()
+	}); err != nil {
+		return nil, err
+	}
 
 	return s, nil
 }
@@ -456,7 +435,7 @@ func (s *SportBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padd
 
 // Render ...
 func (s *SportBoard) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
-	if !s.config.Enabled.Load() {
+	if !s.Enabler().Enabled() {
 		s.log.Warn("skipping disabled board", zap.String("board", s.api.League()))
 		return nil, nil
 	}
@@ -636,7 +615,7 @@ GAMES:
 		default:
 		}
 
-		if !s.config.Enabled.Load() {
+		if !s.Enabler().Enabled() {
 			s.log.Warn("skipping disabled board", zap.String("board", s.api.League()))
 			return nil, nil
 		}

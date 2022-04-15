@@ -15,7 +15,6 @@ import (
 
 	"github.com/mackerelio/go-osstat/cpu"
 	"github.com/mackerelio/go-osstat/memory"
-	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
@@ -25,6 +24,7 @@ import (
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/internal/rgbrender"
 	"github.com/robbydyer/sports/internal/twirphelpers"
+	"github.com/robbydyer/sports/internal/util"
 )
 
 const cpuTempFile = "/sys/class/thermal/thermal_zone0/temp"
@@ -41,11 +41,11 @@ type SysBoard struct {
 
 // Config ...
 type Config struct {
-	boardDelay time.Duration
-	Enabled    *atomic.Bool `json:"enabled"`
-	BoardDelay string       `json:"boardDelay"`
-	OnTimes    []string     `json:"onTimes"`
-	OffTimes   []string     `json:"offTimes"`
+	boardDelay   time.Duration
+	StartEnabled *atomic.Bool `json:"enabled"`
+	BoardDelay   string       `json:"boardDelay"`
+	OnTimes      []string     `json:"onTimes"`
+	OffTimes     []string     `json:"offTimes"`
 }
 
 // SetDefaults ...
@@ -60,8 +60,8 @@ func (c *Config) SetDefaults() {
 		c.boardDelay = 10 * time.Second
 	}
 
-	if c.Enabled == nil {
-		c.Enabled = atomic.NewBool(false)
+	if c.StartEnabled == nil {
+		c.StartEnabled = atomic.NewBool(false)
 	}
 }
 
@@ -74,7 +74,7 @@ func New(logger *zap.Logger, config *Config) (*SysBoard, error) {
 		enabler:     enabler.New(),
 	}
 
-	if config.Enabled.Load() {
+	if config.StartEnabled.Load() {
 		s.enabler.Enable()
 	}
 
@@ -88,35 +88,17 @@ func New(logger *zap.Logger, config *Config) (*SysBoard, error) {
 		),
 	)
 
-	if len(config.OffTimes) > 0 || len(config.OnTimes) > 0 {
-		c := cron.New()
-		for _, on := range config.OnTimes {
-			s.log.Info("sysboard will be schedule to turn on",
-				zap.String("turn on", on),
-			)
-			_, err := c.AddFunc(on, func() {
-				s.log.Info("sysboard turning on")
-				s.Enabler().Enable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for sysboard: %w", err)
-			}
-		}
-
-		for _, off := range config.OffTimes {
-			s.log.Info("sysboard will be schedule to turn off",
-				zap.String("turn on", off),
-			)
-			_, err := c.AddFunc(off, func() {
-				s.log.Info("sysboard turning off")
-				s.Enabler().Disable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for sysboard: %w", err)
-			}
-		}
-
-		c.Start()
+	if err := util.SetCrons(config.OnTimes, func() {
+		s.log.Info("sysboard turning on")
+		s.Enabler().Enable()
+	}); err != nil {
+		return nil, err
+	}
+	if err := util.SetCrons(config.OffTimes, func() {
+		s.log.Info("sysboard turning off")
+		s.Enabler().Disable()
+	}); err != nil {
+		return nil, err
 	}
 
 	return s, nil
@@ -161,7 +143,7 @@ func (s *SysBoard) ScrollRender(ctx context.Context, canvas board.Canvas, paddin
 
 // Render ...
 func (s *SysBoard) Render(ctx context.Context, canvas board.Canvas) error {
-	if !s.config.Enabled.Load() {
+	if !s.Enabler().Enabled() {
 		return nil
 	}
 

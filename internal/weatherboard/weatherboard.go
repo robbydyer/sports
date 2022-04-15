@@ -13,7 +13,6 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
-	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 
 	"github.com/robbydyer/sports/internal/board"
@@ -23,6 +22,7 @@ import (
 	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
 	"github.com/robbydyer/sports/internal/twirphelpers"
+	"github.com/robbydyer/sports/internal/util"
 )
 
 // WeatherBoard displays weather
@@ -45,7 +45,7 @@ type WeatherBoard struct {
 type Config struct {
 	boardDelay         time.Duration
 	scrollDelay        time.Duration
-	Enabled            *atomic.Bool `json:"enabled"`
+	StartEnabled       *atomic.Bool `json:"enabled"`
 	BoardDelay         string       `json:"boardDelay"`
 	ScrollMode         *atomic.Bool `json:"scrollMode"`
 	TightScrollPadding int          `json:"tightScrollPadding"`
@@ -88,8 +88,8 @@ type API interface {
 
 // SetDefaults ...
 func (c *Config) SetDefaults() {
-	if c.Enabled == nil {
-		c.Enabled = atomic.NewBool(false)
+	if c.StartEnabled == nil {
+		c.StartEnabled = atomic.NewBool(false)
 	}
 	if c.ScrollMode == nil {
 		c.ScrollMode = atomic.NewBool(false)
@@ -150,7 +150,7 @@ func New(api API, config *Config, log *zap.Logger) (*WeatherBoard, error) {
 		enabler:     enabler.New(),
 	}
 
-	if config.Enabled.Load() {
+	if config.StartEnabled.Load() {
 		s.enabler.Enable()
 	}
 
@@ -164,35 +164,17 @@ func New(api API, config *Config, log *zap.Logger) (*WeatherBoard, error) {
 		),
 	)
 
-	if len(config.OffTimes) > 0 || len(config.OnTimes) > 0 {
-		c := cron.New()
-		for _, on := range config.OnTimes {
-			s.log.Info("weatherboard will be schedule to turn on",
-				zap.String("turn on", on),
-			)
-			_, err := c.AddFunc(on, func() {
-				s.log.Info("weatherboard turning on")
-				s.Enabler().Enable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for weatherboard: %w", err)
-			}
-		}
-
-		for _, off := range config.OffTimes {
-			s.log.Info("weatherboard will be schedule to turn off",
-				zap.String("turn on", off),
-			)
-			_, err := c.AddFunc(off, func() {
-				s.log.Info("weatherboard turning off")
-				s.Enabler().Disable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for weatherboard: %w", err)
-			}
-		}
-
-		c.Start()
+	if err := util.SetCrons(config.OnTimes, func() {
+		s.log.Info("weatherboard turning on")
+		s.Enabler().Enable()
+	}); err != nil {
+		return nil, err
+	}
+	if err := util.SetCrons(config.OffTimes, func() {
+		s.log.Info("weatherboard turning off")
+		s.Enabler().Disable()
+	}); err != nil {
+		return nil, err
 	}
 
 	return s, nil
@@ -228,7 +210,7 @@ func (w *WeatherBoard) enablerCancel(ctx context.Context, cancel context.CancelF
 			cancel()
 			return
 		case <-ticker.C:
-			if !w.config.Enabled.Load() {
+			if !w.Enabler().Enabled() {
 				cancel()
 				return
 			}
@@ -263,7 +245,7 @@ func (w *WeatherBoard) ScrollRender(ctx context.Context, canvas board.Canvas, pa
 
 // Render ...
 func (w *WeatherBoard) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
-	if !w.config.Enabled.Load() {
+	if !w.Enabler().Enabled() {
 		w.log.Warn("skipping disabled board", zap.String("board", "weather"))
 		return nil, nil
 	}

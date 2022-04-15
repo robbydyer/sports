@@ -13,7 +13,6 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
-	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 
 	"github.com/robbydyer/sports/internal/board"
@@ -23,6 +22,7 @@ import (
 	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
 	"github.com/robbydyer/sports/internal/twirphelpers"
+	"github.com/robbydyer/sports/internal/util"
 )
 
 var (
@@ -54,7 +54,7 @@ type Config struct {
 	updateInterval     time.Duration
 	scrollDelay        time.Duration
 	adjustedResolution int
-	Enabled            *atomic.Bool `json:"enabled"`
+	StartEnabled       *atomic.Bool `json:"enabled"`
 	Symbols            []string     `json:"symbols"`
 	ChartResolution    int          `json:"chartResolution"`
 	BoardDelay         string       `json:"boardDelay"`
@@ -93,8 +93,8 @@ type API interface {
 
 // SetDefaults ...
 func (c *Config) SetDefaults() {
-	if c.Enabled == nil {
-		c.Enabled = atomic.NewBool(false)
+	if c.StartEnabled == nil {
+		c.StartEnabled = atomic.NewBool(false)
 	}
 	if c.ScrollMode == nil {
 		c.ScrollMode = atomic.NewBool(false)
@@ -154,7 +154,7 @@ func New(api API, config *Config, log *zap.Logger) (*StockBoard, error) {
 		enabler:     enabler.New(),
 	}
 
-	if config.Enabled.Load() {
+	if config.StartEnabled.Load() {
 		s.enabler.Enable()
 	}
 
@@ -168,35 +168,17 @@ func New(api API, config *Config, log *zap.Logger) (*StockBoard, error) {
 		),
 	)
 
-	if len(config.OffTimes) > 0 || len(config.OnTimes) > 0 {
-		c := cron.New()
-		for _, on := range config.OnTimes {
-			s.log.Info("stockboard will be schedule to turn on",
-				zap.String("turn on", on),
-			)
-			_, err := c.AddFunc(on, func() {
-				s.log.Info("stockboard turning on")
-				s.Enabler().Enable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for stockboard: %w", err)
-			}
-		}
-
-		for _, off := range config.OffTimes {
-			s.log.Info("stockboard will be schedule to turn off",
-				zap.String("turn on", off),
-			)
-			_, err := c.AddFunc(off, func() {
-				s.log.Info("stockboard turning off")
-				s.Enabler().Disable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for stockboard: %w", err)
-			}
-		}
-
-		c.Start()
+	if err := util.SetCrons(config.OnTimes, func() {
+		s.log.Info("stockboard turning on")
+		s.Enabler().Enable()
+	}); err != nil {
+		return nil, err
+	}
+	if err := util.SetCrons(config.OffTimes, func() {
+		s.log.Info("stockboard turning off")
+		s.Enabler().Disable()
+	}); err != nil {
+		return nil, err
 	}
 
 	return s, nil
@@ -232,7 +214,7 @@ func (s *StockBoard) enablerCancel(ctx context.Context, cancel context.CancelFun
 			cancel()
 			return
 		case <-ticker.C:
-			if !s.config.Enabled.Load() {
+			if !s.Enabler().Enabled() {
 				cancel()
 				return
 			}

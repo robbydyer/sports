@@ -13,7 +13,6 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
-	"github.com/robfig/cron/v3"
 	"github.com/twitchtv/twirp"
 
 	"github.com/robbydyer/sports/internal/board"
@@ -21,6 +20,7 @@ import (
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/internal/rgbrender"
 	"github.com/robbydyer/sports/internal/twirphelpers"
+	"github.com/robbydyer/sports/internal/util"
 )
 
 var defaultUpdateInterval = 5 * time.Minute
@@ -46,7 +46,7 @@ type Config struct {
 	boardDelay      time.Duration
 	updateInterval  time.Duration
 	BoardDelay      string              `json:"boardDelay"`
-	Enabled         *atomic.Bool        `json:"enabled"`
+	StartEnabled    *atomic.Bool        `json:"enabled"`
 	Players         []string            `json:"players"`
 	Teams           []string            `json:"teams"`
 	StatOverride    map[string][]string `json:"statOverride"`
@@ -96,8 +96,8 @@ type Player interface {
 
 // SetDefaults ...
 func (c *Config) SetDefaults() {
-	if c.Enabled == nil {
-		c.Enabled = atomic.NewBool(false)
+	if c.StartEnabled == nil {
+		c.StartEnabled = atomic.NewBool(false)
 	}
 	if c.BoardDelay != "" {
 		d, err := time.ParseDuration(c.BoardDelay)
@@ -150,7 +150,7 @@ func New(ctx context.Context, api API, config *Config, logger *zap.Logger, opts 
 		enabler:       enabler.New(),
 	}
 
-	if config.Enabled.Load() {
+	if config.StartEnabled.Load() {
 		s.enabler.Enable()
 	}
 
@@ -164,40 +164,21 @@ func New(ctx context.Context, api API, config *Config, logger *zap.Logger, opts 
 		s.sorter = defaultSorter
 	}
 
-	if len(config.OnTimes) > 1 || len(config.OffTimes) > 1 {
-		c := cron.New()
-
-		for _, off := range config.OffTimes {
-			s.log.Info("statboard will be scheduled to turn off",
-				zap.String("turn off", off),
-				zap.String("league", s.api.LeagueShortName()),
-			)
-			_, err := c.AddFunc(off, func() {
-				s.log.Warn("statboard turning off",
-					zap.String("league", s.api.LeagueShortName()),
-				)
-				s.Enabler().Disable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for statboard off time: %w", err)
-			}
-		}
-		for _, on := range config.OnTimes {
-			s.log.Info("statboard will be scheduled to turn off",
-				zap.String("turn on", on),
-				zap.String("league", s.api.LeagueShortName()),
-			)
-			_, err := c.AddFunc(on, func() {
-				s.log.Warn("statboard turning on",
-					zap.String("league", s.api.LeagueShortName()),
-				)
-				s.Enabler().Enable()
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to add cron for statboard on time: %w", err)
-			}
-		}
-		c.Start()
+	if err := util.SetCrons(config.OnTimes, func() {
+		s.log.Warn("statboard turning on",
+			zap.String("league", s.api.LeagueShortName()),
+		)
+		s.Enabler().Enable()
+	}); err != nil {
+		return nil, err
+	}
+	if err := util.SetCrons(config.OffTimes, func() {
+		s.log.Warn("statboard turning off",
+			zap.String("league", s.api.LeagueShortName()),
+		)
+		s.Enabler().Disable()
+	}); err != nil {
+		return nil, err
 	}
 
 	svr := &Server{

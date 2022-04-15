@@ -18,6 +18,7 @@ type Enabler interface {
 	Enabled() bool
 	Enable() bool
 	Disable() bool
+	Store(bool) bool
 	SetStateChangeCallback(func())
 }
 
