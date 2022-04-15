@@ -10,9 +10,9 @@ import (
 
 	"github.com/robfig/cron/v3"
 
+	sportboard "github.com/robbydyer/sports/internal/board/sport"
 	"github.com/robbydyer/sports/internal/espn"
 	"github.com/robbydyer/sports/internal/logo"
-	"github.com/robbydyer/sports/internal/sportboard"
 )
 
 const (

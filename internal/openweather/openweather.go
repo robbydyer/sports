@@ -10,9 +10,9 @@ import (
 
 	"go.uber.org/zap"
 
+	weatherboard "github.com/robbydyer/sports/internal/board/weather"
 	"github.com/robbydyer/sports/internal/logo"
 	"github.com/robbydyer/sports/internal/util"
-	"github.com/robbydyer/sports/internal/weatherboard"
 )
 
 const (

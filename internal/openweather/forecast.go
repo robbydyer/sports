@@ -12,8 +12,8 @@ import (
 
 	"go.uber.org/zap"
 
+	weatherboard "github.com/robbydyer/sports/internal/board/weather"
 	"github.com/robbydyer/sports/internal/rgbrender"
-	"github.com/robbydyer/sports/internal/weatherboard"
 )
 
 func (w *weather) expired(refresh time.Duration) bool {

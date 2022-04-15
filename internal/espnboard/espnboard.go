@@ -14,8 +14,8 @@ import (
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
+	sportboard "github.com/robbydyer/sports/internal/board/sport"
 	"github.com/robbydyer/sports/internal/logo"
-	"github.com/robbydyer/sports/internal/sportboard"
 )
 
 // DateFormat for getting games

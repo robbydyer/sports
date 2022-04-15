@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/robbydyer/sports/internal/sportboard"
+	sportboard "github.com/robbydyer/sports/internal/board/sport"
 )
 
 // LiveGameGetter is a func used to retrieve an updated sportboard.Game

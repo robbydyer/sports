@@ -16,7 +16,7 @@ import (
 
 	"github.com/robfig/cron/v3"
 
-	"github.com/robbydyer/sports/internal/stockboard"
+	stockboard "github.com/robbydyer/sports/internal/board/stocks"
 )
 
 const baseURL = "https://query2.finance.yahoo.com"

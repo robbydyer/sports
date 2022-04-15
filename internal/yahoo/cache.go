@@ -5,7 +5,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/robbydyer/sports/internal/stockboard"
+	stockboard "github.com/robbydyer/sports/internal/board/stocks"
 )
 
 // CacheClear clears the cache

@@ -14,7 +14,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/robbydyer/sports/internal/sportboard"
+	sportboard "github.com/robbydyer/sports/internal/board/sport"
 )
 
 var (

@@ -15,7 +15,7 @@ import (
 
 	"github.com/robfig/cron/v3"
 
-	"github.com/robbydyer/sports/internal/statboard"
+	statboard "github.com/robbydyer/sports/internal/board/stat"
 )
 
 const leaderboardURL = "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"

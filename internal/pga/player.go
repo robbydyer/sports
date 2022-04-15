@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/robbydyer/sports/internal/statboard"
+	statboard "github.com/robbydyer/sports/internal/board/stat"
 )
 
 // Player ...
