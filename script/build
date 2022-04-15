@@ -49,7 +49,7 @@ cd /src
 export CGO_ENABLED=1
 export GOCACHE=/app/.cache
 
-go build -o /app/sportsmatrix.${BUILDARCH} -ldflags="-X github.com/robbydyer/sports/internal/sportsmatrix.version=devbuild" ./cmd/sportsmatrix
+go build -o /app/sportsmatrix.${BUILDARCH} -ldflags="-X github.com/robbydyer/sports/internal/sportsmatrix.version=${VERSION}" ./cmd/sportsmatrix
 
 echo "=> DONE created ${ROOT}/sportsmatrix.${BUILDARCH}"
 
