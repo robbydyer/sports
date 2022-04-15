@@ -15,9 +15,15 @@ getsha() {
 
 latestpibuilder() {
   arch="$1"
-  if [ "${arch}" = "arm64" ]; then
-    arch="aarch64"
-  fi
+  case "${arch}" in
+    amd64|x86_64)
+      arch=amd64
+      ;;
+    arm64)
+      arch=aarch64
+    *)
+    ;;
+  esac
   echo "robbydyer/pibuilder-${arch}:$(getsha "${ROOT}/Dockerfile.pibuilder")"
 }
 

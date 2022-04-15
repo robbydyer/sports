@@ -20,7 +20,7 @@ dobuild() {
     armv7l|armhf|armv6l)
       base="multiarch/debian-debootstrap:armhf-buster-slim"
       ;;
-    amd64)
+    amd64|x86_64)
       base="multiarch/debian-debootstrap:amd64-bullseye"
       ;;
     *)
