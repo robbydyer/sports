@@ -1,10 +1,12 @@
 package rgbmatrix
 
 import (
+	"context"
 	"fmt"
 	"image/color"
 	"io"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -70,12 +72,16 @@ func (c *ConsoleMatrix) Set(x int, y int, clr color.Color) {
 	c.matrix[position] = colorToUint32(clr)
 }
 
-func (c *ConsoleMatrix) Load(points []MatrixPoint) error {
+func (c *ConsoleMatrix) PreLoad(points []MatrixPoint) error {
 	for _, pt := range points {
 		c.Set(pt.X, pt.Y, pt.Color)
 	}
 
 	return c.Render()
+}
+
+func (c *ConsoleMatrix) Play(ctx context.Context, interval time.Duration) error {
+	return nil
 }
 
 /*

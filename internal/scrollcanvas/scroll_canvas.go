@@ -359,7 +359,6 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 		zap.String("delay", c.interval.String()),
 	)
 
-	loaders := [][]rgb.MatrixPoint{}
 	for {
 		if thisX == finish {
 			break
@@ -382,23 +381,12 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 			}
 		}
 
-		loaders = append(loaders, loader)
+		c.Matrix.PreLoad(loader)
 
 		thisX--
 	}
 
-	for _, loader := range loaders {
-		select {
-		case <-ctx.Done():
-			return context.Canceled
-		case <-time.After(c.interval):
-		}
-		if err := c.Matrix.Load(loader); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return c.Matrix.Play(ctx, c.interval)
 }
 
 func (c *ScrollCanvas) topToBottom(ctx context.Context) error {

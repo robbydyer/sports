@@ -6,7 +6,6 @@ import (
 	"image"
 	"image/color"
 	"sort"
-	"time"
 
 	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"go.uber.org/zap"
@@ -143,8 +142,6 @@ func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
 		zap.Int("finish", finish),
 	)
 
-	loaders := [][]rgb.MatrixPoint{}
-
 	for {
 		if virtualX == finish {
 			break
@@ -168,20 +165,8 @@ func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
 		}
 		virtualX++
 
-		loaders = append(loaders, loader)
+		c.Matrix.PreLoad(loader)
 	}
 
-	for _, loader := range loaders {
-		select {
-		case <-ctx.Done():
-			return context.Canceled
-		case <-time.After(c.interval):
-		}
-
-		if err := c.Matrix.Load(loader); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return c.Matrix.Play(ctx, c.interval)
 }

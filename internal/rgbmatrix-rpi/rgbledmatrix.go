@@ -40,10 +40,12 @@ void set_inverse_colors(struct RGBLedMatrixOptions *o, int inverse_colors) {
 import "C"
 
 import (
+	"context"
 	"fmt"
 	"image/color"
 	"strings"
 	"sync"
+	"time"
 	"unsafe"
 
 	"go.uber.org/atomic"
@@ -267,12 +269,13 @@ type RGBLedMatrix struct {
 	Config         *HardwareConfig
 	RuntimeOptions *RuntimeOptions
 
-	height int
-	width  int
-	matrix *C.struct_RGBLedMatrix
-	buffer *C.struct_LedCanvas
-	leds   []C.uint32_t
-	closed *atomic.Bool
+	height  int
+	width   int
+	matrix  *C.struct_RGBLedMatrix
+	buffer  *C.struct_LedCanvas
+	leds    []C.uint32_t
+	preload [][]C.uint32_t
+	closed  *atomic.Bool
 	sync.Mutex
 }
 
@@ -356,6 +359,24 @@ func (c *RGBLedMatrix) Render() error {
 	return nil
 }
 
+func (c *RGBLedMatrix) render(leds []C.uint32_t) error {
+	// Check this so we don't cause a panic
+	if len(leds) < 1 {
+		return fmt.Errorf("led buffer is empty")
+	}
+
+	w, h := c.Config.geometry()
+
+	C.led_matrix_swap(
+		c.matrix,
+		c.buffer,
+		C.int(w), C.int(h),
+		(*C.uint32_t)(unsafe.Pointer(&leds[0])),
+	)
+
+	return nil
+}
+
 // At return an Color which allows access to the LED display data as
 // if it were a sequence of 24-bit RGB values.
 func (c *RGBLedMatrix) At(x int, y int) color.Color {
@@ -371,12 +392,33 @@ func (c *RGBLedMatrix) Set(x int, y int, color color.Color) {
 	c.leds[position] = C.uint32_t(colorToUint32(color))
 }
 
-func (c *RGBLedMatrix) Load(points []MatrixPoint) error {
+func (c *RGBLedMatrix) PreLoad(points []MatrixPoint) {
+	w, h := c.Config.geometry()
+	prep := make([]C.uint32_t, w*h)
+
 	for _, pt := range points {
-		c.Set(pt.X, pt.Y, pt.Color)
+		position := c.position(pt.X, pt.Y)
+		prep[position] = C.uint32_t(colorToUint32(pt.Color))
 	}
 
-	return c.Render()
+	c.preload = append(c.preload, prep)
+}
+
+func (c *RGBLedMatrix) Play(ctx context.Context, interval time.Duration) error {
+	for _, leds := range c.preload {
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		case <-time.After(interval):
+		}
+		if err := c.render(leds); err != nil {
+			return err
+		}
+	}
+
+	c.preload = [][]C.uint32_t{}
+
+	return nil
 }
 
 // Close finalizes the ws281x interface

@@ -33,6 +33,8 @@ type SportsmatrixClient interface {
 	NextBoard(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
 	RestartService(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
 	SetLiveOnly(ctx context.Context, in *LiveOnlyReq, opts ...grpc.CallOption) (*empty.Empty, error)
+	SpeedUp(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
+	SlowDown(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type sportsmatrixClient struct {
@@ -133,6 +135,24 @@ func (c *sportsmatrixClient) SetLiveOnly(ctx context.Context, in *LiveOnlyReq, o
 	return out, nil
 }
 
+func (c *sportsmatrixClient) SpeedUp(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/matrix.v1.Sportsmatrix/SpeedUp", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sportsmatrixClient) SlowDown(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/matrix.v1.Sportsmatrix/SlowDown", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SportsmatrixServer is the server API for Sportsmatrix service.
 // All implementations must embed UnimplementedSportsmatrixServer
 // for forward compatibility
@@ -147,6 +167,8 @@ type SportsmatrixServer interface {
 	NextBoard(context.Context, *empty.Empty) (*empty.Empty, error)
 	RestartService(context.Context, *empty.Empty) (*empty.Empty, error)
 	SetLiveOnly(context.Context, *LiveOnlyReq) (*empty.Empty, error)
+	SpeedUp(context.Context, *empty.Empty) (*empty.Empty, error)
+	SlowDown(context.Context, *empty.Empty) (*empty.Empty, error)
 	mustEmbedUnimplementedSportsmatrixServer()
 }
 
@@ -183,6 +205,12 @@ func (UnimplementedSportsmatrixServer) RestartService(context.Context, *empty.Em
 }
 func (UnimplementedSportsmatrixServer) SetLiveOnly(context.Context, *LiveOnlyReq) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetLiveOnly not implemented")
+}
+func (UnimplementedSportsmatrixServer) SpeedUp(context.Context, *empty.Empty) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SpeedUp not implemented")
+}
+func (UnimplementedSportsmatrixServer) SlowDown(context.Context, *empty.Empty) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SlowDown not implemented")
 }
 func (UnimplementedSportsmatrixServer) mustEmbedUnimplementedSportsmatrixServer() {}
 
@@ -377,6 +405,42 @@ func _Sportsmatrix_SetLiveOnly_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Sportsmatrix_SpeedUp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SportsmatrixServer).SpeedUp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/matrix.v1.Sportsmatrix/SpeedUp",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SportsmatrixServer).SpeedUp(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Sportsmatrix_SlowDown_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SportsmatrixServer).SlowDown(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/matrix.v1.Sportsmatrix/SlowDown",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SportsmatrixServer).SlowDown(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Sportsmatrix_ServiceDesc is the grpc.ServiceDesc for Sportsmatrix service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -423,6 +487,14 @@ var Sportsmatrix_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetLiveOnly",
 			Handler:    _Sportsmatrix_SetLiveOnly_Handler,
+		},
+		{
+			MethodName: "SpeedUp",
+			Handler:    _Sportsmatrix_SpeedUp_Handler,
+		},
+		{
+			MethodName: "SlowDown",
+			Handler:    _Sportsmatrix_SlowDown_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

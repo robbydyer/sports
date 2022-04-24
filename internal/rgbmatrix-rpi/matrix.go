@@ -1,6 +1,10 @@
 package rgbmatrix
 
-import "image/color"
+import (
+	"context"
+	"image/color"
+	"time"
+)
 
 // Matrix is an interface that represent any RGB matrix, very useful for testing
 type Matrix interface {
@@ -11,7 +15,8 @@ type Matrix interface {
 	Render() error
 	Close() error
 	SetBrightness(brightness int)
-	Load([]MatrixPoint) error
+	PreLoad([]MatrixPoint)
+	Play(ctx context.Context, interval time.Duration) error
 }
 
 type MatrixPoint struct {
