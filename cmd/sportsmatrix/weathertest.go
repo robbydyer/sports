@@ -11,6 +11,7 @@ import (
 	"github.com/robbydyer/sports/internal/board"
 	weatherboard "github.com/robbydyer/sports/internal/board/weather"
 	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/internal/scrollcanvas"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
 )
 
@@ -69,7 +70,7 @@ func (s *weatherCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	scroll, err := rgb.NewScrollCanvas(matrix, logger)
+	scroll, err := scrollcanvas.NewScrollCanvas(matrix, logger)
 	if err != nil {
 		return err
 	}

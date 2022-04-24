@@ -11,6 +11,7 @@ import (
 	"github.com/robbydyer/sports/internal/board"
 	stockboard "github.com/robbydyer/sports/internal/board/stocks"
 	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/internal/scrollcanvas"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
 )
 
@@ -67,7 +68,7 @@ func (s *stockCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	scroll, err := rgb.NewScrollCanvas(matrix, logger)
+	scroll, err := scrollcanvas.NewScrollCanvas(matrix, logger)
 	if err != nil {
 		return err
 	}

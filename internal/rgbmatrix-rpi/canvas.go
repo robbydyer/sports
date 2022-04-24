@@ -65,12 +65,12 @@ func (c *Canvas) PaddedBounds() image.Rectangle {
 
 // At returns the color of the pixel at (x, y)
 func (c *Canvas) At(x, y int) color.Color {
-	return c.m.At(c.position(x, y))
+	return c.m.At(x, y)
 }
 
 // Set set LED at position x,y to the provided 24-bit color value
 func (c *Canvas) Set(x, y int, color color.Color) {
-	c.m.Set(c.position(x, y), color)
+	c.m.Set(x, y, color)
 }
 
 // SetWidth ...
@@ -124,15 +124,4 @@ func (c *Canvas) SetStateChangeCallback(s func()) {
 // GetHTTPHandlers ...
 func (c *Canvas) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 	return nil, nil
-}
-
-// Matrix is an interface that represent any RGB matrix, very useful for testing
-type Matrix interface {
-	Geometry() (width, height int)
-	At(position int) color.Color
-	Set(position int, c color.Color)
-	Apply([]color.Color) error
-	Render() error
-	Close() error
-	SetBrightness(brightness int)
 }

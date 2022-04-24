@@ -1,4 +1,4 @@
-package rgbmatrix
+package scrollcanvas
 
 import (
 	"image"
@@ -9,11 +9,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
+
+	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 )
 
 func TestScrollCanvas(t *testing.T) {
 	l := zaptest.NewLogger(t)
-	m := NewConsoleMatrix(64, 32, ioutil.Discard, l)
+	m := rgb.NewConsoleMatrix(64, 32, ioutil.Discard, l)
 	c, err := NewScrollCanvas(m, l)
 	require.NoError(t, err)
 
@@ -60,6 +62,7 @@ func TestFirstNonBlankY(t *testing.T) {
 		})
 	}
 }
+
 func TestFirstNonBlankX(t *testing.T) {
 	tests := []struct {
 		name     string

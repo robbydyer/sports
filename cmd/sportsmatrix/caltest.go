@@ -12,6 +12,7 @@ import (
 	calendarboard "github.com/robbydyer/sports/internal/board/calendar"
 	"github.com/robbydyer/sports/internal/logo"
 	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/internal/scrollcanvas"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
 )
 
@@ -91,7 +92,7 @@ func (c *calCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	scroll, err := rgb.NewScrollCanvas(matrix, logger)
+	scroll, err := scrollcanvas.NewScrollCanvas(matrix, logger)
 	if err != nil {
 		return err
 	}

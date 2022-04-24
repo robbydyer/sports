@@ -21,8 +21,8 @@ import (
 	"github.com/robbydyer/sports/internal/enabler"
 	"github.com/robbydyer/sports/internal/logo"
 	pb "github.com/robbydyer/sports/internal/proto/sportboard"
-	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
+	"github.com/robbydyer/sports/internal/scrollcanvas"
 	"github.com/robbydyer/sports/internal/twirphelpers"
 	"github.com/robbydyer/sports/internal/util"
 )
@@ -207,11 +207,11 @@ func (c *Config) SetDefaults() {
 	if c.ScrollDelay != "" {
 		d, err := time.ParseDuration(c.ScrollDelay)
 		if err != nil {
-			c.scrollDelay = rgbmatrix.DefaultScrollDelay
+			c.scrollDelay = scrollcanvas.DefaultScrollDelay
 		}
 		c.scrollDelay = d
 	} else {
-		c.scrollDelay = rgbmatrix.DefaultScrollDelay
+		c.scrollDelay = scrollcanvas.DefaultScrollDelay
 	}
 
 	if c.ScoreHighlightRepeat == nil {
@@ -577,23 +577,23 @@ OUTER:
 
 	defer func() { _ = canvas.Clear() }()
 
-	var tightCanvas *rgbmatrix.ScrollCanvas
+	var tightCanvas *scrollcanvas.ScrollCanvas
 	if canvas.Scrollable() && s.config.TightScroll.Load() {
-		base, ok := canvas.(*rgbmatrix.ScrollCanvas)
+		base, ok := canvas.(*scrollcanvas.ScrollCanvas)
 		if !ok {
 			return nil, fmt.Errorf("wat")
 		}
 
 		var err error
-		tightCanvas, err = rgbmatrix.NewScrollCanvas(base.Matrix, s.log)
+		tightCanvas, err = scrollcanvas.NewScrollCanvas(base.Matrix, s.log)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
 		}
 
-		tightCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
+		tightCanvas.SetScrollDirection(scrollcanvas.RightToLeft)
 		tightCanvas.SetScrollSpeed(s.config.scrollDelay)
 	} else if canvas.Scrollable() && s.config.ScrollMode.Load() {
-		scroll, ok := canvas.(*rgbmatrix.ScrollCanvas)
+		scroll, ok := canvas.(*scrollcanvas.ScrollCanvas)
 		if ok {
 			orig := scroll.GetScrollSpeed()
 			defer func() { scroll.SetScrollSpeed(orig) }()

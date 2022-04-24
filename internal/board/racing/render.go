@@ -12,8 +12,8 @@ import (
 
 	"github.com/robbydyer/sports/internal/board"
 	"github.com/robbydyer/sports/internal/logo"
-	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
+	"github.com/robbydyer/sports/internal/scrollcanvas"
 )
 
 // ScrollRender ...
@@ -72,20 +72,20 @@ func (s *RacingBoard) render(ctx context.Context, canvas board.Canvas) (board.Ca
 		return nil, err
 	}
 
-	var scrollCanvas *rgbmatrix.ScrollCanvas
+	var scrollCanvas *scrollcanvas.ScrollCanvas
 	if canvas.Scrollable() && s.config.ScrollMode.Load() {
-		base, ok := canvas.(*rgbmatrix.ScrollCanvas)
+		base, ok := canvas.(*scrollcanvas.ScrollCanvas)
 		if !ok {
 			return nil, fmt.Errorf("invalid scroll canvas")
 		}
 
 		var err error
-		scrollCanvas, err = rgbmatrix.NewScrollCanvas(base.Matrix, s.log)
+		scrollCanvas, err = scrollcanvas.NewScrollCanvas(base.Matrix, s.log)
 		if err != nil {
 			return nil, err
 		}
 		scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
-		scrollCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
+		scrollCanvas.SetScrollDirection(scrollcanvas.RightToLeft)
 	}
 
 	s.log.Debug("racing events",

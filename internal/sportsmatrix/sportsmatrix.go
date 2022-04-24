@@ -16,6 +16,7 @@ import (
 	"github.com/robbydyer/sports/internal/board"
 	"github.com/robbydyer/sports/internal/imgcanvas"
 	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/internal/scrollcanvas"
 )
 
 var version = "noversion"
@@ -81,7 +82,7 @@ type Config struct {
 type orderedBoard struct {
 	order        int
 	board        board.Board
-	scrollCanvas *rgb.ScrollCanvas
+	scrollCanvas *scrollcanvas.ScrollCanvas
 }
 
 // Defaults sets some sane config defaults
@@ -136,12 +137,12 @@ func (c *Config) Defaults() {
 	if c.CombinedScrollDelay != "" {
 		d, err := time.ParseDuration(c.CombinedScrollDelay)
 		if err != nil {
-			c.combinedScrollDelay = rgb.DefaultScrollDelay
+			c.combinedScrollDelay = scrollcanvas.DefaultScrollDelay
 		} else {
 			c.combinedScrollDelay = d
 		}
 	} else {
-		c.combinedScrollDelay = rgb.DefaultScrollDelay
+		c.combinedScrollDelay = scrollcanvas.DefaultScrollDelay
 	}
 }
 
@@ -555,15 +556,15 @@ CANVASES:
 			continue CANVASES
 		}
 
-		base, ok := canvas.(*rgb.ScrollCanvas)
+		base, ok := canvas.(*scrollcanvas.ScrollCanvas)
 		if !ok {
 			continue CANVASES
 		}
 
-		scrollCanvas, err := rgb.NewScrollCanvas(base.Matrix, s.log,
-			rgb.WithScrollSpeed(s.cfg.combinedScrollDelay),
-			rgb.WithScrollDirection(rgb.RightToLeft),
-			rgb.WithMergePadding(s.cfg.CombinedScrollPadding),
+		scrollCanvas, err := scrollcanvas.NewScrollCanvas(base.Matrix, s.log,
+			scrollcanvas.WithScrollSpeed(s.cfg.combinedScrollDelay),
+			scrollcanvas.WithScrollDirection(scrollcanvas.RightToLeft),
+			scrollcanvas.WithMergePadding(s.cfg.CombinedScrollPadding),
 		)
 		if err != nil {
 			cancel()
@@ -848,9 +849,9 @@ func (s *SportsMatrix) prepOrderedBoards(ctx context.Context, boards []board.Boa
 		wg.Add(1)
 		go func(thisBoard board.Board, i int) {
 			defer wg.Done()
-			myBase, err := rgb.NewScrollCanvas(matrix, s.log,
-				rgb.WithScrollDirection(rgb.RightToLeft),
-				rgb.WithScrollSpeed(s.cfg.combinedScrollDelay),
+			myBase, err := scrollcanvas.NewScrollCanvas(matrix, s.log,
+				scrollcanvas.WithScrollDirection(scrollcanvas.RightToLeft),
+				scrollcanvas.WithScrollSpeed(s.cfg.combinedScrollDelay),
 			)
 			if err != nil {
 				s.log.Error("failed to create scroll canvas",
@@ -866,7 +867,7 @@ func (s *SportsMatrix) prepOrderedBoards(ctx context.Context, boards []board.Boa
 				)
 				return
 			}
-			myCanvas, ok := boardCanvas.(*rgb.ScrollCanvas)
+			myCanvas, ok := boardCanvas.(*scrollcanvas.ScrollCanvas)
 			if !ok {
 				s.log.Error("unexpected board type in combined scroll",
 					zap.String("board", thisBoard.Name()),

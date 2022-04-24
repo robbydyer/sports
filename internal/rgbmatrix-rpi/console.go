@@ -46,8 +46,13 @@ func (c *ConsoleMatrix) Geometry() (int, int) {
 	return c.width, c.height
 }
 
+func (c *ConsoleMatrix) position(x int, y int) int {
+	return x + (y * c.width)
+}
+
 // At ...
-func (c *ConsoleMatrix) At(position int) color.Color {
+func (c *ConsoleMatrix) At(x int, y int) color.Color {
+	position := c.position(x, y)
 	if position > len(c.matrix)-1 || position < 0 {
 		return color.Black
 	}
@@ -56,7 +61,8 @@ func (c *ConsoleMatrix) At(position int) color.Color {
 }
 
 // Set ...
-func (c *ConsoleMatrix) Set(position int, clr color.Color) {
+func (c *ConsoleMatrix) Set(x int, y int, clr color.Color) {
+	position := c.position(x, y)
 	if position > len(c.matrix)-1 || position < 0 {
 		return
 	}
@@ -64,6 +70,15 @@ func (c *ConsoleMatrix) Set(position int, clr color.Color) {
 	c.matrix[position] = colorToUint32(clr)
 }
 
+func (c *ConsoleMatrix) Load(points []MatrixPoint) error {
+	for _, pt := range points {
+		c.Set(pt.X, pt.Y, pt.Color)
+	}
+
+	return c.Render()
+}
+
+/*
 // Apply ...
 func (c *ConsoleMatrix) Apply(leds []color.Color) error {
 	for position, clr := range leds {
@@ -72,6 +87,7 @@ func (c *ConsoleMatrix) Apply(leds []color.Color) error {
 
 	return c.Render()
 }
+*/
 
 // Render ...
 func (c *ConsoleMatrix) Render() error {
