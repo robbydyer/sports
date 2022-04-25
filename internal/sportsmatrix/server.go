@@ -2,6 +2,7 @@ package sportsmatrix
 
 import (
 	"context"
+	"math"
 	"os"
 	"syscall"
 	"time"
@@ -169,9 +170,28 @@ func (s *Server) SetLiveOnly(ctx context.Context, req *pb.LiveOnlyReq) (*emptypb
 }
 
 func (s *Server) SpeedUp(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
+	for _, scrollCanvas := range s.sm.getActiveScrollCanvases() {
+		spd := time.Duration(int64(math.Ceil(float64(scrollCanvas.GetScrollSpeed()) - float64(speedUpIncrement))))
+		if spd < 0 {
+			continue
+		}
+		s.sm.log.Info("speeding up scroll canvas",
+			zap.String("name", scrollCanvas.Name()),
+			zap.Duration("new interval", spd),
+		)
+		scrollCanvas.SetScrollSpeed(spd)
+	}
 	return &emptypb.Empty{}, nil
 }
 
 func (s *Server) SlowDown(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
+	for _, scrollCanvas := range s.sm.getActiveScrollCanvases() {
+		spd := time.Duration(int64(math.Ceil(float64(scrollCanvas.GetScrollSpeed()) + float64(speedUpIncrement))))
+		s.sm.log.Info("speeding up scroll canvas",
+			zap.String("name", scrollCanvas.Name()),
+			zap.Duration("new interval", spd),
+		)
+		scrollCanvas.SetScrollSpeed(spd)
+	}
 	return &emptypb.Empty{}, nil
 }

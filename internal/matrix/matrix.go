@@ -16,7 +16,7 @@ type Matrix interface {
 	Close() error
 	SetBrightness(brightness int)
 	PreLoad([]MatrixPoint)
-	Play(ctx context.Context, interval time.Duration) error
+	Play(ctx context.Context, startInterval time.Duration, interval chan time.Duration) error
 }
 
 type MatrixPoint struct {

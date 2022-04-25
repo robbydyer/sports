@@ -50,6 +50,7 @@ import (
 
 	"github.com/robbydyer/sports/internal/matrix"
 	"go.uber.org/atomic"
+	"go.uber.org/zap"
 )
 
 // DefaultConfig default WS281x configuration
@@ -277,11 +278,12 @@ type RGBLedMatrix struct {
 	leds    []C.uint32_t
 	preload [][]C.uint32_t
 	closed  *atomic.Bool
+	log     *zap.Logger
 	sync.Mutex
 }
 
 // NewRGBLedMatrix returns a new matrix using the given size and config
-func NewRGBLedMatrix(config *HardwareConfig, rtOptions *RuntimeOptions) (c *RGBLedMatrix, err error) {
+func NewRGBLedMatrix(config *HardwareConfig, rtOptions *RuntimeOptions, logger *zap.Logger) (c *RGBLedMatrix, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			var ok bool
@@ -302,6 +304,7 @@ func NewRGBLedMatrix(config *HardwareConfig, rtOptions *RuntimeOptions) (c *RGBL
 		buffer: b,
 		leds:   make([]C.uint32_t, w*h),
 		closed: atomic.NewBool(false),
+		log:    logger,
 	}
 	if m == nil {
 		return nil, fmt.Errorf("unable to allocate memory")
@@ -367,13 +370,29 @@ func (c *RGBLedMatrix) PreLoad(points []matrix.MatrixPoint) {
 	c.preload = append(c.preload, prep)
 }
 
-func (c *RGBLedMatrix) Play(ctx context.Context, interval time.Duration) error {
+func (c *RGBLedMatrix) Play(ctx context.Context, startInterval time.Duration, interval chan time.Duration) error {
+	waitInterval := startInterval
+	c.log.Info("Play matrix",
+		zap.Duration("default interval", waitInterval),
+	)
 	for _, leds := range c.preload {
+		// An updated interval can be sent to the channel to change scroll speed
 		select {
 		case <-ctx.Done():
 			return context.Canceled
-		case <-time.After(interval):
+		case waitInterval = <-interval:
+			c.log.Info("RGB matrix got new interval during play",
+				zap.Duration("interval", waitInterval),
+			)
+		default:
 		}
+
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		case <-time.After(waitInterval):
+		}
+
 		if err := c.render(leds); err != nil {
 			return err
 		}

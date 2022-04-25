@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"sync"
 	"time"
 
 	"go.uber.org/atomic"
@@ -49,6 +50,8 @@ type ScrollCanvas struct {
 	mergePad            int
 	scrollStatus        chan float64
 	stateChangeCallback func()
+	scrollSpeedChan     chan time.Duration
+	speedLock           sync.Mutex
 }
 
 type subCanvasHorizontal struct {
@@ -65,14 +68,15 @@ type ScrollCanvasOption func(*ScrollCanvas) error
 func NewScrollCanvas(m matrix.Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (*ScrollCanvas, error) {
 	w, h := m.Geometry()
 	c := &ScrollCanvas{
-		w:         w,
-		h:         h,
-		Matrix:    m,
-		enabled:   atomic.NewBool(true),
-		interval:  DefaultScrollDelay,
-		log:       logger,
-		direction: RightToLeft,
-		merged:    atomic.NewBool(false),
+		w:               w,
+		h:               h,
+		Matrix:          m,
+		enabled:         atomic.NewBool(true),
+		interval:        DefaultScrollDelay,
+		log:             logger,
+		direction:       RightToLeft,
+		merged:          atomic.NewBool(false),
+		scrollSpeedChan: make(chan time.Duration, 1),
 	}
 
 	for _, f := range opts {
@@ -187,11 +191,34 @@ func (c *ScrollCanvas) AlwaysRender() bool {
 
 // SetScrollSpeed ...
 func (c *ScrollCanvas) SetScrollSpeed(d time.Duration) {
+	c.speedLock.Lock()
+	defer c.speedLock.Unlock()
+
 	c.interval = d
+	select {
+	case c.scrollSpeedChan <- c.interval:
+		c.log.Info("scroll canvas sending new speed to channel",
+			zap.Duration("speed", c.interval),
+		)
+	default:
+		c.log.Info("failed to send scroll canvas sending new speed to channel",
+			zap.Duration("speed", c.interval),
+		)
+		// Clear the buffer
+		for i := 0; i < cap(c.scrollSpeedChan); i++ {
+			select {
+			case <-c.scrollSpeedChan:
+			default:
+			}
+		}
+	}
 }
 
 // GetScrollSpeed ...
 func (c *ScrollCanvas) GetScrollSpeed() time.Duration {
+	c.speedLock.Lock()
+	defer c.speedLock.Unlock()
+
 	return c.interval
 }
 
@@ -386,7 +413,7 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 		thisX--
 	}
 
-	return c.Matrix.Play(ctx, c.interval)
+	return c.Matrix.Play(ctx, c.GetScrollSpeed(), c.scrollSpeedChan)
 }
 
 func (c *ScrollCanvas) topToBottom(ctx context.Context) error {

@@ -141,6 +141,7 @@ func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
 	c.log.Debug("performing right to left scroll without canvas merge",
 		zap.Int("virtualX start", virtualX),
 		zap.Int("finish", finish),
+		zap.Duration("interval", c.GetScrollSpeed()),
 	)
 
 	for {
@@ -168,5 +169,5 @@ func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
 		c.Matrix.PreLoad(loader)
 	}
 
-	return c.Matrix.Play(ctx, c.interval)
+	return c.Matrix.Play(ctx, c.GetScrollSpeed(), c.scrollSpeedChan)
 }

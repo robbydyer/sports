@@ -362,7 +362,7 @@ func (r *rootArgs) getRGBMatrix(logger *zap.Logger) (matrix.Matrix, error) {
 	}
 
 	var err error
-	matrix, err = rgb.NewRGBLedMatrix(r.config.SportsMatrixConfig.HardwareConfig, r.config.SportsMatrixConfig.RuntimeOptions)
+	matrix, err = rgb.NewRGBLedMatrix(r.config.SportsMatrixConfig.HardwareConfig, r.config.SportsMatrixConfig.RuntimeOptions, logger)
 
 	return matrix, err
 }

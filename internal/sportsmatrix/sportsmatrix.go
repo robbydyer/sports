@@ -20,45 +20,49 @@ import (
 	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 )
 
+const speedUpIncrement = 10 * time.Millisecond
+
 var version = "noversion"
 
 // SportsMatrix controls the RGB matrix. It rotates through a list of given board.Board
 type SportsMatrix struct {
-	cfg                *Config
-	isServing          chan struct{}
-	canvases           []board.Canvas
-	boards             []board.Board
-	screenIsOn         *atomic.Bool
-	webBoardIsOn       *atomic.Bool
-	webBoardOn         chan struct{}
-	webBoardOff        chan struct{}
-	serveBlock         chan struct{}
-	log                *zap.Logger
-	boardCtx           context.Context
-	boardCancel        context.CancelFunc
-	currentBoardCtx    context.Context
-	currentBoardCancel context.CancelFunc
-	server             http.Server
-	close              chan struct{}
-	httpEndpoints      []string
-	jumpLock           sync.Mutex
-	boardLock          sync.Mutex
-	webBoardLock       sync.Mutex
-	screenSwitch       chan struct{}
-	jumpTo             chan string
-	betweenBoards      []board.Board
-	currentJump        string
-	jumping            *atomic.Bool
-	switchedOn         int
-	switchedOff        int
-	switchTestSleep    bool
-	webBoardWasOn      *atomic.Bool
-	serveContext       context.Context
-	webBoardCtx        context.Context
-	webBoardCancel     context.CancelFunc
-	liveOnly           *atomic.Bool
-	scrollStatus       chan float64
-	scrollInProgress   *atomic.Bool
+	cfg                  *Config
+	isServing            chan struct{}
+	canvases             []board.Canvas
+	boards               []board.Board
+	screenIsOn           *atomic.Bool
+	webBoardIsOn         *atomic.Bool
+	webBoardOn           chan struct{}
+	webBoardOff          chan struct{}
+	serveBlock           chan struct{}
+	log                  *zap.Logger
+	boardCtx             context.Context
+	boardCancel          context.CancelFunc
+	currentBoardCtx      context.Context
+	currentBoardCancel   context.CancelFunc
+	server               http.Server
+	close                chan struct{}
+	httpEndpoints        []string
+	jumpLock             sync.Mutex
+	boardLock            sync.Mutex
+	webBoardLock         sync.Mutex
+	screenSwitch         chan struct{}
+	jumpTo               chan string
+	betweenBoards        []board.Board
+	currentJump          string
+	jumping              *atomic.Bool
+	switchedOn           int
+	switchedOff          int
+	switchTestSleep      bool
+	webBoardWasOn        *atomic.Bool
+	serveContext         context.Context
+	webBoardCtx          context.Context
+	webBoardCancel       context.CancelFunc
+	liveOnly             *atomic.Bool
+	scrollStatus         chan float64
+	scrollInProgress     *atomic.Bool
+	defaultScrollSpeeds  map[string]time.Duration
+	activeScrollCanvases []*cnvs.ScrollCanvas
 	sync.Mutex
 }
 
@@ -152,24 +156,33 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 	cfg.Defaults()
 
 	s := &SportsMatrix{
-		boards:           boards,
-		cfg:              cfg,
-		log:              logger,
-		serveBlock:       make(chan struct{}),
-		close:            make(chan struct{}),
-		screenIsOn:       atomic.NewBool(true),
-		webBoardIsOn:     atomic.NewBool(false),
-		webBoardOn:       make(chan struct{}),
-		webBoardOff:      make(chan struct{}),
-		isServing:        make(chan struct{}, 1),
-		jumpTo:           make(chan string, 1),
-		canvases:         canvases,
-		jumping:          atomic.NewBool(false),
-		screenSwitch:     make(chan struct{}, 1),
-		webBoardWasOn:    atomic.NewBool(false),
-		liveOnly:         atomic.NewBool(false),
-		scrollStatus:     make(chan float64),
-		scrollInProgress: atomic.NewBool(false),
+		boards:              boards,
+		cfg:                 cfg,
+		log:                 logger,
+		serveBlock:          make(chan struct{}),
+		close:               make(chan struct{}),
+		screenIsOn:          atomic.NewBool(true),
+		webBoardIsOn:        atomic.NewBool(false),
+		webBoardOn:          make(chan struct{}),
+		webBoardOff:         make(chan struct{}),
+		isServing:           make(chan struct{}, 1),
+		jumpTo:              make(chan string, 1),
+		canvases:            canvases,
+		jumping:             atomic.NewBool(false),
+		screenSwitch:        make(chan struct{}, 1),
+		webBoardWasOn:       atomic.NewBool(false),
+		liveOnly:            atomic.NewBool(false),
+		scrollStatus:        make(chan float64),
+		scrollInProgress:    atomic.NewBool(false),
+		defaultScrollSpeeds: make(map[string]time.Duration),
+	}
+
+	for _, canvas := range canvases {
+		scr, ok := canvas.(*cnvs.ScrollCanvas)
+		if !ok {
+			continue
+		}
+		s.defaultScrollSpeeds[scr.Name()] = scr.GetScrollSpeed()
 	}
 
 	s.boardCtx, s.boardCancel = context.WithCancel(context.Background())
@@ -551,6 +564,10 @@ func (s *SportsMatrix) doCombinedScroll(ctx context.Context) error {
 		}
 	}
 
+	defer func() {
+		s.activeScrollCanvases = []*cnvs.ScrollCanvas{}
+	}()
+
 CANVASES:
 	for _, canvas := range s.canvases {
 		if !canvas.Enabled() || !canvas.Scrollable() {
@@ -571,6 +588,8 @@ CANVASES:
 			cancel()
 			return err
 		}
+
+		s.activeScrollCanvases = append(s.activeScrollCanvases, scrollCanvas)
 
 		ch := make(chan *orderedBoard, len(boards))
 		s.prepOrderedBoards(ctx, s.boards, base.Matrix, ch)
@@ -655,6 +674,10 @@ CANVASES:
 
 		s.waitForScroll(scrollCtx, 0.7, 5*time.Minute)
 		s.log.Debug("done waiting for combined scroll")
+
+		// Update the combined scroll delay based on any API adjustments that were
+		// made during rendering
+		s.cfg.combinedScrollDelay = scrollCanvas.GetScrollSpeed()
 	}
 
 	// nolint: govet
@@ -891,4 +914,19 @@ func (s *SportsMatrix) prepOrderedBoards(ctx context.Context, boards []board.Boa
 
 	wg.Wait()
 	close(canvases)
+}
+
+func (s *SportsMatrix) getActiveScrollCanvases() []*cnvs.ScrollCanvas {
+	canvases := []*cnvs.ScrollCanvas{}
+
+	for _, canvas := range s.canvases {
+		c, ok := canvas.(*cnvs.ScrollCanvas)
+		if ok {
+			canvases = append(canvases, c)
+		}
+	}
+
+	canvases = append(canvases, s.activeScrollCanvases...)
+
+	return canvases
 }
