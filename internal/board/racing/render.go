@@ -80,12 +80,15 @@ func (s *RacingBoard) render(ctx context.Context, canvas board.Canvas) (board.Ca
 		}
 
 		var err error
-		scrollCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log)
+		scrollCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log,
+			cnvs.WithMergePadding(s.config.TightScrollPadding),
+		)
 		if err != nil {
 			return nil, err
 		}
 		scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
 		scrollCanvas.SetScrollDirection(cnvs.RightToLeft)
+		go scrollCanvas.MatchScroll(ctx, base)
 	}
 
 	s.log.Debug("racing events",
@@ -130,7 +133,6 @@ EVENTS:
 	}
 
 	if canvas.Scrollable() && scrollCanvas != nil {
-		scrollCanvas.Merge(s.config.TightScrollPadding)
 		return scrollCanvas, nil
 	}
 

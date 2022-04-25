@@ -578,31 +578,34 @@ OUTER:
 	defer func() { _ = canvas.Clear() }()
 
 	var tightCanvas *cnvs.ScrollCanvas
-	if canvas.Scrollable() && s.config.TightScroll.Load() {
-		base, ok := canvas.(*cnvs.ScrollCanvas)
-		if !ok {
-			return nil, fmt.Errorf("wat")
-		}
+	base, ok := canvas.(*cnvs.ScrollCanvas)
+	if !ok {
+		return nil, fmt.Errorf("wat")
+	}
 
+	if canvas.Scrollable() && s.config.TightScroll.Load() {
 		var err error
-		tightCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log)
+		tightCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log,
+			cnvs.WithMergePadding(s.config.TightScrollPadding),
+		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
 		}
 
 		tightCanvas.SetScrollDirection(cnvs.RightToLeft)
 		tightCanvas.SetScrollSpeed(s.config.scrollDelay)
+
+		go tightCanvas.MatchScroll(ctx, base)
+
+		defer func() {
+			s.config.scrollDelay = tightCanvas.GetScrollSpeed()
+		}()
 	} else if canvas.Scrollable() && s.config.ScrollMode.Load() {
-		scroll, ok := canvas.(*cnvs.ScrollCanvas)
-		if ok {
-			orig := scroll.GetScrollSpeed()
-			defer func() { scroll.SetScrollSpeed(orig) }()
-			s.log.Debug("setting scroll delay",
-				zap.String("league", s.api.League()),
-				zap.String("delay", s.config.scrollDelay.String()),
-			)
-			scroll.SetScrollSpeed(s.config.scrollDelay)
-		}
+		base.SetScrollSpeed(s.config.scrollDelay)
+
+		defer func() {
+			s.config.scrollDelay = base.GetScrollSpeed()
+		}()
 	}
 
 GAMES:
@@ -693,7 +696,7 @@ GAMES:
 	}
 
 	if canvas.Scrollable() && tightCanvas != nil {
-		tightCanvas.Merge(s.config.TightScrollPadding)
+		// tightCanvas.Merge(s.config.TightScrollPadding)
 		return tightCanvas, nil
 	}
 

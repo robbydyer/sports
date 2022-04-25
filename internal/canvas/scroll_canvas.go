@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"sort"
 	"sync"
 	"time"
 
@@ -50,7 +51,7 @@ type ScrollCanvas struct {
 	mergePad            int
 	scrollStatus        chan float64
 	stateChangeCallback func()
-	scrollSpeedChan     chan time.Duration
+	sendScrollSpeedChan chan time.Duration
 	speedLock           sync.Mutex
 }
 
@@ -68,15 +69,15 @@ type ScrollCanvasOption func(*ScrollCanvas) error
 func NewScrollCanvas(m matrix.Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (*ScrollCanvas, error) {
 	w, h := m.Geometry()
 	c := &ScrollCanvas{
-		w:               w,
-		h:               h,
-		Matrix:          m,
-		enabled:         atomic.NewBool(true),
-		interval:        DefaultScrollDelay,
-		log:             logger,
-		direction:       RightToLeft,
-		merged:          atomic.NewBool(false),
-		scrollSpeedChan: make(chan time.Duration, 1),
+		w:                   w,
+		h:                   h,
+		Matrix:              m,
+		enabled:             atomic.NewBool(true),
+		interval:            DefaultScrollDelay,
+		log:                 logger,
+		direction:           RightToLeft,
+		merged:              atomic.NewBool(false),
+		sendScrollSpeedChan: make(chan time.Duration, 1),
 	}
 
 	for _, f := range opts {
@@ -125,7 +126,7 @@ func (c *ScrollCanvas) Len() int {
 	return len(c.actuals)
 }
 
-func (c *ScrollCanvas) Merge(padding int) {
+func (c *ScrollCanvas) merge(padding int) {
 	if c.merged.CAS(true, true) {
 		return
 	}
@@ -194,9 +195,13 @@ func (c *ScrollCanvas) SetScrollSpeed(d time.Duration) {
 	c.speedLock.Lock()
 	defer c.speedLock.Unlock()
 
+	if c.interval == d {
+		return
+	}
+
 	c.interval = d
 	select {
-	case c.scrollSpeedChan <- c.interval:
+	case c.sendScrollSpeedChan <- c.interval:
 		c.log.Info("scroll canvas sending new speed to channel",
 			zap.Duration("speed", c.interval),
 		)
@@ -205,9 +210,9 @@ func (c *ScrollCanvas) SetScrollSpeed(d time.Duration) {
 			zap.Duration("speed", c.interval),
 		)
 		// Clear the buffer
-		for i := 0; i < cap(c.scrollSpeedChan); i++ {
+		for i := 0; i < cap(c.sendScrollSpeedChan); i++ {
 			select {
-			case <-c.scrollSpeedChan:
+			case <-c.sendScrollSpeedChan:
 			default:
 			}
 		}
@@ -281,11 +286,13 @@ func (c *ScrollCanvas) Render(ctx context.Context) error {
 			return err
 		}
 	case BottomToTop:
+		c.merge(c.mergePad)
 		c.log.Debug("scrolling bottom to top")
 		if err := c.bottomToTop(ctx); err != nil {
 			return err
 		}
 	case TopToBottom:
+		c.merge(c.mergePad)
 		if err := c.topToBottom(ctx); err != nil {
 			return err
 		}
@@ -298,27 +305,11 @@ func (c *ScrollCanvas) Render(ctx context.Context) error {
 	return nil
 }
 
-// RenderNoMerge update the display with the data from the LED buffer
-func (c *ScrollCanvas) RenderNoMerge(ctx context.Context, status chan float64) error {
-	select {
-	case <-ctx.Done():
-		return context.Canceled
-	default:
-	}
+// RenderWithStatus update the display with the data from the LED buffer
+func (c *ScrollCanvas) RenderWithStatus(ctx context.Context, status chan float64) error {
 	c.scrollStatus = status
-	switch c.direction {
-	case RightToLeft:
-		c.log.Debug("scrolling right to left")
-		if err := c.rightToLeftNoMerge(ctx); err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("unsupported scroll direction")
-	}
 
-	draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Src)
-
-	return nil
+	return c.Render(ctx)
 }
 
 // ColorModel returns the canvas' color model, always color.RGBAModel
@@ -367,53 +358,6 @@ func (c *ScrollCanvas) Store(s bool) bool {
 // GetHTTPHandlers ...
 func (c *ScrollCanvas) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 	return nil, nil
-}
-
-func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
-	thisX := firstNonBlankX(c.actual)
-	thisX -= c.w
-	if thisX < 0 {
-		thisX = thisX * -1
-	}
-	finish := (lastNonBlankX(c.actual) + 1) * -1
-	c.log.Debug("scrolling right to left",
-		zap.Int("min X", c.actual.Bounds().Min.X),
-		zap.Int("min Y", c.actual.Bounds().Min.Y),
-		zap.Int("max X", c.actual.Bounds().Max.X),
-		zap.Int("max Y", c.actual.Bounds().Max.Y),
-		zap.Int("startX", thisX),
-		zap.Int("finish", finish),
-		zap.String("delay", c.interval.String()),
-	)
-
-	for {
-		if thisX == finish {
-			break
-		}
-
-		loader := make([]matrix.MatrixPoint, c.actual.Bounds().Dx()*c.actual.Bounds().Dy())
-
-		index := 0
-		for x := c.actual.Bounds().Min.X; x <= c.actual.Bounds().Max.X; x++ {
-			for y := c.actual.Bounds().Min.Y; y <= c.actual.Bounds().Max.Y; y++ {
-				shiftX := x + thisX
-				if shiftX > 0 && shiftX < c.w && y > 0 && y < c.h {
-					loader[index] = matrix.MatrixPoint{
-						X:     shiftX,
-						Y:     y,
-						Color: c.actual.At(x, y),
-					}
-					index++
-				}
-			}
-		}
-
-		c.Matrix.PreLoad(loader)
-
-		thisX--
-	}
-
-	return c.Matrix.Play(ctx, c.GetScrollSpeed(), c.scrollSpeedChan)
 }
 
 func (c *ScrollCanvas) topToBottom(ctx context.Context) error {
@@ -474,6 +418,186 @@ func (c *ScrollCanvas) bottomToTop(ctx context.Context) error {
 			return err
 		}
 		thisY--
+	}
+}
+
+// getActualPixel returns the pixel color at virtual coordinates in unmerged canvas list
+func (c *ScrollCanvas) getActualPixel(virtualX int, virtualY int) color.Color {
+	if len(c.subCanvases) < 1 {
+		c.PrepareSubCanvases()
+	}
+
+	for _, sub := range c.subCanvases {
+		if virtualX >= sub.virtualStartX && virtualX <= sub.virtualEndX {
+			actualX := (virtualX - sub.virtualStartX) + sub.actualStartX
+			return sub.img.At(actualX, virtualY)
+		}
+	}
+
+	return color.Black
+}
+
+// PrepareSubCanvases
+func (c *ScrollCanvas) PrepareSubCanvases() {
+	if len(c.actuals) < 1 {
+		return
+	}
+	c.subCanvases = []*subCanvasHorizontal{
+		{
+			index:         0,
+			actualStartX:  0,
+			actualEndX:    c.w,
+			virtualStartX: 0,
+			virtualEndX:   c.w,
+			img:           image.NewRGBA(image.Rect(0, 0, c.w, c.h)),
+		},
+	}
+
+	index := 1
+	for _, actual := range c.actuals {
+		c.subCanvases = append(c.subCanvases,
+			&subCanvasHorizontal{
+				actualStartX: firstNonBlankX(actual),
+				actualEndX:   lastNonBlankX(actual),
+				img:          actual,
+				index:        index,
+			},
+		)
+		index++
+		c.subCanvases = append(c.subCanvases,
+			&subCanvasHorizontal{
+				actualStartX: 0,
+				actualEndX:   c.mergePad,
+				img:          image.NewRGBA(image.Rect(0, 0, c.mergePad, c.h)),
+				index:        index,
+			},
+		)
+		index++
+	}
+
+	c.subCanvases = append(c.subCanvases,
+		&subCanvasHorizontal{
+			index:        index,
+			actualStartX: 0,
+			actualEndX:   c.w,
+			img:          image.NewRGBA(image.Rect(0, 0, c.w, c.h)),
+		},
+	)
+
+	sort.SliceStable(c.subCanvases, func(i int, j int) bool {
+		return c.subCanvases[i].index < c.subCanvases[j].index
+	})
+
+	c.log.Debug("done initializing sub canvases",
+		zap.Int("num", len(c.subCanvases)),
+	)
+
+SUBS:
+	for _, sub := range c.subCanvases {
+		if sub.index == 0 {
+			continue SUBS
+		}
+
+		prev := c.prevSub(sub)
+
+		if prev == nil {
+			continue SUBS
+		}
+
+		sub.virtualStartX = prev.virtualEndX + 1
+		diff := sub.actualEndX - sub.actualStartX
+		if sub.actualStartX < 1 {
+			diff = sub.actualEndX - (sub.actualStartX * -1)
+		}
+		sub.virtualEndX = sub.virtualStartX + diff
+
+		c.log.Debug("define sub canvas",
+			zap.Int("index", sub.index),
+			zap.Int("actualstartX", sub.actualStartX),
+			zap.Int("actualendX", sub.actualEndX),
+			zap.Int("virtualstartX", sub.virtualStartX),
+			zap.Int("virtualendx", sub.virtualEndX),
+			zap.Int("actual canvas Width", c.w),
+		)
+	}
+	c.log.Debug("done defining sub canvases")
+}
+
+func (c *ScrollCanvas) prevSub(me *subCanvasHorizontal) *subCanvasHorizontal {
+	if me.index == 0 {
+		return nil
+	}
+	for _, sub := range c.subCanvases {
+		if sub.index == me.index-1 {
+			return sub
+		}
+	}
+	return nil
+}
+
+func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
+	if len(c.subCanvases) < 1 {
+		c.PrepareSubCanvases()
+	}
+	if len(c.subCanvases) < 1 {
+		return fmt.Errorf("not enough subcanvases to merge")
+	}
+
+	finish := c.subCanvases[len(c.subCanvases)-1].virtualEndX
+
+	virtualX := c.subCanvases[0].virtualStartX
+
+	c.log.Debug("performing right to left scroll without canvas merge",
+		zap.Int("virtualX start", virtualX),
+		zap.Int("finish", finish),
+		zap.Duration("interval", c.GetScrollSpeed()),
+	)
+
+	for {
+		if virtualX == finish {
+			break
+		}
+
+		loader := make([]matrix.MatrixPoint, c.w*c.h)
+
+		index := 0
+		for x := 0; x < c.w; x++ {
+			for y := 0; y < c.h; y++ {
+				thisVirtualX := x + virtualX
+
+				loader[index] = matrix.MatrixPoint{
+					X:     x,
+					Y:     y,
+					Color: c.getActualPixel(thisVirtualX, y),
+				}
+				index++
+			}
+		}
+		virtualX++
+
+		c.Matrix.PreLoad(loader)
+	}
+
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	default:
+	}
+
+	return c.Matrix.Play(ctx, c.GetScrollSpeed(), c.sendScrollSpeedChan)
+}
+
+// MatchScroll will match the scroll speed of this canvas from the given one.
+// It will block until the context is canceled
+func (s *ScrollCanvas) MatchScroll(ctx context.Context, match *ScrollCanvas) {
+	ticker := time.NewTicker(500 * time.Millisecond)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+		s.SetScrollSpeed(match.GetScrollSpeed())
 	}
 }
 

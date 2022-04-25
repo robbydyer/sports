@@ -598,18 +598,17 @@ CANVASES:
 		s.prepOrderedBoards(ctx, s.betweenBoards, base.Matrix, betweenCh)
 
 		allOrderedBoards := []*orderedBoard{}
-	SCR:
+
 		for scrCanvas := range ch {
-			if scrCanvas.scrollCanvas == nil {
-				continue SCR
+			if scrCanvas != nil && scrCanvas.scrollCanvas != nil {
+				allOrderedBoards = append(allOrderedBoards, scrCanvas)
 			}
-			allOrderedBoards = append(allOrderedBoards, scrCanvas)
 		}
 
 		betweenBoards := []*orderedBoard{}
 
 		for c := range betweenCh {
-			if c != nil {
+			if c != nil && c.scrollCanvas != nil {
 				betweenBoards = append(betweenBoards, c)
 			}
 		}
@@ -623,9 +622,9 @@ CANVASES:
 
 		for _, ordered := range allOrderedBoards {
 			if ordered.scrollCanvas.Len() > 0 {
-				scrollCanvas.AddCanvas(ordered.scrollCanvas)
+				scrollCanvas.Append(ordered.scrollCanvas)
 				for _, c := range betweenBoards {
-					scrollCanvas.AddCanvas(c.scrollCanvas)
+					scrollCanvas.Append(c.scrollCanvas)
 				}
 			} else {
 				s.log.Debug("board had less than 1 canvas rendered",
@@ -665,7 +664,7 @@ CANVASES:
 				zap.Duration("scroll delay", s.cfg.combinedScrollDelay),
 			)
 
-			if err := scrollCanvas.RenderNoMerge(scrollCtx, s.scrollStatus); err != nil {
+			if err := scrollCanvas.RenderWithStatus(scrollCtx, s.scrollStatus); err != nil {
 				s.log.Error("combined scroll failed",
 					zap.Error(err),
 				)

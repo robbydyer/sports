@@ -259,11 +259,15 @@ func (w *WeatherBoard) render(ctx context.Context, canvas board.Canvas) (board.C
 	base, ok := canvas.(*cnvs.ScrollCanvas)
 	if ok && w.config.ScrollMode.Load() {
 		var err error
-		scrollCanvas, err = cnvs.NewScrollCanvas(base.Matrix, w.log)
+		scrollCanvas, err = cnvs.NewScrollCanvas(base.Matrix, w.log,
+			cnvs.WithMergePadding(w.config.TightScrollPadding),
+		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
 		}
 		scrollCanvas.SetScrollDirection(cnvs.RightToLeft)
+
+		go scrollCanvas.MatchScroll(ctx, base)
 	}
 
 	zeroed := rgbrender.ZeroedBounds(canvas.Bounds())
@@ -347,7 +351,6 @@ FORECASTS:
 	}
 
 	if w.config.ScrollMode.Load() && scrollCanvas != nil {
-		scrollCanvas.Merge(w.config.TightScrollPadding)
 		return scrollCanvas, nil
 	}
 

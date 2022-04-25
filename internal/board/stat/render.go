@@ -151,7 +151,7 @@ func (s *StatBoard) render(ctx context.Context, canvas board.Canvas) (board.Canv
 			return nil, err
 		}
 		tightCanvas.AddCanvas(canvas)
-		tightCanvas.Merge(0)
+		go tightCanvas.MatchScroll(ctx, base)
 		return tightCanvas, nil
 	}
 

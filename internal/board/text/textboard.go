@@ -273,12 +273,16 @@ func (s *TextBoard) render(ctx context.Context, canvas board.Canvas) (board.Canv
 		return nil, fmt.Errorf("wat")
 	}
 
-	scrollCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log)
+	scrollCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log,
+		cnvs.WithMergePadding(s.config.TightScrollPadding),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
 	}
 	scrollCanvas.SetScrollDirection(cnvs.RightToLeft)
 	scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
+
+	go scrollCanvas.MatchScroll(ctx, base)
 
 	s.log.Debug("scroll config",
 		zap.Duration("scroll delay", s.config.scrollDelay),
@@ -334,7 +338,6 @@ TEXT:
 		}
 	}
 
-	scrollCanvas.Merge(s.config.TightScrollPadding)
 	return scrollCanvas, nil
 }
 

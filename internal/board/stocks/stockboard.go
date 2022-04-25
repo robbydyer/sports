@@ -272,11 +272,15 @@ func (s *StockBoard) render(ctx context.Context, canvas board.Canvas) (board.Can
 		}
 
 		var err error
-		scrollCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log)
+		scrollCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log,
+			cnvs.WithMergePadding(s.config.TightScrollPadding),
+		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
 		}
 		scrollCanvas.SetScrollDirection(cnvs.RightToLeft)
+
+		go scrollCanvas.MatchScroll(ctx, base)
 	}
 
 STOCK:
@@ -311,7 +315,6 @@ STOCK:
 	}
 
 	if canvas.Scrollable() && scrollCanvas != nil {
-		scrollCanvas.Merge(s.config.TightScrollPadding)
 		return scrollCanvas, nil
 	}
 
