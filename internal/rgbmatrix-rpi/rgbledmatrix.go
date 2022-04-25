@@ -48,6 +48,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/robbydyer/sports/internal/matrix"
 	"go.uber.org/atomic"
 )
 
@@ -309,68 +310,30 @@ func NewRGBLedMatrix(config *HardwareConfig, rtOptions *RuntimeOptions) (c *RGBL
 	return c, nil
 }
 
-// Initialize initialize library, must be called once before other functions are
-// called.
-/*
-func (c *RGBLedMatrix) Initialize() error {
-	return nil
-}
-*/
-
 // Geometry returns the width and the height of the matrix
-func (c *RGBLedMatrix) Geometry() (width, height int) {
+func (c *RGBLedMatrix) Geometry() (int, int) {
 	return c.width, c.height
 }
 
-/*
-// Apply set all the pixels to the values contained in leds
-func (c *RGBLedMatrix) Apply(leds []color.Color) error {
-	for position, l := range leds {
-		c.Set(position, l)
-	}
-
-	return c.Render()
-}
-*/
-
 // Render update the display with the data from the LED buffer
 func (c *RGBLedMatrix) Render() error {
-	c.Lock()
-	defer c.Unlock()
-
-	if c.closed.Load() {
-		return nil
-	}
-	// Check this so we don't cause a panic
-	if len(c.leds) < 1 {
-		return fmt.Errorf("led buffer is empty")
-	}
-
-	w, h := c.Config.geometry()
-
-	C.led_matrix_swap(
-		c.matrix,
-		c.buffer,
-		C.int(w), C.int(h),
-		(*C.uint32_t)(unsafe.Pointer(&c.leds[0])),
-	)
-
-	c.leds = make([]C.uint32_t, w*h)
-	return nil
+	return c.render(c.leds)
 }
 
 func (c *RGBLedMatrix) render(leds []C.uint32_t) error {
+	c.Lock()
+	defer c.Unlock()
+
 	// Check this so we don't cause a panic
 	if len(leds) < 1 {
 		return fmt.Errorf("led buffer is empty")
 	}
 
-	w, h := c.Config.geometry()
-
 	C.led_matrix_swap(
 		c.matrix,
 		c.buffer,
-		C.int(w), C.int(h),
+		C.int(c.width),
+		C.int(c.height),
 		(*C.uint32_t)(unsafe.Pointer(&leds[0])),
 	)
 
@@ -392,7 +355,7 @@ func (c *RGBLedMatrix) Set(x int, y int, color color.Color) {
 	c.leds[position] = C.uint32_t(colorToUint32(color))
 }
 
-func (c *RGBLedMatrix) PreLoad(points []MatrixPoint) {
+func (c *RGBLedMatrix) PreLoad(points []matrix.MatrixPoint) {
 	w, h := c.Config.geometry()
 	prep := make([]C.uint32_t, w*h)
 

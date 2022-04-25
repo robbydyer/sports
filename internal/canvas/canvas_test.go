@@ -27,7 +27,8 @@ func (s *CanvasSuite) TestNewCanvas(c *C) {
 func (s *CanvasSuite) TestRender(c *C) {
 	m := NewMatrixMock()
 	canvas := &Canvas{m: m}
-	canvas.Render(context.Background())
+	err := canvas.Render(context.Background())
+	c.Assert(err, Equals, nil)
 
 	c.Assert(m.called["Render"], Equals, true)
 }

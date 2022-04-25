@@ -135,5 +135,4 @@ func (c *ConsoleMatrix) Close() error {
 
 // SetBrightness does nothing
 func (c *ConsoleMatrix) SetBrightness(brightness int) {
-	return
 }

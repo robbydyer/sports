@@ -29,6 +29,7 @@ import (
 	"github.com/robbydyer/sports/internal/config"
 	"github.com/robbydyer/sports/internal/espnboard"
 	"github.com/robbydyer/sports/internal/espnracing"
+	"github.com/robbydyer/sports/internal/matrix"
 	"github.com/robbydyer/sports/internal/mlb"
 	"github.com/robbydyer/sports/internal/nhl"
 	"github.com/robbydyer/sports/internal/openweather"
@@ -345,8 +346,8 @@ func (r *rootArgs) setConfigDefaults() {
 	r.config.CalenderConfig.SetDefaults()
 }
 
-func (r *rootArgs) getRGBMatrix(logger *zap.Logger) (rgb.Matrix, error) {
-	var matrix rgb.Matrix
+func (r *rootArgs) getRGBMatrix(logger *zap.Logger) (matrix.Matrix, error) {
+	var matrix matrix.Matrix
 	logger.Info("initializing matrix",
 		zap.Int("Cols", r.config.SportsMatrixConfig.HardwareConfig.Cols),
 		zap.Int("Rows", r.config.SportsMatrixConfig.HardwareConfig.Rows),
@@ -366,12 +367,12 @@ func (r *rootArgs) getRGBMatrix(logger *zap.Logger) (rgb.Matrix, error) {
 	return matrix, err
 }
 
-func (r *rootArgs) getTestMatrix(logger *zap.Logger) rgb.Matrix {
+func (r *rootArgs) getTestMatrix(logger *zap.Logger) matrix.Matrix {
 	logger.Info("initializing console matrix",
 		zap.Int("Cols", r.config.SportsMatrixConfig.HardwareConfig.Cols),
 		zap.Int("Rows", r.config.SportsMatrixConfig.HardwareConfig.Rows),
 	)
-	return rgb.NewConsoleMatrix(r.config.SportsMatrixConfig.HardwareConfig.Cols, r.config.SportsMatrixConfig.HardwareConfig.Rows, os.Stdout, logger)
+	return matrix.NewConsoleMatrix(r.config.SportsMatrixConfig.HardwareConfig.Cols, r.config.SportsMatrixConfig.HardwareConfig.Rows, os.Stdout, logger)
 }
 
 func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.Board, error) {

@@ -7,7 +7,7 @@ import (
 	"math"
 
 	"github.com/robbydyer/sports/internal/board"
-	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
+	cnvs "github.com/robbydyer/sports/internal/canvas"
 )
 
 // Align represents alignment vertically and horizontally
@@ -35,7 +35,7 @@ const (
 )
 
 // SetImageAlign ...
-func SetImageAlign(canvas *rgb.Canvas, align Align, img image.Image) (image.Image, error) {
+func SetImageAlign(canvas *cnvs.Canvas, align Align, img image.Image) (image.Image, error) {
 	rect, err := AlignPosition(align, canvas.Bounds(), img.Bounds().Dx(), img.Bounds().Dy())
 	if err != nil {
 		return nil, err

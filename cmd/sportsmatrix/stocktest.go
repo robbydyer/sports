@@ -10,8 +10,8 @@ import (
 
 	"github.com/robbydyer/sports/internal/board"
 	stockboard "github.com/robbydyer/sports/internal/board/stocks"
-	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
-	"github.com/robbydyer/sports/internal/scrollcanvas"
+	cnvs "github.com/robbydyer/sports/internal/canvas"
+	"github.com/robbydyer/sports/internal/matrix"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
 )
 
@@ -57,7 +57,7 @@ func (s *stockCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	var canvases []board.Canvas
-	var matrix rgb.Matrix
+	var matrix matrix.Matrix
 	if s.rArgs.test {
 		matrix = s.rArgs.getTestMatrix(logger)
 	} else {
@@ -68,12 +68,12 @@ func (s *stockCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	scroll, err := scrollcanvas.NewScrollCanvas(matrix, logger)
+	scroll, err := cnvs.NewScrollCanvas(matrix, logger)
 	if err != nil {
 		return err
 	}
 
-	canvases = append(canvases, rgb.NewCanvas(matrix), scroll)
+	canvases = append(canvases, cnvs.NewCanvas(matrix), scroll)
 
 	mtrx, err := sportsmatrix.New(ctx, logger, s.rArgs.config.SportsMatrixConfig, canvases, b)
 	if err != nil {

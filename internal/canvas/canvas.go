@@ -15,10 +15,10 @@ import (
 // Canvas is a image.Image representation of a WS281x matrix, it implements
 // image.Image interface and can be used with draw.Draw for example
 type Canvas struct {
-	w, h    int
-	m       matrix.Matrix
-	closed  bool
-	enabled *atomic.Bool
+	w, h                int
+	m                   matrix.Matrix
+	enabled             *atomic.Bool
+	stateChangeCallback func()
 }
 
 // NewCanvas returns a new Canvas using the given width and height and creates
@@ -84,10 +84,6 @@ func (c *Canvas) GetWidth() int {
 	return c.w
 }
 
-func (c *Canvas) position(x, y int) int {
-	return x + (y * c.w)
-}
-
 // Clear set all the leds on the matrix with color.Black
 func (c *Canvas) Clear() error {
 	draw.Draw(c, c.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Src)
@@ -96,7 +92,7 @@ func (c *Canvas) Clear() error {
 
 // Close clears the matrix and close the matrix
 func (c *Canvas) Close() error {
-	c.Clear()
+	_ = c.Clear()
 	return c.m.Close()
 }
 
@@ -107,20 +103,24 @@ func (c *Canvas) Enabled() bool {
 
 // Enable ...
 func (c *Canvas) Enable() bool {
-	return c.enabled.CAS(false, true)
+	return c.Store(true)
 }
 
 // Disable ...
 func (c *Canvas) Disable() bool {
-	return c.enabled.CAS(true, false)
+	return c.Store(false)
 }
 
 func (c *Canvas) Store(s bool) bool {
-	return c.enabled.CAS(!s, s)
+	if c.enabled.CAS(!s, s) {
+		c.stateChangeCallback()
+		return true
+	}
+	return false
 }
 
 func (c *Canvas) SetStateChangeCallback(s func()) {
-	return
+	c.stateChangeCallback = s
 }
 
 // GetHTTPHandlers ...
