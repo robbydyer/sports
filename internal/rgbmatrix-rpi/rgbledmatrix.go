@@ -280,7 +280,7 @@ type RGBLedMatrix struct {
 }
 
 // NewRGBLedMatrix returns a new matrix using the given size and config
-func NewRGBLedMatrix(config *HardwareConfig, rtOptions *RuntimeOptions) (c Matrix, err error) {
+func NewRGBLedMatrix(config *HardwareConfig, rtOptions *RuntimeOptions) (c *RGBLedMatrix, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			var ok bool

@@ -1,4 +1,4 @@
-package scrollcanvas
+package canvas
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"image/color"
 	"sort"
 
-	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/internal/matrix"
 	"go.uber.org/zap"
 )
 
@@ -147,14 +147,14 @@ func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
 			break
 		}
 
-		loader := make([]rgb.MatrixPoint, c.w*c.h)
+		loader := make([]matrix.MatrixPoint, c.w*c.h)
 
 		index := 0
 		for x := 0; x < c.w; x++ {
 			for y := 0; y < c.h; y++ {
 				thisVirtualX := x + virtualX
 
-				loader[index] = rgb.MatrixPoint{
+				loader[index] = matrix.MatrixPoint{
 					X:     x,
 					Y:     y,
 					Color: c.getActualPixel(thisVirtualX, y),

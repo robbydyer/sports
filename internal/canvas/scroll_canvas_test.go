@@ -1,4 +1,4 @@
-package scrollcanvas
+package canvas
 
 import (
 	"image"
@@ -7,15 +7,14 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/robbydyer/sports/internal/matrix"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
-
-	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 )
 
 func TestScrollCanvas(t *testing.T) {
 	l := zaptest.NewLogger(t)
-	m := rgb.NewConsoleMatrix(64, 32, ioutil.Discard, l)
+	m := matrix.NewConsoleMatrix(64, 32, ioutil.Discard, l)
 	c, err := NewScrollCanvas(m, l)
 	require.NoError(t, err)
 

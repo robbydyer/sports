@@ -1,10 +1,12 @@
-package rgbmatrix
+package canvas
 
 import (
 	"context"
 	"image/color"
 	"testing"
+	"time"
 
+	"github.com/robbydyer/sports/internal/matrix"
 	. "gopkg.in/check.v1"
 )
 
@@ -36,7 +38,6 @@ func (s *CanvasSuite) TestColorModel(c *C) {
 }
 
 func (s *CanvasSuite) TestBounds(c *C) {
-
 	canvas := &Canvas{w: 10, h: 20}
 
 	b := canvas.Bounds()
@@ -111,22 +112,15 @@ func (m *MatrixMock) Initialize() error {
 	return nil
 }
 
-func (m *MatrixMock) At(position int) color.Color {
-	m.called["At"] = position
+func (m *MatrixMock) At(x int, y int) color.Color {
+	m.called["At"] = position(x, y, 1)
 	return color.Black
 }
 
-func (m *MatrixMock) Set(position int, c color.Color) {
-	m.called["Set"] = position
-	m.colors[position] = c
-}
-
-func (m *MatrixMock) Apply(leds []color.Color) error {
-	for position, l := range leds {
-		m.Set(position, l)
-	}
-
-	return m.Render()
+func (m *MatrixMock) Set(x int, y int, c color.Color) {
+	pos := position(x, y, 1)
+	m.called["Set"] = pos
+	m.colors[pos] = c
 }
 
 func (m *MatrixMock) Render() error {
@@ -141,4 +135,10 @@ func (m *MatrixMock) Close() error {
 
 func (m *MatrixMock) SetBrightness(brightness int) {
 	m.called["MatrixMock"] = true
+}
+
+func (m *MatrixMock) PreLoad(points []matrix.MatrixPoint) {}
+
+func (m *MatrixMock) Play(ctx context.Context, interval time.Duration) error {
+	return nil
 }

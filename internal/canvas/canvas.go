@@ -1,4 +1,4 @@
-package rgbmatrix
+package canvas
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"image/draw"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/matrix"
 	"go.uber.org/atomic"
 )
 
@@ -14,14 +15,14 @@ import (
 // image.Image interface and can be used with draw.Draw for example
 type Canvas struct {
 	w, h    int
-	m       Matrix
+	m       matrix.Matrix
 	closed  bool
 	enabled *atomic.Bool
 }
 
 // NewCanvas returns a new Canvas using the given width and height and creates
 // a new WS281x matrix using the given config
-func NewCanvas(m Matrix) *Canvas {
+func NewCanvas(m matrix.Matrix) *Canvas {
 	w, h := m.Geometry()
 	return &Canvas{
 		w:       w,

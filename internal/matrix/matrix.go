@@ -1,4 +1,4 @@
-package rgbmatrix
+package matrix
 
 import (
 	"context"

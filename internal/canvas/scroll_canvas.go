@@ -1,4 +1,4 @@
-package scrollcanvas
+package canvas
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/robbydyer/sports/internal/board"
-	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/internal/matrix"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )
@@ -35,7 +35,7 @@ const (
 
 type ScrollCanvas struct {
 	w, h         int
-	Matrix       rgb.Matrix
+	Matrix       matrix.Matrix
 	enabled      *atomic.Bool
 	actual       *image.RGBA
 	direction    ScrollDirection
@@ -60,7 +60,7 @@ type subCanvasHorizontal struct {
 
 type ScrollCanvasOption func(*ScrollCanvas) error
 
-func NewScrollCanvas(m rgb.Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (*ScrollCanvas, error) {
+func NewScrollCanvas(m matrix.Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (*ScrollCanvas, error) {
 	w, h := m.Geometry()
 	c := &ScrollCanvas{
 		w:         w,
@@ -171,10 +171,6 @@ func (c *ScrollCanvas) Append(other *ScrollCanvas) {
 	for _, actual := range other.actuals {
 		c.actuals = append(c.actuals, actual)
 	}
-}
-
-func (c *ScrollCanvas) position(x, y int) int {
-	return x + (y * c.w)
 }
 
 func (c *ScrollCanvas) Scrollable() bool {
@@ -364,14 +360,14 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 			break
 		}
 
-		loader := make([]rgb.MatrixPoint, c.actual.Bounds().Dx()*c.actual.Bounds().Dy())
+		loader := make([]matrix.MatrixPoint, c.actual.Bounds().Dx()*c.actual.Bounds().Dy())
 
 		index := 0
 		for x := c.actual.Bounds().Min.X; x <= c.actual.Bounds().Max.X; x++ {
 			for y := c.actual.Bounds().Min.Y; y <= c.actual.Bounds().Max.Y; y++ {
 				shiftX := x + thisX
 				if shiftX > 0 && shiftX < c.w && y > 0 && y < c.h {
-					loader[index] = rgb.MatrixPoint{
+					loader[index] = matrix.MatrixPoint{
 						X:     shiftX,
 						Y:     y,
 						Color: c.actual.At(x, y),
