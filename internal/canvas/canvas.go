@@ -6,9 +6,10 @@ import (
 	"image/color"
 	"image/draw"
 
+	"go.uber.org/atomic"
+
 	"github.com/robbydyer/sports/internal/board"
 	"github.com/robbydyer/sports/internal/matrix"
-	"go.uber.org/atomic"
 )
 
 // Canvas is a image.Image representation of a WS281x matrix, it implements

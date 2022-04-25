@@ -12,8 +12,8 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
+	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/rgbrender"
-	"github.com/robbydyer/sports/internal/scrollcanvas"
 )
 
 // ScrollRender ...
@@ -66,20 +66,20 @@ func (s *CalendarBoard) render(ctx context.Context, canvas board.Canvas) (board.
 		}
 	}
 
-	var scrollCanvas *scrollcanvas.ScrollCanvas
+	var scrollCanvas *cnvs.ScrollCanvas
 	if canvas.Scrollable() && s.config.ScrollMode.Load() {
-		base, ok := canvas.(*scrollcanvas.ScrollCanvas)
+		base, ok := canvas.(*cnvs.ScrollCanvas)
 		if !ok {
 			return nil, fmt.Errorf("invalid scroll canvas")
 		}
 
 		var err error
-		scrollCanvas, err = scrollcanvas.NewScrollCanvas(base.Matrix, s.log)
+		scrollCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log)
 		if err != nil {
 			return nil, err
 		}
 		scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
-		scrollCanvas.SetScrollDirection(scrollcanvas.RightToLeft)
+		scrollCanvas.SetScrollDirection(cnvs.RightToLeft)
 	}
 
 	s.log.Debug("calendar events",

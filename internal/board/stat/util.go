@@ -12,8 +12,8 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/robbydyer/sports/internal/board"
+	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/rgbrender"
-	"github.com/robbydyer/sports/internal/scrollcanvas"
 )
 
 const padSize = float64(0.005)
@@ -200,7 +200,7 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 		pad = int(math.Ceil((writer.FontSize) * float64(numRows)))
 		pad -= rgbrender.ZeroedBounds(canvas.Bounds()).Dy()
 		// pad = pad / 2
-		scroller, ok := canvas.(*scrollcanvas.ScrollCanvas)
+		scroller, ok := canvas.(*cnvs.ScrollCanvas)
 		if ok {
 			scroller.SetPadding(pad)
 		}

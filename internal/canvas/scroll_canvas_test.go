@@ -7,9 +7,10 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/robbydyer/sports/internal/matrix"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
+
+	"github.com/robbydyer/sports/internal/matrix"
 )
 
 func TestScrollCanvas(t *testing.T) {

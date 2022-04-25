@@ -16,10 +16,10 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
+	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/enabler"
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/internal/rgbrender"
-	"github.com/robbydyer/sports/internal/scrollcanvas"
 	"github.com/robbydyer/sports/internal/twirphelpers"
 	"github.com/robbydyer/sports/internal/util"
 )
@@ -76,11 +76,11 @@ func (c *Config) SetDefaults() {
 	if c.ScrollDelay != "" {
 		d, err := time.ParseDuration(c.ScrollDelay)
 		if err != nil {
-			c.scrollDelay = scrollcanvas.DefaultScrollDelay
+			c.scrollDelay = cnvs.DefaultScrollDelay
 		}
 		c.scrollDelay = d
 	} else {
-		c.scrollDelay = scrollcanvas.DefaultScrollDelay
+		c.scrollDelay = cnvs.DefaultScrollDelay
 	}
 }
 
@@ -205,14 +205,14 @@ func (c *Clock) render(ctx context.Context, canvas board.Canvas) (board.Canvas, 
 	}
 
 	if c.config.ScrollMode.Load() && canvas.Scrollable() {
-		base, ok := canvas.(*scrollcanvas.ScrollCanvas)
+		base, ok := canvas.(*cnvs.ScrollCanvas)
 		if !ok {
 			return nil, fmt.Errorf("unsupported scroll canvas")
 		}
 
-		scrollCanvas, err := scrollcanvas.NewScrollCanvas(base.Matrix, c.log,
-			scrollcanvas.WithScrollDirection(scrollcanvas.RightToLeft),
-			scrollcanvas.WithScrollSpeed(c.config.scrollDelay),
+		scrollCanvas, err := cnvs.NewScrollCanvas(base.Matrix, c.log,
+			cnvs.WithScrollDirection(cnvs.RightToLeft),
+			cnvs.WithScrollSpeed(c.config.scrollDelay),
 		)
 		if err != nil {
 			return nil, err

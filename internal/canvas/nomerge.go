@@ -7,8 +7,9 @@ import (
 	"image/color"
 	"sort"
 
-	"github.com/robbydyer/sports/internal/matrix"
 	"go.uber.org/zap"
+
+	"github.com/robbydyer/sports/internal/matrix"
 )
 
 // getActualPixel returns the pixel color at virtual coordinates in unmerged canvas list
@@ -160,7 +161,6 @@ func (c *ScrollCanvas) rightToLeftNoMerge(ctx context.Context) error {
 					Color: c.getActualPixel(thisVirtualX, y),
 				}
 				index++
-
 			}
 		}
 		virtualX++

@@ -8,10 +8,11 @@ import (
 	"image/draw"
 	"time"
 
-	"github.com/robbydyer/sports/internal/board"
-	"github.com/robbydyer/sports/internal/matrix"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
+
+	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/matrix"
 )
 
 var (

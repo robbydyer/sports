@@ -16,11 +16,11 @@ import (
 	"github.com/twitchtv/twirp"
 
 	"github.com/robbydyer/sports/internal/board"
+	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/enabler"
 	"github.com/robbydyer/sports/internal/logo"
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/internal/rgbrender"
-	"github.com/robbydyer/sports/internal/scrollcanvas"
 	"github.com/robbydyer/sports/internal/twirphelpers"
 	"github.com/robbydyer/sports/internal/util"
 )
@@ -267,17 +267,17 @@ func (s *TextBoard) render(ctx context.Context, canvas board.Canvas) (board.Canv
 		)
 	}
 
-	var scrollCanvas *scrollcanvas.ScrollCanvas
-	base, ok := canvas.(*scrollcanvas.ScrollCanvas)
+	var scrollCanvas *cnvs.ScrollCanvas
+	base, ok := canvas.(*cnvs.ScrollCanvas)
 	if !ok {
 		return nil, fmt.Errorf("wat")
 	}
 
-	scrollCanvas, err = scrollcanvas.NewScrollCanvas(base.Matrix, s.log)
+	scrollCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
 	}
-	scrollCanvas.SetScrollDirection(scrollcanvas.RightToLeft)
+	scrollCanvas.SetScrollDirection(cnvs.RightToLeft)
 	scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
 
 	s.log.Debug("scroll config",

@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/robbydyer/sports/internal/matrix"
 	. "gopkg.in/check.v1"
+
+	"github.com/robbydyer/sports/internal/matrix"
 )
 
 func Test(t *testing.T) { TestingT(t) }
