@@ -53,6 +53,8 @@ type ScrollCanvas struct {
 	stateChangeCallback func()
 	sendScrollSpeedChan chan time.Duration
 	speedLock           sync.Mutex
+	matchScrollCtx      context.Context
+	matchScrollCancel   context.CancelFunc
 }
 
 type subCanvasHorizontal struct {
@@ -200,20 +202,29 @@ func (c *ScrollCanvas) SetScrollSpeed(d time.Duration) {
 	}
 
 	c.interval = d
-	select {
-	case c.sendScrollSpeedChan <- c.interval:
-		c.log.Info("scroll canvas sending new speed to channel",
-			zap.Duration("speed", c.interval),
-		)
-	default:
-		c.log.Info("failed to send scroll canvas sending new speed to channel",
-			zap.Duration("speed", c.interval),
-		)
-		// Clear the buffer
-		for i := 0; i < cap(c.sendScrollSpeedChan); i++ {
-			select {
-			case <-c.sendScrollSpeedChan:
-			default:
+	max := 2
+	try := 0
+	for {
+		if try >= max {
+			break
+		}
+		try++
+		select {
+		case c.sendScrollSpeedChan <- c.interval:
+			c.log.Info("scroll canvas sending new speed to channel",
+				zap.Duration("speed", c.interval),
+			)
+			return
+		default:
+			c.log.Info("failed to send scroll canvas sending new speed to channel",
+				zap.Duration("speed", c.interval),
+			)
+			// Clear the buffer
+			for i := 0; i < cap(c.sendScrollSpeedChan); i++ {
+				select {
+				case <-c.sendScrollSpeedChan:
+				default:
+				}
 			}
 		}
 	}
@@ -279,6 +290,11 @@ func (c *ScrollCanvas) Close() error {
 
 // Render update the display with the data from the LED buffer
 func (c *ScrollCanvas) Render(ctx context.Context) error {
+	defer func() {
+		if c.matchScrollCancel != nil {
+			c.matchScrollCancel()
+		}
+	}()
 	switch c.direction {
 	case RightToLeft:
 		c.log.Debug("scrolling right to left")
@@ -440,7 +456,7 @@ func (c *ScrollCanvas) getActualPixel(virtualX int, virtualY int) color.Color {
 // PrepareSubCanvases
 func (c *ScrollCanvas) PrepareSubCanvases() {
 	if len(c.actuals) < 1 {
-		return
+		c.actuals = append(c.actuals, c.actual)
 	}
 	c.subCanvases = []*subCanvasHorizontal{
 		{
@@ -589,15 +605,17 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 
 // MatchScroll will match the scroll speed of this canvas from the given one.
 // It will block until the context is canceled
-func (s *ScrollCanvas) MatchScroll(ctx context.Context, match *ScrollCanvas) {
+func (c *ScrollCanvas) MatchScroll(ctx context.Context, match *ScrollCanvas) {
+	c.matchScrollCtx, c.matchScrollCancel = context.WithCancel(ctx)
+	defer c.matchScrollCancel()
 	ticker := time.NewTicker(500 * time.Millisecond)
 	for {
 		select {
-		case <-ctx.Done():
+		case <-c.matchScrollCtx.Done():
 			return
 		case <-ticker.C:
 		}
-		s.SetScrollSpeed(match.GetScrollSpeed())
+		c.SetScrollSpeed(match.GetScrollSpeed())
 	}
 }
 

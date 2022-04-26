@@ -405,12 +405,24 @@ func (s *SportBoard) callCancelBoard() {
 
 // Render ...
 func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
-	c, err := s.render(ctx, canvas)
+	renderctx, rendercancel := context.WithCancel(ctx)
+	defer rendercancel()
+
+	c, err := s.render(renderctx, canvas)
 	if err != nil {
 		return err
 	}
 	if c != nil {
-		return c.Render(ctx)
+		defer func() {
+			if scr, ok := c.(*cnvs.ScrollCanvas); ok {
+				s.config.scrollDelay = scr.GetScrollSpeed()
+				s.log.Info("updating configured sport scroll speed after tight scroll",
+					zap.String("sport", s.api.League()),
+					zap.Duration("speed", s.config.scrollDelay),
+				)
+			}
+		}()
+		return c.Render(renderctx)
 	}
 
 	return nil
@@ -579,11 +591,8 @@ OUTER:
 
 	var tightCanvas *cnvs.ScrollCanvas
 	base, ok := canvas.(*cnvs.ScrollCanvas)
-	if !ok {
-		return nil, fmt.Errorf("wat")
-	}
 
-	if canvas.Scrollable() && s.config.TightScroll.Load() {
+	if canvas.Scrollable() && s.config.TightScroll.Load() && ok {
 		var err error
 		tightCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log,
 			cnvs.WithMergePadding(s.config.TightScrollPadding),
@@ -593,18 +602,20 @@ OUTER:
 		}
 
 		tightCanvas.SetScrollDirection(cnvs.RightToLeft)
+		base.SetScrollSpeed(s.config.scrollDelay)
 		tightCanvas.SetScrollSpeed(s.config.scrollDelay)
 
 		go tightCanvas.MatchScroll(ctx, base)
 
-		defer func() {
-			s.config.scrollDelay = tightCanvas.GetScrollSpeed()
-		}()
-	} else if canvas.Scrollable() && s.config.ScrollMode.Load() {
+	} else if canvas.Scrollable() && s.config.ScrollMode.Load() && ok {
 		base.SetScrollSpeed(s.config.scrollDelay)
 
 		defer func() {
 			s.config.scrollDelay = base.GetScrollSpeed()
+			s.log.Info("updating configured sport scroll speed",
+				zap.String("sport", s.api.League()),
+				zap.Duration("speed", s.config.scrollDelay),
+			)
 		}()
 	}
 

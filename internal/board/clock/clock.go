@@ -163,12 +163,19 @@ func (c *Clock) ScrollRender(ctx context.Context, canvas board.Canvas, padding i
 
 // Render ...
 func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
-	canv, err := c.render(ctx, canvas)
+	renderctx, rendercancel := context.WithCancel(ctx)
+	defer rendercancel()
+	canv, err := c.render(renderctx, canvas)
 	if err != nil {
 		return err
 	}
 	if canv != nil {
-		return canv.Render(ctx)
+		defer func() {
+			if scr, ok := canv.(*cnvs.ScrollCanvas); ok {
+				c.config.scrollDelay = scr.GetScrollSpeed()
+			}
+		}()
+		return canv.Render(renderctx)
 	}
 
 	return nil
