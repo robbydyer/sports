@@ -6,102 +6,81 @@ import (
 	"testing"
 	"time"
 
-	. "gopkg.in/check.v1"
-
 	"github.com/robbydyer/sports/internal/matrix"
+	"github.com/stretchr/testify/require"
 )
 
-func Test(t *testing.T) { TestingT(t) }
-
-type CanvasSuite struct{}
-
-var _ = Suite(&CanvasSuite{})
-
-func (s *CanvasSuite) TestNewCanvas(c *C) {
-	canvas := NewCanvas(NewMatrixMock())
-	c.Assert(canvas, NotNil)
-	c.Assert(canvas.w, Equals, 64)
-	c.Assert(canvas.h, Equals, 32)
+func TestNewCanvas(t *testing.T) {
+	canvas := NewCanvas(NewMatrixMock(64, 32))
+	require.NotNil(t, canvas)
+	require.Equal(t, 64, canvas.w)
+	require.Equal(t, 32, canvas.h)
 }
 
-func (s *CanvasSuite) TestRender(c *C) {
-	m := NewMatrixMock()
+func TestRender(t *testing.T) {
+	m := NewMatrixMock(10, 20)
 	canvas := &Canvas{m: m}
 	err := canvas.Render(context.Background())
-	c.Assert(err, Equals, nil)
-
-	c.Assert(m.called["Render"], Equals, true)
+	require.NoError(t, err)
 }
 
-func (s *CanvasSuite) TestColorModel(c *C) {
+func TestColorModel(t *testing.T) {
 	canvas := &Canvas{}
-
-	c.Assert(canvas.ColorModel(), Equals, color.RGBAModel)
+	require.Equal(t, color.RGBAModel, canvas.ColorModel())
 }
 
-func (s *CanvasSuite) TestBounds(c *C) {
+func TestBounds(t *testing.T) {
 	canvas := &Canvas{w: 10, h: 20}
 
 	b := canvas.Bounds()
-	c.Assert(b.Min.X, Equals, 0)
-	c.Assert(b.Min.Y, Equals, 0)
-	c.Assert(b.Max.X, Equals, 10)
-	c.Assert(b.Max.Y, Equals, 20)
+	require.Equal(t, 0, b.Min.X)
+	require.Equal(t, 0, b.Min.Y)
+	require.Equal(t, 10, b.Max.X)
+	require.Equal(t, 20, b.Max.Y)
 }
 
-func (s *CanvasSuite) TestAt(c *C) {
-	m := NewMatrixMock()
-	canvas := &Canvas{w: 10, h: 20, m: m}
-	canvas.At(5, 15)
-
-	c.Assert(m.called["At"], Equals, 155)
-}
-
-func (s *CanvasSuite) TestSet(c *C) {
-	m := NewMatrixMock()
+func TestSet(t *testing.T) {
+	m := NewMatrixMock(10, 20)
 	canvas := &Canvas{w: 10, h: 20, m: m}
 	canvas.Set(5, 15, color.White)
 
-	c.Assert(m.called["Set"], Equals, 155)
-	c.Assert(m.colors[155], Equals, color.White)
+	require.Equal(t, color.White, m.colors[155])
 }
 
-func (s *CanvasSuite) TestClear(c *C) {
-	m := NewMatrixMock()
+func TestClear(t *testing.T) {
+	m := NewMatrixMock(10, 20)
 
 	canvas := &Canvas{w: 10, h: 20, m: m}
 	err := canvas.Clear()
-	c.Assert(err, IsNil)
+	require.NoError(t, err)
 
 	for _, px := range m.colors {
-		c.Assert(px, Equals, color.Black)
+		require.Equal(t, color.Black, px)
 	}
-
-	c.Assert(m.called["Render"], Equals, true)
 }
 
-func (s *CanvasSuite) TestClose(c *C) {
-	m := NewMatrixMock()
+func TestClose(t *testing.T) {
+	m := NewMatrixMock(10, 20)
 	canvas := &Canvas{w: 10, h: 20, m: m}
 	err := canvas.Close()
-	c.Assert(err, IsNil)
+	require.NoError(t, err)
 
 	for _, px := range m.colors {
-		c.Assert(px, Equals, color.Black)
+		require.Equal(t, color.Black, px)
 	}
-
-	c.Assert(m.called["Render"], Equals, true)
 }
 
 type MatrixMock struct {
-	called map[string]interface{}
 	colors []color.Color
+	w      int
+	h      int
 }
 
-func NewMatrixMock() *MatrixMock {
+func NewMatrixMock(w int, h int) *MatrixMock {
 	return &MatrixMock{
-		called: make(map[string]interface{}, 0),
-		colors: make([]color.Color, 200),
+		colors: make([]color.Color, w*h),
+		w:      w,
+		h:      h,
 	}
 }
 
@@ -110,33 +89,31 @@ func (m *MatrixMock) Geometry() (width, height int) {
 }
 
 func (m *MatrixMock) Initialize() error {
-	m.called["Initialize"] = true
 	return nil
 }
 
 func (m *MatrixMock) At(x int, y int) color.Color {
-	m.called["At"] = position(x, y, 1)
-	return color.Black
+	pos := position(x, y, m.w)
+	if m.colors[pos] == nil {
+		return color.Black
+	}
+	return m.colors[pos]
 }
 
 func (m *MatrixMock) Set(x int, y int, c color.Color) {
-	pos := position(x, y, 1)
-	m.called["Set"] = pos
+	pos := position(x, y, m.w)
 	m.colors[pos] = c
 }
 
 func (m *MatrixMock) Render() error {
-	m.called["Render"] = true
 	return nil
 }
 
 func (m *MatrixMock) Close() error {
-	m.called["Close"] = true
 	return nil
 }
 
 func (m *MatrixMock) SetBrightness(brightness int) {
-	m.called["MatrixMock"] = true
 }
 
 func (m *MatrixMock) PreLoad(points []matrix.MatrixPoint) {}

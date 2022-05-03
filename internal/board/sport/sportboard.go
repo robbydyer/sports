@@ -604,7 +604,6 @@ OUTER:
 		tightCanvas.SetScrollSpeed(s.config.scrollDelay)
 
 		go tightCanvas.MatchScroll(ctx, base)
-
 	} else if canvas.Scrollable() && s.config.ScrollMode.Load() && ok {
 		base.SetScrollSpeed(s.config.scrollDelay)
 
