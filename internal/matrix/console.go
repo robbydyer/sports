@@ -78,7 +78,7 @@ func (c *ConsoleMatrix) PreLoad(points []MatrixPoint) {
 	}
 }
 
-func (c *ConsoleMatrix) Play(ctx context.Context, defInt time.Duration, intervalCh chan time.Duration) error {
+func (c *ConsoleMatrix) Play(ctx context.Context, defInt time.Duration, intervalCh <-chan time.Duration) error {
 	return nil
 }
 

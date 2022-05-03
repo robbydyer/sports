@@ -141,6 +141,6 @@ func (m *MatrixMock) SetBrightness(brightness int) {
 
 func (m *MatrixMock) PreLoad(points []matrix.MatrixPoint) {}
 
-func (m *MatrixMock) Play(ctx context.Context, defInterval time.Duration, ch chan time.Duration) error {
+func (m *MatrixMock) Play(ctx context.Context, defInterval time.Duration, ch <-chan time.Duration) error {
 	return nil
 }

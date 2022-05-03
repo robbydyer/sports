@@ -37,12 +37,13 @@ const (
 )
 
 type ScrollCanvas struct {
+	name                string
 	w, h                int
 	Matrix              matrix.Matrix
 	enabled             *atomic.Bool
 	actual              *image.RGBA
 	direction           ScrollDirection
-	interval            time.Duration
+	interval            *atomic.Duration
 	log                 *zap.Logger
 	pad                 int
 	actuals             []*image.RGBA
@@ -71,15 +72,14 @@ type ScrollCanvasOption func(*ScrollCanvas) error
 func NewScrollCanvas(m matrix.Matrix, logger *zap.Logger, opts ...ScrollCanvasOption) (*ScrollCanvas, error) {
 	w, h := m.Geometry()
 	c := &ScrollCanvas{
-		w:                   w,
-		h:                   h,
-		Matrix:              m,
-		enabled:             atomic.NewBool(true),
-		interval:            DefaultScrollDelay,
-		log:                 logger,
-		direction:           RightToLeft,
-		merged:              atomic.NewBool(false),
-		sendScrollSpeedChan: make(chan time.Duration, 1),
+		w:         w,
+		h:         h,
+		Matrix:    m,
+		enabled:   atomic.NewBool(true),
+		interval:  atomic.NewDuration(DefaultScrollDelay),
+		log:       logger,
+		direction: RightToLeft,
+		merged:    atomic.NewBool(false),
 	}
 
 	for _, f := range opts {
@@ -194,14 +194,20 @@ func (c *ScrollCanvas) AlwaysRender() bool {
 
 // SetScrollSpeed ...
 func (c *ScrollCanvas) SetScrollSpeed(d time.Duration) {
+	// Even though updating interval is atomic, we still need the lock
+	// to notify the channel
 	c.speedLock.Lock()
 	defer c.speedLock.Unlock()
 
-	if c.interval == d {
+	if !c.interval.CAS(c.interval.Load(), d) {
+		// no change
 		return
 	}
 
-	c.interval = d
+	if c.sendScrollSpeedChan == nil {
+		return
+	}
+
 	max := 2
 	try := 0
 	for {
@@ -210,19 +216,25 @@ func (c *ScrollCanvas) SetScrollSpeed(d time.Duration) {
 		}
 		try++
 		select {
-		case c.sendScrollSpeedChan <- c.interval:
+		case c.sendScrollSpeedChan <- c.interval.Load():
 			c.log.Info("scroll canvas sending new speed to channel",
-				zap.Duration("speed", c.interval),
+				zap.String("name", c.name),
+				zap.Duration("speed", c.interval.Load()),
 			)
 			return
 		default:
 			c.log.Info("failed to send scroll canvas sending new speed to channel",
-				zap.Duration("speed", c.interval),
+				zap.String("name", c.name),
+				zap.Duration("speed", c.interval.Load()),
 			)
 			// Clear the buffer
 			for i := 0; i < cap(c.sendScrollSpeedChan); i++ {
 				select {
 				case <-c.sendScrollSpeedChan:
+					c.log.Info("cleared canvas speed channel buffer",
+						zap.String("name", c.name),
+						zap.Int("index", i),
+					)
 				default:
 				}
 			}
@@ -232,10 +244,7 @@ func (c *ScrollCanvas) SetScrollSpeed(d time.Duration) {
 
 // GetScrollSpeed ...
 func (c *ScrollCanvas) GetScrollSpeed() time.Duration {
-	c.speedLock.Lock()
-	defer c.speedLock.Unlock()
-
-	return c.interval
+	return c.interval.Load()
 }
 
 // SetScrollDirection ...
@@ -293,6 +302,7 @@ func (c *ScrollCanvas) Render(ctx context.Context) error {
 	defer func() {
 		if c.matchScrollCancel != nil {
 			c.matchScrollCancel()
+			c.log.Info("scroll canvas cancel MatchScroll")
 		}
 	}()
 	switch c.direction {
@@ -382,7 +392,7 @@ func (c *ScrollCanvas) topToBottom(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			return context.Canceled
-		case <-time.After(c.interval):
+		case <-time.After(c.interval.Load()):
 		}
 		if thisY == c.actual.Bounds().Max.Y {
 			return nil
@@ -415,7 +425,7 @@ func (c *ScrollCanvas) bottomToTop(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			return context.Canceled
-		case <-time.After(c.interval):
+		case <-time.After(c.interval.Load()):
 		}
 		if thisY == finish {
 			return nil
@@ -600,6 +610,8 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 	default:
 	}
 
+	c.sendScrollSpeedChan = make(chan time.Duration, 1)
+
 	return c.Matrix.Play(ctx, c.GetScrollSpeed(), c.sendScrollSpeedChan)
 }
 
@@ -615,14 +627,16 @@ func (c *ScrollCanvas) MatchScroll(ctx context.Context, match *ScrollCanvas) {
 			return
 		case <-ticker.C:
 		}
-		c.SetScrollSpeed(match.GetScrollSpeed())
+		if curr := match.GetScrollSpeed(); curr != c.GetScrollSpeed() {
+			c.SetScrollSpeed(curr)
+		}
 	}
 }
 
 // WithScrollSpeed ...
 func WithScrollSpeed(d time.Duration) ScrollCanvasOption {
 	return func(c *ScrollCanvas) error {
-		c.interval = d
+		c.interval.Store(d)
 		return nil
 	}
 }
@@ -639,6 +653,13 @@ func WithScrollDirection(direct ScrollDirection) ScrollCanvasOption {
 func WithMergePadding(pad int) ScrollCanvasOption {
 	return func(c *ScrollCanvas) error {
 		c.mergePad = pad
+		return nil
+	}
+}
+
+func WithName(name string) ScrollCanvasOption {
+	return func(c *ScrollCanvas) error {
+		c.name = name
 		return nil
 	}
 }

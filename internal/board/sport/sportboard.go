@@ -405,10 +405,7 @@ func (s *SportBoard) callCancelBoard() {
 
 // Render ...
 func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
-	renderctx, rendercancel := context.WithCancel(ctx)
-	defer rendercancel()
-
-	c, err := s.render(renderctx, canvas)
+	c, err := s.render(ctx, canvas)
 	if err != nil {
 		return err
 	}
@@ -422,7 +419,7 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 				)
 			}
 		}()
-		return c.Render(renderctx)
+		return c.Render(ctx)
 	}
 
 	return nil
@@ -596,6 +593,7 @@ OUTER:
 		var err error
 		tightCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log,
 			cnvs.WithMergePadding(s.config.TightScrollPadding),
+			cnvs.WithName(s.api.League()),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)

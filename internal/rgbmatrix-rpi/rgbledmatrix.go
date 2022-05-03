@@ -370,7 +370,7 @@ func (c *RGBLedMatrix) PreLoad(points []matrix.MatrixPoint) {
 	c.preload = append(c.preload, prep)
 }
 
-func (c *RGBLedMatrix) Play(ctx context.Context, startInterval time.Duration, interval chan time.Duration) error {
+func (c *RGBLedMatrix) Play(ctx context.Context, startInterval time.Duration, interval <-chan time.Duration) error {
 	waitInterval := startInterval
 	c.log.Info("Play matrix",
 		zap.Duration("default interval", waitInterval),
