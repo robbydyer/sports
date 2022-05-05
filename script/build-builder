@@ -20,6 +20,9 @@ dobuild() {
     armv7l|armhf|armv6l)
       base="multiarch/debian-debootstrap:armhf-buster-slim"
       ;;
+    armv6l)
+      base="ghcr.io/pi-hole/ftl-build:v1.16-armv6hf"
+      ;;
     amd64|x86_64)
       base="multiarch/debian-debootstrap:amd64-bullseye"
       ;;
@@ -54,6 +57,7 @@ if [ "${BUILDARCH}" = "all" ]; then
   dobuild aarch64
   dobuild armv7l
   dobuild amd64
+  dobuild armv6l
 else
   dobuild "${BUILDARCH}"
 fi
