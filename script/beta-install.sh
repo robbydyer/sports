@@ -10,12 +10,8 @@ fi
 ARCH="$(uname -m)"
 
 case "${ARCH}" in
-aarch64|armv7l)
+aarch64|armv7l|armv6l)
   echo "Installing sportsmatrix for ${ARCH}"
-  ;;
-armv6l)
-  echo "WARNING! Installing armv7l version, which might not work"
-  ARCH=armv7l
   ;;
 *)
   echo "Unsupported architecture '${ARCH}'"
