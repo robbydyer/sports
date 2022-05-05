@@ -46,6 +46,21 @@ class Home extends React.Component {
         })
     }
 
+    speedUp = async () => {
+        await MatrixPostRet("matrix.v1.Sportsmatrix/SpeedUp", '{}').then((resp) => {
+            if (!resp.ok) {
+                throw resp;
+            }
+        })
+    }
+    slowDown = async () => {
+        await MatrixPostRet("matrix.v1.Sportsmatrix/SlowDown", '{}').then((resp) => {
+            if (!resp.ok) {
+                throw resp;
+            }
+        })
+    }
+
     updateStatus = async () => {
         var req = this.state.status;
         await MatrixPostRet("matrix.v1.Sportsmatrix/SetStatus", JSON.stringify(req.toObject()));
@@ -117,7 +132,7 @@ class Home extends React.Component {
                 </Row>
                 <Row>
                     <Col>
-                        <Button variant="primary" onClick={() => this.handleLiveOnlySwitch(true)}>Live Games Only</Button>
+                        <Button variant="primary" onClick={() => this.handleLiveOnlySwitch(true)}>Live Only</Button>
                     </Col>
                     <Col>
                         <Button variant="primary" onClick={() => this.handleLiveOnlySwitch(false)}>All Games</Button>
@@ -129,6 +144,14 @@ class Home extends React.Component {
                     </Col>
                     <Col>
                         <Button variant="primary" onClick={this.disableAll}>Disable All</Button>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col>
+                        <Button variant="primary" onClick={this.speedUp}>Speed Up</Button>
+                    </Col>
+                    <Col>
+                        <Button variant="primary" onClick={this.slowDown}>Slow Down</Button>
                     </Col>
                 </Row>
                 <Row className="text-left">

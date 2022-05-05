@@ -18,10 +18,10 @@ import (
 	"github.com/robbydyer/sports/internal/board"
 	statboard "github.com/robbydyer/sports/internal/board/stat"
 	textboard "github.com/robbydyer/sports/internal/board/text"
+	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/enabler"
 	"github.com/robbydyer/sports/internal/logo"
 	pb "github.com/robbydyer/sports/internal/proto/sportboard"
-	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
 	"github.com/robbydyer/sports/internal/twirphelpers"
 	"github.com/robbydyer/sports/internal/util"
@@ -207,11 +207,11 @@ func (c *Config) SetDefaults() {
 	if c.ScrollDelay != "" {
 		d, err := time.ParseDuration(c.ScrollDelay)
 		if err != nil {
-			c.scrollDelay = rgbmatrix.DefaultScrollDelay
+			c.scrollDelay = cnvs.DefaultScrollDelay
 		}
 		c.scrollDelay = d
 	} else {
-		c.scrollDelay = rgbmatrix.DefaultScrollDelay
+		c.scrollDelay = cnvs.DefaultScrollDelay
 	}
 
 	if c.ScoreHighlightRepeat == nil {
@@ -410,6 +410,15 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		return err
 	}
 	if c != nil {
+		defer func() {
+			if scr, ok := c.(*cnvs.ScrollCanvas); ok {
+				s.config.scrollDelay = scr.GetScrollSpeed()
+				s.log.Info("updating configured sport scroll speed after tight scroll",
+					zap.String("sport", s.api.League()),
+					zap.Duration("speed", s.config.scrollDelay),
+				)
+			}
+		}()
 		return c.Render(ctx)
 	}
 
@@ -577,32 +586,34 @@ OUTER:
 
 	defer func() { _ = canvas.Clear() }()
 
-	var tightCanvas *rgbmatrix.ScrollCanvas
-	if canvas.Scrollable() && s.config.TightScroll.Load() {
-		base, ok := canvas.(*rgbmatrix.ScrollCanvas)
-		if !ok {
-			return nil, fmt.Errorf("wat")
-		}
+	var tightCanvas *cnvs.ScrollCanvas
+	base, ok := canvas.(*cnvs.ScrollCanvas)
 
+	if canvas.Scrollable() && s.config.TightScroll.Load() && ok {
 		var err error
-		tightCanvas, err = rgbmatrix.NewScrollCanvas(base.Matrix, s.log)
+		tightCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log,
+			cnvs.WithMergePadding(s.config.TightScrollPadding),
+			cnvs.WithName(s.api.League()),
+		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
 		}
 
-		tightCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
+		tightCanvas.SetScrollDirection(cnvs.RightToLeft)
+		base.SetScrollSpeed(s.config.scrollDelay)
 		tightCanvas.SetScrollSpeed(s.config.scrollDelay)
-	} else if canvas.Scrollable() && s.config.ScrollMode.Load() {
-		scroll, ok := canvas.(*rgbmatrix.ScrollCanvas)
-		if ok {
-			orig := scroll.GetScrollSpeed()
-			defer func() { scroll.SetScrollSpeed(orig) }()
-			s.log.Debug("setting scroll delay",
-				zap.String("league", s.api.League()),
-				zap.String("delay", s.config.scrollDelay.String()),
+
+		go tightCanvas.MatchScroll(ctx, base)
+	} else if canvas.Scrollable() && s.config.ScrollMode.Load() && ok {
+		base.SetScrollSpeed(s.config.scrollDelay)
+
+		defer func() {
+			s.config.scrollDelay = base.GetScrollSpeed()
+			s.log.Info("updating configured sport scroll speed",
+				zap.String("sport", s.api.League()),
+				zap.Duration("speed", s.config.scrollDelay),
 			)
-			scroll.SetScrollSpeed(s.config.scrollDelay)
-		}
+		}()
 	}
 
 GAMES:
@@ -693,7 +704,7 @@ GAMES:
 	}
 
 	if canvas.Scrollable() && tightCanvas != nil {
-		tightCanvas.Merge(s.config.TightScrollPadding)
+		// tightCanvas.Merge(s.config.TightScrollPadding)
 		return tightCanvas, nil
 	}
 

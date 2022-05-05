@@ -16,9 +16,9 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
+	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/enabler"
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
-	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
 	"github.com/robbydyer/sports/internal/twirphelpers"
 	"github.com/robbydyer/sports/internal/util"
@@ -76,11 +76,11 @@ func (c *Config) SetDefaults() {
 	if c.ScrollDelay != "" {
 		d, err := time.ParseDuration(c.ScrollDelay)
 		if err != nil {
-			c.scrollDelay = rgbmatrix.DefaultScrollDelay
+			c.scrollDelay = cnvs.DefaultScrollDelay
 		}
 		c.scrollDelay = d
 	} else {
-		c.scrollDelay = rgbmatrix.DefaultScrollDelay
+		c.scrollDelay = cnvs.DefaultScrollDelay
 	}
 }
 
@@ -163,12 +163,19 @@ func (c *Clock) ScrollRender(ctx context.Context, canvas board.Canvas, padding i
 
 // Render ...
 func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
-	canv, err := c.render(ctx, canvas)
+	renderctx, rendercancel := context.WithCancel(ctx)
+	defer rendercancel()
+	canv, err := c.render(renderctx, canvas)
 	if err != nil {
 		return err
 	}
 	if canv != nil {
-		return canv.Render(ctx)
+		defer func() {
+			if scr, ok := canv.(*cnvs.ScrollCanvas); ok {
+				c.config.scrollDelay = scr.GetScrollSpeed()
+			}
+		}()
+		return canv.Render(renderctx)
 	}
 
 	return nil
@@ -205,14 +212,14 @@ func (c *Clock) render(ctx context.Context, canvas board.Canvas) (board.Canvas, 
 	}
 
 	if c.config.ScrollMode.Load() && canvas.Scrollable() {
-		base, ok := canvas.(*rgbmatrix.ScrollCanvas)
+		base, ok := canvas.(*cnvs.ScrollCanvas)
 		if !ok {
 			return nil, fmt.Errorf("unsupported scroll canvas")
 		}
 
-		scrollCanvas, err := rgbmatrix.NewScrollCanvas(base.Matrix, c.log,
-			rgbmatrix.WithScrollDirection(rgbmatrix.RightToLeft),
-			rgbmatrix.WithScrollSpeed(c.config.scrollDelay),
+		scrollCanvas, err := cnvs.NewScrollCanvas(base.Matrix, c.log,
+			cnvs.WithScrollDirection(cnvs.RightToLeft),
+			cnvs.WithScrollSpeed(c.config.scrollDelay),
 		)
 		if err != nil {
 			return nil, err
@@ -234,7 +241,7 @@ func (c *Clock) render(ctx context.Context, canvas board.Canvas) (board.Canvas, 
 		)
 		scrollCanvas.SetPadding(0)
 		scrollCanvas.AddCanvas(canvas)
-		scrollCanvas.Merge(0)
+		go scrollCanvas.MatchScroll(ctx, base)
 
 		draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
 

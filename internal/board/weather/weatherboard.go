@@ -16,10 +16,10 @@ import (
 	"github.com/twitchtv/twirp"
 
 	"github.com/robbydyer/sports/internal/board"
+	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/enabler"
 	"github.com/robbydyer/sports/internal/logo"
 	pb "github.com/robbydyer/sports/internal/proto/weatherboard"
-	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
 	"github.com/robbydyer/sports/internal/twirphelpers"
 	"github.com/robbydyer/sports/internal/util"
@@ -123,11 +123,11 @@ func (c *Config) SetDefaults() {
 	if c.ScrollDelay != "" {
 		d, err := time.ParseDuration(c.ScrollDelay)
 		if err != nil {
-			c.scrollDelay = rgbmatrix.DefaultScrollDelay
+			c.scrollDelay = cnvs.DefaultScrollDelay
 		}
 		c.scrollDelay = d
 	} else {
-		c.scrollDelay = rgbmatrix.DefaultScrollDelay
+		c.scrollDelay = cnvs.DefaultScrollDelay
 	}
 
 	if c.DailyNumber == 0 {
@@ -255,15 +255,19 @@ func (w *WeatherBoard) render(ctx context.Context, canvas board.Canvas) (board.C
 
 	go w.enablerCancel(boardCtx, boardCancel)
 
-	var scrollCanvas *rgbmatrix.ScrollCanvas
-	base, ok := canvas.(*rgbmatrix.ScrollCanvas)
+	var scrollCanvas *cnvs.ScrollCanvas
+	base, ok := canvas.(*cnvs.ScrollCanvas)
 	if ok && w.config.ScrollMode.Load() {
 		var err error
-		scrollCanvas, err = rgbmatrix.NewScrollCanvas(base.Matrix, w.log)
+		scrollCanvas, err = cnvs.NewScrollCanvas(base.Matrix, w.log,
+			cnvs.WithMergePadding(w.config.TightScrollPadding),
+		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
 		}
-		scrollCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
+		scrollCanvas.SetScrollDirection(cnvs.RightToLeft)
+
+		go scrollCanvas.MatchScroll(ctx, base)
 	}
 
 	zeroed := rgbrender.ZeroedBounds(canvas.Bounds())
@@ -347,7 +351,6 @@ FORECASTS:
 	}
 
 	if w.config.ScrollMode.Load() && scrollCanvas != nil {
-		scrollCanvas.Merge(w.config.TightScrollPadding)
 		return scrollCanvas, nil
 	}
 

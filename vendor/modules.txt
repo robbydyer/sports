@@ -1,6 +1,3 @@
-# dmitri.shuralyov.com/gpu/mtl v0.0.0-20201218220906-28db891af037
-## explicit
-dmitri.shuralyov.com/gpu/mtl
 # github.com/Masterminds/semver v1.4.2
 ## explicit
 github.com/Masterminds/semver
@@ -47,15 +44,6 @@ github.com/ghodss/yaml
 ## explicit; go 1.16
 github.com/go-bridget/twirp-swagger-gen/cmd/twirp-swagger-gen
 github.com/go-bridget/twirp-swagger-gen/internal/swagger
-# github.com/go-gl/glfw/v3.3/glfw v0.0.0-20201108214237-06ea97f0c265
-## explicit; go 1.10
-github.com/go-gl/glfw/v3.3/glfw
-github.com/go-gl/glfw/v3.3/glfw/glfw/deps
-github.com/go-gl/glfw/v3.3/glfw/glfw/deps/glad
-github.com/go-gl/glfw/v3.3/glfw/glfw/deps/mingw
-github.com/go-gl/glfw/v3.3/glfw/glfw/deps/vs2008
-github.com/go-gl/glfw/v3.3/glfw/glfw/include/GLFW
-github.com/go-gl/glfw/v3.3/glfw/glfw/src
 # github.com/go-openapi/jsonpointer v0.19.5
 ## explicit; go 1.13
 github.com/go-openapi/jsonpointer
@@ -139,18 +127,9 @@ github.com/imdario/mergo
 # github.com/inconshreveable/mousetrap v1.0.0
 ## explicit
 github.com/inconshreveable/mousetrap
-# github.com/jezek/xgb v0.0.0-20210121230032-cec22bda1ce1
-## explicit
-github.com/jezek/xgb
-github.com/jezek/xgb/render
-github.com/jezek/xgb/shm
-github.com/jezek/xgb/xproto
 # github.com/josharian/intern v1.0.0
 ## explicit; go 1.5
 github.com/josharian/intern
-# github.com/kr/text v0.2.0
-## explicit
-github.com/kr/text
 # github.com/lyft/protoc-gen-star v0.5.3
 ## explicit; go 1.14
 github.com/lyft/protoc-gen-star
@@ -176,9 +155,6 @@ github.com/mwitkow/go-proto-validators
 # github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 ## explicit
 github.com/nfnt/resize
-# github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e
-## explicit; go 1.12
-github.com/niemeyer/pretty
 # github.com/pelletier/go-toml v1.9.4
 ## explicit; go 1.12
 github.com/pelletier/go-toml
@@ -206,23 +182,6 @@ github.com/pseudomuto/protoc-gen-doc/extensions/validator_field
 # github.com/pseudomuto/protokit v0.2.0
 ## explicit
 github.com/pseudomuto/protokit
-# github.com/robbydyer/exp v0.1.2
-## explicit; go 1.12
-github.com/robbydyer/exp/shiny/driver
-github.com/robbydyer/exp/shiny/driver/gldriver
-github.com/robbydyer/exp/shiny/driver/internal/drawer
-github.com/robbydyer/exp/shiny/driver/internal/errscreen
-github.com/robbydyer/exp/shiny/driver/internal/event
-github.com/robbydyer/exp/shiny/driver/internal/lifecycler
-github.com/robbydyer/exp/shiny/driver/internal/swizzle
-github.com/robbydyer/exp/shiny/driver/internal/win32
-github.com/robbydyer/exp/shiny/driver/internal/x11key
-github.com/robbydyer/exp/shiny/driver/mtldriver
-github.com/robbydyer/exp/shiny/driver/mtldriver/internal/appkit
-github.com/robbydyer/exp/shiny/driver/mtldriver/internal/coreanim
-github.com/robbydyer/exp/shiny/driver/windriver
-github.com/robbydyer/exp/shiny/driver/x11driver
-github.com/robbydyer/exp/shiny/screen
 # github.com/robfig/cron/v3 v3.0.1
 ## explicit; go 1.12
 github.com/robfig/cron/v3
@@ -304,21 +263,10 @@ golang.org/x/crypto/scrypt
 ## explicit; go 1.12
 golang.org/x/image/bmp
 golang.org/x/image/ccitt
-golang.org/x/image/draw
 golang.org/x/image/font
-golang.org/x/image/math/f64
 golang.org/x/image/math/fixed
 golang.org/x/image/tiff
 golang.org/x/image/tiff/lzw
-# golang.org/x/mobile v0.0.0-20201217150744-e6ae53a27f4f
-## explicit; go 1.11
-golang.org/x/mobile/event/key
-golang.org/x/mobile/event/lifecycle
-golang.org/x/mobile/event/mouse
-golang.org/x/mobile/event/paint
-golang.org/x/mobile/event/size
-golang.org/x/mobile/geom
-golang.org/x/mobile/gl
 # golang.org/x/net v0.0.0-20220412020605-290c469a71a5
 ## explicit; go 1.17
 golang.org/x/net/http/httpguts
@@ -331,7 +279,6 @@ golang.org/x/net/trace
 ## explicit; go 1.17
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
-golang.org/x/sys/windows
 # golang.org/x/text v0.3.7
 ## explicit; go 1.17
 golang.org/x/text/secure/bidirule
@@ -434,9 +381,6 @@ google.golang.org/protobuf/types/known/emptypb
 google.golang.org/protobuf/types/known/structpb
 google.golang.org/protobuf/types/known/timestamppb
 google.golang.org/protobuf/types/pluginpb
-# gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b
-## explicit
-gopkg.in/check.v1
 # gopkg.in/ini.v1 v1.66.4
 ## explicit
 gopkg.in/ini.v1

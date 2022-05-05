@@ -11,8 +11,8 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
+	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/logo"
-	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
 )
 
@@ -72,20 +72,23 @@ func (s *RacingBoard) render(ctx context.Context, canvas board.Canvas) (board.Ca
 		return nil, err
 	}
 
-	var scrollCanvas *rgbmatrix.ScrollCanvas
+	var scrollCanvas *cnvs.ScrollCanvas
 	if canvas.Scrollable() && s.config.ScrollMode.Load() {
-		base, ok := canvas.(*rgbmatrix.ScrollCanvas)
+		base, ok := canvas.(*cnvs.ScrollCanvas)
 		if !ok {
 			return nil, fmt.Errorf("invalid scroll canvas")
 		}
 
 		var err error
-		scrollCanvas, err = rgbmatrix.NewScrollCanvas(base.Matrix, s.log)
+		scrollCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log,
+			cnvs.WithMergePadding(s.config.TightScrollPadding),
+		)
 		if err != nil {
 			return nil, err
 		}
 		scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
-		scrollCanvas.SetScrollDirection(rgbmatrix.RightToLeft)
+		scrollCanvas.SetScrollDirection(cnvs.RightToLeft)
+		go scrollCanvas.MatchScroll(ctx, base)
 	}
 
 	s.log.Debug("racing events",
@@ -130,7 +133,6 @@ EVENTS:
 	}
 
 	if canvas.Scrollable() && scrollCanvas != nil {
-		scrollCanvas.Merge(s.config.TightScrollPadding)
 		return scrollCanvas, nil
 	}
 

@@ -13,7 +13,8 @@ import (
 
 	"github.com/robbydyer/sports/internal/board"
 	imageboard "github.com/robbydyer/sports/internal/board/image"
-	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
+	cnvs "github.com/robbydyer/sports/internal/canvas"
+	"github.com/robbydyer/sports/internal/matrix"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
 )
 
@@ -63,7 +64,7 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	var canvases []board.Canvas
-	var matrix rgb.Matrix
+	var matrix matrix.Matrix
 	if s.rArgs.test {
 		matrix = s.rArgs.getTestMatrix(logger)
 	} else {
@@ -74,12 +75,12 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	scroll, err := rgb.NewScrollCanvas(matrix, logger)
+	scroll, err := cnvs.NewScrollCanvas(matrix, logger)
 	if err != nil {
 		return err
 	}
 
-	canvases = append(canvases, rgb.NewCanvas(matrix), scroll)
+	canvases = append(canvases, cnvs.NewCanvas(matrix), scroll)
 
 	newBoards := []board.Board{}
 	inBetweenBoards := []board.Board{}

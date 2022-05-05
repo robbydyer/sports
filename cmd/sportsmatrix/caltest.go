@@ -10,8 +10,9 @@ import (
 	"github.com/robbydyer/sports/internal/assetlogo"
 	"github.com/robbydyer/sports/internal/board"
 	calendarboard "github.com/robbydyer/sports/internal/board/calendar"
+	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/logo"
-	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
+	"github.com/robbydyer/sports/internal/matrix"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
 )
 
@@ -80,7 +81,7 @@ func (c *calCmd) run(cmd *cobra.Command, args []string) error {
 	calBoard.Enabler().Enable()
 
 	var canvases []board.Canvas
-	var matrix rgb.Matrix
+	var matrix matrix.Matrix
 	if c.rArgs.test {
 		matrix = c.rArgs.getTestMatrix(logger)
 	} else {
@@ -91,12 +92,12 @@ func (c *calCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	scroll, err := rgb.NewScrollCanvas(matrix, logger)
+	scroll, err := cnvs.NewScrollCanvas(matrix, logger)
 	if err != nil {
 		return err
 	}
 
-	canvases = append(canvases, rgb.NewCanvas(matrix), scroll)
+	canvases = append(canvases, cnvs.NewCanvas(matrix), scroll)
 
 	mtrx, err := sportsmatrix.New(ctx, logger, c.rArgs.config.SportsMatrixConfig, canvases, calBoard)
 	if err != nil {

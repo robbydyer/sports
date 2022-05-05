@@ -13,9 +13,9 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
+	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/enabler"
 	"github.com/robbydyer/sports/internal/logo"
-	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/rgbrender"
 	"github.com/robbydyer/sports/internal/twirphelpers"
 	"github.com/robbydyer/sports/internal/util"
@@ -91,11 +91,11 @@ func (c *Config) SetDefaults() {
 	if c.ScrollDelay != "" {
 		d, err := time.ParseDuration(c.ScrollDelay)
 		if err != nil {
-			c.scrollDelay = rgbmatrix.DefaultScrollDelay
+			c.scrollDelay = cnvs.DefaultScrollDelay
 		}
 		c.scrollDelay = d
 	} else {
-		c.scrollDelay = rgbmatrix.DefaultScrollDelay
+		c.scrollDelay = cnvs.DefaultScrollDelay
 	}
 }
 

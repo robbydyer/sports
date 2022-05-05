@@ -14,6 +14,8 @@ service Sportsmatrix {
        rpc NextBoard(google.protobuf.Empty) returns (google.protobuf.Empty);
        rpc RestartService(google.protobuf.Empty) returns (google.protobuf.Empty);
        rpc SetLiveOnly(LiveOnlyReq) returns (google.protobuf.Empty);
+       rpc SpeedUp(google.protobuf.Empty) returns (google.protobuf.Empty);
+       rpc SlowDown(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
 message VersionResp {

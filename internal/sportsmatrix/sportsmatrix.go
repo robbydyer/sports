@@ -14,49 +14,55 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
+	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/imgcanvas"
+	"github.com/robbydyer/sports/internal/matrix"
 	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 )
+
+const speedUpIncrement = 10 * time.Millisecond
 
 var version = "noversion"
 
 // SportsMatrix controls the RGB matrix. It rotates through a list of given board.Board
 type SportsMatrix struct {
-	cfg                *Config
-	isServing          chan struct{}
-	canvases           []board.Canvas
-	boards             []board.Board
-	screenIsOn         *atomic.Bool
-	webBoardIsOn       *atomic.Bool
-	webBoardOn         chan struct{}
-	webBoardOff        chan struct{}
-	serveBlock         chan struct{}
-	log                *zap.Logger
-	boardCtx           context.Context
-	boardCancel        context.CancelFunc
-	currentBoardCtx    context.Context
-	currentBoardCancel context.CancelFunc
-	server             http.Server
-	close              chan struct{}
-	httpEndpoints      []string
-	jumpLock           sync.Mutex
-	boardLock          sync.Mutex
-	webBoardLock       sync.Mutex
-	screenSwitch       chan struct{}
-	jumpTo             chan string
-	betweenBoards      []board.Board
-	currentJump        string
-	jumping            *atomic.Bool
-	switchedOn         int
-	switchedOff        int
-	switchTestSleep    bool
-	webBoardWasOn      *atomic.Bool
-	serveContext       context.Context
-	webBoardCtx        context.Context
-	webBoardCancel     context.CancelFunc
-	liveOnly           *atomic.Bool
-	scrollStatus       chan float64
-	scrollInProgress   *atomic.Bool
+	cfg                  *Config
+	isServing            chan struct{}
+	canvases             []board.Canvas
+	boards               []board.Board
+	screenIsOn           *atomic.Bool
+	webBoardIsOn         *atomic.Bool
+	webBoardOn           chan struct{}
+	webBoardOff          chan struct{}
+	serveBlock           chan struct{}
+	log                  *zap.Logger
+	boardCtx             context.Context
+	boardCancel          context.CancelFunc
+	currentBoardCtx      context.Context
+	currentBoardCancel   context.CancelFunc
+	server               http.Server
+	close                chan struct{}
+	httpEndpoints        []string
+	jumpLock             sync.Mutex
+	boardLock            sync.Mutex
+	webBoardLock         sync.Mutex
+	screenSwitch         chan struct{}
+	jumpTo               chan string
+	betweenBoards        []board.Board
+	currentJump          string
+	jumping              *atomic.Bool
+	switchedOn           int
+	switchedOff          int
+	switchTestSleep      bool
+	webBoardWasOn        *atomic.Bool
+	serveContext         context.Context
+	webBoardCtx          context.Context
+	webBoardCancel       context.CancelFunc
+	liveOnly             *atomic.Bool
+	scrollStatus         chan float64
+	scrollInProgress     *atomic.Bool
+	defaultScrollSpeeds  map[string]time.Duration
+	activeScrollCanvases []*cnvs.ScrollCanvas
 	sync.Mutex
 }
 
@@ -81,7 +87,7 @@ type Config struct {
 type orderedBoard struct {
 	order        int
 	board        board.Board
-	scrollCanvas *rgb.ScrollCanvas
+	scrollCanvas *cnvs.ScrollCanvas
 }
 
 // Defaults sets some sane config defaults
@@ -136,12 +142,12 @@ func (c *Config) Defaults() {
 	if c.CombinedScrollDelay != "" {
 		d, err := time.ParseDuration(c.CombinedScrollDelay)
 		if err != nil {
-			c.combinedScrollDelay = rgb.DefaultScrollDelay
+			c.combinedScrollDelay = cnvs.DefaultScrollDelay
 		} else {
 			c.combinedScrollDelay = d
 		}
 	} else {
-		c.combinedScrollDelay = rgb.DefaultScrollDelay
+		c.combinedScrollDelay = cnvs.DefaultScrollDelay
 	}
 }
 
@@ -150,24 +156,33 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 	cfg.Defaults()
 
 	s := &SportsMatrix{
-		boards:           boards,
-		cfg:              cfg,
-		log:              logger,
-		serveBlock:       make(chan struct{}),
-		close:            make(chan struct{}),
-		screenIsOn:       atomic.NewBool(true),
-		webBoardIsOn:     atomic.NewBool(false),
-		webBoardOn:       make(chan struct{}),
-		webBoardOff:      make(chan struct{}),
-		isServing:        make(chan struct{}, 1),
-		jumpTo:           make(chan string, 1),
-		canvases:         canvases,
-		jumping:          atomic.NewBool(false),
-		screenSwitch:     make(chan struct{}, 1),
-		webBoardWasOn:    atomic.NewBool(false),
-		liveOnly:         atomic.NewBool(false),
-		scrollStatus:     make(chan float64),
-		scrollInProgress: atomic.NewBool(false),
+		boards:              boards,
+		cfg:                 cfg,
+		log:                 logger,
+		serveBlock:          make(chan struct{}),
+		close:               make(chan struct{}),
+		screenIsOn:          atomic.NewBool(true),
+		webBoardIsOn:        atomic.NewBool(false),
+		webBoardOn:          make(chan struct{}),
+		webBoardOff:         make(chan struct{}),
+		isServing:           make(chan struct{}, 1),
+		jumpTo:              make(chan string, 1),
+		canvases:            canvases,
+		jumping:             atomic.NewBool(false),
+		screenSwitch:        make(chan struct{}, 1),
+		webBoardWasOn:       atomic.NewBool(false),
+		liveOnly:            atomic.NewBool(false),
+		scrollStatus:        make(chan float64),
+		scrollInProgress:    atomic.NewBool(false),
+		defaultScrollSpeeds: make(map[string]time.Duration),
+	}
+
+	for _, canvas := range canvases {
+		scr, ok := canvas.(*cnvs.ScrollCanvas)
+		if !ok {
+			continue
+		}
+		s.defaultScrollSpeeds[scr.Name()] = scr.GetScrollSpeed()
 	}
 
 	s.boardCtx, s.boardCancel = context.WithCancel(context.Background())
@@ -549,26 +564,32 @@ func (s *SportsMatrix) doCombinedScroll(ctx context.Context) error {
 		}
 	}
 
+	defer func() {
+		s.activeScrollCanvases = []*cnvs.ScrollCanvas{}
+	}()
+
 CANVASES:
 	for _, canvas := range s.canvases {
 		if !canvas.Enabled() || !canvas.Scrollable() {
 			continue CANVASES
 		}
 
-		base, ok := canvas.(*rgb.ScrollCanvas)
+		base, ok := canvas.(*cnvs.ScrollCanvas)
 		if !ok {
 			continue CANVASES
 		}
 
-		scrollCanvas, err := rgb.NewScrollCanvas(base.Matrix, s.log,
-			rgb.WithScrollSpeed(s.cfg.combinedScrollDelay),
-			rgb.WithScrollDirection(rgb.RightToLeft),
-			rgb.WithMergePadding(s.cfg.CombinedScrollPadding),
+		scrollCanvas, err := cnvs.NewScrollCanvas(base.Matrix, s.log,
+			cnvs.WithScrollSpeed(s.cfg.combinedScrollDelay),
+			cnvs.WithScrollDirection(cnvs.RightToLeft),
+			cnvs.WithMergePadding(s.cfg.CombinedScrollPadding),
 		)
 		if err != nil {
 			cancel()
 			return err
 		}
+
+		s.activeScrollCanvases = append(s.activeScrollCanvases, scrollCanvas)
 
 		ch := make(chan *orderedBoard, len(boards))
 		s.prepOrderedBoards(ctx, s.boards, base.Matrix, ch)
@@ -577,18 +598,17 @@ CANVASES:
 		s.prepOrderedBoards(ctx, s.betweenBoards, base.Matrix, betweenCh)
 
 		allOrderedBoards := []*orderedBoard{}
-	SCR:
+
 		for scrCanvas := range ch {
-			if scrCanvas.scrollCanvas == nil {
-				continue SCR
+			if scrCanvas != nil && scrCanvas.scrollCanvas != nil {
+				allOrderedBoards = append(allOrderedBoards, scrCanvas)
 			}
-			allOrderedBoards = append(allOrderedBoards, scrCanvas)
 		}
 
 		betweenBoards := []*orderedBoard{}
 
 		for c := range betweenCh {
-			if c != nil {
+			if c != nil && c.scrollCanvas != nil {
 				betweenBoards = append(betweenBoards, c)
 			}
 		}
@@ -602,9 +622,9 @@ CANVASES:
 
 		for _, ordered := range allOrderedBoards {
 			if ordered.scrollCanvas.Len() > 0 {
-				scrollCanvas.AddCanvas(ordered.scrollCanvas)
+				scrollCanvas.Append(ordered.scrollCanvas)
 				for _, c := range betweenBoards {
-					scrollCanvas.AddCanvas(c.scrollCanvas)
+					scrollCanvas.Append(c.scrollCanvas)
 				}
 			} else {
 				s.log.Debug("board had less than 1 canvas rendered",
@@ -644,7 +664,7 @@ CANVASES:
 				zap.Duration("scroll delay", s.cfg.combinedScrollDelay),
 			)
 
-			if err := scrollCanvas.RenderNoMerge(scrollCtx, s.scrollStatus); err != nil {
+			if err := scrollCanvas.RenderWithStatus(scrollCtx, s.scrollStatus); err != nil {
 				s.log.Error("combined scroll failed",
 					zap.Error(err),
 				)
@@ -653,6 +673,10 @@ CANVASES:
 
 		s.waitForScroll(scrollCtx, 0.7, 5*time.Minute)
 		s.log.Debug("done waiting for combined scroll")
+
+		// Update the combined scroll delay based on any API adjustments that were
+		// made during rendering
+		s.cfg.combinedScrollDelay = scrollCanvas.GetScrollSpeed()
 	}
 
 	// nolint: govet
@@ -836,7 +860,7 @@ func (s *SportsMatrix) JumpTo(ctx context.Context, boardName string) error {
 	return fmt.Errorf("could not find board %s to jump to", boardName)
 }
 
-func (s *SportsMatrix) prepOrderedBoards(ctx context.Context, boards []board.Board, matrix rgb.Matrix, canvases chan *orderedBoard) {
+func (s *SportsMatrix) prepOrderedBoards(ctx context.Context, boards []board.Board, mtrx matrix.Matrix, canvases chan *orderedBoard) {
 	wg := sync.WaitGroup{}
 
 	index := 0
@@ -848,9 +872,9 @@ func (s *SportsMatrix) prepOrderedBoards(ctx context.Context, boards []board.Boa
 		wg.Add(1)
 		go func(thisBoard board.Board, i int) {
 			defer wg.Done()
-			myBase, err := rgb.NewScrollCanvas(matrix, s.log,
-				rgb.WithScrollDirection(rgb.RightToLeft),
-				rgb.WithScrollSpeed(s.cfg.combinedScrollDelay),
+			myBase, err := cnvs.NewScrollCanvas(mtrx, s.log,
+				cnvs.WithScrollDirection(cnvs.RightToLeft),
+				cnvs.WithScrollSpeed(s.cfg.combinedScrollDelay),
 			)
 			if err != nil {
 				s.log.Error("failed to create scroll canvas",
@@ -866,7 +890,7 @@ func (s *SportsMatrix) prepOrderedBoards(ctx context.Context, boards []board.Boa
 				)
 				return
 			}
-			myCanvas, ok := boardCanvas.(*rgb.ScrollCanvas)
+			myCanvas, ok := boardCanvas.(*cnvs.ScrollCanvas)
 			if !ok {
 				s.log.Error("unexpected board type in combined scroll",
 					zap.String("board", thisBoard.Name()),
@@ -889,4 +913,19 @@ func (s *SportsMatrix) prepOrderedBoards(ctx context.Context, boards []board.Boa
 
 	wg.Wait()
 	close(canvases)
+}
+
+func (s *SportsMatrix) getActiveScrollCanvases() []*cnvs.ScrollCanvas {
+	canvases := []*cnvs.ScrollCanvas{}
+
+	for _, canvas := range s.canvases {
+		c, ok := canvas.(*cnvs.ScrollCanvas)
+		if ok {
+			canvases = append(canvases, c)
+		}
+	}
+
+	canvases = append(canvases, s.activeScrollCanvases...)
+
+	return canvases
 }

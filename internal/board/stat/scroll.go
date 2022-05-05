@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
-	"github.com/robbydyer/sports/internal/rgbmatrix-rpi"
+	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/rgbrender"
 )
 
@@ -18,14 +18,14 @@ func (s *StatBoard) doScroll(ctx context.Context, canvas board.Canvas, players [
 		return nil
 	}
 
-	scrollCanvas, ok := canvas.(*rgbmatrix.ScrollCanvas)
+	scrollCanvas, ok := canvas.(*cnvs.ScrollCanvas)
 	if !ok {
 		return fmt.Errorf("incorrect canvas type given for scrolling")
 	}
 
 	origDir := scrollCanvas.GetScrollDirection()
 	defer scrollCanvas.SetScrollDirection(origDir)
-	scrollCanvas.SetScrollDirection(rgbmatrix.BottomToTop)
+	scrollCanvas.SetScrollDirection(cnvs.BottomToTop)
 
 	origPadding := scrollCanvas.GetPadding()
 	defer scrollCanvas.SetPadding(origPadding)
