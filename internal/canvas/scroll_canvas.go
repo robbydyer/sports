@@ -484,7 +484,6 @@ func (c *ScrollCanvas) PrepareSubCanvases() {
 
 	index := 1
 	for i, actual := range c.actuals {
-
 		// Add the actual subcanvas
 		c.subCanvases = append(c.subCanvases,
 			&subCanvasHorizontal{
@@ -621,7 +620,6 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 		}(sceneIndex, virtualX)
 		sceneIndex++
 		virtualX++
-
 	}
 
 	wg.Wait()
