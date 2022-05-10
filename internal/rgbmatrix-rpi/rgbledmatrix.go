@@ -358,19 +358,28 @@ func (c *RGBLedMatrix) Set(x int, y int, color color.Color) {
 	c.leds[position] = C.uint32_t(colorToUint32(color))
 }
 
-func (c *RGBLedMatrix) PreLoad(points []matrix.MatrixPoint) {
+func (c *RGBLedMatrix) PreLoad(scene *matrix.MatrixScene) {
 	w, h := c.Config.geometry()
 	prep := make([]C.uint32_t, w*h)
 
-	for _, pt := range points {
+	for _, pt := range scene.Points {
 		position := c.position(pt.X, pt.Y)
 		prep[position] = C.uint32_t(colorToUint32(pt.Color))
 	}
 
-	c.preload = append(c.preload, prep)
+	if len(c.preload) < scene.Index+1 {
+		newPreload := make([][]C.uint32_t, scene.Index+1)
+		copy(newPreload, c.preload)
+		c.preload = newPreload
+	}
+
+	c.preload[scene.Index] = prep
 }
 
 func (c *RGBLedMatrix) Play(ctx context.Context, startInterval time.Duration, interval <-chan time.Duration) error {
+	defer func() {
+		c.preload = [][]C.uint32_t{}
+	}()
 	waitInterval := startInterval
 	c.log.Info("Play matrix",
 		zap.Duration("default interval", waitInterval),
@@ -397,8 +406,6 @@ func (c *RGBLedMatrix) Play(ctx context.Context, startInterval time.Duration, in
 			return err
 		}
 	}
-
-	c.preload = [][]C.uint32_t{}
 
 	return nil
 }

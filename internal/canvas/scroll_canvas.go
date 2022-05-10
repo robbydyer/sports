@@ -579,30 +579,42 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 		zap.Duration("interval", c.GetScrollSpeed()),
 	)
 
+	sceneIndex := 0
+	wg := sync.WaitGroup{}
 	for {
 		if virtualX == finish {
 			break
 		}
 
-		loader := make([]matrix.MatrixPoint, c.w*c.h)
+		wg.Add(1)
+		go func(sceneIndex int, virtualX int) {
+			defer wg.Done()
+			loader := make([]matrix.MatrixPoint, c.w*c.h)
 
-		index := 0
-		for x := 0; x < c.w; x++ {
-			for y := 0; y < c.h; y++ {
-				thisVirtualX := x + virtualX
+			index := 0
+			for x := 0; x < c.w; x++ {
+				for y := 0; y < c.h; y++ {
+					thisVirtualX := x + virtualX
 
-				loader[index] = matrix.MatrixPoint{
-					X:     x,
-					Y:     y,
-					Color: c.getActualPixel(thisVirtualX, y),
+					loader[index] = matrix.MatrixPoint{
+						X:     x,
+						Y:     y,
+						Color: c.getActualPixel(thisVirtualX, y),
+					}
+					index++
 				}
-				index++
 			}
-		}
+			c.Matrix.PreLoad(&matrix.MatrixScene{
+				Index:  sceneIndex,
+				Points: loader,
+			})
+		}(sceneIndex, virtualX)
+		sceneIndex++
 		virtualX++
 
-		c.Matrix.PreLoad(loader)
 	}
+
+	wg.Wait()
 
 	select {
 	case <-ctx.Done():
