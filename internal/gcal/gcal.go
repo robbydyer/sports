@@ -5,9 +5,9 @@ import (
 	"image"
 	"time"
 
-	"github.com/robbydyer/sports/pkg/assetlogo"
-	"github.com/robbydyer/sports/pkg/calendarboard"
-	"github.com/robbydyer/sports/pkg/logo"
+	"github.com/robbydyer/sports/internal/assetlogo"
+	calendarboard "github.com/robbydyer/sports/internal/board/calendar"
+	"github.com/robbydyer/sports/internal/logo"
 	"go.uber.org/zap"
 	google_oauth "golang.org/x/oauth2/google"
 
