@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"io"
 	"strings"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -14,11 +15,13 @@ import (
 // ConsoleMatrix prints a representation of a matrix to a terminal.
 // Useful for testing layouts without a Pi or an LED matrix.
 type ConsoleMatrix struct {
-	matrix []uint32
-	width  int
-	height int
-	out    io.Writer
-	log    *zap.Logger
+	matrix      []uint32
+	width       int
+	height      int
+	out         io.Writer
+	preload     [][]uint32
+	log         *zap.Logger
+	preloadLock sync.Mutex
 }
 
 // NewConsoleMatrix ...
@@ -72,23 +75,72 @@ func (c *ConsoleMatrix) Set(x int, y int, clr color.Color) {
 	c.matrix[position] = colorToUint32(clr)
 }
 
-func (c *ConsoleMatrix) PreLoad(points []MatrixPoint) {
-	for _, pt := range points {
-		c.Set(pt.X, pt.Y, pt.Color)
+func (c *ConsoleMatrix) PreLoad(scene *MatrixScene) {
+	c.preloadLock.Lock()
+	defer c.preloadLock.Unlock()
+
+	w, h := c.Geometry()
+	prep := make([]uint32, w*h)
+
+	for _, pt := range scene.Points {
+		position := c.position(pt.X, pt.Y)
+		prep[position] = colorToUint32(pt.Color)
 	}
+
+	if len(c.preload) < scene.Index+1 {
+		newPreload := make([][]uint32, scene.Index+1)
+		copy(newPreload, c.preload)
+		c.preload = newPreload
+	}
+
+	c.preload[scene.Index] = prep
 }
 
-func (c *ConsoleMatrix) Play(ctx context.Context, defInt time.Duration, intervalCh <-chan time.Duration) error {
+func (c *ConsoleMatrix) Play(ctx context.Context, startInterval time.Duration, interval <-chan time.Duration) error {
+	defer func() {
+		c.preload = [][]uint32{}
+	}()
+	waitInterval := startInterval
+	c.log.Info("Play matrix",
+		zap.Duration("default interval", waitInterval),
+	)
+	for _, leds := range c.preload {
+		// An updated interval can be sent to the channel to change scroll speed
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		case waitInterval = <-interval:
+			c.log.Info("RGB matrix got new interval during play",
+				zap.Duration("interval", waitInterval),
+			)
+		default:
+		}
+
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		case <-time.After(waitInterval):
+		}
+
+		if err := c.render(leds); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 // Render ...
 func (c *ConsoleMatrix) Render() error {
+	return c.render(c.matrix)
+}
+
+func (c *ConsoleMatrix) render(leds []uint32) error {
 	rendered := []string{
 		strings.Repeat("_ ", c.width+1),
 	}
 	row := ""
-	for index, clrint := range c.matrix {
+	for index, clrint := range leds {
 		clr := uint32ToColorGo(clrint)
 		if (index)%c.width == 0 {
 			// This is a new row

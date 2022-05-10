@@ -15,8 +15,14 @@ type Matrix interface {
 	Render() error
 	Close() error
 	SetBrightness(brightness int)
-	PreLoad([]MatrixPoint)
+	PreLoad(*MatrixScene)
 	Play(ctx context.Context, startInterval time.Duration, interval <-chan time.Duration) error
+}
+
+type MatrixScene struct {
+	Points []MatrixPoint
+	// Index is the ordering of each scene
+	Index int
 }
 
 type MatrixPoint struct {
