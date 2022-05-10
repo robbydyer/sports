@@ -271,14 +271,15 @@ type RGBLedMatrix struct {
 	Config         *HardwareConfig
 	RuntimeOptions *RuntimeOptions
 
-	height  int
-	width   int
-	matrix  *C.struct_RGBLedMatrix
-	buffer  *C.struct_LedCanvas
-	leds    []C.uint32_t
-	preload [][]C.uint32_t
-	closed  *atomic.Bool
-	log     *zap.Logger
+	height      int
+	width       int
+	matrix      *C.struct_RGBLedMatrix
+	buffer      *C.struct_LedCanvas
+	leds        []C.uint32_t
+	preload     [][]C.uint32_t
+	closed      *atomic.Bool
+	log         *zap.Logger
+	preloadLock sync.Mutex
 	sync.Mutex
 }
 
@@ -320,6 +321,10 @@ func (c *RGBLedMatrix) Geometry() (int, int) {
 
 // Render update the display with the data from the LED buffer
 func (c *RGBLedMatrix) Render() error {
+	defer func() {
+		w, h := c.Config.geometry()
+		c.leds = make([]C.uint32_t, w*h)
+	}()
 	return c.render(c.leds)
 }
 
@@ -327,16 +332,22 @@ func (c *RGBLedMatrix) render(leds []C.uint32_t) error {
 	c.Lock()
 	defer c.Unlock()
 
+	if c.closed.Load() {
+		return nil
+	}
+
 	// Check this so we don't cause a panic
 	if len(leds) < 1 {
 		return fmt.Errorf("led buffer is empty")
 	}
 
+	w, h := c.Config.geometry()
+
 	C.led_matrix_swap(
 		c.matrix,
 		c.buffer,
-		C.int(c.width),
-		C.int(c.height),
+		C.int(w),
+		C.int(h),
 		(*C.uint32_t)(unsafe.Pointer(&leds[0])),
 	)
 
@@ -359,6 +370,9 @@ func (c *RGBLedMatrix) Set(x int, y int, color color.Color) {
 }
 
 func (c *RGBLedMatrix) PreLoad(scene *matrix.MatrixScene) {
+	c.preloadLock.Lock()
+	defer c.preloadLock.Unlock()
+
 	w, h := c.Config.geometry()
 	prep := make([]C.uint32_t, w*h)
 

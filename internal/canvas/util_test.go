@@ -141,8 +141,13 @@ func TestLastNonBlankX(t *testing.T) {
 		},
 		{
 			name:     "middle",
-			pt:       image.Pt(2, 5),
-			expected: 2,
+			pt:       image.Pt(5, 5),
+			expected: 5,
+		},
+		{
+			name:     "last X",
+			pt:       image.Pt(10, 5),
+			expected: 10,
 		},
 	}
 

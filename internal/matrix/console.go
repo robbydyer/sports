@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"io"
 	"strings"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -14,12 +15,13 @@ import (
 // ConsoleMatrix prints a representation of a matrix to a terminal.
 // Useful for testing layouts without a Pi or an LED matrix.
 type ConsoleMatrix struct {
-	matrix  []uint32
-	width   int
-	height  int
-	out     io.Writer
-	preload [][]uint32
-	log     *zap.Logger
+	matrix      []uint32
+	width       int
+	height      int
+	out         io.Writer
+	preload     [][]uint32
+	log         *zap.Logger
+	preloadLock sync.Mutex
 }
 
 // NewConsoleMatrix ...
@@ -74,6 +76,9 @@ func (c *ConsoleMatrix) Set(x int, y int, clr color.Color) {
 }
 
 func (c *ConsoleMatrix) PreLoad(scene *MatrixScene) {
+	c.preloadLock.Lock()
+	defer c.preloadLock.Unlock()
+
 	w, h := c.Geometry()
 	prep := make([]uint32, w*h)
 
