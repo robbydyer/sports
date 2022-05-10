@@ -468,6 +468,9 @@ func (c *ScrollCanvas) PrepareSubCanvases() {
 	if len(c.actuals) < 1 {
 		c.actuals = append(c.actuals, c.actual)
 	}
+
+	// Add a matrix-width empty subcanvas so that we start
+	// scrolling with a totally blank screen
 	c.subCanvases = []*subCanvasHorizontal{
 		{
 			index:         0,
@@ -480,7 +483,9 @@ func (c *ScrollCanvas) PrepareSubCanvases() {
 	}
 
 	index := 1
-	for _, actual := range c.actuals {
+	for i, actual := range c.actuals {
+
+		// Add the actual subcanvas
 		c.subCanvases = append(c.subCanvases,
 			&subCanvasHorizontal{
 				actualStartX: firstNonBlankX(actual),
@@ -490,17 +495,22 @@ func (c *ScrollCanvas) PrepareSubCanvases() {
 			},
 		)
 		index++
-		c.subCanvases = append(c.subCanvases,
-			&subCanvasHorizontal{
-				actualStartX: 0,
-				actualEndX:   c.mergePad,
-				img:          image.NewRGBA(image.Rect(0, 0, c.mergePad, c.h)),
-				index:        index,
-			},
-		)
-		index++
+
+		if i != len(c.actuals)-1 {
+			// Add a subcanvas for padding between
+			c.subCanvases = append(c.subCanvases,
+				&subCanvasHorizontal{
+					actualStartX: 0,
+					actualEndX:   c.mergePad,
+					img:          image.NewRGBA(image.Rect(0, 0, c.mergePad, c.h)),
+					index:        index,
+				},
+			)
+			index++
+		}
 	}
 
+	// Add another matrix-width empty subcanvas
 	c.subCanvases = append(c.subCanvases,
 		&subCanvasHorizontal{
 			index:        index,
@@ -532,18 +542,18 @@ SUBS:
 
 		sub.virtualStartX = prev.virtualEndX + 1
 		diff := sub.actualEndX - sub.actualStartX
-		if sub.actualStartX < 1 {
-			diff = sub.actualEndX - (sub.actualStartX * -1)
-		}
 		sub.virtualEndX = sub.virtualStartX + diff
 
 		c.log.Debug("define sub canvas",
 			zap.Int("index", sub.index),
 			zap.Int("actualstartX", sub.actualStartX),
+			zap.Int("min X", sub.img.Bounds().Min.X),
 			zap.Int("actualendX", sub.actualEndX),
+			zap.Int("max X", sub.img.Bounds().Max.X),
 			zap.Int("virtualstartX", sub.virtualStartX),
 			zap.Int("virtualendx", sub.virtualEndX),
 			zap.Int("actual canvas Width", c.w),
+			zap.Int("pad", c.pad),
 		)
 	}
 	c.log.Debug("done defining sub canvases")
@@ -615,6 +625,10 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 	}
 
 	wg.Wait()
+
+	c.log.Debug("loaded matrix scenes",
+		zap.Int("num scenes", sceneIndex+1),
+	)
 
 	select {
 	case <-ctx.Done():
