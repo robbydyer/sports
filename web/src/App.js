@@ -33,6 +33,7 @@ class App extends React.Component {
           <Route path="/clock" render={() => <BasicBoard id="clock" name="clock" key="clock" />} />
           <Route path="/sys" render={() => <BasicBoard id="sys" name="sys" key="sys" />} />
           <Route path="/stocks" render={() => <BasicBoard id="stocks" name="stocks" key="stocks" />} />
+          <Route path="/gcal" render={() => <BasicBoard id="gcal" name="gcal" key="gcal" />} />
           <Route path="/weather" exact component={Weather} />
           <Route path="/board" exact component={Board} />
           <Route path="/docs" exact component={() => <SwaggerUI spec={swag} />} />

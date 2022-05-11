@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"image"
 	"io/ioutil"
+	"os"
+	"sort"
 	"time"
 
 	"github.com/robbydyer/sports/internal/assetlogo"
@@ -45,12 +47,24 @@ func (g *Gcal) connect(ctx context.Context) error {
 		return nil
 	}
 
+	// If no credential and token files, try using ADC
+	_, credsErr := os.Stat(CredentialsFile)
+	_, tokErr := os.Stat(TokenFile)
+	if (credsErr != nil || tokErr != nil) && (os.IsNotExist(credsErr) || os.IsNotExist(tokErr)) {
+		var err error
+		g.log.Info("using google ADC for calendar auth")
+		g.service, err = calendar.NewService(ctx, option.WithScopes(calendar.CalendarScope))
+		return fmt.Errorf("failed to auth to calendar with ADC: %w", err)
+	}
+
+	g.log.Info("using ouath2 token file for calendar auth")
+
 	b, err := ioutil.ReadFile(CredentialsFile)
 	if err != nil {
 		return err
 	}
 
-	config, err := google_oauth2.ConfigFromJSON(b, calendar.CalendarReadonlyScope)
+	config, err := google_oauth2.ConfigFromJSON(b, calendar.CalendarReadonlyScope, calendar.CalendarEventsReadonlyScope)
 	if err != nil {
 		return err
 	}
@@ -83,7 +97,7 @@ func (g *Gcal) DailyEvents(ctx context.Context, date time.Time) ([]*calendarboar
 
 	events := []*calendarboard.Event{}
 
-	calendarIDs, err := g.getCalendarIDs(ctx)
+	calendarIDs, err := g.GetCalendarIDs(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +116,7 @@ func (g *Gcal) DailyEvents(ctx context.Context, date time.Time) ([]*calendarboar
 			if e.Start == nil {
 				continue CALEVENTS
 			}
-			g.log.Info("google calendar event",
+			g.log.Debug("google calendar event",
 				zap.String("summary", e.Summary),
 				zap.String("start", e.Start.DateTime),
 			)
@@ -126,10 +140,14 @@ func (g *Gcal) DailyEvents(ctx context.Context, date time.Time) ([]*calendarboar
 		}
 	}
 
+	sort.SliceStable(events, func(i int, j int) bool {
+		return events[i].Time.Before(events[j].Time)
+	})
+
 	return events, nil
 }
 
-func (g *Gcal) getCalendarIDs(ctx context.Context) ([]string, error) {
+func (g *Gcal) GetCalendarIDs(ctx context.Context) ([]string, error) {
 	if len(g.calendarIDs) > 0 {
 		return g.calendarIDs, nil
 	}
