@@ -97,10 +97,6 @@ func (c *Config) SetDefaults() {
 	} else {
 		c.scrollDelay = cnvs.DefaultScrollDelay
 	}
-
-	if c.CredentialsFile == "" {
-		c.CredentialsFile = "/etc/calendar_credentials.json"
-	}
 }
 
 // New ...
