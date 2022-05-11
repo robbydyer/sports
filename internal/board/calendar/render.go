@@ -86,7 +86,7 @@ func (s *CalendarBoard) render(ctx context.Context, canvas board.Canvas) (board.
 	}
 
 	s.log.Debug("calendar events",
-		zap.Int("number", len(s.events)),
+		zap.Int("number", len(events)),
 	)
 
 EVENTS:
@@ -97,7 +97,7 @@ EVENTS:
 		default:
 		}
 		if err := s.renderEvent(s.boardCtx, canvas, event, scheduleWriter); err != nil {
-			s.log.Error("failed to render racing event",
+			s.log.Error("failed to render calendar event",
 				zap.Error(err),
 			)
 			continue EVENTS
@@ -110,7 +110,7 @@ EVENTS:
 		}
 
 		if err := canvas.Render(s.boardCtx); err != nil {
-			s.log.Error("failed to render racing board",
+			s.log.Error("failed to render calendar board",
 				zap.Error(err),
 			)
 			continue EVENTS
@@ -156,6 +156,7 @@ func (s *CalendarBoard) renderEvent(ctx context.Context, canvas board.Canvas, ev
 		dateBounds,
 		[]string{
 			event.Time.Format("Mon Jan 2"),
+			event.Time.Format("03:04PM"),
 		},
 		color.White,
 	); err != nil {

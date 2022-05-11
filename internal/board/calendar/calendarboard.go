@@ -54,6 +54,7 @@ type Config struct {
 	OnTimes            []string     `json:"onTimes"`
 	OffTimes           []string     `json:"offTimes"`
 	TightScrollPadding int          `json:"tightScrollPadding"`
+	CalendarIDs        []string     `json:"calendarIDs"`
 }
 
 // API ...
@@ -95,6 +96,10 @@ func (c *Config) SetDefaults() {
 		c.scrollDelay = d
 	} else {
 		c.scrollDelay = cnvs.DefaultScrollDelay
+	}
+
+	if c.CredentialsFile == "" {
+		c.CredentialsFile = "/etc/calendar_credentials.json"
 	}
 }
 
