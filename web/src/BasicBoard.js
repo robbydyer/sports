@@ -9,6 +9,7 @@ import clock from './clock.png';
 import stocksstocks from './stock.png';
 import pga from './pga.png';
 import sys from './server.png';
+import cal from './cal.png';
 import Form from 'react-bootstrap/Form';
 import { MatrixPostRet, JSONToStatus, JumpToBoard } from './util';
 import * as pb from './basicboard/basicboard_pb';
@@ -64,6 +65,8 @@ class BasicBoard extends React.Component {
             return pga;
         } else if (this.props.name === "sys") {
             return sys;
+        } else if (this.props.name === "gcal") {
+            return cal;
         }
     }
     render() {

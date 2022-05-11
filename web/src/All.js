@@ -89,6 +89,11 @@ class All extends React.Component {
                     </Col>
                     <Col lg="auto" style={styles.col}>
                         <Card style={{ width: { card_border } }}>
+                            <BasicBoard id="gcal" name="gcal" doSync={this.doSync} key={"gcal" + this.state.sync} />
+                        </Card>
+                    </Col>
+                    <Col lg="auto" style={styles.col}>
+                        <Card style={{ width: { card_border } }}>
                             <BasicBoard id="sys" name="sys" doSync={this.doSync} key={"sys" + this.state.sync} />
                         </Card>
                     </Col>

@@ -29,6 +29,7 @@ import (
 	"github.com/robbydyer/sports/internal/config"
 	"github.com/robbydyer/sports/internal/espnboard"
 	"github.com/robbydyer/sports/internal/espnracing"
+	"github.com/robbydyer/sports/internal/gcal"
 	"github.com/robbydyer/sports/internal/matrix"
 	"github.com/robbydyer/sports/internal/mlb"
 	"github.com/robbydyer/sports/internal/nhl"
@@ -134,6 +135,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 	rootCmd.AddCommand(newStockCmd(args))
 	rootCmd.AddCommand(newWeatherCmd(args))
 	rootCmd.AddCommand(newCalCmd(args))
+	rootCmd.AddCommand(newGcalSetupCmd(args))
 
 	return rootCmd
 }
@@ -714,6 +716,18 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 		b, err := racingboard.New(api, logger, r.config.IRLConfig)
+		if err != nil {
+			return nil, err
+		}
+		boards = append(boards, b)
+	}
+
+	if r.config.CalenderConfig != nil {
+		api, err := gcal.New(logger)
+		if err != nil {
+			return nil, err
+		}
+		b, err := calendarboard.New(api, logger, r.config.CalenderConfig)
 		if err != nil {
 			return nil, err
 		}

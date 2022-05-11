@@ -1069,3 +1069,29 @@ irlConfig:
   #- 00 18 * * *
   #offTimes:
   #- 00 02 * * *
+
+# Google Calendar
+# See https://github.com/robbydyer/sports/blob/master/GCAL.md for auth setup
+calendarConfig:
+  enabled: false
+
+  scrollMode: false
+
+  # If you leave this option empty, it will pull all the available calendar ID's in your account
+  #calendarIDs:
+  #- myemail@gmail.com
+  
+  # Set the spacing between the tickers in scroll mode.
+  tightScrollPadding: 10
+
+  # Delay between screen draws in scroll mode. Default is 50ms.
+  #scrollDelay: "50ms"
+
+  # Delay between each screen in non-scroll mode
+  boardDelay: "10s"
+
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *

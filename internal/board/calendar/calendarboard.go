@@ -29,7 +29,6 @@ type CalendarBoard struct {
 	api            API
 	log            *zap.Logger
 	scheduleWriter *rgbrender.TextWriter
-	events         []*Event
 	rpcServer      pb.TwirpServer
 	boardCtx       context.Context
 	boardCancel    context.CancelFunc
@@ -54,6 +53,7 @@ type Config struct {
 	OnTimes            []string     `json:"onTimes"`
 	OffTimes           []string     `json:"offTimes"`
 	TightScrollPadding int          `json:"tightScrollPadding"`
+	CalendarIDs        []string     `json:"calendarIDs"`
 }
 
 // API ...
