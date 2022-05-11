@@ -9,10 +9,11 @@ import (
 	"sort"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/robbydyer/sports/internal/assetlogo"
 	calendarboard "github.com/robbydyer/sports/internal/board/calendar"
 	"github.com/robbydyer/sports/internal/logo"
-	"go.uber.org/zap"
 
 	google_oauth2 "golang.org/x/oauth2/google"
 	calendar "google.golang.org/api/calendar/v3"
@@ -22,7 +23,6 @@ import (
 type Gcal struct {
 	log         *zap.Logger
 	service     *calendar.Service
-	calendars   []string
 	calendarIDs []string
 }
 
@@ -129,6 +129,9 @@ func (g *Gcal) DailyEvents(ctx context.Context, date time.Time) ([]*calendarboar
 				}
 			} else if e.Start.Date != "" {
 				t, err = time.Parse("2006-01-02", e.Start.Date)
+				if err != nil {
+					return nil, err
+				}
 			}
 			if t.Format("2006-01-02") != date.Format("2006-01-02") {
 				continue CALEVENTS

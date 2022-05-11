@@ -7,11 +7,12 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/robbydyer/sports/internal/gcal"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 	google_oauth2 "golang.org/x/oauth2/google"
 	"google.golang.org/api/calendar/v3"
+
+	"github.com/robbydyer/sports/internal/gcal"
 )
 
 const gcaldesc = `
@@ -35,7 +36,7 @@ func newGcalSetupCmd(args *rootArgs) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "gcalsetup",
-		Short: "Performs intial authentication setup for Google Calendar",
+		Short: "Performs initial authentication setup for Google Calendar",
 		Long:  gcaldesc,
 		RunE:  g.run,
 	}
@@ -73,7 +74,6 @@ func (g *gcalSetupCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	defer f.Close()
-	json.NewEncoder(f).Encode(tok)
 
-	return nil
+	return json.NewEncoder(f).Encode(tok)
 }

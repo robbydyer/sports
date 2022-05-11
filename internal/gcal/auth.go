@@ -22,5 +22,5 @@ func getClient(config *oauth2.Config) (*http.Client, error) {
 	defer f.Close()
 	tok := &oauth2.Token{}
 	err = json.NewDecoder(f).Decode(tok)
-	return config.Client(context.Background(), tok), nil
+	return config.Client(context.Background(), tok), err
 }

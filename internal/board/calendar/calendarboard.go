@@ -29,7 +29,6 @@ type CalendarBoard struct {
 	api            API
 	log            *zap.Logger
 	scheduleWriter *rgbrender.TextWriter
-	events         []*Event
 	rpcServer      pb.TwirpServer
 	boardCtx       context.Context
 	boardCancel    context.CancelFunc
