@@ -123,7 +123,8 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		debugServer := NewDebugServer("0.0.0.0:6060")
 
 		go func() {
-			debugServer.ListenAndServe()
+			err := debugServer.ListenAndServe()
+			logger.Fatal(err.Error())
 		}()
 	}
 

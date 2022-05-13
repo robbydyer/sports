@@ -7,10 +7,6 @@ import (
 	calendar "google.golang.org/api/calendar/v3"
 )
 
-func (g *Gcal) clearCache() {
-	g.calendars = make(map[string]*cal)
-}
-
 func (g *Gcal) getEvents(ctx context.Context, calendarID string, date time.Time) ([]*calendar.Event, error) {
 	g.Lock()
 	thisCal, ok := g.calendars[calendarID]
