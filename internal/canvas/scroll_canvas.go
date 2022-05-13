@@ -6,7 +6,6 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"sort"
 	"sync"
 	"time"
 
@@ -64,7 +63,7 @@ type subCanvasHorizontal struct {
 	virtualStartX int
 	virtualEndX   int
 	img           *image.RGBA
-	index         int
+	previous      *subCanvasHorizontal
 }
 
 type ScrollCanvasOption func(*ScrollCanvas) error
@@ -80,16 +79,13 @@ func NewScrollCanvas(m matrix.Matrix, logger *zap.Logger, opts ...ScrollCanvasOp
 		log:       logger,
 		direction: RightToLeft,
 		merged:    atomic.NewBool(false),
+		pad:       w + int(float64(w)*0.25),
 	}
 
 	for _, f := range opts {
 		if err := f(c); err != nil {
 			return nil, err
 		}
-	}
-
-	if c.actual == nil {
-		c.SetPadding(w + int(float64(w)*0.25))
 	}
 
 	return c, nil
@@ -112,6 +108,20 @@ func (c *ScrollCanvas) GetActual() *image.RGBA {
 	return c.actual
 }
 
+// GC clears out the underlying slices that hold image data.
+// This should be called whenever a ScrollCanvas is used that is not Rendered
+// at some point
+func (c *ScrollCanvas) GC() {
+	for i := range c.subCanvases {
+		c.subCanvases[i] = nil
+	}
+	for i := range c.actuals {
+		c.actuals[i] = nil
+	}
+	c.subCanvases = nil
+	c.actuals = nil
+}
+
 func (c *ScrollCanvas) AddCanvas(add draw.Image) {
 	if c.direction != RightToLeft && c.direction != LeftToRight {
 		return
@@ -121,6 +131,17 @@ func (c *ScrollCanvas) AddCanvas(add draw.Image) {
 	draw.Draw(img, add.Bounds(), add, add.Bounds().Min, draw.Over)
 
 	c.actuals = append(c.actuals, img)
+}
+
+// Append the actual canvases of another ScrollCanvas to this one
+func (c *ScrollCanvas) Append(other *ScrollCanvas) {
+	c.actuals = append(c.actuals, other.actuals...)
+}
+
+// Append the actual canvases of another ScrollCanvas to this one
+func (c *ScrollCanvas) AppendAndGC(other *ScrollCanvas) {
+	c.actuals = append(c.actuals, other.actuals...)
+	other.GC()
 }
 
 // Len returns the number of canvases
@@ -173,11 +194,6 @@ func (c *ScrollCanvas) merge(padding int) {
 	}
 
 	c.actual = merged
-}
-
-// Append the actual canvases of another ScrollCanvas to this one
-func (c *ScrollCanvas) Append(other *ScrollCanvas) {
-	c.actuals = append(c.actuals, other.actuals...)
 }
 
 func (c *ScrollCanvas) Scrollable() bool {
@@ -261,7 +277,7 @@ func (c *ScrollCanvas) GetScrollDirection() ScrollDirection {
 func (c *ScrollCanvas) SetPadding(pad int) {
 	c.pad = pad
 
-	c.actual = image.NewRGBA(image.Rect(0-c.pad, 0-c.pad, c.w+c.pad, c.h+c.pad))
+	c.actual = image.NewRGBA(c.getBounds())
 	draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
 
 	c.log.Debug("creating scroll canvas",
@@ -275,6 +291,10 @@ func (c *ScrollCanvas) SetPadding(pad int) {
 	)
 }
 
+func (c *ScrollCanvas) getBounds() image.Rectangle {
+	return image.Rect(0-c.pad, 0-c.pad, c.w+c.pad, c.h+c.pad)
+}
+
 // GetPadding
 func (c *ScrollCanvas) GetPadding() int {
 	return c.pad
@@ -282,6 +302,9 @@ func (c *ScrollCanvas) GetPadding() int {
 
 // Clear set all the leds on the matrix with color.Black
 func (c *ScrollCanvas) Clear() error {
+	if c.actual == nil {
+		c.SetPadding(c.pad)
+	}
 	draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
 	for x := 0; x < c.w-1; x++ {
 		for y := 0; y < c.h-1; y++ {
@@ -304,6 +327,25 @@ func (c *ScrollCanvas) Render(ctx context.Context) error {
 			c.matchScrollCancel()
 			c.log.Info("scroll canvas cancel MatchScroll")
 		}
+
+		// Make sure to nil out these to ensure we don't leak memory
+		c.GC()
+		/*
+			subCanv := c.subCanvases
+			for i := range subCanv {
+				last := len(subCanv) - 1
+				subCanv[i], subCanv[last] = subCanv[last], nil
+				c.subCanvases = subCanv[:last]
+			}
+			c.subCanvases = nil
+			act := c.actuals
+			for i := range act {
+				last := len(act) - 1
+				act[i], act[last] = act[last], nil
+				c.actuals = act[:last]
+			}
+			c.actuals = nil
+		*/
 	}()
 	switch c.direction {
 	case RightToLeft:
@@ -317,16 +359,16 @@ func (c *ScrollCanvas) Render(ctx context.Context) error {
 		if err := c.bottomToTop(ctx); err != nil {
 			return err
 		}
+		draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Src)
 	case TopToBottom:
 		c.merge(c.mergePad)
 		if err := c.topToBottom(ctx); err != nil {
 			return err
 		}
+		draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Src)
 	default:
 		return fmt.Errorf("unsupported scroll direction")
 	}
-
-	draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Src)
 
 	return nil
 }
@@ -345,16 +387,25 @@ func (c *ScrollCanvas) ColorModel() color.Model {
 
 // Bounds return the topology of the Canvas
 func (c *ScrollCanvas) Bounds() image.Rectangle {
+	if c.actual == nil {
+		return c.getBounds()
+	}
 	return c.actual.Bounds()
 }
 
 // At returns the color of the pixel at (x, y)
 func (c *ScrollCanvas) At(x, y int) color.Color {
+	if c.actual == nil {
+		c.SetPadding(c.pad)
+	}
 	return c.actual.At(x, y)
 }
 
 // Set set LED at position x,y to the provided 24-bit color value
 func (c *ScrollCanvas) Set(x, y int, color color.Color) {
+	if c.actual == nil {
+		c.SetPadding(c.pad)
+	}
 	c.actual.Set(x, y, color)
 }
 
@@ -469,59 +520,54 @@ func (c *ScrollCanvas) PrepareSubCanvases() {
 		c.actuals = append(c.actuals, c.actual)
 	}
 
+	c.log.Debug("preparing sub canvases",
+		zap.Int("num actuals", len(c.actuals)),
+	)
+
+	c.subCanvases = make([]*subCanvasHorizontal, (len(c.actuals)*2)+1)
+	subIndex := 0
+
 	// Add a matrix-width empty subcanvas so that we start
 	// scrolling with a totally blank screen
-	c.subCanvases = []*subCanvasHorizontal{
-		{
-			index:         0,
-			actualStartX:  0,
-			actualEndX:    c.w,
-			virtualStartX: 0,
-			virtualEndX:   c.w,
-			img:           image.NewRGBA(image.Rect(0, 0, c.w, c.h)),
-		},
+	c.subCanvases[subIndex] = &subCanvasHorizontal{
+		actualStartX:  0,
+		actualEndX:    c.w,
+		virtualStartX: 0,
+		virtualEndX:   c.w,
+		img:           image.NewRGBA(image.Rect(0, 0, c.w, c.h)),
+		previous:      nil,
 	}
+	subIndex++
 
-	index := 1
 	for i, actual := range c.actuals {
 		// Add the actual subcanvas
-		c.subCanvases = append(c.subCanvases,
-			&subCanvasHorizontal{
-				actualStartX: firstNonBlankX(actual),
-				actualEndX:   lastNonBlankX(actual),
-				img:          actual,
-				index:        index,
-			},
-		)
-		index++
+		c.subCanvases[subIndex] = &subCanvasHorizontal{
+			actualStartX: firstNonBlankX(actual),
+			actualEndX:   lastNonBlankX(actual),
+			img:          actual,
+			previous:     c.subCanvases[subIndex-1],
+		}
+		subIndex++
 
 		if i != len(c.actuals)-1 {
 			// Add a subcanvas for padding between
-			c.subCanvases = append(c.subCanvases,
-				&subCanvasHorizontal{
-					actualStartX: 0,
-					actualEndX:   c.mergePad,
-					img:          image.NewRGBA(image.Rect(0, 0, c.mergePad, c.h)),
-					index:        index,
-				},
-			)
-			index++
+			c.subCanvases[subIndex] = &subCanvasHorizontal{
+				actualStartX: 0,
+				actualEndX:   c.mergePad,
+				img:          image.NewRGBA(image.Rect(0, 0, c.mergePad, c.h)),
+				previous:     c.subCanvases[subIndex-1],
+			}
+			subIndex++
 		}
 	}
 
 	// Add another matrix-width empty subcanvas
-	c.subCanvases = append(c.subCanvases,
-		&subCanvasHorizontal{
-			index:        index,
-			actualStartX: 0,
-			actualEndX:   c.w,
-			img:          image.NewRGBA(image.Rect(0, 0, c.w, c.h)),
-		},
-	)
-
-	sort.SliceStable(c.subCanvases, func(i int, j int) bool {
-		return c.subCanvases[i].index < c.subCanvases[j].index
-	})
+	c.subCanvases[subIndex] = &subCanvasHorizontal{
+		actualStartX: 0,
+		actualEndX:   c.w,
+		img:          image.NewRGBA(image.Rect(0, 0, c.w, c.h)),
+		previous:     c.subCanvases[subIndex-1],
+	}
 
 	c.log.Debug("done initializing sub canvases",
 		zap.Int("num", len(c.subCanvases)),
@@ -529,11 +575,7 @@ func (c *ScrollCanvas) PrepareSubCanvases() {
 
 SUBS:
 	for _, sub := range c.subCanvases {
-		if sub.index == 0 {
-			continue SUBS
-		}
-
-		prev := c.prevSub(sub)
+		prev := sub.previous
 
 		if prev == nil {
 			continue SUBS
@@ -544,7 +586,6 @@ SUBS:
 		sub.virtualEndX = sub.virtualStartX + diff
 
 		c.log.Debug("define sub canvas",
-			zap.Int("index", sub.index),
 			zap.Int("actualstartX", sub.actualStartX),
 			zap.Int("min X", sub.img.Bounds().Min.X),
 			zap.Int("actualendX", sub.actualEndX),
@@ -556,18 +597,6 @@ SUBS:
 		)
 	}
 	c.log.Debug("done defining sub canvases")
-}
-
-func (c *ScrollCanvas) prevSub(me *subCanvasHorizontal) *subCanvasHorizontal {
-	if me.index == 0 {
-		return nil
-	}
-	for _, sub := range c.subCanvases {
-		if sub.index == me.index-1 {
-			return sub
-		}
-	}
-	return nil
 }
 
 func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
