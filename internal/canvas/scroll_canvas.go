@@ -330,22 +330,6 @@ func (c *ScrollCanvas) Render(ctx context.Context) error {
 
 		// Make sure to nil out these to ensure we don't leak memory
 		c.GC()
-		/*
-			subCanv := c.subCanvases
-			for i := range subCanv {
-				last := len(subCanv) - 1
-				subCanv[i], subCanv[last] = subCanv[last], nil
-				c.subCanvases = subCanv[:last]
-			}
-			c.subCanvases = nil
-			act := c.actuals
-			for i := range act {
-				last := len(act) - 1
-				act[i], act[last] = act[last], nil
-				c.actuals = act[:last]
-			}
-			c.actuals = nil
-		*/
 	}()
 	switch c.direction {
 	case RightToLeft:
