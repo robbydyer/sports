@@ -108,9 +108,9 @@ func (c *ScrollCanvas) GetActual() *image.RGBA {
 	return c.actual
 }
 
-// GC clears out the underlying slices that hold image data.
+// GC clears out the underlying struct fields that hold image data.
 // This should be called whenever a ScrollCanvas is used that is not Rendered
-// at some point
+// at some point or after Rendering
 func (c *ScrollCanvas) GC() {
 	for i := range c.subCanvases {
 		c.subCanvases[i] = nil
@@ -120,6 +120,7 @@ func (c *ScrollCanvas) GC() {
 	}
 	c.subCanvases = nil
 	c.actuals = nil
+	// c.actual = nil
 }
 
 func (c *ScrollCanvas) AddCanvas(add draw.Image) {
