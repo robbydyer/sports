@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -24,13 +25,23 @@ type Gcal struct {
 	log         *zap.Logger
 	service     *calendar.Service
 	calendarIDs []string
+	refresh     time.Duration
+	calendars   map[string]*cal
+	sync.Mutex
+}
+
+type cal struct {
+	events     []*calendar.Event
+	lastUpdate time.Time
 }
 
 type OptionFunc func(*Gcal) error
 
 func New(logger *zap.Logger, opts ...OptionFunc) (*Gcal, error) {
 	g := &Gcal{
-		log: logger,
+		log:       logger,
+		refresh:   30 * time.Minute,
+		calendars: make(map[string]*cal),
 	}
 
 	for _, o := range opts {
@@ -107,12 +118,12 @@ func (g *Gcal) DailyEvents(ctx context.Context, date time.Time) ([]*calendarboar
 	)
 
 	for _, calID := range calendarIDs {
-		calEvents, err := g.service.Events.List(calID).Context(ctx).TimeMin(dateMin(date)).TimeMax(dateMax(date)).Do()
+		calEvents, err := g.getEvents(ctx, calID, date)
 		if err != nil {
 			return nil, err
 		}
 	CALEVENTS:
-		for _, e := range calEvents.Items {
+		for _, e := range calEvents {
 			if e.Start == nil {
 				continue CALEVENTS
 			}
@@ -175,6 +186,13 @@ func (g *Gcal) GetCalendarIDs(ctx context.Context) ([]string, error) {
 func WithCalendarIDs(ids []string) OptionFunc {
 	return func(g *Gcal) error {
 		g.calendarIDs = ids
+		return nil
+	}
+}
+
+func WithRefreshInterval(interval time.Duration) OptionFunc {
+	return func(g *Gcal) error {
+		g.refresh = interval
 		return nil
 	}
 }

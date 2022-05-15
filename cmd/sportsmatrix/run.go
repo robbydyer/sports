@@ -119,6 +119,15 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		mtrx.AddBetweenBoard(brd)
 	}
 
+	if s.rArgs.debug {
+		debugServer := NewDebugServer("0.0.0.0:6060")
+
+		go func() {
+			err := debugServer.ListenAndServe()
+			logger.Fatal(err.Error())
+		}()
+	}
+
 	logger.Info("Starting matrix service")
 	if err := mtrx.Serve(ctx); err != nil {
 		logger.Error("Matrix returned an error",

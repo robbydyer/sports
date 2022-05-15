@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	_ "net/http/pprof"
 	"sort"
 	"strings"
 	"sync"
@@ -622,9 +623,9 @@ CANVASES:
 
 		for _, ordered := range allOrderedBoards {
 			if ordered.scrollCanvas.Len() > 0 {
-				scrollCanvas.Append(ordered.scrollCanvas)
+				scrollCanvas.AppendAndGC(ordered.scrollCanvas)
 				for _, c := range betweenBoards {
-					scrollCanvas.Append(c.scrollCanvas)
+					scrollCanvas.AppendAndGC(c.scrollCanvas)
 				}
 			} else {
 				s.log.Debug("board had less than 1 canvas rendered",

@@ -55,6 +55,7 @@ type rootArgs struct {
 	logFile      string
 	writer       *os.File
 	alternateAPI bool
+	debug        bool
 }
 
 func main() {
@@ -124,6 +125,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 	f.StringVar(&args.today, "date-str", "", "Set the date of 'Today' for testing past days. Format 2020-01-30")
 	f.StringVarP(&args.logFile, "log-file", "f", "", "Write logs to given file instead of STDOUT")
 	f.BoolVarP(&args.alternateAPI, "alt-api", "a", false, "Use alternative API's where available")
+	f.BoolVarP(&args.debug, "debug", "d", false, "Run pprof debug server on :6060")
 
 	_ = viper.BindPFlags(f)
 
