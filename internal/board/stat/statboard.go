@@ -45,6 +45,7 @@ type StatBoard struct {
 type Config struct {
 	boardDelay      time.Duration
 	updateInterval  time.Duration
+	scrollDelay     time.Duration
 	BoardDelay      string              `json:"boardDelay"`
 	StartEnabled    *atomic.Bool        `json:"enabled"`
 	Players         []string            `json:"players"`
@@ -55,6 +56,7 @@ type Config struct {
 	OnTimes         []string            `json:"onTimes"`
 	OffTimes        []string            `json:"offTimes"`
 	ScrollMode      *atomic.Bool        `json:"scrollMode"`
+	ScrollDelay     string              `json:"scrollDelay"`
 	Horizontal      *atomic.Bool        `json:"horizontal"`
 	HorizontalLimit int                 `json:"horizontalLimit"`
 }
@@ -108,6 +110,17 @@ func (c *Config) SetDefaults() {
 		}
 	} else {
 		c.boardDelay = 0 * time.Second
+	}
+
+	if c.ScrollDelay != "" {
+		d, err := time.ParseDuration(c.ScrollDelay)
+		if err != nil {
+			c.scrollDelay = 200 * time.Millisecond
+		} else {
+			c.scrollDelay = d
+		}
+	} else {
+		c.scrollDelay = 200 * time.Millisecond
 	}
 
 	if c.UpdateInterval != "" {

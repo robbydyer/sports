@@ -207,6 +207,11 @@ func (s *TextBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		return err
 	}
 	if c != nil {
+		defer func() {
+			if scr, ok := c.(*cnvs.ScrollCanvas); ok {
+				s.config.scrollDelay = scr.GetScrollSpeed()
+			}
+		}()
 		return c.Render(ctx)
 	}
 
@@ -281,6 +286,7 @@ func (s *TextBoard) render(ctx context.Context, canvas board.Canvas) (board.Canv
 	}
 	scrollCanvas.SetScrollDirection(cnvs.RightToLeft)
 	scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
+	base.SetScrollSpeed(s.config.scrollDelay)
 
 	go scrollCanvas.MatchScroll(ctx, base)
 

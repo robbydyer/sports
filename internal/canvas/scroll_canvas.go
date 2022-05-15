@@ -149,53 +149,6 @@ func (c *ScrollCanvas) Len() int {
 	return len(c.actuals)
 }
 
-func (c *ScrollCanvas) merge(padding int) {
-	if c.merged.CAS(true, true) {
-		return
-	}
-
-	maxX := 0
-	maxY := 0
-	for _, img := range c.actuals {
-		maxX += img.Bounds().Dx()
-		if img.Bounds().Dy() > maxY {
-			maxY = img.Bounds().Dy()
-		}
-	}
-
-	merged := image.NewRGBA(image.Rect(0, 0, maxX, maxY))
-
-	c.log.Debug("merging tight scroll canvas",
-		zap.Int("width", maxX),
-		zap.Int("height", maxY),
-	)
-
-	lastX := 0
-	for _, img := range c.actuals {
-		startX := firstNonBlankX(img)
-		endX := lastNonBlankX(img) + 1
-		negStart := 0
-		if startX < 0 {
-			negStart = startX * -1
-		}
-
-		buffered := false
-		x := 0
-		for x = startX; x < endX; x++ {
-			if !buffered {
-				lastX += padding
-			}
-			buffered = true
-			for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
-				merged.Set(x+lastX+negStart, y, img.At(x, y))
-			}
-		}
-		lastX += x + negStart
-	}
-
-	c.actual = merged
-}
-
 func (c *ScrollCanvas) Scrollable() bool {
 	return true
 }
@@ -337,19 +290,20 @@ func (c *ScrollCanvas) Render(ctx context.Context) error {
 		if err := c.rightToLeft(ctx); err != nil {
 			return err
 		}
+	case LeftToRight:
+		c.log.Debug("scrolling left to right")
+		if err := c.leftToRight(ctx); err != nil {
+			return err
+		}
 	case BottomToTop:
-		c.merge(c.mergePad)
 		c.log.Debug("scrolling bottom to top")
 		if err := c.bottomToTop(ctx); err != nil {
 			return err
 		}
-		draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Src)
 	case TopToBottom:
-		c.merge(c.mergePad)
 		if err := c.topToBottom(ctx); err != nil {
 			return err
 		}
-		draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Src)
 	default:
 		return fmt.Errorf("unsupported scroll direction")
 	}
@@ -378,7 +332,7 @@ func (c *ScrollCanvas) Bounds() image.Rectangle {
 }
 
 // At returns the color of the pixel at (x, y)
-func (c *ScrollCanvas) At(x, y int) color.Color {
+func (c *ScrollCanvas) At(x int, y int) color.Color {
 	if c.actual == nil {
 		c.SetPadding(c.pad)
 	}
@@ -386,7 +340,7 @@ func (c *ScrollCanvas) At(x, y int) color.Color {
 }
 
 // Set set LED at position x,y to the provided 24-bit color value
-func (c *ScrollCanvas) Set(x, y int, color color.Color) {
+func (c *ScrollCanvas) Set(x int, y int, color color.Color) {
 	if c.actual == nil {
 		c.SetPadding(c.pad)
 	}
@@ -422,64 +376,83 @@ func (c *ScrollCanvas) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 }
 
 func (c *ScrollCanvas) topToBottom(ctx context.Context) error {
-	thisY := c.actual.Bounds().Min.Y
-	for {
-		select {
-		case <-ctx.Done():
-			return context.Canceled
-		case <-time.After(c.interval.Load()):
-		}
-		if thisY == c.actual.Bounds().Max.Y {
-			return nil
-		}
-
-		for x := c.actual.Bounds().Min.X; x <= c.actual.Bounds().Max.X; x++ {
-			for y := c.actual.Bounds().Min.Y; y <= c.actual.Bounds().Max.Y; y++ {
-				shiftY := y + thisY
-				if shiftY > 0 && shiftY < c.h && x > 0 && x < c.w {
-					c.Matrix.Set(x, shiftY, c.actual.At(x, y))
-				}
-			}
-		}
-
-		if err := c.Matrix.Render(); err != nil {
-			return err
-		}
-		thisY++
+	if err := c.verticalPrep(ctx); err != nil {
+		return err
 	}
+
+	// Default is bottomToTop, so reverse it
+	c.Matrix.ReversePreLoad()
+
+	c.sendScrollSpeedChan = make(chan time.Duration, 1)
+	return c.Matrix.Play(ctx, c.GetScrollSpeed(), c.sendScrollSpeedChan)
 }
 
 func (c *ScrollCanvas) bottomToTop(ctx context.Context) error {
+	if err := c.verticalPrep(ctx); err != nil {
+		return err
+	}
+
+	c.sendScrollSpeedChan = make(chan time.Duration, 1)
+	return c.Matrix.Play(ctx, c.GetScrollSpeed(), c.sendScrollSpeedChan)
+}
+
+func (c *ScrollCanvas) verticalPrep(ctx context.Context) error {
 	thisY := firstNonBlankY(c.actual) + c.h
 	finish := (lastNonBlankY(c.actual) + 1) * -1
 	c.log.Debug("scrolling until line",
 		zap.Int("finish line", finish),
 		zap.Int("last Y index", c.actual.Bounds().Max.Y),
+		zap.Int("thisY", thisY),
 	)
+	sceneIndex := 0
+	wg := sync.WaitGroup{}
+OUTER:
 	for {
-		select {
-		case <-ctx.Done():
-			return context.Canceled
-		case <-time.After(c.interval.Load()):
-		}
 		if thisY == finish {
-			return nil
+			break OUTER
 		}
 
-		for x := c.actual.Bounds().Min.X; x <= c.actual.Bounds().Max.X; x++ {
-			for y := c.actual.Bounds().Min.Y; y <= c.actual.Bounds().Max.Y; y++ {
-				shiftY := y + thisY
-				if shiftY > 0 && shiftY < c.h && x > 0 && x < c.w {
-					c.Matrix.Set(x, shiftY, c.actual.At(x, y))
+		wg.Add(1)
+		go func(sceneIndex int, thisY int) {
+			defer wg.Done()
+			loader := make([]matrix.MatrixPoint, c.w*c.h)
+			index := 0
+			for x := c.actual.Bounds().Min.X; x <= c.actual.Bounds().Max.X; x++ {
+				for y := c.actual.Bounds().Min.Y; y <= c.actual.Bounds().Max.Y; y++ {
+					shiftY := y + thisY
+					if shiftY > 0 && shiftY < c.h && x > 0 && x < c.w {
+						loader[index] = matrix.MatrixPoint{
+							X:     x,
+							Y:     shiftY,
+							Color: c.actual.At(x, y),
+						}
+						index++
+					}
 				}
 			}
-		}
-
-		if err := c.Matrix.Render(); err != nil {
-			return err
-		}
+			c.Matrix.PreLoad(&matrix.MatrixScene{
+				Index:  sceneIndex,
+				Points: loader,
+			})
+		}(sceneIndex, thisY)
+		sceneIndex++
 		thisY--
 	}
+
+	done := make(chan struct{})
+
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	case <-done:
+	}
+
+	return nil
 }
 
 // getActualPixel returns the pixel color at virtual coordinates in unmerged canvas list
@@ -584,6 +557,27 @@ SUBS:
 }
 
 func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
+	if err := c.horizontalPrep(ctx); err != nil {
+		return err
+	}
+
+	c.sendScrollSpeedChan = make(chan time.Duration, 1)
+	return c.Matrix.Play(ctx, c.GetScrollSpeed(), c.sendScrollSpeedChan)
+}
+
+func (c *ScrollCanvas) leftToRight(ctx context.Context) error {
+	if err := c.horizontalPrep(ctx); err != nil {
+		return err
+	}
+
+	// Default is rightToLeft, reverse it
+	c.Matrix.ReversePreLoad()
+
+	c.sendScrollSpeedChan = make(chan time.Duration, 1)
+	return c.Matrix.Play(ctx, c.GetScrollSpeed(), c.sendScrollSpeedChan)
+}
+
+func (c *ScrollCanvas) horizontalPrep(ctx context.Context) error {
 	if len(c.subCanvases) < 1 {
 		c.PrepareSubCanvases()
 	}
@@ -635,21 +629,24 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 		virtualX++
 	}
 
-	wg.Wait()
+	done := make(chan struct{})
+
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	case <-done:
+	}
 
 	c.log.Debug("loaded matrix scenes",
 		zap.Int("num scenes", sceneIndex+1),
 	)
 
-	select {
-	case <-ctx.Done():
-		return context.Canceled
-	default:
-	}
-
-	c.sendScrollSpeedChan = make(chan time.Duration, 1)
-
-	return c.Matrix.Play(ctx, c.GetScrollSpeed(), c.sendScrollSpeedChan)
+	return nil
 }
 
 // MatchScroll will match the scroll speed of this canvas from the given one.

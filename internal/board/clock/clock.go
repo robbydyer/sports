@@ -241,6 +241,7 @@ func (c *Clock) render(ctx context.Context, canvas board.Canvas) (board.Canvas, 
 		)
 		scrollCanvas.SetPadding(0)
 		scrollCanvas.AddCanvas(canvas)
+		base.SetScrollSpeed(c.config.scrollDelay)
 		go scrollCanvas.MatchScroll(ctx, base)
 
 		draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)

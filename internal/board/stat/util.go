@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 
 	"github.com/robbydyer/sports/internal/board"
 	cnvs "github.com/robbydyer/sports/internal/canvas"
@@ -178,11 +177,9 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 		return nil, err
 	}
 
-	fields := []zapcore.Field{}
-	for _, str := range strs {
-		fields = append(fields, zap.String("str", str))
-	}
-	s.log.Debug("cell X Maxes", fields...)
+	s.log.Debug("cell X Maxes",
+		zap.Strings("strs", strs),
+	)
 
 	cellXRatios, err := getGridRatios(writer, canvas, strs)
 	if err != nil {
@@ -199,9 +196,13 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 		}
 		pad = int(math.Ceil((writer.FontSize) * float64(numRows)))
 		pad -= rgbrender.ZeroedBounds(canvas.Bounds()).Dy()
-		// pad = pad / 2
 		scroller, ok := canvas.(*cnvs.ScrollCanvas)
 		if ok {
+			s.log.Debug("stat board getStatGrid set padding",
+				zap.Int("padding", pad),
+				zap.Int("num rows", numRows),
+				zap.Int("canvas Y", canvas.Bounds().Dy()),
+			)
 			scroller.SetPadding(pad)
 		}
 	}

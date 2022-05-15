@@ -229,6 +229,11 @@ func (s *StockBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		return err
 	}
 	if c != nil {
+		defer func() {
+			if scr, ok := c.(*cnvs.ScrollCanvas); ok {
+				s.config.scrollDelay = scr.GetScrollSpeed()
+			}
+		}()
 		return c.Render(ctx)
 	}
 
@@ -279,6 +284,8 @@ func (s *StockBoard) render(ctx context.Context, canvas board.Canvas) (board.Can
 			return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
 		}
 		scrollCanvas.SetScrollDirection(cnvs.RightToLeft)
+		scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
+		base.SetScrollSpeed(s.config.scrollDelay)
 
 		go scrollCanvas.MatchScroll(ctx, base)
 	}

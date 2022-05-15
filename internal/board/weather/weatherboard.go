@@ -225,6 +225,11 @@ func (w *WeatherBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		return err
 	}
 	if c != nil {
+		defer func() {
+			if scr, ok := c.(*cnvs.ScrollCanvas); ok {
+				w.config.scrollDelay = scr.GetScrollSpeed()
+			}
+		}()
 		return c.Render(ctx)
 	}
 
@@ -266,6 +271,8 @@ func (w *WeatherBoard) render(ctx context.Context, canvas board.Canvas) (board.C
 			return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
 		}
 		scrollCanvas.SetScrollDirection(cnvs.RightToLeft)
+		scrollCanvas.SetScrollSpeed(w.config.scrollDelay)
+		base.SetScrollSpeed(w.config.scrollDelay)
 
 		go scrollCanvas.MatchScroll(ctx, base)
 	}

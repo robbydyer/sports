@@ -15,6 +15,9 @@ func isBlack(c color.Color) bool {
 }
 
 func firstNonBlankY(img image.Image) int {
+	if img == nil {
+		return 0
+	}
 	for y := img.Bounds().Min.Y; y <= img.Bounds().Max.Y; y++ {
 		for x := img.Bounds().Min.X; x <= img.Bounds().Max.X; x++ {
 			if !isBlack(img.At(x, y)) {
@@ -27,6 +30,9 @@ func firstNonBlankY(img image.Image) int {
 }
 
 func firstNonBlankX(img image.Image) int {
+	if img == nil {
+		return 0
+	}
 	for x := img.Bounds().Min.X; x <= img.Bounds().Max.X; x++ {
 		for y := img.Bounds().Min.Y; y <= img.Bounds().Max.Y; y++ {
 			if !isBlack(img.At(x, y)) {
@@ -39,6 +45,9 @@ func firstNonBlankX(img image.Image) int {
 }
 
 func lastNonBlankY(img image.Image) int {
+	if img == nil {
+		return 0
+	}
 	for y := img.Bounds().Max.Y; y >= img.Bounds().Min.Y; y-- {
 		for x := img.Bounds().Min.X; x <= img.Bounds().Max.X; x++ {
 			if !isBlack(img.At(x, y)) {
@@ -51,6 +60,9 @@ func lastNonBlankY(img image.Image) int {
 }
 
 func lastNonBlankX(img image.Image) int {
+	if img == nil {
+		return 0
+	}
 	for x := img.Bounds().Max.X; x >= img.Bounds().Min.X; x-- {
 		for y := img.Bounds().Max.Y; y >= img.Bounds().Min.Y; y-- {
 			if !isBlack(img.At(x, y)) {

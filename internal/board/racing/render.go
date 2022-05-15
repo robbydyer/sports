@@ -38,6 +38,11 @@ func (s *RacingBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		return err
 	}
 	if c != nil {
+		defer func() {
+			if scr, ok := c.(*cnvs.ScrollCanvas); ok {
+				s.config.scrollDelay = scr.GetScrollSpeed()
+			}
+		}()
 		return c.Render(ctx)
 	}
 
@@ -88,6 +93,7 @@ func (s *RacingBoard) render(ctx context.Context, canvas board.Canvas) (board.Ca
 		}
 		scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
 		scrollCanvas.SetScrollDirection(cnvs.RightToLeft)
+		base.SetScrollSpeed(s.config.scrollDelay)
 		go scrollCanvas.MatchScroll(ctx, base)
 	}
 
