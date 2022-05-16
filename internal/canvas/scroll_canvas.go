@@ -9,6 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
@@ -405,21 +407,21 @@ func (c *ScrollCanvas) verticalPrep(ctx context.Context) error {
 		zap.Int("thisY", thisY),
 	)
 	sceneIndex := 0
-	wg := sync.WaitGroup{}
+	wg, ctx := errgroup.WithContext(ctx)
 OUTER:
 	for {
 		if thisY == finish {
 			break OUTER
 		}
 
-		wg.Add(1)
-		go func(sceneIndex int, thisY int) {
-			defer wg.Done()
+		mySceneIndex, myThisY := sceneIndex, thisY
+
+		wg.Go(func() error {
 			loader := make([]matrix.MatrixPoint, c.w*c.h)
 			index := 0
 			for x := c.actual.Bounds().Min.X; x <= c.actual.Bounds().Max.X; x++ {
 				for y := c.actual.Bounds().Min.Y; y <= c.actual.Bounds().Max.Y; y++ {
-					shiftY := y + thisY
+					shiftY := y + myThisY
 					if shiftY > 0 && shiftY < c.h && x > 0 && x < c.w {
 						loader[index] = matrix.MatrixPoint{
 							X:     x,
@@ -431,28 +433,16 @@ OUTER:
 				}
 			}
 			c.Matrix.PreLoad(&matrix.MatrixScene{
-				Index:  sceneIndex,
+				Index:  mySceneIndex,
 				Points: loader,
 			})
-		}(sceneIndex, thisY)
+			return nil
+		})
 		sceneIndex++
 		thisY--
 	}
 
-	done := make(chan struct{})
-
-	go func() {
-		wg.Wait()
-		close(done)
-	}()
-
-	select {
-	case <-ctx.Done():
-		return context.Canceled
-	case <-done:
-	}
-
-	return nil
+	return wg.Wait()
 }
 
 // getActualPixel returns the pixel color at virtual coordinates in unmerged canvas list
@@ -596,21 +586,21 @@ func (c *ScrollCanvas) horizontalPrep(ctx context.Context) error {
 	)
 
 	sceneIndex := 0
-	wg := sync.WaitGroup{}
+	wg, ctx := errgroup.WithContext(ctx)
 	for {
 		if virtualX == finish {
 			break
 		}
 
-		wg.Add(1)
-		go func(sceneIndex int, virtualX int) {
-			defer wg.Done()
+		mySceneIndex, myVirtualX := sceneIndex, virtualX
+
+		wg.Go(func() error {
 			loader := make([]matrix.MatrixPoint, c.w*c.h)
 
 			index := 0
 			for x := 0; x < c.w; x++ {
 				for y := 0; y < c.h; y++ {
-					thisVirtualX := x + virtualX
+					thisVirtualX := x + myVirtualX
 
 					loader[index] = matrix.MatrixPoint{
 						X:     x,
@@ -621,32 +611,16 @@ func (c *ScrollCanvas) horizontalPrep(ctx context.Context) error {
 				}
 			}
 			c.Matrix.PreLoad(&matrix.MatrixScene{
-				Index:  sceneIndex,
+				Index:  mySceneIndex,
 				Points: loader,
 			})
-		}(sceneIndex, virtualX)
+			return nil
+		})
 		sceneIndex++
 		virtualX++
 	}
 
-	done := make(chan struct{})
-
-	go func() {
-		wg.Wait()
-		close(done)
-	}()
-
-	select {
-	case <-ctx.Done():
-		return context.Canceled
-	case <-done:
-	}
-
-	c.log.Debug("loaded matrix scenes",
-		zap.Int("num scenes", sceneIndex+1),
-	)
-
-	return nil
+	return wg.Wait()
 }
 
 // MatchScroll will match the scroll speed of this canvas from the given one.
