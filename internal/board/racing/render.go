@@ -11,9 +11,9 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
-	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/logo"
 	"github.com/robbydyer/sports/internal/rgbrender"
+	scrcnvs "github.com/robbydyer/sports/internal/scrollcanvas"
 )
 
 // ScrollRender ...
@@ -39,7 +39,7 @@ func (s *RacingBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	}
 	if c != nil {
 		defer func() {
-			if scr, ok := c.(*cnvs.ScrollCanvas); ok {
+			if scr, ok := c.(*scrcnvs.ScrollCanvas); ok {
 				s.config.scrollDelay = scr.GetScrollSpeed()
 			}
 		}()
@@ -77,22 +77,22 @@ func (s *RacingBoard) render(ctx context.Context, canvas board.Canvas) (board.Ca
 		return nil, err
 	}
 
-	var scrollCanvas *cnvs.ScrollCanvas
+	var scrollCanvas *scrcnvs.ScrollCanvas
 	if canvas.Scrollable() && s.config.ScrollMode.Load() {
-		base, ok := canvas.(*cnvs.ScrollCanvas)
+		base, ok := canvas.(*scrcnvs.ScrollCanvas)
 		if !ok {
 			return nil, fmt.Errorf("invalid scroll canvas")
 		}
 
 		var err error
-		scrollCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log,
-			cnvs.WithMergePadding(s.config.TightScrollPadding),
+		scrollCanvas, err = scrcnvs.NewScrollCanvas(base.Matrix, s.log,
+			scrcnvs.WithMergePadding(s.config.TightScrollPadding),
 		)
 		if err != nil {
 			return nil, err
 		}
 		scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
-		scrollCanvas.SetScrollDirection(cnvs.RightToLeft)
+		scrollCanvas.SetScrollDirection(scrcnvs.RightToLeft)
 		base.SetScrollSpeed(s.config.scrollDelay)
 		go scrollCanvas.MatchScroll(ctx, base)
 	}

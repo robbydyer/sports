@@ -8,8 +8,8 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
-	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/rgbrender"
+	scrcnvs "github.com/robbydyer/sports/internal/scrollcanvas"
 )
 
 func (s *StatBoard) doScroll(ctx context.Context, canvas board.Canvas, players []Player) error {
@@ -17,14 +17,14 @@ func (s *StatBoard) doScroll(ctx context.Context, canvas board.Canvas, players [
 		return nil
 	}
 
-	scrollCanvas, ok := canvas.(*cnvs.ScrollCanvas)
+	scrollCanvas, ok := canvas.(*scrcnvs.ScrollCanvas)
 	if !ok {
 		return fmt.Errorf("incorrect canvas type given for scrolling")
 	}
 
 	origDir := scrollCanvas.GetScrollDirection()
 	defer scrollCanvas.SetScrollDirection(origDir)
-	scrollCanvas.SetScrollDirection(cnvs.BottomToTop)
+	scrollCanvas.SetScrollDirection(scrcnvs.BottomToTop)
 
 	origPadding := scrollCanvas.GetPadding()
 	defer scrollCanvas.SetPadding(origPadding)

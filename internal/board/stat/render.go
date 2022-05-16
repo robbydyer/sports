@@ -10,8 +10,8 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
-	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/rgbrender"
+	scrcnvs "github.com/robbydyer/sports/internal/scrollcanvas"
 )
 
 func (s *StatBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc) {
@@ -137,16 +137,16 @@ func (s *StatBoard) render(ctx context.Context, canvas board.Canvas) (board.Canv
 	}
 
 	if s.config.Horizontal.Load() {
-		base, ok := canvas.(*cnvs.ScrollCanvas)
+		base, ok := canvas.(*scrcnvs.ScrollCanvas)
 		if !ok {
 			return nil, fmt.Errorf("unexpected canvas type for statboard")
 		}
-		tightCanvas, err := cnvs.NewScrollCanvas(base.Matrix, s.log)
+		tightCanvas, err := scrcnvs.NewScrollCanvas(base.Matrix, s.log)
 		if err != nil {
 			return nil, err
 		}
 		tightCanvas.SetScrollSpeed(base.GetScrollSpeed())
-		tightCanvas.SetScrollDirection(cnvs.RightToLeft)
+		tightCanvas.SetScrollDirection(scrcnvs.RightToLeft)
 		if err := s.doHorizontal(ctx, canvas, players); err != nil {
 			return nil, err
 		}

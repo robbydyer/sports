@@ -1,13 +1,9 @@
-package canvas
+package scrollcanvas
 
 import (
 	"image"
 	"image/color"
 )
-
-func position(x int, y int, canvasWidth int) int {
-	return x + (y * canvasWidth)
-}
 
 func isBlack(c color.Color) bool {
 	r, g, b, _ := c.RGBA()

@@ -18,11 +18,11 @@ import (
 	"github.com/robbydyer/sports/internal/board"
 	statboard "github.com/robbydyer/sports/internal/board/stat"
 	textboard "github.com/robbydyer/sports/internal/board/text"
-	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/enabler"
 	"github.com/robbydyer/sports/internal/logo"
 	pb "github.com/robbydyer/sports/internal/proto/sportboard"
 	"github.com/robbydyer/sports/internal/rgbrender"
+	scrcnvs "github.com/robbydyer/sports/internal/scrollcanvas"
 	"github.com/robbydyer/sports/internal/twirphelpers"
 	"github.com/robbydyer/sports/internal/util"
 )
@@ -207,11 +207,11 @@ func (c *Config) SetDefaults() {
 	if c.ScrollDelay != "" {
 		d, err := time.ParseDuration(c.ScrollDelay)
 		if err != nil {
-			c.scrollDelay = cnvs.DefaultScrollDelay
+			c.scrollDelay = scrcnvs.DefaultScrollDelay
 		}
 		c.scrollDelay = d
 	} else {
-		c.scrollDelay = cnvs.DefaultScrollDelay
+		c.scrollDelay = scrcnvs.DefaultScrollDelay
 	}
 
 	if c.ScoreHighlightRepeat == nil {
@@ -411,7 +411,7 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	}
 	if c != nil {
 		defer func() {
-			if scr, ok := c.(*cnvs.ScrollCanvas); ok {
+			if scr, ok := c.(*scrcnvs.ScrollCanvas); ok {
 				s.config.scrollDelay = scr.GetScrollSpeed()
 				s.log.Info("updating configured sport scroll speed after tight scroll",
 					zap.String("sport", s.api.League()),
@@ -586,20 +586,20 @@ OUTER:
 
 	defer func() { _ = canvas.Clear() }()
 
-	var tightCanvas *cnvs.ScrollCanvas
-	base, ok := canvas.(*cnvs.ScrollCanvas)
+	var tightCanvas *scrcnvs.ScrollCanvas
+	base, ok := canvas.(*scrcnvs.ScrollCanvas)
 
 	if canvas.Scrollable() && s.config.TightScroll.Load() && ok {
 		var err error
-		tightCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log,
-			cnvs.WithMergePadding(s.config.TightScrollPadding),
-			cnvs.WithName(s.api.League()),
+		tightCanvas, err = scrcnvs.NewScrollCanvas(base.Matrix, s.log,
+			scrcnvs.WithMergePadding(s.config.TightScrollPadding),
+			scrcnvs.WithName(s.api.League()),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
 		}
 
-		tightCanvas.SetScrollDirection(cnvs.RightToLeft)
+		tightCanvas.SetScrollDirection(scrcnvs.RightToLeft)
 		base.SetScrollSpeed(s.config.scrollDelay)
 		tightCanvas.SetScrollSpeed(s.config.scrollDelay)
 
