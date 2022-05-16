@@ -118,7 +118,7 @@ clockConfig:
   showBetween: false
 
   boardDelay: "10s"
-  
+
   # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
   #onTimes:
   #- 00 18 * * *
@@ -129,7 +129,7 @@ clockConfig:
 sysConfig:
   enabled: false
   boardDelay: "10s"
-  
+
   # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
   #onTimes:
   #- 00 18 * * *
@@ -264,11 +264,12 @@ nhlConfig:
   # will display separate stats.
   stats:
     enabled: true
+    #scrollDelay: "200ms"
     teams:
     - NYI
     #players:
     #- Mathew Barzal
-    
+
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -369,6 +370,7 @@ mlbConfig:
   # will display separate stats.
   stats:
     enabled: true
+    #scrollDelay: "200ms"
     teams:
     - ATL
     #players:
@@ -420,7 +422,7 @@ mlbConfig:
 
   # This sets the number of runs through the scoreboard that a score change will be highlighted in red
   scoreHighlightRepeat: 3
-  
+
   # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
   #onTimes:
   #- 00 18 * * *
@@ -515,7 +517,7 @@ ncaamConfig:
 
   # This sets the number of runs through the scoreboard that a score change will be highlighted in red
   scoreHighlightRepeat: 3
-  
+
   # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
   #onTimes:
   #- 00 18 * * *
@@ -607,7 +609,7 @@ nbaConfig:
 
   # This sets the number of runs through the scoreboard that a score change will be highlighted in red
   scoreHighlightRepeat: 3
-  
+
   # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
   #onTimes:
   #- 00 18 * * *
@@ -699,7 +701,7 @@ nflConfig:
 
   # This sets the number of runs through the scoreboard that a score change will be highlighted in red
   scoreHighlightRepeat: 3
-  
+
   # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
   #onTimes:
   #- 00 18 * * *
@@ -791,7 +793,7 @@ mlsConfig:
 
   # This sets the number of runs through the scoreboard that a score change will be highlighted in red
   scoreHighlightRepeat: 3
-  
+
   # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
   #onTimes:
   #- 00 18 * * *
@@ -883,7 +885,7 @@ eplConfig:
 
   # This sets the number of runs through the scoreboard that a score change will be highlighted in red
   scoreHighlightRepeat: 3
-  
+
   # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
   #onTimes:
   #- 00 18 * * *
@@ -912,7 +914,7 @@ imageConfig:
     # Set this to true if you only want these images displayed when API calls are made to display it.
     # In most cases, you would leave this set to false.
     jumpOnly: false
-  
+
   # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
   #onTimes:
   #- 00 18 * * *
@@ -925,6 +927,8 @@ pga:
 
   # Limit the number of players shown. Defaults to 0, which is no limit
   #limitPlayers: 50
+
+  scrollDelay: "200ms"
 
   # This schedules the PGA leaderboard to turn on Thursday morning, and off Sunday night
   onTimes:
@@ -974,7 +978,7 @@ stocksConfig:
 
   # Interval in which pricing data is pulled from API. Default is 5m
   updateInterval: "5m"
-  
+
   # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
   #onTimes:
   #- 00 18 * * *
@@ -986,7 +990,7 @@ weatherConfig:
 
   # Set this to true if you want temps in Celsius
   metricUnits: false
-  
+
   # Set this to true to show the weather board in between every other board
   showBetween: false
 
@@ -1021,7 +1025,7 @@ weatherConfig:
 
   # Delay between each screen in non-scroll mode
   boardDelay: "10s"
-  
+
   # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
   #onTimes:
   #- 00 18 * * *
@@ -1080,7 +1084,7 @@ calendarConfig:
   # If you leave this option empty, it will pull all the available calendar ID's in your account
   #calendarIDs:
   #- myemail@gmail.com
-  
+
   # Set the spacing between the tickers in scroll mode.
   tightScrollPadding: 10
 
