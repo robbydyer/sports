@@ -38,6 +38,11 @@ func (s *CalendarBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		return err
 	}
 	if c != nil {
+		defer func() {
+			if scr, ok := c.(*cnvs.ScrollCanvas); ok {
+				s.config.scrollDelay = scr.GetScrollSpeed()
+			}
+		}()
 		return c.Render(ctx)
 	}
 
@@ -51,6 +56,14 @@ func (s *CalendarBoard) render(ctx context.Context, canvas board.Canvas) (board.
 	events, err := s.api.DailyEvents(ctx, time.Now())
 	if err != nil {
 		return nil, err
+	}
+
+	s.log.Debug("calendar events",
+		zap.Int("number", len(events)),
+	)
+
+	if len(events) < 1 {
+		return nil, nil
 	}
 
 	scheduleWriter, err := s.getScheduleWriter(rgbrender.ZeroedBounds(canvas.Bounds()))
@@ -82,12 +95,9 @@ func (s *CalendarBoard) render(ctx context.Context, canvas board.Canvas) (board.
 		}
 		scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
 		scrollCanvas.SetScrollDirection(cnvs.RightToLeft)
+		base.SetScrollSpeed(s.config.scrollDelay)
 		go scrollCanvas.MatchScroll(ctx, base)
 	}
-
-	s.log.Debug("calendar events",
-		zap.Int("number", len(events)),
-	)
 
 EVENTS:
 	for _, event := range events {

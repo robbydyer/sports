@@ -390,6 +390,12 @@ func (c *RGBLedMatrix) PreLoad(scene *matrix.MatrixScene) {
 	c.preload[scene.Index] = prep
 }
 
+func (c *RGBLedMatrix) ReversePreLoad() {
+	for i, j := 0, len(c.preload)-1; i < j; i, j = i+1, j-1 {
+		c.preload[i], c.preload[j] = c.preload[j], c.preload[i]
+	}
+}
+
 func (c *RGBLedMatrix) Play(ctx context.Context, startInterval time.Duration, interval <-chan time.Duration) error {
 	defer func() {
 		c.preload = [][]C.uint32_t{}

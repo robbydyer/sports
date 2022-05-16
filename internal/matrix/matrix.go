@@ -16,6 +16,7 @@ type Matrix interface {
 	Close() error
 	SetBrightness(brightness int)
 	PreLoad(*MatrixScene)
+	ReversePreLoad()
 	Play(ctx context.Context, startInterval time.Duration, interval <-chan time.Duration) error
 }
 

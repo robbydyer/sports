@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"image/color"
-	"time"
 
 	"go.uber.org/zap"
 
@@ -30,9 +29,10 @@ func (s *StatBoard) doScroll(ctx context.Context, canvas board.Canvas, players [
 	origPadding := scrollCanvas.GetPadding()
 	defer scrollCanvas.SetPadding(origPadding)
 
-	origSpeed := scrollCanvas.GetScrollSpeed()
-	defer scrollCanvas.SetScrollSpeed(origSpeed)
-	scrollCanvas.SetScrollSpeed(200 * time.Millisecond)
+	scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
+	defer func() {
+		s.config.scrollDelay = scrollCanvas.GetScrollSpeed()
+	}()
 
 	// Assume all players passed to this func are in the same category
 	playerCategory := players[0].GetCategory()
