@@ -1302,8 +1302,7 @@ type Event struct {
 	// (deprecated). Optional. The default is False.
 	AnyoneCanAddSelf bool `json:"anyoneCanAddSelf,omitempty"`
 
-	// Attachments: File attachments for the event. Currently only Google
-	// Drive attachments are supported.
+	// Attachments: File attachments for the event.
 	// In order to modify attachments the supportsAttachments request
 	// parameter should be set to true.
 	// There can be at most 25 attachments per event,
@@ -1828,7 +1827,8 @@ type EventAttachment struct {
 	// Required when adding an attachment.
 	FileUrl string `json:"fileUrl,omitempty"`
 
-	// IconLink: URL link to the attachment's icon. Read-only.
+	// IconLink: URL link to the attachment's icon. This field can only be
+	// modified for custom third-party attachments.
 	IconLink string `json:"iconLink,omitempty"`
 
 	// MimeType: Internet media type (MIME type) of the attachment.
@@ -1895,12 +1895,17 @@ type EventAttendee struct {
 
 	// ResponseStatus: The attendee's response status. Possible values are:
 	//
-	// - "needsAction" - The attendee has not responded to the invitation.
-	//
+	// - "needsAction" - The attendee has not responded to the invitation
+	// (recommended for new events).
 	// - "declined" - The attendee has declined the invitation.
 	// - "tentative" - The attendee has tentatively accepted the invitation.
 	//
-	// - "accepted" - The attendee has accepted the invitation.
+	// - "accepted" - The attendee has accepted the invitation.  Warning: If
+	// you add an event using the values declined, tentative, or accepted,
+	// attendees with the "Add invitations to my calendar" setting set to
+	// "When I respond to invitation in email" won't see an event on their
+	// calendar unless they choose to change their invitation response in
+	// the event invitation email.
 	ResponseStatus string `json:"responseStatus,omitempty"`
 
 	// Self: Whether this entry represents the calendar on which this copy
