@@ -20,7 +20,6 @@ for dir in $(find proto -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | 
       --proto_path=./proto \
       --go_out=./internal/proto \
       --twirp_out=./internal/proto \
-      --go-grpc_out=./internal/proto \
       --js_out=import_style=commonjs,binary:./web/src \
       "${dir}"/*.proto
 done

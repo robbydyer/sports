@@ -25,3 +25,5 @@ matrix.conf
 release
 update-matrix
 test-matrix
+test-office
+update-office

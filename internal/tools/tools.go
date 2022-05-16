@@ -10,6 +10,5 @@ import (
 	_ "github.com/srikrsna/protoc-gen-gotag"
 	_ "github.com/thechriswalker/protoc-gen-twirp_js"
 	_ "github.com/twitchtv/twirp/protoc-gen-twirp"
-	_ "google.golang.org/grpc/cmd/protoc-gen-go-grpc"
 	_ "google.golang.org/protobuf/cmd/protoc-gen-go"
 )
