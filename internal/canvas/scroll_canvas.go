@@ -407,7 +407,7 @@ func (c *ScrollCanvas) verticalPrep(ctx context.Context) error {
 		zap.Int("thisY", thisY),
 	)
 	sceneIndex := 0
-	wg, ctx := errgroup.WithContext(ctx)
+	wg, _ := errgroup.WithContext(ctx)
 OUTER:
 	for {
 		if thisY == finish {
@@ -586,7 +586,7 @@ func (c *ScrollCanvas) horizontalPrep(ctx context.Context) error {
 	)
 
 	sceneIndex := 0
-	wg, ctx := errgroup.WithContext(ctx)
+	wg, _ := errgroup.WithContext(ctx)
 	for {
 		if virtualX == finish {
 			break
