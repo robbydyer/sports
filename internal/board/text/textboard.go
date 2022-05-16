@@ -16,11 +16,11 @@ import (
 	"github.com/twitchtv/twirp"
 
 	"github.com/robbydyer/sports/internal/board"
-	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/enabler"
 	"github.com/robbydyer/sports/internal/logo"
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/internal/rgbrender"
+	scrcnvs "github.com/robbydyer/sports/internal/scrollcanvas"
 	"github.com/robbydyer/sports/internal/twirphelpers"
 	"github.com/robbydyer/sports/internal/util"
 )
@@ -208,7 +208,7 @@ func (s *TextBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	}
 	if c != nil {
 		defer func() {
-			if scr, ok := c.(*cnvs.ScrollCanvas); ok {
+			if scr, ok := c.(*scrcnvs.ScrollCanvas); ok {
 				s.config.scrollDelay = scr.GetScrollSpeed()
 			}
 		}()
@@ -272,19 +272,19 @@ func (s *TextBoard) render(ctx context.Context, canvas board.Canvas) (board.Canv
 		)
 	}
 
-	var scrollCanvas *cnvs.ScrollCanvas
-	base, ok := canvas.(*cnvs.ScrollCanvas)
+	var scrollCanvas *scrcnvs.ScrollCanvas
+	base, ok := canvas.(*scrcnvs.ScrollCanvas)
 	if !ok {
 		return nil, fmt.Errorf("wat")
 	}
 
-	scrollCanvas, err = cnvs.NewScrollCanvas(base.Matrix, s.log,
-		cnvs.WithMergePadding(s.config.TightScrollPadding),
+	scrollCanvas, err = scrcnvs.NewScrollCanvas(base.Matrix, s.log,
+		scrcnvs.WithMergePadding(s.config.TightScrollPadding),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
 	}
-	scrollCanvas.SetScrollDirection(cnvs.RightToLeft)
+	scrollCanvas.SetScrollDirection(scrcnvs.RightToLeft)
 	scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
 	base.SetScrollSpeed(s.config.scrollDelay)
 

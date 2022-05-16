@@ -94,7 +94,7 @@ func (m *MatrixMock) Initialize() error {
 }
 
 func (m *MatrixMock) At(x int, y int) color.Color {
-	pos := position(x, y, m.w)
+	pos := x + (y * m.w)
 	if m.colors[pos] == nil {
 		return color.Black
 	}
@@ -102,7 +102,7 @@ func (m *MatrixMock) At(x int, y int) color.Color {
 }
 
 func (m *MatrixMock) Set(x int, y int, c color.Color) {
-	pos := position(x, y, m.w)
+	pos := x + (y * m.w)
 	m.colors[pos] = c
 }
 

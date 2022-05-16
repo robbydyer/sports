@@ -12,6 +12,7 @@ import (
 	stockboard "github.com/robbydyer/sports/internal/board/stocks"
 	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/matrix"
+	scrcnvs "github.com/robbydyer/sports/internal/scrollcanvas"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
 )
 
@@ -68,7 +69,7 @@ func (s *stockCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	scroll, err := cnvs.NewScrollCanvas(matrix, logger)
+	scroll, err := scrcnvs.NewScrollCanvas(matrix, logger)
 	if err != nil {
 		return err
 	}
