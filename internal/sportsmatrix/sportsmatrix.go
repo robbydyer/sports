@@ -895,6 +895,7 @@ func (s *SportsMatrix) prepOrderedBoards(ctx context.Context, boards []board.Boa
 			if !ok {
 				s.log.Error("unexpected board type in combined scroll",
 					zap.String("board", thisBoard.Name()),
+					zap.String("type", fmt.Sprintf("%T", boardCanvas)),
 				)
 				return
 			}

@@ -206,10 +206,12 @@ func WithRefreshInterval(interval time.Duration) OptionFunc {
 }
 
 func dateMin(date time.Time) string {
+	date = date.Add(-24 * time.Hour)
 	return date.Format(time.RFC3339)
 }
 
 func dateMax(date time.Time) string {
+	date = date.Add(24 * time.Hour)
 	return date.Format(time.RFC3339)
 }
 
