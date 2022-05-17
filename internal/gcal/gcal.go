@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/robbydyer/sports/internal/assetlogo"
 	calendarboard "github.com/robbydyer/sports/internal/board/calendar"
@@ -127,24 +128,31 @@ func (g *Gcal) DailyEvents(ctx context.Context, date time.Time) ([]*calendarboar
 			if e.Start == nil {
 				continue CALEVENTS
 			}
-			g.log.Debug("google calendar event",
+
+			fields := []zapcore.Field{
 				zap.String("summary", e.Summary),
-				zap.String("start", e.Start.DateTime),
-			)
-			var t time.Time
-			var err error
-			if e.Start.DateTime != "" {
-				t, err = time.Parse(time.RFC3339, e.Start.DateTime)
-				if err != nil {
-					return nil, err
-				}
-			} else if e.Start.Date != "" {
-				t, err = time.Parse("2006-01-02", e.Start.Date)
-				if err != nil {
-					return nil, err
-				}
+				zap.String("start datetime", e.Start.DateTime),
+				zap.String("start date", e.Start.Date),
+			}
+			if e.OriginalStartTime != nil {
+				fields = append(fields,
+					zap.String("original start datetime", e.OriginalStartTime.DateTime),
+					zap.String("original start date", e.OriginalStartTime.Date),
+				)
+			}
+			g.log.Debug("google calendar event", fields...)
+			t, err := getStartTime(e)
+			if err != nil {
+				g.log.Error("failed to get event start time",
+					zap.Error(err),
+				)
+				continue CALEVENTS
 			}
 			if t.Format("2006-01-02") != date.Format("2006-01-02") {
+				g.log.Debug("calendar event outside date",
+					zap.String("date", date.Format("2006-01-02")),
+					zap.String("event date", t.Format("2006-01-02")),
+				)
 				continue CALEVENTS
 			}
 			events = append(events, &calendarboard.Event{
@@ -198,9 +206,33 @@ func WithRefreshInterval(interval time.Duration) OptionFunc {
 }
 
 func dateMin(date time.Time) string {
-	return fmt.Sprintf("%d-%d-%dT00:00:00Z", date.Year(), date.Month(), date.Day())
+	return date.Format(time.RFC3339)
 }
 
 func dateMax(date time.Time) string {
-	return fmt.Sprintf("%d-%d-%dT23:59:59Z", date.Year(), date.Month(), date.Day())
+	return date.Format(time.RFC3339)
+}
+
+func getStartTime(e *calendar.Event) (time.Time, error) {
+	if e.Start == nil && e.OriginalStartTime == nil {
+		return time.Time{}, fmt.Errorf("no event start time defined")
+	}
+
+	// Prioritize original start time for recurring events
+	if e.OriginalStartTime != nil {
+		return getStartFromEventDateTime(e.OriginalStartTime)
+	}
+
+	return getStartFromEventDateTime(e.Start)
+}
+
+func getStartFromEventDateTime(e *calendar.EventDateTime) (time.Time, error) {
+	if e.DateTime != "" {
+		return time.Parse(time.RFC3339, e.DateTime)
+	}
+	if e.Date != "" {
+		return time.Parse("2006-01-02", e.Date)
+	}
+
+	return time.Time{}, fmt.Errorf("failed to parse eventdatetime")
 }
