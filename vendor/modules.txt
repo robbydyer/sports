@@ -330,7 +330,7 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# google.golang.org/api v0.79.0
+# google.golang.org/api v0.80.0
 ## explicit; go 1.15
 google.golang.org/api/calendar/v3
 google.golang.org/api/googleapi
