@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"go.uber.org/zap"
 	calendar "google.golang.org/api/calendar/v3"
 )
 
@@ -21,7 +22,11 @@ func (g *Gcal) getEvents(ctx context.Context, calendarID string, date time.Time)
 	}
 
 	// fetch events from API
-	calEvents, err := g.service.Events.List(calendarID).Context(ctx).TimeMin(dateMin(date)).TimeMax(dateMax(date)).Do()
+	g.log.Debug("fetching calendar events from API",
+		zap.String("TimeMin", dateMin(date)),
+		zap.String("TimeMax", dateMax(date)),
+	)
+	calEvents, err := g.service.Events.List(calendarID).Context(ctx).SingleEvents(true).TimeMin(dateMin(date)).TimeMax(dateMax(date)).Do()
 	if err != nil {
 		return nil, err
 	}
