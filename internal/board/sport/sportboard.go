@@ -35,28 +35,33 @@ const (
 	right
 )
 
+type DetailedLiveRender func(ctx context.Context, canvas board.Canvas, game Game, homeLogo *logo.Logo, awayLogo *logo.Logo) error
+
+type OptionFunc func(s *SportBoard) error
+
 // SportBoard implements board.Board
 type SportBoard struct {
-	config          *Config
-	api             API
-	cachedLiveGames map[int]Game
-	logos           map[string]*logo.Logo
-	log             *zap.Logger
-	logoDrawCache   map[string]image.Image
-	scoreWriters    map[string]*rgbrender.TextWriter
-	timeWriters     map[string]*rgbrender.TextWriter
-	teamInfoWidths  map[string]map[string]int
-	watchTeams      []string
-	teamInfoLock    sync.RWMutex
-	drawLock        sync.RWMutex
-	logoLock        sync.RWMutex
-	cancelBoard     chan struct{}
-	previousScores  []*previousScore
-	prevScoreLock   sync.Mutex
-	rpcServer       pb.TwirpServer
-	renderCtx       context.Context
-	renderCancel    context.CancelFunc
-	enabler         board.Enabler
+	config               *Config
+	api                  API
+	cachedLiveGames      map[int]Game
+	logos                map[string]*logo.Logo
+	log                  *zap.Logger
+	logoDrawCache        map[string]image.Image
+	scoreWriters         map[string]*rgbrender.TextWriter
+	timeWriters          map[string]*rgbrender.TextWriter
+	teamInfoWidths       map[string]map[string]int
+	watchTeams           []string
+	teamInfoLock         sync.RWMutex
+	drawLock             sync.RWMutex
+	logoLock             sync.RWMutex
+	cancelBoard          chan struct{}
+	previousScores       []*previousScore
+	prevScoreLock        sync.Mutex
+	rpcServer            pb.TwirpServer
+	renderCtx            context.Context
+	renderCancel         context.CancelFunc
+	enabler              board.Enabler
+	detailedLiveRenderer DetailedLiveRender
 	sync.Mutex
 }
 
@@ -102,6 +107,7 @@ type Config struct {
 	OffTimes             []string          `json:"offTimes"`
 	UseGradient          *atomic.Bool      `json:"useGradient"`
 	LiveOnly             *atomic.Bool      `json:"liveOnly"`
+	DetailedLive         *atomic.Bool      `json:"detailedLive"`
 }
 
 // FontConfig ...
@@ -221,10 +227,13 @@ func (c *Config) SetDefaults() {
 	if c.UseGradient == nil {
 		c.UseGradient = atomic.NewBool(true)
 	}
+	if c.DetailedLive == nil {
+		c.DetailedLive = atomic.NewBool(true)
+	}
 }
 
 // New ...
-func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logger, config *Config) (*SportBoard, error) {
+func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logger, config *Config, opts ...OptionFunc) (*SportBoard, error) {
 	s := &SportBoard{
 		config:          config,
 		api:             api,
@@ -300,6 +309,12 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 		s.Enabler().Disable()
 	}); err != nil {
 		return nil, err
+	}
+
+	for _, o := range opts {
+		if err := o(s); err != nil {
+			return nil, err
+		}
 	}
 
 	return s, nil
@@ -704,7 +719,6 @@ GAMES:
 	}
 
 	if canvas.Scrollable() && tightCanvas != nil {
-		// tightCanvas.Merge(s.config.TightScrollPadding)
 		return tightCanvas, nil
 	}
 
@@ -883,8 +897,58 @@ func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGa
 	s.logCanvas(canvas, "sportboard renderGame canvas")
 
 	if isLive {
-		if err := s.renderLiveGame(ctx, canvas, liveGame, counter); err != nil {
-			return fmt.Errorf("failed to render live game: %w", err)
+		isFavorite, err := s.isFavoriteGame(liveGame)
+		if err != nil {
+			isFavorite = false
+		}
+
+		stickyStart := time.Now()
+		stickyDelay := s.getStickyDelay()
+
+	FAV:
+		for {
+			if s.config.DetailedLive.Load() && s.detailedLiveRenderer != nil {
+				h, err := liveGame.HomeTeam()
+				if err != nil {
+					return err
+				}
+				a, err := liveGame.AwayTeam()
+				if err != nil {
+					return err
+				}
+				hLogo, err := s.getLogo(ctx, h.GetID())
+				if err != nil {
+					return err
+				}
+				aLogo, err := s.getLogo(ctx, a.GetID())
+				if err != nil {
+					return err
+				}
+
+				if err := s.detailedLiveRenderer(ctx, canvas, liveGame, hLogo, aLogo); err != nil {
+					return err
+				}
+				draw.Draw(canvas, counter.Bounds(), counter, image.Point{}, draw.Over)
+			} else {
+				if err := s.renderLiveGame(ctx, canvas, liveGame, counter); err != nil {
+					return fmt.Errorf("failed to render live game: %w", err)
+				}
+			}
+			if !(isFavorite && s.config.FavoriteSticky.Load()) {
+				break FAV
+			}
+			if stickyDelay != nil && time.Since(stickyStart) > *stickyDelay {
+				break FAV
+			}
+			s.log.Debug("rendering sticky game")
+			if err := canvas.Render(ctx); err != nil {
+				return fmt.Errorf("failed to render canvas during sticky live game: %w", err)
+			}
+			select {
+			case <-ctx.Done():
+				return context.Canceled
+			case <-time.After(s.config.boardDelay):
+			}
 		}
 	} else if isOver {
 		if err := s.renderCompleteGame(ctx, canvas, liveGame, counter); err != nil {
@@ -1012,4 +1076,11 @@ func (s *SportBoard) getStickyDelay() *time.Duration {
 	s.config.stickyDelay = &d
 
 	return s.config.stickyDelay
+}
+
+func WithDetailedLiveRenderer(d DetailedLiveRender) OptionFunc {
+	return func(s *SportBoard) error {
+		s.detailedLiveRenderer = d
+		return nil
+	}
 }

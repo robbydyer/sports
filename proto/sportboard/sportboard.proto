@@ -18,6 +18,7 @@ message Status{
     bool odds_enabled = 7;
     bool use_gradient = 8;
     bool live_only = 9;
+    bool detailed_live = 10;
 }
 
 message SetStatusReq {

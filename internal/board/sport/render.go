@@ -116,206 +116,157 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 		gradientLayers = s.gradientLayer(rgbrender.ZeroedBounds(canvas.Bounds()), len(strings.ReplaceAll(score, " ", "")))
 	}
 
-	stickyStart := time.Now()
-	stickyDelay := s.getStickyDelay()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("context canceled")
-		default:
-		}
-
-		for _, l := range gradientLayers {
-			layers.AddLayer(gradientLayerPriority, l)
-		}
-		for _, l := range logos {
-			layers.AddLayer(logoLayerPriority, l)
-		}
-
-		layers.AddTextLayer(scoreLayerPriority,
-			rgbrender.NewTextLayer(
-				func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
-					quarter, err := liveGame.GetQuarter()
-					if err != nil {
-						return nil, nil, err
-					}
-
-					clock, err := liveGame.GetClock()
-					if err != nil {
-						return nil, nil, err
-					}
-					writer, err := s.getTimeWriter(canvas.Bounds())
-					if err != nil {
-						return nil, nil, err
-					}
-					return writer, []string{quarter, clock}, nil
-				},
-				func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
-					return writer.WriteAlignedBoxed(
-						rgbrender.CenterTop,
-						canvas,
-						rgbrender.ZeroedBounds(canvas.Bounds()),
-						text,
-						s.config.TimeColor,
-						s.writeBoxColor(),
-					)
-				},
-			),
-		)
-
-		layers.AddTextLayer(scoreLayerPriority,
-			rgbrender.NewTextLayer(
-				func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
-					writer, err := s.getScoreWriter(canvas.Bounds())
-					if err != nil {
-						return nil, nil, err
-					}
-					return writer, []string{}, nil
-				},
-				func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
-					isFavorite, err := s.isFavoriteGame(liveGame)
-					if err != nil {
-						return err
-					}
-					if s.config.HideFavoriteScore.Load() && isFavorite {
-						s.log.Warn("hiding score for favorite team")
-						return nil
-					}
-					a, err := liveGame.AwayTeam()
-					if err != nil {
-						return err
-					}
-					h, err := liveGame.HomeTeam()
-					if err != nil {
-						return err
-					}
-					aScore := a.Score()
-					hScore := h.Score()
-					s.log.Debug("writing scores",
-						zap.Int("home", hScore),
-						zap.Int("away", aScore),
-					)
-					prev := s.storeOrGetPreviousScore(liveGame.GetID(), a.Score(), h.Score())
-					var chars []string
-					var clrs []color.Color
-					if s.homeSide() == left {
-						chars = []string{
-							fmt.Sprintf("%d", hScore),
-							"-",
-							fmt.Sprintf("%d", aScore),
-						}
-						if prev.home.hasScored(hScore) {
-							clrs = append(clrs, red)
-							s.log.Debug("home team scored")
-						} else {
-							clrs = append(clrs, color.White)
-						}
-						clrs = append(clrs, color.White)
-						if prev.away.hasScored(aScore) {
-							clrs = append(clrs, red)
-							s.log.Debug("away team scored")
-						} else {
-							clrs = append(clrs, color.White)
-						}
-					} else {
-						chars = []string{
-							fmt.Sprintf("%d", aScore),
-							"-",
-							fmt.Sprintf("%d", hScore),
-						}
-						if prev.away.hasScored(aScore) {
-							clrs = append(clrs, red)
-							s.log.Debug("away team scored")
-						} else {
-							clrs = append(clrs, color.White)
-						}
-						clrs = append(clrs, color.White)
-						if prev.home.hasScored(hScore) {
-							clrs = append(clrs, red)
-							s.log.Debug("home team scored")
-						} else {
-							clrs = append(clrs, color.White)
-						}
-					}
-					clrCodes := &rgbrender.ColorChar{
-						BoxClr: color.Black,
-						Lines: []*rgbrender.ColorCharLine{
-							{
-								Chars: chars,
-								Clrs:  clrs,
-							},
-						},
-					}
-					if err := writer.WriteAlignedColorCodes(
-						rgbrender.CenterBottom,
-						canvas,
-						rgbrender.ZeroedBounds(canvas.Bounds()),
-						clrCodes,
-					); err != nil {
-						s.log.Error("failed to write multicolored str", zap.Error(err))
-						return err
-					}
-
-					return nil
-				},
-			),
-		)
-
-		if counter != nil {
-			layers.AddLayer(counterLayerPriority, counterLayer(counter))
-		}
-
-		if err := layers.Draw(ctx, canvas); err != nil {
-			return err
-		}
-
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("context canceled")
-		default:
-		}
-
-		isFavorite, err := s.isFavoriteGame(liveGame)
-		if err != nil {
-			return err
-		}
-		if !(isFavorite && s.config.FavoriteSticky.Load()) {
-			return nil
-		}
-
-		if stickyDelay != nil {
-			if time.Since(stickyStart) > *stickyDelay {
-				return nil
-			}
-		}
-
-		if err := canvas.Render(ctx); err != nil {
-			return err
-		}
-		select {
-		case <-ctx.Done():
-			return context.Canceled
-		case <-time.After(s.config.boardDelay - 3*time.Second):
-		}
-
-		liveGame, err = liveGame.GetUpdate(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to update sticky game: %w", err)
-		}
-		s.log.Debug("updated live sticky game")
-
-		over, err := liveGame.IsComplete()
-		if err != nil {
-			return err
-		}
-		if over {
-			s.log.Info("live game is over", zap.Int("game ID", liveGame.GetID()))
-			return nil
-		}
-
-		layers.ClearLayers()
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("context canceled")
+	default:
 	}
+
+	for _, l := range gradientLayers {
+		layers.AddLayer(gradientLayerPriority, l)
+	}
+	for _, l := range logos {
+		layers.AddLayer(logoLayerPriority, l)
+	}
+
+	layers.AddTextLayer(scoreLayerPriority,
+		rgbrender.NewTextLayer(
+			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
+				quarter, err := liveGame.GetQuarter()
+				if err != nil {
+					return nil, nil, err
+				}
+
+				clock, err := liveGame.GetClock()
+				if err != nil {
+					return nil, nil, err
+				}
+				writer, err := s.getTimeWriter(canvas.Bounds())
+				if err != nil {
+					return nil, nil, err
+				}
+				return writer, []string{quarter, clock}, nil
+			},
+			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
+				return writer.WriteAlignedBoxed(
+					rgbrender.CenterTop,
+					canvas,
+					rgbrender.ZeroedBounds(canvas.Bounds()),
+					text,
+					s.config.TimeColor,
+					s.writeBoxColor(),
+				)
+			},
+		),
+	)
+
+	layers.AddTextLayer(scoreLayerPriority,
+		rgbrender.NewTextLayer(
+			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
+				writer, err := s.getScoreWriter(canvas.Bounds())
+				if err != nil {
+					return nil, nil, err
+				}
+				return writer, []string{}, nil
+			},
+			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
+				isFavorite, err := s.isFavoriteGame(liveGame)
+				if err != nil {
+					return err
+				}
+				if s.config.HideFavoriteScore.Load() && isFavorite {
+					s.log.Warn("hiding score for favorite team")
+					return nil
+				}
+				a, err := liveGame.AwayTeam()
+				if err != nil {
+					return err
+				}
+				h, err := liveGame.HomeTeam()
+				if err != nil {
+					return err
+				}
+				aScore := a.Score()
+				hScore := h.Score()
+				s.log.Debug("writing scores",
+					zap.Int("home", hScore),
+					zap.Int("away", aScore),
+				)
+				prev := s.storeOrGetPreviousScore(liveGame.GetID(), a.Score(), h.Score())
+				var chars []string
+				var clrs []color.Color
+				if s.homeSide() == left {
+					chars = []string{
+						fmt.Sprintf("%d", hScore),
+						"-",
+						fmt.Sprintf("%d", aScore),
+					}
+					if prev.home.hasScored(hScore) {
+						clrs = append(clrs, red)
+						s.log.Debug("home team scored")
+					} else {
+						clrs = append(clrs, color.White)
+					}
+					clrs = append(clrs, color.White)
+					if prev.away.hasScored(aScore) {
+						clrs = append(clrs, red)
+						s.log.Debug("away team scored")
+					} else {
+						clrs = append(clrs, color.White)
+					}
+				} else {
+					chars = []string{
+						fmt.Sprintf("%d", aScore),
+						"-",
+						fmt.Sprintf("%d", hScore),
+					}
+					if prev.away.hasScored(aScore) {
+						clrs = append(clrs, red)
+						s.log.Debug("away team scored")
+					} else {
+						clrs = append(clrs, color.White)
+					}
+					clrs = append(clrs, color.White)
+					if prev.home.hasScored(hScore) {
+						clrs = append(clrs, red)
+						s.log.Debug("home team scored")
+					} else {
+						clrs = append(clrs, color.White)
+					}
+				}
+				clrCodes := &rgbrender.ColorChar{
+					BoxClr: color.Black,
+					Lines: []*rgbrender.ColorCharLine{
+						{
+							Chars: chars,
+							Clrs:  clrs,
+						},
+					},
+				}
+				if err := writer.WriteAlignedColorCodes(
+					rgbrender.CenterBottom,
+					canvas,
+					rgbrender.ZeroedBounds(canvas.Bounds()),
+					clrCodes,
+				); err != nil {
+					s.log.Error("failed to write multicolored str", zap.Error(err))
+					return err
+				}
+
+				return nil
+			},
+		),
+	)
+
+	if counter != nil {
+		layers.AddLayer(counterLayerPriority, counterLayer(counter))
+	}
+
+	if err := layers.Draw(ctx, canvas); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {

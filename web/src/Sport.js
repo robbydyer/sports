@@ -32,6 +32,7 @@ function jsonToStatus(jsonDat) {
     status.setOddsEnabled(dat.odds_enabled);
     status.setUseGradient(dat.use_gradient);
     status.setLiveOnly(dat.live_only);
+    status.setDetailedLive(dat.detailed_live);
 
     return status;
 }
@@ -242,6 +243,12 @@ class Sport extends React.Component {
                     <Col>
                         <Form.Switch id={this.props.sport + "liveonly"} label="Live Games Only" checked={this.state.status.getLiveOnly()}
                             onChange={() => { this.state.status.setLiveOnly(!this.state.status.getLiveOnly()); this.updateStatus(); }} />
+                    </Col>
+                </Row>
+                <Row className="text-left">
+                    <Col>
+                        <Form.Switch id={this.props.sport + "detailedlive"} label="Detailed Live View" checked={this.state.status.getDetailedLive()}
+                            onChange={() => { this.state.status.setDetailedLive(!this.state.status.getDetailedLive()); this.updateStatus(); }} />
                     </Col>
                 </Row>
                 <Row className="text-left">

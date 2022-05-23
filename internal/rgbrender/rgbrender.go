@@ -5,8 +5,8 @@ import (
 	"image/color"
 	"image/draw"
 	"math"
+	"strconv"
 
-	"github.com/robbydyer/sports/internal/board"
 	cnvs "github.com/robbydyer/sports/internal/canvas"
 )
 
@@ -132,20 +132,108 @@ func ZoomImageSize(img image.Image, zoom float64) (int, int) {
 }
 
 // DrawRectangle ...
-func DrawRectangle(canvas board.Canvas, startX int, startY int, sizeX int, sizeY int, fillColor color.Color) error {
-	rect := image.Rect(startX, startY, startX+sizeX, startY+sizeY)
-
-	rgba := image.NewRGBA(rect)
-
-	for x := rect.Min.X; x < rect.Max.X; x++ {
-		for y := rect.Min.Y; y < rect.Min.Y; y++ {
-			rgba.Set(x, y, fillColor)
+func DrawRectangle(canvas draw.Image, startX int, startY int, sizeX int, sizeY int, fillColor color.Color) error {
+	for x := startX; x < startX+sizeX; x++ {
+		for y := startY; y < startY+sizeY; y++ {
+			canvas.Set(x, y, fillColor)
 		}
 	}
 
-	draw.Draw(canvas, canvas.Bounds(), rgba, image.Point{}, draw.Over)
-
 	return nil
+}
+
+func DrawSquare(canvas draw.Image, start image.Point, width int, outlineClr color.Color, fillClr color.Color) {
+	for x := start.X; x <= start.X+width; x++ {
+		for y := start.Y; y <= start.Y+width; y++ {
+			if x == start.X || x == start.X+width || y == start.Y || y == start.Y+width {
+				canvas.Set(x, y, outlineClr)
+			} else {
+				canvas.Set(x, y, fillClr)
+			}
+		}
+	}
+}
+
+func DrawVerticalLine(canvas draw.Image, start image.Point, end image.Point, clr color.Color) {
+	for x := start.X; x <= end.X; x++ {
+		for y := start.Y; y <= end.Y; y++ {
+			canvas.Set(x, y, clr)
+		}
+	}
+}
+
+func DrawUpTriangle(canvas draw.Image, start image.Point, width int, height int, outlineColor color.Color, fillColor color.Color) {
+	canvas.Set(start.X, start.Y, outlineColor)
+	topY := start.Y
+	for x := start.X; x < start.X+(width/2); x++ {
+		canvas.Set(x, topY, outlineColor)
+		for y := start.Y - (height / 2); y < start.Y+(height/2); y++ {
+			if y > topY {
+				canvas.Set(x, y, fillColor)
+			}
+		}
+		topY--
+	}
+	for x := start.X + (width / 2); x <= start.X+width; x++ {
+		canvas.Set(x, topY, outlineColor)
+		for y := start.Y - (height / 2); y < start.Y+(height/2); y++ {
+			if y > topY {
+				canvas.Set(x, y, fillColor)
+			}
+		}
+		topY++
+	}
+}
+
+func DrawDownTriangle(canvas draw.Image, start image.Point, width int, height int, outlineColor color.Color, fillColor color.Color) {
+	canvas.Set(start.X, start.Y, outlineColor)
+	botY := start.Y
+	for x := start.X; x < start.X+(width/2); x++ {
+		canvas.Set(x, botY, outlineColor)
+		for y := start.Y; y <= start.Y+(height/2); y++ {
+			if y < botY {
+				canvas.Set(x, y, fillColor)
+			}
+		}
+		botY++
+	}
+	for x := start.X + (width / 2); x <= start.X+width; x++ {
+		canvas.Set(x, botY, outlineColor)
+		for y := start.Y; y <= start.Y+(height/2); y++ {
+			if y < botY {
+				canvas.Set(x, y, fillColor)
+			}
+		}
+		botY--
+	}
+}
+
+func DrawDiamond(canvas draw.Image, start image.Point, width int, height int, outlineColor color.Color, fillColor color.Color) {
+	canvas.Set(start.X, start.Y, outlineColor)
+	topY := start.Y
+	botY := start.Y
+	for x := start.X; x < start.X+(width/2); x++ {
+		canvas.Set(x, topY, outlineColor)
+		canvas.Set(x, botY, outlineColor)
+		for y := start.Y - (height / 2); y < start.Y+(height/2); y++ {
+			if y > topY && y < botY {
+				canvas.Set(x, y, fillColor)
+			}
+		}
+		topY--
+		botY++
+	}
+	for x := start.X + (width / 2); x <= start.X+width; x++ {
+		canvas.Set(x, topY, outlineColor)
+		canvas.Set(x, botY, outlineColor)
+		for y := start.Y - (height / 2); y < start.Y+(height/2); y++ {
+			if y > topY && y < botY {
+				canvas.Set(x, y, fillColor)
+			}
+		}
+		topY++
+		botY--
+	}
 }
 
 // ZeroedBounds returns an image.Rectangle with square padding stripped off
@@ -172,4 +260,13 @@ func ZeroedYBounds(bounds image.Rectangle) image.Rectangle {
 	yPad := bounds.Min.Y * -1
 
 	return image.Rect(bounds.Min.X, 0, bounds.Max.X, bounds.Max.Y-yPad)
+}
+
+func HexToRGB(hexClr string) (uint8, uint8, uint8, error) {
+	values, err := strconv.ParseUint(hexClr, 16, 32)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	return uint8(values >> 16), uint8(values>>8) & 0xFF, uint8(values & 0xFF), nil
 }

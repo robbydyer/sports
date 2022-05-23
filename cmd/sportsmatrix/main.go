@@ -30,8 +30,10 @@ import (
 	"github.com/robbydyer/sports/internal/espnboard"
 	"github.com/robbydyer/sports/internal/espnracing"
 	"github.com/robbydyer/sports/internal/gcal"
+	"github.com/robbydyer/sports/internal/logo"
 	"github.com/robbydyer/sports/internal/matrix"
 	"github.com/robbydyer/sports/internal/mlb"
+	"github.com/robbydyer/sports/internal/mlblive"
 	"github.com/robbydyer/sports/internal/nhl"
 	"github.com/robbydyer/sports/internal/openweather"
 	"github.com/robbydyer/sports/internal/pga"
@@ -112,6 +114,16 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 			}
 
 			args.setConfigDefaults()
+
+			if viper.GetBool("debug") {
+				debugServer := NewDebugServer("0.0.0.0:6060")
+
+				fmt.Println("Debug server running on port 6060")
+
+				go func() {
+					_ = debugServer.ListenAndServe()
+				}()
+			}
 
 			return args.setTodayFuncs(viper.GetString("date-str"))
 		},
@@ -436,6 +448,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 	}
 	if r.config.MLBConfig != nil {
 		var api sportboard.API
+		var opts []sportboard.OptionFunc
 		if r.alternateAPI {
 			api, err = mlb.New(ctx, logger)
 			if err != nil {
@@ -446,8 +459,25 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			if err != nil {
 				return boards, err
 			}
+
+			m := &mlblive.MlbLive{
+				Logger: logger,
+			}
+
+			opts = append(opts,
+				sportboard.WithDetailedLiveRenderer(
+					func(ctx context.Context, canvas board.Canvas, game sportboard.Game, hLogo *logo.Logo, aLogo *logo.Logo) error {
+						mlbGame, ok := game.(*espnboard.Game)
+						if !ok {
+							return fmt.Errorf("unsupported sport for detailed renderer")
+						}
+						return m.RenderLive(ctx, canvas, mlbGame, hLogo, aLogo)
+					},
+				),
+			)
 		}
-		b, err := sportboard.New(ctx, api, bounds, logger, r.config.MLBConfig)
+
+		b, err := sportboard.New(ctx, api, bounds, logger, r.config.MLBConfig, opts...)
 		if err != nil {
 			return boards, err
 		}
