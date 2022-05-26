@@ -11,15 +11,16 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/robbydyer/sports/internal/board"
 	"github.com/robbydyer/sports/internal/rgbrender"
 )
 
 //go:embed assets
 var assets embed.FS
 
-func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board.Canvas) error {
-	canvasBounds := rgbrender.ZeroedBounds(canvas.Bounds())
+func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, bounds image.Rectangle) (draw.Image, error) {
+	var chart draw.Image
+	chart = image.NewRGBA(bounds)
+	canvasBounds := rgbrender.ZeroedBounds(bounds)
 
 	maxChartWidth := canvasBounds.Dx() / 2
 
@@ -100,18 +101,17 @@ func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board
 		zap.Float64s("prices", prices(chartPrices)),
 	)
 
-	chart := s.getChart(chartBounds, stock, chartPrices)
-
-	draw.Draw(canvas, canvasBounds, chart, image.Point{}, draw.Over)
+	ch := s.getChart(chartBounds, stock, chartPrices)
+	draw.Draw(chart, canvasBounds, ch, image.Point{}, draw.Over)
 
 	priceWriter, err := s.getPriceWriter(canvasBounds)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	symbolWriter, err := s.getSymbolWriter(canvasBounds)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var clr color.Color
@@ -130,7 +130,7 @@ func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board
 	writeSymbol := func() {
 		if err := symbolWriter.WriteAligned(
 			rgbrender.RightCenter,
-			canvas,
+			chart,
 			symbolBounds,
 			[]string{
 				fmt.Sprintf("%s  ", symbol),
@@ -147,7 +147,7 @@ func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board
 		s.log.Debug("attempting to draw logo for stock",
 			zap.String("symbol", stock.Symbol),
 		)
-		if err := s.drawLogo(ctx, canvas, symbolBounds, stock.Symbol); err != nil {
+		if err := s.drawLogo(ctx, chart, symbolBounds, stock.Symbol); err != nil {
 			s.log.Error("failed to draw logo for stock",
 				zap.Error(err),
 				zap.String("symbol", stock.Symbol),
@@ -160,7 +160,7 @@ func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board
 
 	if err := priceWriter.WriteAligned(
 		rgbrender.LeftCenter,
-		canvas,
+		chart,
 		priceBounds,
 		[]string{
 			fmt.Sprintf("  %.2f ", stock.Price),
@@ -168,12 +168,12 @@ func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board
 		},
 		clr,
 	); err != nil {
-		return err
+		return nil, err
 	}
 
 	select {
 	case <-ctx.Done():
-		return context.Canceled
+		return nil, context.Canceled
 	default:
 	}
 
@@ -183,10 +183,10 @@ func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, canvas board
 		zap.Int("charted prices", len(chartPrices)),
 	)
 
-	return nil
+	return chart, nil
 }
 
-func (s *StockBoard) getChart(bounds image.Rectangle, stock *Stock, prices []*Price) image.Image {
+func (s *StockBoard) getChart(bounds image.Rectangle, stock *Stock, prices []*Price) draw.Image {
 	img := image.NewRGBA(bounds)
 
 	maxPrice := stock.maxPrice()

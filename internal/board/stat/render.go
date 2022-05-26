@@ -147,10 +147,11 @@ func (s *StatBoard) render(ctx context.Context, canvas board.Canvas) (board.Canv
 		}
 		tightCanvas.SetScrollSpeed(base.GetScrollSpeed())
 		tightCanvas.SetScrollDirection(scrcnvs.RightToLeft)
-		if err := s.doHorizontal(ctx, canvas, players); err != nil {
+		img, err := s.doHorizontal(ctx, canvas, players)
+		if err != nil {
 			return nil, err
 		}
-		tightCanvas.AddCanvas(canvas)
+		tightCanvas.AddCanvas(img)
 		go tightCanvas.MatchScroll(ctx, base)
 		return tightCanvas, nil
 	}
