@@ -123,7 +123,8 @@ proto.sport.v1.Status.toObject = function(includeInstance, msg) {
     recordRankEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 6, false),
     oddsEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
     useGradient: jspb.Message.getBooleanFieldWithDefault(msg, 8, false),
-    liveOnly: jspb.Message.getBooleanFieldWithDefault(msg, 9, false)
+    liveOnly: jspb.Message.getBooleanFieldWithDefault(msg, 9, false),
+    detailedLive: jspb.Message.getBooleanFieldWithDefault(msg, 10, false)
   };
 
   if (includeInstance) {
@@ -195,6 +196,10 @@ proto.sport.v1.Status.deserializeBinaryFromReader = function(msg, reader) {
     case 9:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setLiveOnly(value);
+      break;
+    case 10:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setDetailedLive(value);
       break;
     default:
       reader.skipField();
@@ -285,6 +290,13 @@ proto.sport.v1.Status.serializeBinaryToWriter = function(message, writer) {
   if (f) {
     writer.writeBool(
       9,
+      f
+    );
+  }
+  f = message.getDetailedLive();
+  if (f) {
+    writer.writeBool(
+      10,
       f
     );
   }
@@ -450,6 +462,24 @@ proto.sport.v1.Status.prototype.getLiveOnly = function() {
  */
 proto.sport.v1.Status.prototype.setLiveOnly = function(value) {
   return jspb.Message.setProto3BooleanField(this, 9, value);
+};
+
+
+/**
+ * optional bool detailed_live = 10;
+ * @return {boolean}
+ */
+proto.sport.v1.Status.prototype.getDetailedLive = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 10, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.sport.v1.Status} returns this
+ */
+proto.sport.v1.Status.prototype.setDetailedLive = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 10, value);
 };
 
 

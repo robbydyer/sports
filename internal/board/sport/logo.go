@@ -111,6 +111,34 @@ func (s *SportBoard) getLogoCache(logoKey string) (*logo.Logo, error) {
 	return nil, fmt.Errorf("no cache for %s", logoKey)
 }
 
+func (s *SportBoard) getLogo(ctx context.Context, teamID string) (*logo.Logo, error) {
+	key := fmt.Sprintf("%s_X_FIT", teamID)
+
+	l, err := s.getLogoCache(key)
+	if err != nil {
+		l, err = s.api.GetLogo(ctx, key,
+			&logo.Config{
+				Abbrev: key,
+				XSize:  0,
+				YSize:  0,
+				Pt: &logo.Pt{
+					X:    0,
+					Y:    0,
+					Zoom: 1.0,
+				},
+			},
+			image.Rect(0, 0, 64, 32),
+		)
+		if err != nil {
+			return nil, err
+		}
+		l.SetLogger(s.log)
+		s.setLogoCache(key, l)
+	}
+
+	return l, nil
+}
+
 // RenderLeftLogo ...
 func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rectangle, teamID string) (image.Image, error) {
 	select {

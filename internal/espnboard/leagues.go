@@ -200,8 +200,8 @@ func (n *mlb) HeadlinePath() string {
 }
 
 // NewMLB ...
-func NewMLB(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
-	return New(ctx, &mlb{}, logger, defaultRankSetter, defaultRankSetter)
+func NewMLB(ctx context.Context, logger *zap.Logger, opts ...Option) (*ESPNBoard, error) {
+	return New(ctx, &mlb{}, logger, defaultRankSetter, defaultRankSetter, opts...)
 }
 
 type ncaaf struct{}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"image/color"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -15,6 +16,7 @@ import (
 	"go.uber.org/zap"
 
 	sportboard "github.com/robbydyer/sports/internal/board/sport"
+	"github.com/robbydyer/sports/internal/rgbrender"
 )
 
 var (
@@ -27,6 +29,15 @@ type schedule struct {
 	Events []*event `json:"events"`
 }
 
+type baseballSituation struct {
+	Balls    int  `json:"balls"`
+	Strikes  int  `json:"strikes"`
+	OnFirst  bool `json:"onFirst"`
+	OnSecond bool `json:"onSecond"`
+	OnThird  bool `json:"onThird"`
+	Outs     int  `json:"outs"`
+}
+
 type event struct {
 	ID           string  `json:"id"`
 	Date         string  `json:"date"`
@@ -37,7 +48,8 @@ type event struct {
 			Team     *Team  `json:"team"`
 			Score    string `json:"score"`
 		}
-		Odds []*Odds `json:"odds"`
+		Odds      []*Odds            `json:"odds"`
+		Situation *baseballSituation `json:"situation"`
 	} `json:"competitions"`
 }
 
@@ -54,13 +66,15 @@ type Odds struct {
 
 // Game ...
 type Game struct {
-	ID       string
-	Home     *Team
-	Away     *Team
-	GameTime time.Time
-	status   *status
-	leaguer  Leaguer
-	odds     []*Odds
+	espnBoard *ESPNBoard
+	ID        string
+	Home      *Team
+	Away      *Team
+	GameTime  time.Time
+	status    *status
+	leaguer   Leaguer
+	odds      []*Odds
+	Situation *baseballSituation
 }
 
 type status struct {
@@ -136,6 +150,66 @@ func (g *Game) AwayTeam() (sportboard.Team, error) {
 	return g.Away, nil
 }
 
+func (g *Game) HomeAbbrev() string {
+	return g.Home.Abbreviation
+}
+
+func (g *Game) AwayAbbrev() string {
+	return g.Away.Abbreviation
+}
+
+func (g *Game) HomeColor() (*color.RGBA, *color.RGBA, error) {
+	if g.Home != nil {
+		r, gr, b, err := rgbrender.HexToRGB(g.Home.Color)
+		if err != nil {
+			return nil, nil, err
+		}
+		r2, g2, b2, err := rgbrender.HexToRGB(g.Home.AlternateColor)
+		if err != nil {
+			return nil, nil, err
+		}
+		return &color.RGBA{
+				R: r,
+				G: gr,
+				B: b,
+				A: 255,
+			}, &color.RGBA{
+				R: r2,
+				B: b2,
+				G: g2,
+				A: 255,
+			}, nil
+	}
+
+	return nil, nil, fmt.Errorf("failed to get home team color")
+}
+
+func (g *Game) AwayColor() (*color.RGBA, *color.RGBA, error) {
+	if g.Away != nil {
+		r, gr, b, err := rgbrender.HexToRGB(g.Away.Color)
+		if err != nil {
+			return nil, nil, err
+		}
+		r2, g2, b2, err := rgbrender.HexToRGB(g.Away.AlternateColor)
+		if err != nil {
+			return nil, nil, err
+		}
+		return &color.RGBA{
+				R: r,
+				G: gr,
+				B: b,
+				A: 255,
+			}, &color.RGBA{
+				R: r2,
+				G: g2,
+				B: b2,
+				A: 255,
+			}, nil
+	}
+
+	return nil, nil, fmt.Errorf("failed to get home team color")
+}
+
 // GetQuarter ...
 func (g *Game) GetQuarter() (string, error) {
 	if g.leaguer != nil && g.leaguer.League() == mLB {
@@ -162,8 +236,40 @@ func (g *Game) GetClock() (string, error) {
 	return g.status.DisplayClock, nil
 }
 
+func (g *Game) getMockUpdate() (sportboard.Game, error) {
+	var event *event
+
+	if g.espnBoard == nil {
+		return nil, fmt.Errorf("no mock data present")
+	}
+	mockDat, ok := g.espnBoard.mockLiveGames[g.ID]
+	if !ok {
+		return nil, fmt.Errorf("no mock data for game %s", g.ID)
+	}
+
+	if err := json.Unmarshal(mockDat, &event); err != nil {
+		return nil, err
+	}
+
+	newG, err := gameFromEvent(event, g.espnBoard)
+	if err != nil {
+		return nil, err
+	}
+	newG.leaguer = g.leaguer
+
+	if len(newG.odds) < 1 {
+		newG.odds = append(newG.odds, g.odds...)
+	}
+
+	return newG, nil
+}
+
 // GetUpdate ...
 func (g *Game) GetUpdate(ctx context.Context) (sportboard.Game, error) {
+	if g.espnBoard != nil && len(g.espnBoard.mockLiveGames) > 0 {
+		return g.getMockUpdate()
+	}
+
 	uri, err := url.Parse(
 		fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s/scoreboard/%s", g.leaguer.APIPath(), g.ID),
 	)
@@ -202,7 +308,7 @@ func (g *Game) GetUpdate(ctx context.Context) (sportboard.Game, error) {
 		return nil, fmt.Errorf("failed to unmarshal game JSON: %w", err)
 	}
 
-	newG, err := gameFromEvent(event)
+	newG, err := gameFromEvent(event, g.espnBoard)
 	if err != nil {
 		return nil, err
 	}
@@ -244,10 +350,39 @@ func extractOverUnder(details string) (string, string, error) {
 	return match[1], match[2], nil
 }
 
+func (e *ESPNBoard) getMockGames() ([]*Game, error) {
+	if e.mockSchedule == nil {
+		return nil, fmt.Errorf("missing mock schedule data")
+	}
+	var schedule *schedule
+
+	if err := json.Unmarshal(e.mockSchedule, &schedule); err != nil {
+		return nil, err
+	}
+
+	var games []*Game
+	for _, event := range schedule.Events {
+		game, err := gameFromEvent(event, e)
+		if err != nil {
+			return nil, err
+		}
+
+		game.leaguer = e.leaguer
+
+		games = append(games, game)
+	}
+
+	return games, nil
+}
+
 // GetGames gets the games for a given date
 func (e *ESPNBoard) GetGames(ctx context.Context, dateStr string) ([]*Game, error) {
 	e.gameLock.Lock()
 	defer e.gameLock.Unlock()
+
+	if e.mockSchedule != nil {
+		return e.getMockGames()
+	}
 
 	t, ok := e.lastScheduleCall[dateStr]
 	if !ok || t == nil {
@@ -316,7 +451,7 @@ func (e *ESPNBoard) GetGames(ctx context.Context, dateStr string) ([]*Game, erro
 
 	var games []*Game
 	for _, event := range schedule.Events {
-		game, err := gameFromEvent(event)
+		game, err := gameFromEvent(event, e)
 		if err != nil {
 			return nil, err
 		}
@@ -332,18 +467,20 @@ func (e *ESPNBoard) GetGames(ctx context.Context, dateStr string) ([]*Game, erro
 	return games, nil
 }
 
-func gameFromEvent(event *event) (*Game, error) {
+func gameFromEvent(event *event, b *ESPNBoard) (*Game, error) {
 	t, err := timeFromGameTime(event.Date)
 	if err != nil {
 		return nil, err
 	}
 	game := &Game{
-		ID:       event.ID,
-		GameTime: t,
-		status:   event.Status,
+		espnBoard: b,
+		ID:        event.ID,
+		GameTime:  t,
+		status:    event.Status,
 	}
 	for _, comp := range event.Competitions {
 		game.odds = append(game.odds, comp.Odds...)
+		game.Situation = comp.Situation
 		for _, team := range comp.Competitors {
 			if strings.ToLower(team.HomeAway) == "home" {
 				game.Home = team.Team

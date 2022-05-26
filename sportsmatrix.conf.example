@@ -336,6 +336,9 @@ nhlConfig:
 mlbConfig:
   enabled: true
 
+  # This enables a more detailed view of the game while it is live
+  detailedLive: true
+
   # Headline news from ESPN
   headlines:
     enabled: false

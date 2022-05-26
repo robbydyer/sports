@@ -30,19 +30,20 @@ type Conference struct {
 
 // Team implements sportboard.Team
 type Team struct {
-	hasDetail    *atomic.Bool
-	ID           string  `json:"id"`
-	Name         string  `json:"name"`
-	DisplayName  string  `json:"displayName"`
-	Abbreviation string  `json:"abbreviation"`
-	Color        string  `json:"color"`
-	Logos        []*Logo `json:"logos"`
-	Points       string  `json:"score"`
-	LogoURL      string  `json:"logo"`
-	Conference   *Conference
-	IsHome       bool
-	rank         int
-	record       string
+	hasDetail      *atomic.Bool
+	ID             string  `json:"id"`
+	Name           string  `json:"name"`
+	DisplayName    string  `json:"displayName"`
+	Abbreviation   string  `json:"abbreviation"`
+	Color          string  `json:"color"`
+	AlternateColor string  `json:"alternateColor"`
+	Logos          []*Logo `json:"logos"`
+	Points         string  `json:"score"`
+	LogoURL        string  `json:"logo"`
+	Conference     *Conference
+	IsHome         bool
+	rank           int
+	record         string
 	sync.Mutex
 }
 
@@ -75,11 +76,12 @@ type teamData struct {
 
 type teamDetails struct {
 	Team struct {
-		ID           string `json:"id"`
-		Abbreviation string `json:"abbreviation"`
-		Color        string `json:"color"`
-		Rank         int    `json:"rank"`
-		Record       struct {
+		ID             string `json:"id"`
+		Abbreviation   string `json:"abbreviation"`
+		Color          string `json:"color"`
+		AlternateColor string `json:"alternateColor"`
+		Rank           int    `json:"rank"`
+		Record         struct {
 			Items []struct {
 				Description string `json:"description"`
 				Type        string `json:"type"`

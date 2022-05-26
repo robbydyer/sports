@@ -23,6 +23,8 @@ const DateFormat = "20060102"
 
 type rankSetter func(ctx context.Context, e *ESPNBoard, season string, teams []*Team) error
 
+type Option func(e *ESPNBoard) error
+
 // Leaguer ...
 type Leaguer interface {
 	League() string
@@ -53,6 +55,8 @@ type ESPNBoard struct {
 	gameLock         sync.Mutex
 	offSeasonLock    sync.Mutex
 	offSeason        map[string]bool
+	mockLiveGames    map[string][]byte
+	mockSchedule     []byte
 	sync.Mutex
 }
 
@@ -67,7 +71,7 @@ func (e *ESPNBoard) logoCacheDir() (string, error) {
 }
 
 // New ...
-func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger, r rankSetter, rec rankSetter) (*ESPNBoard, error) {
+func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger, r rankSetter, rec rankSetter, opts ...Option) (*ESPNBoard, error) {
 	e := &ESPNBoard{
 		leaguer:          leaguer,
 		log:              logger,
@@ -90,6 +94,12 @@ func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger, r rankSetter,
 		return e, fmt.Errorf("failed to set cron job for cacheClear: %w", err)
 	}
 	c.Start()
+
+	for _, o := range opts {
+		if err := o(e); err != nil {
+			return nil, err
+		}
+	}
 
 	return e, nil
 }
@@ -195,6 +205,7 @@ DATES:
 		}
 
 		for _, g := range games {
+			g.espnBoard = e
 			gList = append(gList, g)
 		}
 	}
@@ -460,4 +471,12 @@ func (e *ESPNBoard) TeamRecord(ctx context.Context, team sportboard.Team, season
 	}
 
 	return realTeam.record
+}
+
+func WithMockData(mockSchedule []byte, mockLiveGames map[string][]byte) Option {
+	return func(e *ESPNBoard) error {
+		e.mockSchedule = mockSchedule
+		e.mockLiveGames = mockLiveGames
+		return nil
+	}
 }

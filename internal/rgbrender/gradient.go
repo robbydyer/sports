@@ -40,13 +40,14 @@ func GradientXRectangle(bounds image.Rectangle, fillPercentage float64, baseColo
 			zap.Int("gradient start", bounds.Min.X),
 			zap.Int("gradient end", bounds.Max.X),
 			zap.Uint8("gradient step", gradientStep),
+			zap.Int("center width", centerWidth),
 		)
 	}
 
-	for x := bounds.Min.X; x < bounds.Max.X; x++ {
+	for x := bounds.Min.X; x <= bounds.Max.X; x++ {
 		bumpLeft := false
 		bumpRight := false
-		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for y := bounds.Min.Y; y <= bounds.Max.Y; y++ {
 			if x < minFull {
 				grad.Set(x, y, color.NRGBA{r, g, b, leftGradient})
 				bumpLeft = true
