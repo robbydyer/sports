@@ -273,6 +273,7 @@ func nestedQueryParams(message *descriptor.Message, field *descriptor.Field, pre
 			Format:      schema.Format,
 			Pattern:     schema.Pattern,
 			Required:    required,
+			extensions:  schema.extensions,
 		}
 		if param.Type == "array" {
 			param.CollectionFormat = "multi"
@@ -449,6 +450,7 @@ func renderMessageAsDefinition(msg *descriptor.Message, reg *descriptor.Registry
 		schema.MinProperties = protoSchema.MinProperties
 		schema.Required = protoSchema.Required
 		schema.XNullable = protoSchema.XNullable
+		schema.extensions = protoSchema.extensions
 		if protoSchema.schemaCore.Type != "" || protoSchema.schemaCore.Ref != "" {
 			schema.schemaCore = protoSchema.schemaCore
 		}
@@ -936,9 +938,14 @@ func partsToOpenAPIPath(parts []string, overrides map[string]string) string {
 // For example "{name=organizations/*/roles/*}" would produce the regular expression for the "name" parameter of
 // "organizations/[^/]+/roles/[^/]+" or "{bar=bing/*/bang/**}" would produce the regular expression for the "bar"
 // parameter of "bing/[^/]+/bang/.+".
+//
+// Note that OpenAPI does not actually support path parameters with "/", see https://github.com/OAI/OpenAPI-Specification/issues/892
 func partsToRegexpMap(parts []string) map[string]string {
 	regExps := make(map[string]string)
 	for _, part := range parts {
+		if strings.Contains(part, "/") {
+			glog.Warningf("Path parameter '%s' contains '/', which is not supported in OpenAPI", part)
+		}
 		if submatch := canRegexp.FindStringSubmatch(part); len(submatch) > 2 {
 			if strings.HasPrefix(submatch[2], "=") { // this part matches the standard and should be made into a regular expression
 				// assume the string's characters other than "**" and "*" are literals (not necessarily a good assumption 100% of the times, but it will support most use cases)
@@ -1022,6 +1029,7 @@ func renderServices(services []*descriptor.Service, paths openapiPathsObject, re
 					var enumNames []string
 					var items *openapiItemsObject
 					var minItems *int
+					var extensions []extension
 					switch pt := parameter.Target.GetType(); pt {
 					case descriptorpb.FieldDescriptorProto_TYPE_GROUP, descriptorpb.FieldDescriptorProto_TYPE_MESSAGE:
 						if descriptor.IsWellKnownType(parameter.Target.GetTypeName()) {
@@ -1033,6 +1041,7 @@ func renderServices(services []*descriptor.Service, paths openapiPathsObject, re
 							paramFormat = schema.Format
 							desc = schema.Description
 							defaultValue = schema.Default
+							extensions = schema.extensions
 						} else {
 							return fmt.Errorf("only primitive and well-known types are allowed in path parameters")
 						}
@@ -1052,6 +1061,7 @@ func renderServices(services []*descriptor.Service, paths openapiPathsObject, re
 						schema := schemaOfField(parameter.Target, reg, customRefs)
 						desc = schema.Description
 						defaultValue = schema.Default
+						extensions = schema.extensions
 					default:
 						var ok bool
 						paramType, paramFormat, ok = primitiveSchema(pt)
@@ -1062,6 +1072,7 @@ func renderServices(services []*descriptor.Service, paths openapiPathsObject, re
 						schema := schemaOfField(parameter.Target, reg, customRefs)
 						desc = schema.Description
 						defaultValue = schema.Default
+						extensions = schema.extensions
 					}
 
 					if parameter.IsRepeated() {
@@ -1111,6 +1122,7 @@ func renderServices(services []*descriptor.Service, paths openapiPathsObject, re
 						CollectionFormat: collectionFormat,
 						MinItems:         minItems,
 						Pattern:          pattern,
+						extensions:       extensions,
 					})
 				}
 				// Now check if there is a body parameter
@@ -1164,7 +1176,7 @@ func renderServices(services []*descriptor.Service, paths openapiPathsObject, re
 							bodyFieldName = bodyField.Name
 						}
 						// Align pathParams with body field path.
-						pathParams := subPathParams(bodyFieldName, b.PathParams)
+						pathParams := subPathParams(bodyField.Name, b.PathParams)
 						var err error
 						schema, err = renderFieldAsDefinition(bodyField.Target, reg, customRefs, pathParams)
 						if err != nil {
@@ -2523,10 +2535,17 @@ func updateswaggerObjectFromJSONSchema(s *openapiSchemaObject, j *openapi_option
 	if reg.GetUseJSONNamesForFields() {
 		for i, r := range s.Required {
 			// TODO(oyvindwe): Look up field and use field.GetJsonName()?
-			s.Required[i] = doCamelCase(r)
+			s.Required[i] = casing.JSONCamelCase(r)
 		}
 	}
 	s.Enum = j.GetEnum()
+	if j.GetExtensions() != nil {
+		exts, err := processExtensions(j.GetExtensions())
+		if err != nil {
+			panic(err)
+		}
+		s.extensions = exts
+	}
 	if overrideType := j.GetType(); len(overrideType) > 0 {
 		s.Type = strings.ToLower(overrideType[0].String())
 	}
@@ -2707,7 +2726,7 @@ func lowerCamelCase(fieldName string, fields []*descriptor.Field, msgs []*descri
 		fieldNames := strings.Split(fieldName, ".")
 		fieldNamesWithCamelCase := make([]string, 0)
 		for i := 0; i < len(fieldNames)-1; i++ {
-			fieldNamesWithCamelCase = append(fieldNamesWithCamelCase, doCamelCase(string(fieldNames[i])))
+			fieldNamesWithCamelCase = append(fieldNamesWithCamelCase, casing.JSONCamelCase(string(fieldNames[i])))
 		}
 		prefix := strings.Join(fieldNamesWithCamelCase, ".")
 		reservedJSONName := getReservedJSONName(fieldName, messageNameToFieldsToJSONName, fieldNameToType)
@@ -2715,15 +2734,7 @@ func lowerCamelCase(fieldName string, fields []*descriptor.Field, msgs []*descri
 			return prefix + "." + reservedJSONName
 		}
 	}
-	return doCamelCase(fieldName)
-}
-
-func doCamelCase(input string) string {
-	parameterString := casing.Camel(input)
-	builder := &strings.Builder{}
-	builder.WriteString(strings.ToLower(string(parameterString[0])))
-	builder.WriteString(parameterString[1:])
-	return builder.String()
+	return casing.JSONCamelCase(fieldName)
 }
 
 func getReservedJSONName(fieldName string, messageNameToFieldsToJSONName map[string]map[string]string, fieldNameToType map[string]string) string {
