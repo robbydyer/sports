@@ -122,6 +122,7 @@ func (c *ScrollCanvas) GC() {
 	}
 	c.subCanvases = nil
 	c.actuals = nil
+	c.actual = nil
 }
 
 func (c *ScrollCanvas) AddCanvas(add draw.Image) {

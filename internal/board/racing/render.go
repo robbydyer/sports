@@ -109,7 +109,8 @@ EVENTS:
 			return nil, context.Canceled
 		default:
 		}
-		if err := s.renderEvent(s.boardCtx, canvas, event, s.leagueLogo, scheduleWriter); err != nil {
+		img, err := s.renderEvent(s.boardCtx, canvas.Bounds(), event, s.leagueLogo, scheduleWriter)
+		if err != nil {
 			s.log.Error("failed to render racing event",
 				zap.Error(err),
 			)
@@ -117,10 +118,11 @@ EVENTS:
 		}
 
 		if scrollCanvas != nil && s.config.ScrollMode.Load() {
-			scrollCanvas.AddCanvas(canvas)
-			draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
+			scrollCanvas.AddCanvas(img)
 			continue EVENTS
 		}
+
+		draw.Draw(canvas, img.Bounds(), img, image.Point{}, draw.Over)
 
 		if err := canvas.Render(s.boardCtx); err != nil {
 			s.log.Error("failed to render racing board",
@@ -145,16 +147,17 @@ EVENTS:
 	return nil, nil
 }
 
-func (s *RacingBoard) renderEvent(ctx context.Context, canvas board.Canvas, event *Event, leagueLogo *logo.Logo, scheduleWriter *rgbrender.TextWriter) error {
-	canvasBounds := rgbrender.ZeroedBounds(canvas.Bounds())
+func (s *RacingBoard) renderEvent(ctx context.Context, bounds image.Rectangle, event *Event, leagueLogo *logo.Logo, scheduleWriter *rgbrender.TextWriter) (draw.Image, error) {
+	img := image.NewRGBA(bounds)
+	canvasBounds := rgbrender.ZeroedBounds(bounds)
 
 	logoImg, err := leagueLogo.RenderRightAlignedWithEnd(ctx, canvasBounds, (canvasBounds.Max.X-canvasBounds.Min.X)/2)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	pt := image.Pt(logoImg.Bounds().Min.X, logoImg.Bounds().Min.Y)
-	draw.Draw(canvas, logoImg.Bounds(), logoImg, pt, draw.Over)
+	draw.Draw(img, logoImg.Bounds(), logoImg, pt, draw.Over)
 
 	gradient := rgbrender.GradientXRectangle(
 		canvasBounds,
@@ -163,7 +166,7 @@ func (s *RacingBoard) renderEvent(ctx context.Context, canvas board.Canvas, even
 		s.log,
 	)
 	pt = image.Pt(gradient.Bounds().Min.X, gradient.Bounds().Min.Y)
-	draw.Draw(canvas, gradient.Bounds(), gradient, pt, draw.Over)
+	draw.Draw(img, gradient.Bounds(), gradient, pt, draw.Over)
 
 	event.Date = event.Date.Local()
 
@@ -174,9 +177,9 @@ func (s *RacingBoard) renderEvent(ctx context.Context, canvas board.Canvas, even
 		fmt.Sprintf("%s %s", event.Date.Format("3:04PM"), tz),
 	}
 
-	lengths, err := scheduleWriter.MeasureStrings(canvas, txt)
+	lengths, err := scheduleWriter.MeasureStrings(img, txt)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	max := canvasBounds.Dx() / 2
 
@@ -200,13 +203,13 @@ func (s *RacingBoard) renderEvent(ctx context.Context, canvas board.Canvas, even
 
 	if err := scheduleWriter.WriteAligned(
 		rgbrender.LeftCenter,
-		canvas,
+		img,
 		scheduleBounds,
 		txt,
 		color.White,
 	); err != nil {
-		return fmt.Errorf("failed to write schedule: %w", err)
+		return nil, fmt.Errorf("failed to write schedule: %w", err)
 	}
 
-	return nil
+	return img, nil
 }

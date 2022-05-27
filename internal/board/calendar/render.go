@@ -106,7 +106,8 @@ EVENTS:
 			return nil, context.Canceled
 		default:
 		}
-		if err := s.renderEvent(s.boardCtx, canvas, event, scheduleWriter); err != nil {
+		img, err := s.renderEvent(s.boardCtx, canvas.Bounds(), event, scheduleWriter)
+		if err != nil {
 			s.log.Error("failed to render calendar event",
 				zap.Error(err),
 			)
@@ -114,10 +115,11 @@ EVENTS:
 		}
 
 		if scrollCanvas != nil && s.config.ScrollMode.Load() {
-			scrollCanvas.AddCanvas(canvas)
-			draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
+			scrollCanvas.AddCanvas(img)
 			continue EVENTS
 		}
+
+		draw.Draw(canvas, img.Bounds(), img, image.Point{}, draw.Over)
 
 		if err := canvas.Render(s.boardCtx); err != nil {
 			s.log.Error("failed to render calendar board",
@@ -142,8 +144,9 @@ EVENTS:
 	return nil, nil
 }
 
-func (s *CalendarBoard) renderEvent(ctx context.Context, canvas board.Canvas, event *Event, writer *rgbrender.TextWriter) error {
-	canvasBounds := rgbrender.ZeroedBounds(canvas.Bounds())
+func (s *CalendarBoard) renderEvent(ctx context.Context, bounds image.Rectangle, event *Event, writer *rgbrender.TextWriter) (draw.Image, error) {
+	img := image.NewRGBA(bounds)
+	canvasBounds := rgbrender.ZeroedBounds(bounds)
 
 	logoHeight := int(writer.FontSize * 2.0)
 	logoBounds := image.Rect(canvasBounds.Min.X, canvasBounds.Min.Y, canvasBounds.Min.X+logoHeight, canvasBounds.Min.Y+logoHeight)
@@ -154,15 +157,15 @@ func (s *CalendarBoard) renderEvent(ctx context.Context, canvas board.Canvas, ev
 
 	logoImg, err := s.logo.RenderLeftAlignedWithStart(ctx, logoBounds, 0)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	pt := image.Pt(logoImg.Bounds().Min.X, logoImg.Bounds().Min.Y)
-	draw.Draw(canvas, logoImg.Bounds(), logoImg, pt, draw.Over)
+	draw.Draw(img, logoImg.Bounds(), logoImg, pt, draw.Over)
 
 	if err := writer.WriteAligned(
 		rgbrender.CenterCenter,
-		canvas,
+		img,
 		dateBounds,
 		[]string{
 			event.Time.Format("Mon Jan 2"),
@@ -170,12 +173,12 @@ func (s *CalendarBoard) renderEvent(ctx context.Context, canvas board.Canvas, ev
 		},
 		color.White,
 	); err != nil {
-		return err
+		return nil, err
 	}
 
-	lines, err := writer.BreakText(canvas, titleBounds.Max.X-titleBounds.Min.X, event.Title)
+	lines, err := writer.BreakText(img, titleBounds.Max.X-titleBounds.Min.X, event.Title)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	maxLines := int(math.Ceil(float64(titleBounds.Dy()) / writer.FontSize))
@@ -195,13 +198,13 @@ func (s *CalendarBoard) renderEvent(ctx context.Context, canvas board.Canvas, ev
 
 	if err := writer.WriteAligned(
 		rgbrender.LeftBottom,
-		canvas,
+		img,
 		titleBounds,
 		lines,
 		color.White,
 	); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return img, nil
 }

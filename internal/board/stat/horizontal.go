@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/draw"
 	"strings"
 
 	"github.com/robbydyer/sports/internal/board"
 	"github.com/robbydyer/sports/internal/rgbrender"
 )
 
-func (s *StatBoard) doHorizontal(ctx context.Context, canvas board.Canvas, players map[string][]Player) error {
+func (s *StatBoard) doHorizontal(ctx context.Context, canvas board.Canvas, players map[string][]Player) (draw.Image, error) {
 	zeroed := rgbrender.ZeroedBounds(canvas.Bounds())
 
 	clrLine := &rgbrender.ColorCharLine{}
@@ -32,7 +33,7 @@ func (s *StatBoard) doHorizontal(ctx context.Context, canvas board.Canvas, playe
 
 			stats, err := s.api.AvailableStats(ctx, player.GetCategory())
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			for _, s := range fmt.Sprintf("  %s)", prfx) {
@@ -67,15 +68,15 @@ func (s *StatBoard) doHorizontal(ctx context.Context, canvas board.Canvas, playe
 
 	writer, err := s.getWriter(zeroed.Bounds())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	lengths, err := writer.MeasureStrings(canvas, []string{strings.Join(clrLine.Chars, "")})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(lengths) < 1 {
-		return fmt.Errorf("failed to measure text")
+		return nil, fmt.Errorf("failed to measure text")
 	}
 	bounds := image.Rect(
 		zeroed.Min.X,
@@ -84,11 +85,11 @@ func (s *StatBoard) doHorizontal(ctx context.Context, canvas board.Canvas, playe
 		zeroed.Max.Y,
 	)
 
-	canvas.SetWidth(bounds.Dx())
+	img := image.NewRGBA(bounds)
 
-	return writer.WriteAlignedColorCodes(
+	_ = writer.WriteAlignedColorCodes(
 		rgbrender.CenterCenter,
-		canvas,
+		img,
 		bounds,
 		&rgbrender.ColorChar{
 			BoxClr: color.Black,
@@ -97,4 +98,6 @@ func (s *StatBoard) doHorizontal(ctx context.Context, canvas board.Canvas, playe
 			},
 		},
 	)
+
+	return img, nil
 }

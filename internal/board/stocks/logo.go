@@ -12,7 +12,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/robbydyer/sports/internal/board"
 	"github.com/robbydyer/sports/internal/logo"
 )
 
@@ -30,7 +29,7 @@ func (s *StockBoard) logoSource(symbol string) (logo.SourceGetter, error) {
 	}, nil
 }
 
-func (s *StockBoard) drawLogo(ctx context.Context, canvas board.Canvas, bounds image.Rectangle, symbol string) error {
+func (s *StockBoard) drawLogo(ctx context.Context, canvas draw.Image, bounds image.Rectangle, symbol string) error {
 	l, err := s.getOrCreateLogo(symbol, canvas, bounds)
 	if err != nil {
 		return err
@@ -42,7 +41,7 @@ func (s *StockBoard) drawLogo(ctx context.Context, canvas board.Canvas, bounds i
 		zap.Int("endX", bounds.Max.X-2),
 	)
 
-	i, err := l.RenderRightAlignedWithEnd(ctx, bounds, bounds.Max.X-2)
+	i, err := l.RenderRightAlignedWithEnd(ctx, bounds, bounds.Max.X-4)
 	if err != nil {
 		return err
 	}
@@ -52,7 +51,7 @@ func (s *StockBoard) drawLogo(ctx context.Context, canvas board.Canvas, bounds i
 	return nil
 }
 
-func (s *StockBoard) getOrCreateLogo(symbol string, canvas board.Canvas, bounds image.Rectangle) (*logo.Logo, error) {
+func (s *StockBoard) getOrCreateLogo(symbol string, canvas draw.Image, bounds image.Rectangle) (*logo.Logo, error) {
 	s.logoLock.Lock()
 	defer s.logoLock.Unlock()
 

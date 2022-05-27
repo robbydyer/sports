@@ -292,7 +292,8 @@ func (s *StockBoard) render(ctx context.Context, canvas board.Canvas) (board.Can
 
 STOCK:
 	for _, stock := range stocks {
-		if err := s.renderStock(boardCtx, stock, canvas); err != nil {
+		img, err := s.renderStock(boardCtx, stock, canvas.Bounds())
+		if err != nil {
 			s.log.Error("failed to render stock",
 				zap.Error(err),
 			)
@@ -300,10 +301,11 @@ STOCK:
 		}
 
 		if scrollCanvas != nil && s.config.ScrollMode.Load() {
-			scrollCanvas.AddCanvas(canvas)
-			draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
+			scrollCanvas.AddCanvas(img)
 			continue STOCK
 		}
+
+		draw.Draw(canvas, canvas.Bounds(), img, image.Point{}, draw.Over)
 
 		if err := canvas.Render(boardCtx); err != nil {
 			s.log.Error("failed to render stock board",
