@@ -18,8 +18,7 @@ import (
 var assets embed.FS
 
 func (s *StockBoard) renderStock(ctx context.Context, stock *Stock, bounds image.Rectangle) (draw.Image, error) {
-	var chart draw.Image
-	chart = image.NewRGBA(bounds)
+	chart := image.NewRGBA(bounds)
 	canvasBounds := rgbrender.ZeroedBounds(bounds)
 
 	maxChartWidth := canvasBounds.Dx() / 2
