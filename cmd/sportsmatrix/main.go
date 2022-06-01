@@ -115,7 +115,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 
 			args.setConfigDefaults()
 
-			if viper.GetBool("debug") {
+			if viper.GetBool("debug") || args.config.Debug {
 				debugServer := NewDebugServer("0.0.0.0:6060")
 
 				fmt.Println("Debug server running on port 6060")

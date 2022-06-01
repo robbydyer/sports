@@ -15,6 +15,7 @@ import (
 
 // Config holds configuration for the RGB matrix and all of its supported Boards
 type Config struct {
+	Debug              bool                  `json:"debug"`
 	EnableNHL          bool                  `json:"enableNHL,omitempty"`
 	NHLConfig          *sportboard.Config    `json:"nhlConfig,omitempty"`
 	MLBConfig          *sportboard.Config    `json:"mlbConfig,omitempty"`

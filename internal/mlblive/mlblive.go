@@ -228,7 +228,7 @@ func (m *MlbLive) RenderLive(ctx context.Context, canvas board.Canvas, game Game
 		canvas,
 		inningNumBounds,
 		[]string{
-			strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(inning.Number, "th", ""), "nd", ""), "st", ""),
+			strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(inning.Number, "th", ""), "nd", ""), "st", ""), "rd", ""),
 		},
 		color.White,
 	)
