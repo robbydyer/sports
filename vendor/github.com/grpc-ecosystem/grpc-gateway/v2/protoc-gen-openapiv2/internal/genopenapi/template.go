@@ -88,13 +88,13 @@ var wktSchemas = map[string]schemaCore{
 	".google.protobuf.BoolValue": {
 		Type: "boolean",
 	},
-	".google.protobuf.Empty": {},
+	".google.protobuf.Empty": {
+		Type: "object",
+	},
 	".google.protobuf.Struct": {
 		Type: "object",
 	},
-	".google.protobuf.Value": {
-		Type: "object",
-	},
+	".google.protobuf.Value": {},
 	".google.protobuf.ListValue": {
 		Type: "array",
 		Items: (*openapiItemsObject)(&schemaCore{
@@ -894,6 +894,15 @@ func templateToParts(path string, reg *descriptor.Registry, fields []*descriptor
 			}
 			buffer += string(char)
 			jsonBuffer += string(char)
+		case ':':
+			// Only the last part may be a verb (":" LITERAL)
+			if depth == 0 {
+				parts = append(parts, buffer)
+				buffer = ":"
+				continue
+			}
+			buffer += string(char)
+			jsonBuffer += string(char)
 		default:
 			buffer += string(char)
 			jsonBuffer += string(char)
@@ -918,6 +927,11 @@ func partsToOpenAPIPath(parts []string, overrides map[string]string) string {
 			part = override
 		}
 		parts[index] = part
+	}
+	last := len(parts) - 1
+	if strings.HasPrefix(parts[last], ":") {
+		// Last item is a verb (":" LITERAL).
+		return strings.Join(parts[:last], "/") + parts[last]
 	}
 	return strings.Join(parts, "/")
 }
@@ -1477,6 +1491,10 @@ func renderServices(services []*descriptor.Service, paths openapiPathsObject, re
 					pathItemObject.Put = operationObject
 				case "PATCH":
 					pathItemObject.Patch = operationObject
+				case "HEAD":
+					pathItemObject.Head = operationObject
+				case "OPTIONS":
+					pathItemObject.Options = operationObject
 				}
 				paths[path] = pathItemObject
 			}
@@ -1507,8 +1525,12 @@ func operationForMethod(httpMethod string) func(*openapiPathItemObject) *openapi
 		return func(obj *openapiPathItemObject) *openapiOperationObject { return obj.Delete }
 	case "PATCH":
 		return func(obj *openapiPathItemObject) *openapiOperationObject { return obj.Patch }
+	case "HEAD":
+		return func(obj *openapiPathItemObject) *openapiOperationObject { return obj.Head }
+	case "OPTIONS":
+		return func(obj *openapiPathItemObject) *openapiOperationObject { return obj.Options }
 	default:
-		return nil
+		return func(obj *openapiPathItemObject) *openapiOperationObject { return nil }
 	}
 }
 
