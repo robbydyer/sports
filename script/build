@@ -26,7 +26,7 @@ if [ "${IN_DOCKER}" = "no" ]; then
 
   if [ "${DEB_BUILD}" = "yes" ]; then
     echo "Deb build complete"
-    git log --decorate --oneline --pretty=%s ${OLD}...master
+    git --no-pager log --decorate --oneline --pretty=%s ${OLD}...master
   fi
   exit
 fi

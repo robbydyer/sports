@@ -3,7 +3,7 @@ ARG BASE=multiarch/debian-debootstrap:arm64-bullseye-slim
 
 FROM $BASE
 
-ARG GOVERSION=1.18.1
+ARG GOVERSION=1.18.3
 
 RUN apt-get update && \
     apt-get install -y \
