@@ -17,10 +17,6 @@ import (
 
 var fillColor = color.RGBA{255, 255, 0, 100}
 
-const (
-	maxCanvasWidth = 64
-)
-
 type MlbLive struct {
 	Logger *zap.Logger
 	writer *rgbrender.TextWriter
@@ -51,19 +47,19 @@ type Game interface {
 	AwayColor() (*color.RGBA, *color.RGBA, error)
 }
 
-func getCanvasWidth(canvas board.Canvas) int {
-	min := rgbrender.ZeroedBounds(canvas.Bounds()).Dx()
-	if min > maxCanvasWidth {
-		min = maxCanvasWidth
+func getCanvasWidth(width int, height int) int {
+	// Return the highest X that maintains a 2:1 aspect ratio
+	if width/height == 2 {
+		return width
 	}
-	return min
+	return height * 2
 }
 
 func (m *MlbLive) RenderLive(ctx context.Context, canvas board.Canvas, game Game, homeLogo *logo.Logo, awayLogo *logo.Logo) error {
 	zeroed := rgbrender.ZeroedBounds(canvas.Bounds())
 	midX := zeroed.Max.X / 2
 
-	canvasWidth := getCanvasWidth(canvas)
+	canvasWidth := getCanvasWidth(zeroed.Dx(), zeroed.Dy())
 
 	quarterW := canvasWidth / 4
 
@@ -223,7 +219,10 @@ func (m *MlbLive) RenderLive(ctx context.Context, canvas board.Canvas, game Game
 
 	inning.Number = strings.ToLower(inning.Number)
 	writer.XStartCorrection = 0
-	writer.YStartCorrection = 3
+	writer.YStartCorrection = (inningNumBounds.Dy() / 3) - 2
+	m.Logger.Debug("MLB live inning number Y start correction",
+		zap.Int("Y", writer.YStartCorrection),
+	)
 	_ = writer.Write(
 		canvas,
 		inningNumBounds,
@@ -241,7 +240,12 @@ func (m *MlbLive) RenderLive(ctx context.Context, canvas board.Canvas, game Game
 	countBounds := image.Rect(midX+(canvasWidth/4), zeroed.Max.Y-(zeroed.Dy()/2), midX+canvasWidth, runnerBounds.Max.Y+zeroed.Dy()/4)
 	outBounds := image.Rect(countBounds.Min.X, zeroed.Max.Y-(zeroed.Dy()/4), countBounds.Min.X+(canvasWidth/4), zeroed.Max.Y)
 
-	writer.YStartCorrection = 0
+	writer.YStartCorrection = ((countBounds.Dy() - int(writer.FontSize)) / 2) - 3
+	m.Logger.Debug("MLB live count Y start correction",
+		zap.Int("count bounds Y", countBounds.Dy()),
+		zap.Int("font", int(writer.FontSize)),
+		zap.Int("Y", writer.YStartCorrection),
+	)
 	_ = writer.Write(
 		canvas,
 		countBounds,
