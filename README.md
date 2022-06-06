@@ -11,7 +11,6 @@ I run this on a Pi zero and a Pi 4. If you want to use the "Web Board" feature (
 - [Getting Help](#getting-help)<br>
 - [Donations/Beer Money](#donations-and-beer-money)<br>
 - [Board Types](#current-board-types)<br>
-- [Roadmap](#roadmap)<br>
 - [Installation](#installation)<br>
 - [Configuration](#configuration)<br>
 - [Running the Board](#running-the-board)<br>
@@ -40,8 +39,10 @@ If you feel so inclined, beer money can be sent to my Venmo (www.venmo.com/u/Rob
   - PGA Tour Leaderboards
 - Racing. Currently just shows upcoming event schedule
   - F1
+  - Indy Car
 - Stock Ticker
 - Weather
+- Google Calendar
 - Player Stats boards- currently supports MLB and NHL.
 - Image Board: Takes a list of directories containg images and displays them. Works with GIF's too!
 - Clock
