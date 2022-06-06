@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/internal/descriptor"
-	"gopkg.in/yaml.v2"
 )
 
 type param struct {
@@ -105,11 +104,15 @@ type openapiPathsObject map[string]openapiPathItemObject
 
 // http://swagger.io/specification/#pathItemObject
 type openapiPathItemObject struct {
-	Get    *openapiOperationObject `json:"get,omitempty" yaml:"get,omitempty"`
-	Delete *openapiOperationObject `json:"delete,omitempty" yaml:"delete,omitempty"`
-	Post   *openapiOperationObject `json:"post,omitempty" yaml:"post,omitempty"`
-	Put    *openapiOperationObject `json:"put,omitempty" yaml:"put,omitempty"`
-	Patch  *openapiOperationObject `json:"patch,omitempty" yaml:"patch,omitempty"`
+	Get     *openapiOperationObject `json:"get,omitempty" yaml:"get,omitempty"`
+	Delete  *openapiOperationObject `json:"delete,omitempty" yaml:"delete,omitempty"`
+	Post    *openapiOperationObject `json:"post,omitempty" yaml:"post,omitempty"`
+	Put     *openapiOperationObject `json:"put,omitempty" yaml:"put,omitempty"`
+	Patch   *openapiOperationObject `json:"patch,omitempty" yaml:"patch,omitempty"`
+	Head    *openapiOperationObject `json:"head,omitempty" yaml:"head,omitempty"`
+	Options *openapiOperationObject `json:"options,omitempty" yaml:"options,omitempty"`
+	// While TRACE is supported in OpenAPI v3, it is not supported in OpenAPI v2
+	// Trace   *openapiOperationObject `json:"trace,omitempty" yaml:"trace,omitempty"`
 }
 
 // http://swagger.io/specification/#operationObject
@@ -253,16 +256,13 @@ type keyVal struct {
 type openapiSchemaObjectProperties []keyVal
 
 func (p openapiSchemaObjectProperties) MarshalYAML() (interface{}, error) {
-	ms := make(yaml.MapSlice, len(p))
+	m := make(map[string]interface{})
 
-	for i, v := range p {
-		ms[i] = yaml.MapItem{
-			Key:   v.Key,
-			Value: v.Value,
-		}
+	for _, v := range p {
+		m[v.Key] = v.Value
 	}
 
-	return ms, nil
+	return m, nil
 }
 
 func (op openapiSchemaObjectProperties) MarshalJSON() ([]byte, error) {
