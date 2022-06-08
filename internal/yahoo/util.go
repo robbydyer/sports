@@ -34,5 +34,6 @@ func tradingBegin() (time.Time, error) {
 	if err != nil {
 		return t, err
 	}
-	return time.Date(t.Year(), t.Month(), t.Day(), 8, 0o0, 0, 0, loc), nil
+	// Give an extra few minutes after close to ensure we get the closing price
+	return time.Date(t.Year(), t.Month(), t.Day(), 8, 6, 0, 0, loc), nil
 }
