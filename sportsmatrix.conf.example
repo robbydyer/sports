@@ -155,6 +155,9 @@ ncaafConfig:
     # Increase this number to slow down the headline scroll
     scrollDelay: "10ms"
 
+  # Shows the league logo at the start of each board cycle
+  showLeagueLogo: false
+
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
 
@@ -247,6 +250,9 @@ nhlConfig:
     # Increase this number to slow down the headline scroll
     scrollDelay: "10ms"
 
+  # Shows the league logo at the start of each board cycle
+  showLeagueLogo: false
+  
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
 
@@ -354,6 +360,9 @@ mlbConfig:
     # Increase this number to slow down the headline scroll
     scrollDelay: "10ms"
 
+  # Shows the league logo at the start of each board cycle
+  showLeagueLogo: false
+  
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
 
@@ -461,6 +470,9 @@ ncaamConfig:
     # Increase this number to slow down the headline scroll
     scrollDelay: "10ms"
 
+  # Shows the league logo at the start of each board cycle
+  showLeagueLogo: false
+  
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
 
@@ -556,6 +568,9 @@ nbaConfig:
     # Increase this number to slow down the headline scroll
     scrollDelay: "10ms"
 
+  # Shows the league logo at the start of each board cycle
+  showLeagueLogo: false
+  
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
 
@@ -648,6 +663,9 @@ nflConfig:
     # Increase this number to slow down the headline scroll
     scrollDelay: "10ms"
 
+  # Shows the league logo at the start of each board cycle
+  showLeagueLogo: false
+  
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
 
@@ -740,6 +758,9 @@ mlsConfig:
     # Increase this number to slow down the headline scroll
     scrollDelay: "10ms"
 
+  # Shows the league logo at the start of each board cycle
+  showLeagueLogo: false
+  
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
 
@@ -832,6 +853,9 @@ eplConfig:
     # Increase this number to slow down the headline scroll
     scrollDelay: "10ms"
 
+  # Shows the league logo at the start of each board cycle
+  showLeagueLogo: false
+  
   # Displays the scoreboard in a scrolling style instead of statically
   scrollMode: false
 
