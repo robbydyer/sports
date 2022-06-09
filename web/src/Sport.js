@@ -33,6 +33,7 @@ function jsonToStatus(jsonDat) {
     status.setUseGradient(dat.use_gradient);
     status.setLiveOnly(dat.live_only);
     status.setDetailedLive(dat.detailed_live);
+    status.setShowLeagueLogo(dat.show_league_logo);
 
     return status;
 }
@@ -249,6 +250,12 @@ class Sport extends React.Component {
                     <Col>
                         <Form.Switch id={this.props.sport + "detailedlive"} label="Detailed Live View" checked={this.state.status.getDetailedLive()}
                             onChange={() => { this.state.status.setDetailedLive(!this.state.status.getDetailedLive()); this.updateStatus(); }} />
+                    </Col>
+                </Row>
+                <Row className="text-left">
+                    <Col>
+                        <Form.Switch id={this.props.sport + "leaguelogo"} label="Show League Logo" checked={this.state.status.getShowLeagueLogo()}
+                            onChange={() => { this.state.status.setShowLeagueLogo(!this.state.status.getShowLeagueLogo()); this.updateStatus(); }} />
                     </Col>
                 </Row>
                 <Row className="text-left">

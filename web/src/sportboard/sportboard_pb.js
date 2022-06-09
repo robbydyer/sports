@@ -124,7 +124,8 @@ proto.sport.v1.Status.toObject = function(includeInstance, msg) {
     oddsEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
     useGradient: jspb.Message.getBooleanFieldWithDefault(msg, 8, false),
     liveOnly: jspb.Message.getBooleanFieldWithDefault(msg, 9, false),
-    detailedLive: jspb.Message.getBooleanFieldWithDefault(msg, 10, false)
+    detailedLive: jspb.Message.getBooleanFieldWithDefault(msg, 10, false),
+    showLeagueLogo: jspb.Message.getBooleanFieldWithDefault(msg, 11, false)
   };
 
   if (includeInstance) {
@@ -200,6 +201,10 @@ proto.sport.v1.Status.deserializeBinaryFromReader = function(msg, reader) {
     case 10:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setDetailedLive(value);
+      break;
+    case 11:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setShowLeagueLogo(value);
       break;
     default:
       reader.skipField();
@@ -297,6 +302,13 @@ proto.sport.v1.Status.serializeBinaryToWriter = function(message, writer) {
   if (f) {
     writer.writeBool(
       10,
+      f
+    );
+  }
+  f = message.getShowLeagueLogo();
+  if (f) {
+    writer.writeBool(
+      11,
       f
     );
   }
@@ -480,6 +492,24 @@ proto.sport.v1.Status.prototype.getDetailedLive = function() {
  */
 proto.sport.v1.Status.prototype.setDetailedLive = function(value) {
   return jspb.Message.setProto3BooleanField(this, 10, value);
+};
+
+
+/**
+ * optional bool show_league_logo = 11;
+ * @return {boolean}
+ */
+proto.sport.v1.Status.prototype.getShowLeagueLogo = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 11, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.sport.v1.Status} returns this
+ */
+proto.sport.v1.Status.prototype.setShowLeagueLogo = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 11, value);
 };
 
 

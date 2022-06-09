@@ -65,6 +65,9 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 		cancelBoard = true
 		clearDrawCache = true
 	}
+	if s.board.config.ShowLeagueLogo.CAS(!req.Status.ShowLeagueLogo, req.Status.ShowLeagueLogo) {
+		clearDrawCache = true
+	}
 
 	if clearDrawCache {
 		s.board.clearDrawCache()
@@ -91,6 +94,7 @@ func (s *Server) GetStatus(ctx context.Context, req *emptypb.Empty) (*pb.StatusR
 			UseGradient:        s.board.config.UseGradient.Load(),
 			LiveOnly:           s.board.config.LiveOnly.Load(),
 			DetailedLive:       s.board.config.DetailedLive.Load(),
+			ShowLeagueLogo:     s.board.config.ShowLeagueLogo.Load(),
 		},
 	}, nil
 }

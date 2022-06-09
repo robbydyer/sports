@@ -9,7 +9,7 @@ RUN apk --update --no-cache add \
   alpine-sdk \
   bash
 
-FROM golang:1.17.1 as builder
+FROM golang:1.18.3 as builder
 
 ARG CGO_ENABLED=0
 ARG GOOS=linux
@@ -18,7 +18,7 @@ ARG GO111MODULE=on
 
 COPY . /src
 RUN cd /src && go build -mod=vendor -o /tmp/protoc-gen-go ./vendor/google.golang.org/protobuf/cmd/protoc-gen-go
-RUN cd /src && go build -mod=vendor -o /tmp/protoc-gen-go-grpc ./vendor/google.golang.org/grpc/cmd/protoc-gen-go-grpc
+#RUN cd /src && go build -mod=vendor -o /tmp/protoc-gen-go-grpc ./vendor/google.golang.org/grpc/cmd/protoc-gen-go-grpc
 RUN cd /src && go build -mod=vendor -o /tmp/protoc-gen-twirp ./vendor/github.com/twitchtv/twirp/protoc-gen-twirp
 RUN cd /src && go build -mod=vendor -o /tmp/protoc-gen-doc ./vendor/github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
 RUN cd /src && go build -mod=vendor -o /tmp/protoc-gen-openapiv2 ./vendor/github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2

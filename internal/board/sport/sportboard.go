@@ -232,6 +232,9 @@ func (c *Config) SetDefaults() {
 	if c.DetailedLive == nil {
 		c.DetailedLive = atomic.NewBool(true)
 	}
+	if c.ShowLeagueLogo == nil {
+		c.ShowLeagueLogo = atomic.NewBool(false)
+	}
 }
 
 // New ...
