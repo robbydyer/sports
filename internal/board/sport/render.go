@@ -978,21 +978,28 @@ func (s *SportBoard) renderNoScheduled(ctx context.Context, canvas board.Canvas)
 }
 
 func (s *SportBoard) renderLeagueLogo(ctx context.Context, canvas board.Canvas) error {
-	l := logo.New(
-		s.api.League(),
-		s.leagueLogoGetter,
-		"/tmp/sportsmatrix/leaguelogos",
-		canvas.Bounds(),
-		&logo.Config{
-			FitImage: true,
-			Abbrev:   s.api.League(),
-			Pt: &logo.Pt{
-				X:    0,
-				Y:    0,
-				Zoom: 1,
+	s.logoLock.Lock()
+	defer s.logoLock.Unlock()
+
+	l, ok := s.logos["league"]
+	if !ok {
+		l = logo.New(
+			s.api.League(),
+			s.leagueLogoGetter,
+			"/tmp/sportsmatrix/leaguelogos",
+			canvas.Bounds(),
+			&logo.Config{
+				FitImage: true,
+				Abbrev:   s.api.League(),
+				Pt: &logo.Pt{
+					X:    0,
+					Y:    0,
+					Zoom: 1,
+				},
 			},
-		},
-	)
+		)
+		s.logos["league"] = l
+	}
 
 	zeroed := rgbrender.ZeroedBounds(canvas.Bounds())
 	img, err := l.GetThumbnail(ctx, zeroed)
