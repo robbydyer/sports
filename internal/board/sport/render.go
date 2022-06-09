@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
+	"github.com/robbydyer/sports/internal/logo"
 	"github.com/robbydyer/sports/internal/rgbrender"
 )
 
@@ -974,4 +975,43 @@ func (s *SportBoard) renderNoScheduled(ctx context.Context, canvas board.Canvas)
 	case <-time.After(s.config.boardDelay / 2):
 		return nil
 	}
+}
+
+func (s *SportBoard) renderLeagueLogo(ctx context.Context, canvas board.Canvas) error {
+	s.logoLock.Lock()
+	defer s.logoLock.Unlock()
+
+	l, ok := s.logos["league"]
+	if !ok {
+		l = logo.New(
+			s.api.League(),
+			s.leagueLogoGetter,
+			"/tmp/sportsmatrix/leaguelogos",
+			canvas.Bounds(),
+			&logo.Config{
+				FitImage: true,
+				Abbrev:   s.api.League(),
+				Pt: &logo.Pt{
+					X:    0,
+					Y:    0,
+					Zoom: 1,
+				},
+			},
+		)
+		s.logos["league"] = l
+	}
+
+	zeroed := rgbrender.ZeroedBounds(canvas.Bounds())
+	img, err := l.GetThumbnail(ctx, zeroed)
+	if err != nil {
+		return err
+	}
+
+	if img == nil {
+		return fmt.Errorf("failed to get league logo thumbnail")
+	}
+
+	draw.Draw(canvas, zeroed, img, image.Point{}, draw.Over)
+
+	return nil
 }

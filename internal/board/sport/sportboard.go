@@ -62,6 +62,7 @@ type SportBoard struct {
 	renderCancel         context.CancelFunc
 	enabler              board.Enabler
 	detailedLiveRenderer DetailedLiveRender
+	leagueLogoGetter     logo.SourceGetter
 	sync.Mutex
 }
 
@@ -108,6 +109,7 @@ type Config struct {
 	UseGradient          *atomic.Bool      `json:"useGradient"`
 	LiveOnly             *atomic.Bool      `json:"liveOnly"`
 	DetailedLive         *atomic.Bool      `json:"detailedLive"`
+	ShowLeagueLogo       *atomic.Bool      `json:"showLeagueLogo"`
 }
 
 // FontConfig ...
@@ -229,6 +231,9 @@ func (c *Config) SetDefaults() {
 	}
 	if c.DetailedLive == nil {
 		c.DetailedLive = atomic.NewBool(true)
+	}
+	if c.ShowLeagueLogo == nil {
+		c.ShowLeagueLogo = atomic.NewBool(false)
 	}
 }
 
@@ -629,6 +634,25 @@ OUTER:
 				zap.Duration("speed", s.config.scrollDelay),
 			)
 		}()
+	}
+
+	if s.config.ShowLeagueLogo.Load() {
+		if err := s.renderLeagueLogo(ctx, canvas); err != nil {
+			return nil, err
+		}
+		if s.config.ScrollMode.Load() && tightCanvas != nil {
+			tightCanvas.AddCanvas(canvas)
+			draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
+		} else {
+			if err := canvas.Render(ctx); err != nil {
+				return nil, err
+			}
+			select {
+			case <-s.renderCtx.Done():
+				return nil, context.Canceled
+			case <-time.After(s.config.boardDelay):
+			}
+		}
 	}
 
 GAMES:
@@ -1081,6 +1105,13 @@ func (s *SportBoard) getStickyDelay() *time.Duration {
 func WithDetailedLiveRenderer(d DetailedLiveRender) OptionFunc {
 	return func(s *SportBoard) error {
 		s.detailedLiveRenderer = d
+		return nil
+	}
+}
+
+func WithLeagueLogoGetter(g logo.SourceGetter) OptionFunc {
+	return func(s *SportBoard) error {
+		s.leagueLogoGetter = g
 		return nil
 	}
 }

@@ -487,7 +487,11 @@ func (c *ScrollCanvas) PrepareSubCanvases() {
 	}
 	subIndex++
 
+ACTUALS:
 	for i, actual := range c.actuals {
+		if actual == nil {
+			continue ACTUALS
+		}
 		// Add the actual subcanvas
 		c.subCanvases[subIndex] = &subCanvasHorizontal{
 			actualStartX: firstNonBlankX(actual),

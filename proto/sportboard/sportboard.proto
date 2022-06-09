@@ -19,6 +19,7 @@ message Status{
     bool use_gradient = 8;
     bool live_only = 9;
     bool detailed_live = 10;
+    bool show_league_logo = 11;
 }
 
 message SetStatusReq {
