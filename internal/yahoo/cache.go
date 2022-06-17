@@ -24,57 +24,60 @@ func (a *API) getCache(symbol string, expire time.Duration) *stockboard.Stock {
 		return nil
 	}
 
-	// Don't expire cache before or after trading hours
-	begin, beginErr := tradingBegin()
-	if beginErr != nil {
-		a.log.Error("failed to get trading day begin time",
-			zap.Error(beginErr),
-		)
-	}
-	end, endErr := tradingEnd()
-	if endErr != nil {
-		a.log.Error("failed to get trading day end time",
-			zap.Error(endErr),
-		)
-	}
-
-	if beginErr == nil && endErr == nil {
-		t := time.Now()
-		loc, err := tradingLocation()
-		if err != nil {
-			a.log.Error("failed to get trading day location",
-				zap.Error(err),
+	/*
+		// Don't expire cache before or after trading hours
+		begin, beginErr := tradingBegin()
+		if beginErr != nil {
+			a.log.Error("failed to get trading day begin time",
+				zap.Error(beginErr),
 			)
-		} else {
-			t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
-			if t.After(end) {
-				// Do at least one update after trading hours end
-				if !a.afterHoursUpdated.Load() {
-					a.afterHoursUpdated.Store(true)
-					return nil
+		}
+		end, endErr := tradingEnd()
+		if endErr != nil {
+			a.log.Error("failed to get trading day end time",
+				zap.Error(endErr),
+			)
+		}
+
+		if beginErr == nil && endErr == nil {
+			t := time.Now()
+			loc, err := tradingLocation()
+			if err != nil {
+				a.log.Error("failed to get trading day location",
+					zap.Error(err),
+				)
+			} else {
+				t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
+				if t.After(end) {
+					// Do at least one update after trading hours end
+					if !a.afterHoursUpdated.Load() {
+						a.afterHoursUpdated.Store(true)
+						return nil
+					}
+					a.log.Info("outside trading hours, not expiring cache",
+						zap.Time("begin", begin),
+						zap.Time("end", end),
+						zap.Time("current", t),
+					)
+					return c.stock
 				}
-				a.log.Info("outside trading hours, not expiring cache",
-					zap.Time("begin", begin),
-					zap.Time("end", end),
-					zap.Time("current", t),
-				)
-				return c.stock
-			}
-			if t.Before(begin) {
-				a.log.Info("outside trading hours, not expiring cache",
-					zap.Time("begin", begin),
-					zap.Time("end", end),
-					zap.Time("current", t),
-				)
-				return c.stock
+				if t.Before(begin) {
+					a.log.Info("outside trading hours, not expiring cache",
+						zap.Time("begin", begin),
+						zap.Time("end", end),
+						zap.Time("current", t),
+					)
+					return c.stock
+				}
 			}
 		}
-	}
+	*/
 
 	if c.time.Add(expire).Before(time.Now()) {
 		a.log.Info("cache expired",
 			zap.String("symbol", symbol),
 			zap.String("since", time.Since(c.time).String()),
+			zap.Duration("expiration", expire),
 		)
 		return nil
 	}
