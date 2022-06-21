@@ -113,7 +113,7 @@ func (a *API) TradingClose() (time.Time, error) {
 }
 
 func (a *API) getTicker(ctx context.Context, ticker string, interval time.Duration) (*stockboard.Stock, error) {
-	cacheExpire := interval * 2
+	cacheExpire := interval
 	if stock := a.getCache(ticker, cacheExpire); stock != nil {
 		a.log.Debug("get stock from cache",
 			zap.String("symbol", ticker),
