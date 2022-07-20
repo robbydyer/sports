@@ -222,7 +222,7 @@ func (s *schemaCore) setRefFromFQN(ref string, reg *descriptor.Registry) error {
 	return nil
 }
 
-type openapiItemsObject schemaCore
+type openapiItemsObject openapiSchemaObject
 
 // http://swagger.io/specification/#responsesObject
 type openapiResponsesObject map[string]openapiResponseObject
@@ -256,7 +256,7 @@ type keyVal struct {
 type openapiSchemaObjectProperties []keyVal
 
 func (p openapiSchemaObjectProperties) MarshalYAML() (interface{}, error) {
-	m := make(map[string]interface{})
+	m := make(map[string]interface{}, len(p))
 
 	for _, v := range p {
 		m[v.Key] = v.Value
