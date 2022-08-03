@@ -119,6 +119,9 @@ clockConfig:
 
   boardDelay: "10s"
 
+  # Enable 24 Hour clock
+  enable24Hour: false
+
   # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
   #onTimes:
   #- 00 18 * * *
