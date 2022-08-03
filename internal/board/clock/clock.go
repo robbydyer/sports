@@ -49,6 +49,7 @@ type Config struct {
 	ShowBetween  *atomic.Bool `json:"showBetween"`
 	ScrollMode   *atomic.Bool `json:"scrollMode"`
 	ScrollDelay  string       `json:"scrollDelay"`
+	Enable24Hour *atomic.Bool `json:"enable24Hour"`
 }
 
 // SetDefaults ...
@@ -81,6 +82,10 @@ func (c *Config) SetDefaults() {
 		c.scrollDelay = d
 	} else {
 		c.scrollDelay = scrcnvs.DefaultScrollDelay
+	}
+
+	if c.Enable24Hour == nil {
+		c.Enable24Hour = atomic.NewBool(false)
 	}
 }
 
@@ -181,7 +186,7 @@ func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
 	return nil
 }
 
-func currentTimeStr() string {
+func (c *Clock) currentTimeStr() string {
 	ampm := ""
 	h, m, _ := time.Now().Local().Clock()
 	if h >= 12 {
@@ -197,6 +202,15 @@ func currentTimeStr() string {
 	if m < 10 {
 		z = "0"
 	}
+
+	if c.config.Enable24Hour.Load() {
+		hz := ""
+		if h < 10 {
+			hz = "0"
+		}
+		return fmt.Sprintf("%s%d:%s%d", hz, h, z, m)
+	}
+
 	return fmt.Sprintf("%d:%s%d%s", h, z, m, ampm)
 }
 
@@ -230,14 +244,14 @@ func (c *Clock) render(ctx context.Context, canvas board.Canvas) (board.Canvas, 
 			canvas,
 			rgbrender.ZeroedBounds(canvas.Bounds()),
 			[]string{
-				currentTimeStr(),
+				c.currentTimeStr(),
 			},
 			color.White,
 		); err != nil {
 			return nil, err
 		}
 		c.log.Debug("clock time",
-			zap.String("time", currentTimeStr()),
+			zap.String("time", c.currentTimeStr()),
 		)
 		scrollCanvas.SetPadding(0)
 		scrollCanvas.AddCanvas(canvas)
@@ -264,7 +278,7 @@ func (c *Clock) render(ctx context.Context, canvas board.Canvas) (board.Canvas, 
 				return
 			case <-ticker.C:
 			}
-			thisTime = currentTimeStr()
+			thisTime = c.currentTimeStr()
 			if thisTime != prevTime {
 				select {
 				case update <- struct{}{}:
@@ -291,7 +305,7 @@ func (c *Clock) render(ctx context.Context, canvas board.Canvas) (board.Canvas, 
 				canvas,
 				canvas.Bounds(),
 				[]string{
-					currentTimeStr(),
+					c.currentTimeStr(),
 				},
 				color.White,
 			); err != nil {
@@ -300,7 +314,7 @@ func (c *Clock) render(ctx context.Context, canvas board.Canvas) (board.Canvas, 
 			}
 
 			c.log.Debug("write non scroll clock",
-				zap.String("time", currentTimeStr()),
+				zap.String("time", c.currentTimeStr()),
 			)
 
 			if err := canvas.Render(ctx); err != nil {
