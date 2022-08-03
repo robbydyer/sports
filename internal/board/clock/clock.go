@@ -189,15 +189,6 @@ func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
 func (c *Clock) currentTimeStr() string {
 	ampm := ""
 	h, m, _ := time.Now().Local().Clock()
-	if h >= 12 {
-		h = h - 12
-		ampm = "PM"
-	} else {
-		ampm = "AM"
-	}
-	if h == 0 {
-		h = 12
-	}
 	z := ""
 	if m < 10 {
 		z = "0"
@@ -209,6 +200,16 @@ func (c *Clock) currentTimeStr() string {
 			hz = "0"
 		}
 		return fmt.Sprintf("%s%d:%s%d", hz, h, z, m)
+	}
+
+	if h >= 12 {
+		h = h - 12
+		ampm = "PM"
+	} else {
+		ampm = "AM"
+	}
+	if h == 0 {
+		h = 12
 	}
 
 	return fmt.Sprintf("%d:%s%d%s", h, z, m, ampm)
