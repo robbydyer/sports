@@ -110,6 +110,7 @@ type Config struct {
 	LiveOnly             *atomic.Bool      `json:"liveOnly"`
 	DetailedLive         *atomic.Bool      `json:"detailedLive"`
 	ShowLeagueLogo       *atomic.Bool      `json:"showLeagueLogo"`
+	Enable24Hour         *atomic.Bool      `json:"enable24Hour"`
 }
 
 // FontConfig ...
@@ -234,6 +235,10 @@ func (c *Config) SetDefaults() {
 	}
 	if c.ShowLeagueLogo == nil {
 		c.ShowLeagueLogo = atomic.NewBool(false)
+	}
+
+	if c.Enable24Hour == nil {
+		c.Enable24Hour = atomic.NewBool(false)
 	}
 }
 

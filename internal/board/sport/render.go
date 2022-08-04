@@ -327,6 +327,11 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 					if gameTime.Local().Format("01/02/2006") != time.Now().Local().Format("01/02/2006") {
 						dateStr = gameTime.Local().Format("01/02")
 					}
+
+					if s.config.Enable24Hour.Load() {
+						gameTimeStr = gameTime.Local().Format("15:04")
+					}
+
 					s.log.Debug("game time",
 						zap.String("time", gameTimeStr),
 						zap.String("day", dateStr),
