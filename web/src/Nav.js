@@ -45,6 +45,7 @@ class TopNav extends React.Component {
                                 <NavDropDown.Item as={Link} to="/nfl">NFL</NavDropDown.Item>
                                 <NavDropDown.Item as={Link} to="/pga">PGA</NavDropDown.Item>
                                 <NavDropDown.Item as={Link} to="/epl">EPL</NavDropDown.Item>
+                                <NavDropDown.Item as={Link} to="/dfl">DFL</NavDropDown.Item>
                             </NavDropDown>
                             <Nav.Link as={Link} to="/stocks">Stocks</Nav.Link>
                             <Nav.Link as={Link} to="/weather">Weather</Nav.Link>

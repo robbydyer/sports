@@ -489,7 +489,12 @@ func (s *SportBoard) render(ctx context.Context, canvas board.Canvas) (board.Can
 		s.log.Debug("no games scheduled",
 			zap.String("league", s.api.League()),
 		)
-		return nil, fmt.Errorf("no games scheduled for %s", s.api.League())
+		todays := s.config.TodayFunc()
+		today := ""
+		if len(todays) > 0 {
+			today = todays[0].String()
+		}
+		return nil, fmt.Errorf("no games scheduled for %s on %s", s.api.League(), today)
 	}
 
 	if _, err := s.api.GetTeams(ctx); err != nil {

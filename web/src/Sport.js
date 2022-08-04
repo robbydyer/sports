@@ -14,6 +14,7 @@ import nbalogo from './nba.png';
 import nfllogo from './nfl.png';
 import mlslogo from './mls.png';
 import epllogo from './epl.png'
+import dfllogo from './dfl.png';
 import { MatrixPostRet, JSONToStatus, JumpToBoard } from './util';
 import { SetStatusReq, Status } from './sportboard/sportboard_pb';
 import * as basicboard_pb from './basicboard/basicboard_pb';
@@ -162,6 +163,8 @@ class Sport extends React.Component {
             return epllogo
         } else if (this.props.sport === "ncaaf") {
             return ncaaflogo
+        } else if (this.props.sport === "dfl") {
+            return dfllogo
         } else {
             return mlblogo
         }
