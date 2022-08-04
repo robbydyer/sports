@@ -29,6 +29,7 @@ class App extends React.Component {
           <Route path="/mls" render={() => <Sport sport="mls" id="mls" key="mls" />} />
           <Route path="/epl" render={() => <Sport sport="epl" id="epl" key="epl" />} />
           <Route path="/dfl" render={() => <Sport sport="dfl" id="dfl" key="dfl" />} />
+          <Route path="/dfb" render={() => <Sport sport="dfb" id="dfb" key="dfb" />} />
           <Route path="/pga" render={() => <BasicBoard id="pga" name="pga" key="pga" path="stat/pga" />} />
           <Route path="/img" exact component={ImageBoard} />
           <Route path="/clock" render={() => <BasicBoard id="clock" name="clock" key="clock" />} />

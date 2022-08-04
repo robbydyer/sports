@@ -1,11 +1,12 @@
 {
   "files": {
     "main.css": "/static/css/main.f24987b3.css",
-    "main.js": "/static/js/main.48b317d7.js",
+    "main.js": "/static/js/main.4e92e3ca.js",
     "static/js/377.4b6b005c.chunk.js": "/static/js/377.4b6b005c.chunk.js",
     "static/media/nba.png": "/static/media/nba.5e388b8b70bc6edb378e.png",
     "static/media/pga.png": "/static/media/pga.f4df396939bb4464c7b4.png",
     "static/media/ncaaf.png": "/static/media/ncaaf.903eccc0c47ca6822730.png",
+    "static/media/dfb.png": "/static/media/dfb.b4ceea8ebd31c98821c0.png",
     "static/media/mls.png": "/static/media/mls.9317ef90c10cb3e5b5ed.png",
     "static/media/server.png": "/static/media/server.53a7036378f5a0470948.png",
     "static/media/nhllogo.jpeg": "/static/media/nhllogo.ba9e188b1256ee846b29.jpeg",
@@ -21,11 +22,11 @@
     "static/media/dfl.png": "/static/media/dfl.4823eec0231ff185d993.png",
     "index.html": "/index.html",
     "main.f24987b3.css.map": "/static/css/main.f24987b3.css.map",
-    "main.48b317d7.js.map": "/static/js/main.48b317d7.js.map",
+    "main.4e92e3ca.js.map": "/static/js/main.4e92e3ca.js.map",
     "377.4b6b005c.chunk.js.map": "/static/js/377.4b6b005c.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.f24987b3.css",
-    "static/js/main.48b317d7.js"
+    "static/js/main.4e92e3ca.js"
   ]
 }

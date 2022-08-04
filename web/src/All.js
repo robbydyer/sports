@@ -38,7 +38,7 @@ class All extends React.Component {
     }
 
     render() {
-        var sports = ["ncaaf", "nhl", "mlb", "ncaam", "nfl", "nba", "mls", "epl", "dfl"].map((sport) =>
+        var sports = ["ncaaf", "nhl", "mlb", "ncaam", "nfl", "nba", "mls", "epl", "dfl", "dfb"].map((sport) =>
             <Col lg="auto" style={styles.col}>
                 <Card style={{ width: { card_border } }}>
                     <Sport sport={sport} id={sport} key={sport + this.state.sync} doSync={this.doSync} />
