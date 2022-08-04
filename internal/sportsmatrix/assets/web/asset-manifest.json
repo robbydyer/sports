@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.f24987b3.css",
-    "main.js": "/static/js/main.48b317d7.js",
+    "main.js": "/static/js/main.bd6d7991.js",
     "static/js/377.4b6b005c.chunk.js": "/static/js/377.4b6b005c.chunk.js",
     "static/media/nba.png": "/static/media/nba.5e388b8b70bc6edb378e.png",
     "static/media/pga.png": "/static/media/pga.f4df396939bb4464c7b4.png",
@@ -15,17 +15,18 @@
     "static/media/nfl.png": "/static/media/nfl.766b6188ff8b55c60239.png",
     "static/media/f1.png": "/static/media/f1.92b90f710185630ed227.png",
     "static/media/weather.png": "/static/media/weather.0b8414b1f0f2f08d7a17.png",
+    "static/media/dfb.png": "/static/media/dfb.ee790b9fa95b7398aa8f.png",
     "static/media/stock.png": "/static/media/stock.2479f8858450b2b8d33f.png",
     "static/media/mlb.png": "/static/media/mlb.c803628813d90a24bbbb.png",
     "static/media/cal.png": "/static/media/cal.08574752ed9e1ce7fa6e.png",
     "static/media/dfl.png": "/static/media/dfl.4823eec0231ff185d993.png",
     "index.html": "/index.html",
     "main.f24987b3.css.map": "/static/css/main.f24987b3.css.map",
-    "main.48b317d7.js.map": "/static/js/main.48b317d7.js.map",
+    "main.bd6d7991.js.map": "/static/js/main.bd6d7991.js.map",
     "377.4b6b005c.chunk.js.map": "/static/js/377.4b6b005c.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.f24987b3.css",
-    "static/js/main.48b317d7.js"
+    "static/js/main.bd6d7991.js"
   ]
 }
