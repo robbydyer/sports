@@ -527,11 +527,11 @@ ACTUALS:
 
 SUBS:
 	for _, sub := range c.subCanvases {
-		prev := sub.previous
-
-		if prev == nil {
+		if sub == nil || sub.previous == nil {
 			continue SUBS
 		}
+
+		prev := sub.previous
 
 		sub.virtualStartX = prev.virtualEndX + 1
 		diff := sub.actualEndX - sub.actualStartX
