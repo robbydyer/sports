@@ -527,11 +527,11 @@ ACTUALS:
 
 SUBS:
 	for _, sub := range c.subCanvases {
-		prev := sub.previous
-
-		if prev == nil {
+		if sub == nil || sub.previous == nil {
 			continue SUBS
 		}
+
+		prev := sub.previous
 
 		sub.virtualStartX = prev.virtualEndX + 1
 		diff := sub.actualEndX - sub.actualStartX
@@ -580,7 +580,12 @@ func (c *ScrollCanvas) horizontalPrep(ctx context.Context) error {
 		return fmt.Errorf("not enough subcanvases to merge")
 	}
 
-	finish := c.subCanvases[len(c.subCanvases)-1].virtualEndX
+	lastSub := c.subCanvases[len(c.subCanvases)-1]
+	if lastSub == nil {
+		return fmt.Errorf("last subcanvas was nil during horizontalPrep")
+	}
+
+	finish := lastSub.virtualEndX
 
 	virtualX := c.subCanvases[0].virtualStartX
 
