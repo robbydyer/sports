@@ -17,6 +17,7 @@ import weather from './weather.png';
 import imgimg from './image.png';
 import f1logo from './f1.png';
 import irllogo from './irl.png';
+import uefa from './uefa.png';
 
 export function LogoSrc(sport) {
     if (sport === "nhl") {
@@ -59,5 +60,7 @@ export function LogoSrc(sport) {
         return f1logo
     } else if (sport === "irl") {
         return irllogo
+    } else if (sport === "uefa") {
+        return uefa
     }
 }

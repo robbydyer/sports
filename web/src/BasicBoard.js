@@ -17,14 +17,9 @@ class BasicBoard extends React.Component {
         if (this.props.path) {
             path = this.props.path;
         }
-        var visible = "hidden"
-        if (this.props.withImg) {
-            visible = "visible"
-        }
         this.state = {
             "path": path,
             "status": new pb.Status(),
-            "imgVisible": visible,
         };
     }
     async componentDidMount() {
@@ -58,9 +53,12 @@ class BasicBoard extends React.Component {
     }
 
     render() {
+        var img = (
+            <Row className="text-center"><Col><Image src={LogoSrc(this.props.name)} style={{ height: '100px', width: 'auto' }} fluid /></Col></Row>
+        )
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Image src={LogoSrc(this.props.name)} style={{ height: '100px', width: 'auto', visibility: this.state.imgVisible }} fluid /></Col></Row>
+                {this.props.withImg ? img : ""}
                 <Row className="text-left">
                     <Col>
                         <Form.Switch id={this.props.name + "enabler"} label="Enable/Disable" checked={this.state.status.getEnabled()}

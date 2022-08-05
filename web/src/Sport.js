@@ -35,16 +35,11 @@ class Sport extends React.Component {
     constructor(props) {
         super(props);
         var status = new Status();
-        var visible = "hidden"
-        if (this.props.withImg) {
-            visible = "visible"
-        }
         this.state = {
             "status": status,
             "stats": new basicboard_pb.Status(),
             "headlines": new basicboard_pb.Status(),
             "has_stats": false,
-            "imgVisible": visible,
         };
         if (this.props.sport === "nhl") {
             console.log("Sport created ", this.props.sport, this.state.status)
@@ -144,13 +139,16 @@ class Sport extends React.Component {
     }
 
     render() {
+        var img = (
+            <Row className="text-center">
+                <Col>
+                    <Image src={LogoSrc(this.props.sport)} style={{ height: '100px', width: 'auto' }} fluid />
+                </Col>
+            </Row>
+        )
         return (
             <Container fluid>
-                <Row className="text-center">
-                    <Col>
-                        <Image src={LogoSrc(this.props.sport)} style={{ height: '100px', width: 'auto', visibility: this.state.imgVisible }} fluid />
-                    </Col>
-                </Row>
+                {this.props.withImg ? img : ""}
                 <Row className="text-left">
                     <Col>
                         <Form.Switch id={this.props.sport + "enabler"} label="Enable/Disable" checked={this.state.status.getEnabled()}
