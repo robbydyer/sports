@@ -9,6 +9,7 @@ import weatherimg from './weather.png';
 import Form from 'react-bootstrap/Form';
 import { MatrixPostRet, JumpToBoard } from './util';
 import * as pb from './weatherboard/weatherboard_pb';
+import { LogoSrc } from './Logo';
 
 function jsonToStatus(jsonDat) {
     var d = JSON.parse(jsonDat);
@@ -59,9 +60,12 @@ class Weather extends React.Component {
     }
 
     render() {
+        var img = (
+            <Row className="text-center"><Col><Image src={LogoSrc("weather")} style={{ height: '100px', width: 'auto' }} fluid /></Col></Row>
+        )
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Image src={weatherimg} style={{ height: '100px', width: 'auto' }} onClick={() => { this.doJump(); }} fluid /></Col></Row>
+                {this.props.withImg ? img : ""}
                 <Row className="text-left">
                     <Col>
                         <Form.Switch id="weatherenabler" label="Enable/Disable" checked={this.state.status.getEnabled()}

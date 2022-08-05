@@ -6,10 +6,9 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Image from 'react-bootstrap/Image';
-import f1logo from './f1.png';
-import irllogo from './irl.png';
 import { MatrixPostRet, JumpToBoard } from './util';
 import { SetStatusReq, Status } from './racingboard/racingboard_pb';
+import { LogoSrc } from './Logo';
 
 
 function jsonToStatus(jsonDat) {
@@ -60,21 +59,17 @@ class Sport extends React.Component {
         this.props.doSync();
     }
 
-    logosrc() {
-        if (this.props.sport === "f1") {
-            return f1logo
-        } else if (this.props.sport === "irl") {
-            return irllogo
-        }
-    }
     render() {
+        var img = (
+            <Row className="text-center">
+                <Col>
+                    <Image src={LogoSrc(this.props.sport)} style={{ height: '100px', width: 'auto' }} fluid />
+                </Col>
+            </Row>
+        )
         return (
             <Container fluid>
-                <Row className="text-center">
-                    <Col>
-                        <Image src={this.logosrc()} style={{ height: '100px', width: 'auto' }} onClick={() => { this.doJump(); }} fluid />
-                    </Col>
-                </Row>
+                {this.props.withImg ? img : ""}
                 <Row className="text-left">
                     <Col>
                         <Form.Switch id={this.props.sport + "enabler"} label="Enable/Disable" checked={this.state.status.getEnabled()}
