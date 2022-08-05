@@ -27,6 +27,7 @@ type Config struct {
 	EPLConfig          *sportboard.Config    `json:"eplConfig,omitempty"`
 	DFLConfig          *sportboard.Config    `json:"dflConfig,omitempty"`
 	DFBConfig          *sportboard.Config    `json:"dfbConfig,omitempty"`
+	UEFAConfig         *sportboard.Config    `json:"uefaConfig,omitempty"`
 	ImageConfig        *imageboard.Config    `json:"imageConfig"`
 	ClockConfig        *clock.Config         `json:"clockConfig"`
 	SysConfig          *sysboard.Config      `json:"sysConfig"`

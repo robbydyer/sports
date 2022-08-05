@@ -32,6 +32,8 @@ func GetLeaguer(league string) (Leaguer, error) {
 		return &dfl{}, nil
 	case "dfb":
 		return &dfb{}, nil
+	case "uefa":
+		return &uefa{}, nil
 	}
 
 	return nil, fmt.Errorf("invalid league '%s'", league)
@@ -325,5 +327,34 @@ func (n *dfb) HTTPPathPrefix() string {
 }
 
 func (n *dfb) HeadlinePath() string {
+	return fmt.Sprintf("%s/news", n.APIPath())
+}
+
+// NewUEFA ...
+func NewUEFA(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
+	return New(ctx, &uefa{}, logger, defaultRankSetter, defaultRankSetter)
+}
+
+type uefa struct{}
+
+func (n *uefa) League() string {
+	return "UEFA"
+}
+
+func (n *uefa) APIPath() string {
+	return "soccer/uefa.champions"
+}
+
+func (n *uefa) TeamEndpoints() []string {
+	return []string{
+		filepath.Join(n.APIPath(), "teams"),
+	}
+}
+
+func (n *uefa) HTTPPathPrefix() string {
+	return "uefa"
+}
+
+func (n *uefa) HeadlinePath() string {
 	return fmt.Sprintf("%s/news", n.APIPath())
 }
