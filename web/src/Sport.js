@@ -170,7 +170,7 @@ class Sport extends React.Component {
         } else if (this.props.sport === "dfb") {
             return dfblogo
         } else if (this.props.sport === "uefa") {
-            return dfblogo
+            return uefalogo
         } else {
             return mlblogo
         }
