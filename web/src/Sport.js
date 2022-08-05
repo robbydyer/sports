@@ -6,20 +6,10 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Image from 'react-bootstrap/Image';
-import nhllogo from './nhllogo.jpeg';
-import mlblogo from './mlb.png';
-import ncaamlogo from './ncaam.png';
-import ncaaflogo from './ncaaf.png';
-import nbalogo from './nba.png';
-import nfllogo from './nfl.png';
-import mlslogo from './mls.png';
-import epllogo from './epl.png'
-import dfllogo from './dfl.png';
-import dfblogo from './dfb.png';
-import uefalogo from './uefa.png';
 import { MatrixPostRet, JSONToStatus, JumpToBoard } from './util';
 import { SetStatusReq, Status } from './sportboard/sportboard_pb';
 import * as basicboard_pb from './basicboard/basicboard_pb';
+import { LogoSrc } from './Logo';
 
 
 function jsonToStatus(jsonDat) {
@@ -45,11 +35,16 @@ class Sport extends React.Component {
     constructor(props) {
         super(props);
         var status = new Status();
+        var visible = "hidden"
+        if (this.props.withImg) {
+            visible = "visible"
+        }
         this.state = {
             "status": status,
             "stats": new basicboard_pb.Status(),
             "headlines": new basicboard_pb.Status(),
             "has_stats": false,
+            "imgVisible": visible,
         };
         if (this.props.sport === "nhl") {
             console.log("Sport created ", this.props.sport, this.state.status)
@@ -148,39 +143,12 @@ class Sport extends React.Component {
         this.props.doSync();
     }
 
-    logosrc() {
-        if (this.props.sport === "nhl") {
-            return nhllogo
-        } else if (this.props.sport === "ncaam") {
-            return ncaamlogo
-        } else if (this.props.sport === "nhl") {
-            return nhllogo
-        } else if (this.props.sport === "nba") {
-            return nbalogo
-        } else if (this.props.sport === "nfl") {
-            return nfllogo
-        } else if (this.props.sport === "mls") {
-            return mlslogo
-        } else if (this.props.sport === "epl") {
-            return epllogo
-        } else if (this.props.sport === "ncaaf") {
-            return ncaaflogo
-        } else if (this.props.sport === "dfl") {
-            return dfllogo
-        } else if (this.props.sport === "dfb") {
-            return dfblogo
-        } else if (this.props.sport === "uefa") {
-            return uefalogo
-        } else {
-            return mlblogo
-        }
-    }
     render() {
         return (
             <Container fluid>
                 <Row className="text-center">
                     <Col>
-                        <Image src={this.logosrc()} style={{ height: '100px', width: 'auto' }} onClick={() => { this.doJump(); }} fluid />
+                        <Image src={LogoSrc(this.props.sport)} style={{ height: '100px', width: 'auto', visibility: this.state.imgVisible }} fluid />
                     </Col>
                 </Row>
                 <Row className="text-left">

@@ -20,28 +20,27 @@ class App extends React.Component {
         <Router>
           <TopNav />
           <Route path="/" exact component={All} />
-          <Route path="/mlb" render={() => <Sport sport="mlb" id="mlb" key="mlb" />} />
-          <Route path="/ncaaf" render={() => <Sport sport="ncaaf" id="ncaaf" key="ncaaf" />} />
-          <Route path="/nhl" render={() => <Sport sport="nhl" id="nhl" key="nhl" />} />
-          <Route path="/ncaam" render={() => <Sport sport="ncaam" id="ncaam" key="ncaam" />} />
-          <Route path="/nfl" render={() => <Sport sport="nfl" id="nfl" key="nfl" />} />
-          <Route path="/nba" render={() => <Sport sport="nba" id="nba" key="nba" />} />
-          <Route path="/mls" render={() => <Sport sport="mls" id="mls" key="mls" />} />
-          <Route path="/epl" render={() => <Sport sport="epl" id="epl" key="epl" />} />
-          <Route path="/dfl" render={() => <Sport sport="dfl" id="dfl" key="dfl" />} />
-          <Route path="/dfb" render={() => <Sport sport="dfb" id="dfb" key="dfb" />} />
-          <Route path="/uefa" render={() => <Sport sport="uefa" id="uefa" key="uefa" />} />
-          <Route path="/pga" render={() => <BasicBoard id="pga" name="pga" key="pga" path="stat/pga" />} />
-          <Route path="/img" exact component={ImageBoard} />
-          <Route path="/clock" render={() => <BasicBoard id="clock" name="clock" key="clock" />} />
-          <Route path="/sys" render={() => <BasicBoard id="sys" name="sys" key="sys" />} />
-          <Route path="/stocks" render={() => <BasicBoard id="stocks" name="stocks" key="stocks" />} />
-          <Route path="/gcal" render={() => <BasicBoard id="gcal" name="gcal" key="gcal" />} />
-          <Route path="/weather" exact component={Weather} />
+          <Route path="/mlb" render={() => <Sport sport="mlb" id="mlb" key="mlb" withImg="true" />} />
+          <Route path="/ncaaf" render={() => <Sport sport="ncaaf" id="ncaaf" key="ncaaf" withImg="true" />} />
+          <Route path="/nhl" render={() => <Sport sport="nhl" id="nhl" key="nhl" withImg="true" />} />
+          <Route path="/ncaam" render={() => <Sport sport="ncaam" id="ncaam" key="ncaam" withImg="true" />} />
+          <Route path="/nfl" render={() => <Sport sport="nfl" id="nfl" key="nfl" withImg="true" />} />
+          <Route path="/nba" render={() => <Sport sport="nba" id="nba" key="nba" withImg="true" />} />
+          <Route path="/mls" render={() => <Sport sport="mls" id="mls" key="mls" withImg="true" />} />
+          <Route path="/epl" render={() => <Sport sport="epl" id="epl" key="epl" withImg="true" />} />
+          <Route path="/dfl" render={() => <Sport sport="dfl" id="dfl" key="dfl" withImg="true" />} />
+          <Route path="/dfb" render={() => <Sport sport="dfb" id="dfb" key="dfb" withImg="true" />} />
+          <Route path="/pga" render={() => <BasicBoard id="pga" name="pga" key="pga" path="stat/pga" withImg="true" />} />
+          <Route path="/img" render={() => <ImageBoard withImg="true" />} />
+          <Route path="/clock" render={() => <BasicBoard id="clock" name="clock" key="clock" withImg="true" />} />
+          <Route path="/sys" render={() => <BasicBoard id="sys" name="sys" key="sys" withImg="true" />} />
+          <Route path="/stocks" render={() => <BasicBoard id="stocks" name="stocks" key="stocks" withImg="true" />} />
+          <Route path="/gcal" render={() => <BasicBoard id="gcal" name="gcal" key="gcal" withImg="true" />} />
+          <Route path="/weather" render={() => <Weather withImg="true" />} />
           <Route path="/board" exact component={Board} />
           <Route path="/docs" exact component={() => <SwaggerUI spec={swag} />} />
-          <Route path="/f1" exact component={() => <Racing sport="f1" id="f1" key="f1" />} />
-          <Route path="/irl" exact component={() => <Racing sport="irl" id="irl" key="irl" />} />
+          <Route path="/f1" exact component={() => <Racing sport="f1" id="f1" key="f1" withImg="true" />} />
+          <Route path="/irl" exact component={() => <Racing sport="irl" id="irl" key="irl" withImg="true" />} />
         </Router>
         <hr />
       </>

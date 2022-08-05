@@ -60,7 +60,6 @@ class ImageBoard extends React.Component {
     render() {
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Image src={imgimg} style={{ height: '100px', width: 'auto' }} onClick={() => this.doJump()} fluid /></Col></Row>
                 <Row className="text-left">
                     <Col>
                         <Form.Switch id="imgenabler" label="Enable/Disable" checked={this.state.status.getEnabled()}

@@ -5,14 +5,10 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Image from 'react-bootstrap/Image';
-import clock from './clock.png';
-import stocksstocks from './stock.png';
-import pga from './pga.png';
-import sys from './server.png';
-import cal from './cal.png';
 import Form from 'react-bootstrap/Form';
 import { MatrixPostRet, JSONToStatus, JumpToBoard } from './util';
 import * as pb from './basicboard/basicboard_pb';
+import { LogoSrc } from './Logo';
 
 class BasicBoard extends React.Component {
     constructor(props) {
@@ -21,9 +17,14 @@ class BasicBoard extends React.Component {
         if (this.props.path) {
             path = this.props.path;
         }
+        var visible = "hidden"
+        if (this.props.withImg) {
+            visible = "visible"
+        }
         this.state = {
             "path": path,
             "status": new pb.Status(),
+            "imgVisible": visible,
         };
     }
     async componentDidMount() {
@@ -56,23 +57,10 @@ class BasicBoard extends React.Component {
         this.props.doSync();
     }
 
-    logosrc() {
-        if (this.props.name == "clock") {
-            return clock;
-        } else if (this.props.name == "stocks") {
-            return stocksstocks;
-        } else if (this.props.name === "pga") {
-            return pga;
-        } else if (this.props.name === "sys") {
-            return sys;
-        } else if (this.props.name === "gcal") {
-            return cal;
-        }
-    }
     render() {
         return (
             <Container fluid>
-                <Row className="text-center"><Col><Image src={this.logosrc()} style={{ height: '100px', width: 'auto' }} onClick={() => { this.doJump(); }} fluid /></Col></Row>
+                <Row className="text-center"><Col><Image src={LogoSrc(this.props.name)} style={{ height: '100px', width: 'auto', visibility: this.state.imgVisible }} fluid /></Col></Row>
                 <Row className="text-left">
                     <Col>
                         <Form.Switch id={this.props.name + "enabler"} label="Enable/Disable" checked={this.state.status.getEnabled()}
@@ -91,7 +79,7 @@ class BasicBoard extends React.Component {
 
                     </Col>
                 </Row>
-            </Container>
+            </Container >
         )
     }
 }
