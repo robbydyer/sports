@@ -13,7 +13,6 @@ import BasicBoard from './BasicBoard';
 import Weather from './Weather.js';
 import Accordion from 'react-bootstrap/Accordion';
 import { LogoSrc } from './Logo.js';
-//import './accordion.css';
 
 const styles = {
     row: {
