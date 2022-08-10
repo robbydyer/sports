@@ -133,6 +133,7 @@ type API interface {
 	TeamRecord(ctx context.Context, team Team, season string) string
 	TeamRank(ctx context.Context, team Team, season string) string
 	CacheClear(ctx context.Context)
+	HomeSideSwap() bool
 	// LeagueLogo(ctx context.Context) (*logo.Logo, error)
 }
 

@@ -17,7 +17,6 @@ import (
 )
 
 const (
-	mls                 = "MLS"
 	defaultTeamInfoArea = 22
 	teamInfoPad         = 2
 )
@@ -33,7 +32,7 @@ var (
 )
 
 func (s *SportBoard) homeSide() side {
-	if s.api.League() == mls {
+	if s.api.HomeSideSwap() {
 		return left
 	}
 	return right
@@ -507,7 +506,7 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 		return nil, err
 	}
 
-	if s.api.League() == mls {
+	if s.api.HomeSideSwap() {
 		// MLS does Home team on left
 		leftTeam, rightTeam = rightTeam, leftTeam
 	}
@@ -653,7 +652,7 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 		longestScore = rightScore
 	}
 
-	if s.api.League() == mls {
+	if s.api.HomeSideSwap() {
 		// MLS does Home team on left
 		leftTeam, rightTeam = rightTeam, leftTeam
 	}
