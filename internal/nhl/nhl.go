@@ -224,6 +224,10 @@ func (n *NHL) TeamRank(ctx context.Context, team sportboard.Team, season string)
 	return ""
 }
 
+func (n *NHL) HomeSideSwap() bool {
+	return false
+}
+
 // GetSeason gets the season identifier based on a date, i.e. 20202021
 func GetSeason(day time.Time) string {
 	year := day.Year()

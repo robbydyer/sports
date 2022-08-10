@@ -61,6 +61,10 @@ func (n *nfl) HeadlinePath() string {
 	return "football/nfl/news"
 }
 
+func (n *nfl) HomeSideSwap() bool {
+	return false
+}
+
 // NewNFL ...
 func NewNFL(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &nfl{}, logger, defaultRankSetter, defaultRankSetter)
@@ -91,6 +95,10 @@ func (n *ncaam) HeadlinePath() string {
 	return fmt.Sprintf("%s/news", n.APIPath())
 }
 
+func (n *ncaam) HomeSideSwap() bool {
+	return false
+}
+
 // NewNCAAMensBasketball ...
 func NewNCAAMensBasketball(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &ncaam{}, logger, defaultRankSetter, defaultRankSetter)
@@ -118,6 +126,10 @@ func (n *nba) HeadlinePath() string {
 	return fmt.Sprintf("%s/news", n.APIPath())
 }
 
+func (n *nba) HomeSideSwap() bool {
+	return false
+}
+
 // NewNBA ...
 func NewNBA(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &nba{}, logger, defaultRankSetter, defaultRankSetter)
@@ -143,6 +155,10 @@ func (n *mls) HTTPPathPrefix() string {
 
 func (n *mls) HeadlinePath() string {
 	return fmt.Sprintf("%s/news", n.APIPath())
+}
+
+func (n *mls) HomeSideSwap() bool {
+	return true
 }
 
 // NewMLS ...
@@ -175,6 +191,10 @@ func (n *nhl) HeadlinePath() string {
 	return fmt.Sprintf("%s/news", n.APIPath())
 }
 
+func (n *nhl) HomeSideSwap() bool {
+	return false
+}
+
 // NewNHL ...
 func NewNHL(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &nhl{}, logger, defaultRankSetter, defaultRankSetter)
@@ -203,6 +223,10 @@ func (n *mlb) HTTPPathPrefix() string {
 
 func (n *mlb) HeadlinePath() string {
 	return fmt.Sprintf("%s/news", n.APIPath())
+}
+
+func (n *mlb) HomeSideSwap() bool {
+	return false
 }
 
 // NewMLB ...
@@ -235,6 +259,10 @@ func (n *ncaaf) HTTPPathPrefix() string {
 
 func (n *ncaaf) HeadlinePath() string {
 	return fmt.Sprintf("%s/news", n.APIPath())
+}
+
+func (n *ncaaf) HomeSideSwap() bool {
+	return false
 }
 
 // NewNCAAF ...
@@ -272,6 +300,10 @@ func (n *epl) HeadlinePath() string {
 	return fmt.Sprintf("%s/news", n.APIPath())
 }
 
+func (n *epl) HomeSideSwap() bool {
+	return true
+}
+
 // NewDFL ...
 func NewDFL(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &dfl{}, logger, defaultRankSetter, defaultRankSetter)
@@ -299,6 +331,10 @@ func (n *dfl) HTTPPathPrefix() string {
 
 func (n *dfl) HeadlinePath() string {
 	return fmt.Sprintf("%s/news", n.APIPath())
+}
+
+func (n *dfl) HomeSideSwap() bool {
+	return true
 }
 
 // NewDFB ...
@@ -330,6 +366,10 @@ func (n *dfb) HeadlinePath() string {
 	return fmt.Sprintf("%s/news", n.APIPath())
 }
 
+func (n *dfb) HomeSideSwap() bool {
+	return true
+}
+
 // NewUEFA ...
 func NewUEFA(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &uefa{}, logger, defaultRankSetter, defaultRankSetter)
@@ -357,4 +397,8 @@ func (n *uefa) HTTPPathPrefix() string {
 
 func (n *uefa) HeadlinePath() string {
 	return fmt.Sprintf("%s/news", n.APIPath())
+}
+
+func (n *uefa) HomeSideSwap() bool {
+	return true
 }

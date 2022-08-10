@@ -233,6 +233,10 @@ func (m *MLB) TeamRank(ctx context.Context, team sportboard.Team, season string)
 	return ""
 }
 
+func (m *MLB) HomeSideSwap() bool {
+	return false
+}
+
 // GetSeason gets the season identifier based on a date, i.e. 2020
 func GetSeason(day time.Time) string {
 	return fmt.Sprint(day.Year())

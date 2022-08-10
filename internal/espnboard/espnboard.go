@@ -32,6 +32,7 @@ type Leaguer interface {
 	TeamEndpoints() []string
 	HTTPPathPrefix() string
 	HeadlinePath() string
+	HomeSideSwap() bool
 }
 
 // ESPNBoard ...
@@ -471,6 +472,10 @@ func (e *ESPNBoard) TeamRecord(ctx context.Context, team sportboard.Team, season
 	}
 
 	return realTeam.record
+}
+
+func (e *ESPNBoard) HomeSideSwap() bool {
+	return e.leaguer.HomeSideSwap()
 }
 
 func WithMockData(mockSchedule []byte, mockLiveGames map[string][]byte) Option {
