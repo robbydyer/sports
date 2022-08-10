@@ -17,7 +17,7 @@
     "follow-redirects": "^1.15.1",
     "glob-parent": ">=5.1.2",
     "google-protobuf": "^3.21.0",
-    "hosted-git-info": ">=2.8.9",
+    "hosted-git-info": ">=5.1.0",
     "immer": "^9.0.15",
     "is-svg": ">=4.2.2",
     "json-schema": ">=0.4.0",
