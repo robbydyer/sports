@@ -24,10 +24,6 @@ if [ "${IN_DOCKER}" = "no" ]; then
     ${img} \
     /app/script/$(basename $0)
 
-  if [ "${DEB_BUILD}" = "yes" ]; then
-    echo "Deb build complete"
-    git --no-pager log --decorate --oneline --pretty=%s ${OLD}...master
-  fi
   exit
 fi
 
