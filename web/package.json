@@ -8,7 +8,7 @@
     "@testing-library/user-event": "^14.4.3",
     "ansi-html": "npm:ansi-html-community@^0.0.8",
     "ansi-regex": ">=5.0.1",
-    "bootstrap": "^4.6.2",
+    "bootstrap": "^5.2.0",
     "browserslist": "^4.21.3",
     "btoa": "^1.2.1",
     "color-string": "^1.9.1",
