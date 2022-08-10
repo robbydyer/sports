@@ -32,6 +32,8 @@ dobuild() {
       ;;
   esac
 
+  docker pull "${base}"
+
   img=$(latestpibuilder ${buildarch})
 
   if [ "$(docker images -q ${img})" = "" ]; then
@@ -54,10 +56,11 @@ dockerlogin
 docker --config="${DOCKERCONF}" buildx create --use --name=build --node=build
 
 if [ "${BUILDARCH}" = "all" ]; then
-  dobuild aarch64
-  dobuild armv7l
-  dobuild amd64
-  dobuild armv6l
+  dobuild aarch64 &
+  dobuild armv7l &
+  dobuild amd64 &
+  dobuild armv6l &
+  wait
 else
   dobuild "${BUILDARCH}"
 fi
