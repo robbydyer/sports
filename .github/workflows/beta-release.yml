@@ -15,19 +15,19 @@ jobs:
       with:
         image: tonistiigi/binfmt:latest
         platforms: all
-		- name: Set env
-			run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+    - name: Set env
+      run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
     - name: Lint
       run: ./script/lint
 
     - name: Test
       run: ./script/test
 
-		- name: Build
-			run: ./script/release-all
+    - name: Build
+      run: ./script/release-all
 
-		- uses: ncipollo/release-action@v1
-			with:
-				artifacts: "*.deb"
-				generateReleaseNotes: true
-				prerelease: true
+    - uses: ncipollo/release-action@v1
+      with:
+        artifacts: "*.deb"
+        generateReleaseNotes: true
+        prerelease: true
