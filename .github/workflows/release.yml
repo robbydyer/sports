@@ -1,10 +1,11 @@
-name: Beta Release
+name: Release
 on:
   push:
     tags:
     - 'v*'
-    tags-ignore:
-    - '*beta*'
+
+env:
+  VERSION: ${{ github.ref_name }}
 
 jobs:
   build:
@@ -17,8 +18,7 @@ jobs:
       with:
         image: tonistiigi/binfmt:latest
         platforms: all
-    - name: Set env
-      run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
     - name: Lint
       run: ./script/lint
 
@@ -44,3 +44,4 @@ jobs:
       with:
         artifacts: "*.deb"
         generateReleaseNotes: true
+        prerelease: ${{ contains(github.ref_name, 'beta') }}
