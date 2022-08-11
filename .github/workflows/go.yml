@@ -23,5 +23,8 @@ jobs:
     - name: Test
       run: ./script/test
 
+    - name: Web Build
+      run: ./script/web-build
+
     - name: Build
       run: ./script/build

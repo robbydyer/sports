@@ -8,8 +8,6 @@ source script/common
 IN_DOCKER="${IN_DOCKER:-no}"
 VERSION="${VERSION:-devbuild}"
 DEB_BUILD="${DEB_BUILD:-no}"
-DO_WEB="${SKIP_WEB:-yes}"
-
 BUILDARCH="${BUILDARCH:-$(uname -m)}"
 
 img=$(latestpibuilder ${BUILDARCH})
@@ -29,37 +27,15 @@ if [ "${IN_DOCKER}" = "no" ]; then
 fi
 
 # Everything below is inside docker
-
-if [ ! -d /src/web ]; then
-  echo "No /src"
-  ls -l /src
-  exit 1
-fi
-
-ls -l /src
-
 cd /app
 cp -r \
   .nvmrc \
   cmd \
+  internal \
   vendor \
   go.mod \
   go.sum \
   /src/
-
-rsync -a /app/internal/ /src/internal/
-
-if [ "${DO_WEB}" = "yes" ]; then
-  rsync -a --exclude=/app/web/node_modules /app/web/ /src/web/
-
-  . ~/.bashrc
-  echo $PATH
-  cd /src/web
-  npm install
-  npm run build
-  mkdir -p /src/internal/sportsmatrix/assets
-  mv /src/web/build /src/internal/sportsmatrix/assets/web
-fi
 
 cd /src
 
