@@ -82,7 +82,7 @@ class All extends React.Component {
                             {sports}
 
                             <Accordion.Item eventKey="pga">
-                                <Accordion.Header><Image fluid src={LogoSrc("pga")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
+                                <Accordion.Header><Image src={LogoSrc("pga")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
                                 <Accordion.Body>
                                     <Card style={{ width: { card_border } }}>
                                         <BasicBoard id="pga" name="pga" doSync={this.doSync} key={"pga" + this.state.sync} path="stat/pga" />
@@ -90,7 +90,7 @@ class All extends React.Component {
                                 </Accordion.Body>
                             </Accordion.Item>
                             <Accordion.Item eventKey="weather">
-                                <Accordion.Header><Image fluid src={LogoSrc("weather")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
+                                <Accordion.Header><Image src={LogoSrc("weather")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
                                 <Accordion.Body>
                                     <Card style={{ width: { card_border } }}>
                                         <Weather id="weatherboard" doSync={this.doSync} key={"weather" + this.state.sync} />
@@ -98,7 +98,7 @@ class All extends React.Component {
                                 </Accordion.Body>
                             </Accordion.Item>
                             <Accordion.Item eventKey="imgboard">
-                                <Accordion.Header><Image fluid src={LogoSrc("img")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
+                                <Accordion.Header><Image src={LogoSrc("img")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
                                 <Accordion.Body>
                                     <Card style={{ width: { card_border } }}>
                                         <ImageBoard id="imgboard" doSync={this.doSync} key={"img" + this.state.sync} />
@@ -106,7 +106,7 @@ class All extends React.Component {
                                 </Accordion.Body>
                             </Accordion.Item>
                             <Accordion.Item eventKey="stocks">
-                                <Accordion.Header><Image fluid src={LogoSrc("stocks")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
+                                <Accordion.Header><Image src={LogoSrc("stocks")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
                                 <Accordion.Body>
                                     <Card style={{ width: { card_border } }}>
                                         <BasicBoard id="stocks" name="stocks" doSync={this.doSync} key={"stocks" + this.state.sync} />
@@ -114,7 +114,7 @@ class All extends React.Component {
                                 </Accordion.Body>
                             </Accordion.Item>
                             <Accordion.Item eventKey="clock">
-                                <Accordion.Header><Image fluid src={LogoSrc("clock")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
+                                <Accordion.Header><Image src={LogoSrc("clock")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
                                 <Accordion.Body>
                                     <Card style={{ width: { card_border } }}>
                                         <BasicBoard id="clock" name="clock" doSync={this.doSync} key={"clock" + this.state.sync} />
@@ -122,7 +122,7 @@ class All extends React.Component {
                                 </Accordion.Body>
                             </Accordion.Item>
                             <Accordion.Item eventKey="gcal">
-                                <Accordion.Header><Image fluid src={LogoSrc("gcal")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
+                                <Accordion.Header><Image src={LogoSrc("gcal")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
                                 <Accordion.Body>
                                     <Card style={{ width: { card_border } }}>
                                         <BasicBoard id="gcal" name="gcal" doSync={this.doSync} key={"gcal" + this.state.sync} />
@@ -130,7 +130,7 @@ class All extends React.Component {
                                 </Accordion.Body>
                             </Accordion.Item>
                             <Accordion.Item eventKey="sys">
-                                <Accordion.Header><Image fluid src={LogoSrc("sys")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
+                                <Accordion.Header><Image src={LogoSrc("sys")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
                                 <Accordion.Body>
                                     <Card style={{ width: { card_border } }}>
                                         <BasicBoard id="sys" name="sys" doSync={this.doSync} key={"sys" + this.state.sync} />
