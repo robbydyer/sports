@@ -42,5 +42,10 @@ if [ ! -n "${GITHUB_ACTIONS}" ]; then
   fix="--fix"
 fi
 
+# Put some dummy assets here
+trap "rm -rf ${ROOT}/internal/sportsmatrix/assets" EXIT
+mkdir -p "${ROOT}/internal/sportsmatrix/assets/web"
+touch "${ROOT}/internal/sportsmatrix/assets/web/foo"
+
 set -x
 golangci-lint run --verbose ${fix}

@@ -23,6 +23,10 @@ const styles = {
     }
 }
 
+const accordionHeaderStyle = {
+    justifyContent: 'center',
+}
+
 const card_border = "18rem"
 
 class All extends React.Component {
@@ -41,8 +45,8 @@ class All extends React.Component {
     render() {
         var sports = ["ncaaf", "nhl", "mlb", "ncaam", "nfl", "nba", "mls", "epl", "dfl", "dfb", "uefa"].map((sport) =>
             <Accordion.Item eventKey={sport}>
-                <Accordion.Header>
-                    <Image src={LogoSrc(sport)} style={{ height: '100px', width: 'auto' }} />
+                <Accordion.Header as='Image' style={accordionHeaderStyle}>
+                    <Image fluid src={LogoSrc(sport)} style={{ height: '100px', width: 'auto' }} />
                 </Accordion.Header>
                 <Accordion.Body>
                     <Card style={{ width: { card_border } }}>
@@ -54,7 +58,7 @@ class All extends React.Component {
         var racing = ["f1", "irl"].map((sport) =>
             <Col>
                 <Accordion.Item eventKey={sport}>
-                    <Accordion.Header><Image src={LogoSrc(sport)} style={{ height: '100px', width: 'auto' }} /></Accordion.Header>
+                    <Accordion.Header><Image fluid src={LogoSrc(sport)} style={{ height: '100px', width: 'auto' }} /></Accordion.Header>
                     <Accordion.Body>
                         <Card style={{ width: { card_border } }}>
                             <Racing sport={sport} id={sport} key={sport + this.state.sync} doSync={this.doSync} />
@@ -74,7 +78,7 @@ class All extends React.Component {
                 </Row>
                 <Row className="justify-content-space-between" sm={1} lg={2} xl={3} style={styles.row}>
                     <Col>
-                        <Accordion>
+                        <Accordion alwaysOpen>
                             {sports}
 
                             <Accordion.Item eventKey="pga">

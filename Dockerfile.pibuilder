@@ -2,6 +2,8 @@
 ARG BASE=multiarch/debian-debootstrap:arm64-bullseye-slim
 
 FROM $BASE
+# Replace shell with bash so we can source files
+SHELL ["/bin/bash", "--login", "-ce"]
 
 ARG GOVERSION=1.18.5
 
@@ -9,10 +11,23 @@ RUN apt-get update && \
     apt-get install -y \
     automake \
     build-essential \
+    ca-certificates \
     curl \
     gcc \
     git \
-    g++
+    g++ \
+    rsync
+
+RUN update-ca-certificates -f
+ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+COPY .nvmrc /root/.nvmrc
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+RUN cd /root && nvm install
+
+RUN mkdir -p /src/internal/rgbmatrix-rpi/lib /src/web
+COPY ./web /src/web
+RUN cd /src/web && \
+    npm install
 
 RUN GOIMG= && a="$(dpkg --print-architecture)" && \
     case "${a##*-}" in \
@@ -27,7 +42,7 @@ RUN GOIMG= && a="$(dpkg --print-architecture)" && \
 
 ENV PATH="/usr/local/go/bin:${PATH}"
 
-COPY ./internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE /sportslibs/rpi-rgb-led-matrix
+COPY ./internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE /src/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix
 
-RUN cd /sportslibs/rpi-rgb-led-matrix && \
+RUN cd /src/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix && \
     make

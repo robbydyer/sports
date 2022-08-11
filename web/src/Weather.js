@@ -5,7 +5,6 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Image from 'react-bootstrap/Image';
-import weatherimg from './weather.png';
 import Form from 'react-bootstrap/Form';
 import { MatrixPostRet, JumpToBoard } from './util';
 import * as pb from './weatherboard/weatherboard_pb';

@@ -8,12 +8,16 @@ source script/common
 IN_DOCKER="${IN_DOCKER:-no}"
 VERSION="${VERSION:-devbuild}"
 DEB_BUILD="${DEB_BUILD:-no}"
-
 BUILDARCH="${BUILDARCH:-$(uname -m)}"
 
 img=$(latestpibuilder ${BUILDARCH})
 
 if [ "${IN_DOCKER}" = "no" ]; then
+  if [ ! -d "${ROOT}/internal/sportsmatrix/assets" ]; then
+    mkdir -p "${ROOT}/internal/sportsmatrix/assets"
+    cp -r "${ROOT}/web/build" "${ROOT}/internal/sportsmatrix/assets/web"
+  fi
+
   docker run -t --rm \
     -e IN_DOCKER=yes \
     -e BUILDARCH="${BUILDARCH}" \
@@ -28,17 +32,15 @@ if [ "${IN_DOCKER}" = "no" ]; then
 fi
 
 # Everything below is inside docker
-
 cd /app
 cp -r \
+  .nvmrc \
   cmd \
   internal \
   vendor \
   go.mod \
   go.sum \
   /src/
-
-cp -r /sportslibs/rpi-rgb-led-matrix /src/internal/rgbmatrix-rpi/lib/
 
 cd /src
 
