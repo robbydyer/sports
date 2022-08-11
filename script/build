@@ -13,6 +13,11 @@ BUILDARCH="${BUILDARCH:-$(uname -m)}"
 img=$(latestpibuilder ${BUILDARCH})
 
 if [ "${IN_DOCKER}" = "no" ]; then
+  if [ ! -d "${ROOT}/internal/sportsmatrix/assets" ]; then
+    mkdir -p "${ROOT}/internal/sportsmatrix/assets"
+    cp -r "${ROOT}/web/build" "${ROOT}/internal/sportsmatrix/assets/web"
+  fi
+
   docker run -t --rm \
     -e IN_DOCKER=yes \
     -e BUILDARCH="${BUILDARCH}" \
