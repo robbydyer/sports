@@ -42,7 +42,7 @@ RUN GOIMG= && a="$(dpkg --print-architecture)" && \
 
 ENV PATH="/usr/local/go/bin:${PATH}"
 
-COPY ./internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE /src/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix
+COPY ./internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE /sportsmatrix_lib/rpi-rgb-led-matrix
 
-RUN cd /src/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix && \
+RUN cd /sportsmatrix_lib/rpi-rgb-led-matrix && \
     make
