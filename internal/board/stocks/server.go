@@ -31,7 +31,7 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 	if s.board.Enabler().Store(req.Status.Enabled) {
 		cancelBoard = true
 	}
-	if s.board.config.ScrollMode.CAS(!req.Status.ScrollEnabled, req.Status.ScrollEnabled) {
+	if s.board.config.ScrollMode.CompareAndSwap(!req.Status.ScrollEnabled, req.Status.ScrollEnabled) {
 		cancelBoard = true
 	}
 

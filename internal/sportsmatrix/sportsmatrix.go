@@ -267,7 +267,7 @@ func (s *SportsMatrix) ScreenOn(ctx context.Context) error {
 		<-s.screenSwitch
 	}()
 
-	if changed := s.screenIsOn.CAS(false, true); !changed {
+	if changed := s.screenIsOn.CompareAndSwap(false, true); !changed {
 		s.log.Warn("screen is already on")
 		return nil
 	}
@@ -303,7 +303,7 @@ func (s *SportsMatrix) ScreenOff(ctx context.Context) error {
 		<-s.screenSwitch
 	}()
 
-	if changed := s.screenIsOn.CAS(true, false); !changed {
+	if changed := s.screenIsOn.CompareAndSwap(true, false); !changed {
 		s.log.Warn("screen is already off")
 		return nil
 	}

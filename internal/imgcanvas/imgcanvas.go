@@ -170,7 +170,7 @@ func (i *ImgCanvas) Enabled() bool {
 
 // Enable ...
 func (i *ImgCanvas) Enable() bool {
-	return i.enabled.CAS(false, true)
+	return i.enabled.CompareAndSwap(false, true)
 }
 
 func (i *ImgCanvas) SetStateChangeCallback(s func()) {
@@ -178,11 +178,11 @@ func (i *ImgCanvas) SetStateChangeCallback(s func()) {
 
 // Disable ...
 func (i *ImgCanvas) Disable() bool {
-	return i.enabled.CAS(true, false)
+	return i.enabled.CompareAndSwap(true, false)
 }
 
 func (i *ImgCanvas) Store(s bool) bool {
-	return i.enabled.CAS(!s, s)
+	return i.enabled.CompareAndSwap(!s, s)
 }
 
 func (i *ImgCanvas) position(x, y int) int {

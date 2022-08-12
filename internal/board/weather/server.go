@@ -31,13 +31,13 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 	if s.board.Enabler().Store(req.Status.Enabled) {
 		cancelBoard = true
 	}
-	if s.board.config.ScrollMode.CAS(!req.Status.ScrollEnabled, req.Status.ScrollEnabled) {
+	if s.board.config.ScrollMode.CompareAndSwap(!req.Status.ScrollEnabled, req.Status.ScrollEnabled) {
 		cancelBoard = true
 	}
-	if s.board.config.DailyForecast.CAS(!req.Status.DailyEnabled, req.Status.DailyEnabled) {
+	if s.board.config.DailyForecast.CompareAndSwap(!req.Status.DailyEnabled, req.Status.DailyEnabled) {
 		cancelBoard = true
 	}
-	if s.board.config.HourlyForecast.CAS(!req.Status.HourlyEnabled, req.Status.HourlyEnabled) {
+	if s.board.config.HourlyForecast.CompareAndSwap(!req.Status.HourlyEnabled, req.Status.HourlyEnabled) {
 		cancelBoard = true
 	}
 

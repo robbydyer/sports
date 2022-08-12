@@ -26,7 +26,7 @@ func (e *Enabler) Disable() bool {
 }
 
 func (e *Enabler) Store(set bool) bool {
-	if e.enabled.CAS(!set, set) {
+	if e.enabled.CompareAndSwap(!set, set) {
 		if e.stateChangeCallback != nil {
 			e.stateChangeCallback()
 		}

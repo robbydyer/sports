@@ -105,7 +105,7 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.Status) (*emptypb.Empty,
 		}
 	}
 
-	if s.sm.cfg.CombinedScroll.CAS(!req.CombinedScroll, req.CombinedScroll) {
+	if s.sm.cfg.CombinedScroll.CompareAndSwap(!req.CombinedScroll, req.CombinedScroll) {
 		if _, err := s.ScreenOff(ctx, &emptypb.Empty{}); err != nil {
 			return nil, twirp.NewError(twirp.Internal, err.Error())
 		}

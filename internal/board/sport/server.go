@@ -29,43 +29,43 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 		return &emptypb.Empty{}, twirp.NewError(twirp.InvalidArgument, "nil status sent")
 	}
 
-	if s.board.config.HideFavoriteScore.CAS(!req.Status.FavoriteHidden, req.Status.FavoriteHidden) {
+	if s.board.config.HideFavoriteScore.CompareAndSwap(!req.Status.FavoriteHidden, req.Status.FavoriteHidden) {
 		cancelBoard = true
 	}
 	if s.board.Enabler().Store(req.Status.Enabled) {
 		cancelBoard = true
 	}
-	if s.board.config.FavoriteSticky.CAS(!req.Status.FavoriteSticky, req.Status.FavoriteSticky) {
+	if s.board.config.FavoriteSticky.CompareAndSwap(!req.Status.FavoriteSticky, req.Status.FavoriteSticky) {
 		cancelBoard = true
 	}
-	if s.board.config.GamblingSpread.CAS(!req.Status.OddsEnabled, req.Status.OddsEnabled) {
-		cancelBoard = true
-		clearDrawCache = true
-	}
-	if s.board.config.ScrollMode.CAS(!req.Status.ScrollEnabled, req.Status.ScrollEnabled) {
+	if s.board.config.GamblingSpread.CompareAndSwap(!req.Status.OddsEnabled, req.Status.OddsEnabled) {
 		cancelBoard = true
 		clearDrawCache = true
 	}
-	if s.board.config.TightScroll.CAS(!req.Status.TightScrollEnabled, req.Status.TightScrollEnabled) {
+	if s.board.config.ScrollMode.CompareAndSwap(!req.Status.ScrollEnabled, req.Status.ScrollEnabled) {
 		cancelBoard = true
 		clearDrawCache = true
 	}
-	if s.board.config.ShowRecord.CAS(!req.Status.RecordRankEnabled, req.Status.RecordRankEnabled) {
+	if s.board.config.TightScroll.CompareAndSwap(!req.Status.TightScrollEnabled, req.Status.TightScrollEnabled) {
 		cancelBoard = true
 		clearDrawCache = true
 	}
-	if s.board.config.UseGradient.CAS(!req.Status.UseGradient, req.Status.UseGradient) {
+	if s.board.config.ShowRecord.CompareAndSwap(!req.Status.RecordRankEnabled, req.Status.RecordRankEnabled) {
 		cancelBoard = true
 		clearDrawCache = true
 	}
-	if s.board.config.LiveOnly.CAS(!req.Status.LiveOnly, req.Status.LiveOnly) {
-		cancelBoard = true
-	}
-	if s.board.config.DetailedLive.CAS(!req.Status.DetailedLive, req.Status.DetailedLive) {
+	if s.board.config.UseGradient.CompareAndSwap(!req.Status.UseGradient, req.Status.UseGradient) {
 		cancelBoard = true
 		clearDrawCache = true
 	}
-	if s.board.config.ShowLeagueLogo.CAS(!req.Status.ShowLeagueLogo, req.Status.ShowLeagueLogo) {
+	if s.board.config.LiveOnly.CompareAndSwap(!req.Status.LiveOnly, req.Status.LiveOnly) {
+		cancelBoard = true
+	}
+	if s.board.config.DetailedLive.CompareAndSwap(!req.Status.DetailedLive, req.Status.DetailedLive) {
+		cancelBoard = true
+		clearDrawCache = true
+	}
+	if s.board.config.ShowLeagueLogo.CompareAndSwap(!req.Status.ShowLeagueLogo, req.Status.ShowLeagueLogo) {
 		clearDrawCache = true
 	}
 

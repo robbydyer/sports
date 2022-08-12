@@ -114,16 +114,16 @@ func (i *BlankCanvas) Enabled() bool {
 
 // Enable ...
 func (i *BlankCanvas) Enable() bool {
-	return i.enabled.CAS(false, true)
+	return i.enabled.CompareAndSwap(false, true)
 }
 
 // Disable ...
 func (i *BlankCanvas) Disable() bool {
-	return i.enabled.CAS(true, false)
+	return i.enabled.CompareAndSwap(true, false)
 }
 
 func (i *BlankCanvas) Store(s bool) bool {
-	return i.enabled.CAS(!s, s)
+	return i.enabled.CompareAndSwap(!s, s)
 }
 
 func (i *BlankCanvas) SetStateChangeCallback(s func()) {

@@ -383,7 +383,7 @@ func (s *SportBoard) ScrollMode() bool {
 
 // SetLiveOnly sets this board to show only live games or not
 func (s *SportBoard) SetLiveOnly(live bool) {
-	if s.config.LiveOnly.CAS(!live, live) {
+	if s.config.LiveOnly.CompareAndSwap(!live, live) {
 		s.callCancelBoard()
 	}
 }
