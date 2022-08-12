@@ -171,7 +171,7 @@ func (c *ScrollCanvas) SetScrollSpeed(d time.Duration) {
 	c.speedLock.Lock()
 	defer c.speedLock.Unlock()
 
-	if !c.interval.CAS(c.interval.Load(), d) {
+	if !c.interval.CompareAndSwap(c.interval.Load(), d) {
 		// no change
 		return
 	}
@@ -357,12 +357,12 @@ func (c *ScrollCanvas) Enabled() bool {
 
 // Enable ...
 func (c *ScrollCanvas) Enable() bool {
-	return c.enabled.CAS(false, true)
+	return c.enabled.CompareAndSwap(false, true)
 }
 
 // Disable ...
 func (c *ScrollCanvas) Disable() bool {
-	return c.enabled.CAS(true, false)
+	return c.enabled.CompareAndSwap(true, false)
 }
 
 func (c *ScrollCanvas) SetStateChangeCallback(s func()) {
@@ -370,7 +370,7 @@ func (c *ScrollCanvas) SetStateChangeCallback(s func()) {
 }
 
 func (c *ScrollCanvas) Store(s bool) bool {
-	return c.enabled.CAS(!s, s)
+	return c.enabled.CompareAndSwap(!s, s)
 }
 
 // GetHTTPHandlers ...

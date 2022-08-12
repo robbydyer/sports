@@ -112,7 +112,7 @@ func (c *Canvas) Disable() bool {
 }
 
 func (c *Canvas) Store(s bool) bool {
-	if c.enabled.CAS(!s, s) {
+	if c.enabled.CompareAndSwap(!s, s) {
 		c.stateChangeCallback()
 		return true
 	}
