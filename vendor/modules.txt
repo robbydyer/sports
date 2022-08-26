@@ -151,8 +151,8 @@ github.com/josharian/intern
 ## explicit; go 1.14
 github.com/lyft/protoc-gen-star
 github.com/lyft/protoc-gen-star/lang/go
-# github.com/mackerelio/go-osstat v0.2.2
-## explicit; go 1.17
+# github.com/mackerelio/go-osstat v0.2.3
+## explicit; go 1.18
 github.com/mackerelio/go-osstat/cpu
 github.com/mackerelio/go-osstat/memory
 # github.com/magiconair/properties v1.8.6
