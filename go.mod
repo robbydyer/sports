@@ -22,7 +22,7 @@ require (
 	github.com/thechriswalker/protoc-gen-twirp_js v0.0.0-20190627152235-0fe8731d4d8f
 	github.com/twitchtv/twirp v8.1.2+incompatible
 	go.uber.org/atomic v1.10.0
-	go.uber.org/zap v1.22.0
+	go.uber.org/zap v1.23.0
 	golang.org/x/image v0.0.0-20201208152932-35266b937fa6
 	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
