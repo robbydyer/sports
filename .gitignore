@@ -24,6 +24,7 @@ docs-base/
 matrix.conf
 release
 update-matrix
+update-matrix-web
 test-matrix
 test-office
 update-office
