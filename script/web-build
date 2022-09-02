@@ -33,4 +33,5 @@ cd /app/web
 npm install
 npm run build
 [ ! -d /app/internal/sportsmatrix/assets ] && mkdir -p /app/internal/sportsmatrix/assets
+[ -d /app/internal/sportsmatrix/assets/web ] && rm -rf /app/internal/sportsmatrix/assets/web
 mv /app/web/build /app/internal/sportsmatrix/assets/web
