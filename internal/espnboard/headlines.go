@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"image"
 	"image/png"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"sort"
@@ -108,7 +108,7 @@ func (h *Headlines) GetText(ctx context.Context) ([]string, error) {
 	}
 	defer resp.Body.Close()
 
-	dat, err := ioutil.ReadAll(resp.Body)
+	dat, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

@@ -3,7 +3,7 @@ package espnboard
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -94,7 +94,7 @@ func (n *ncaaf) setRankings(ctx context.Context, e *ESPNBoard, season string, te
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
