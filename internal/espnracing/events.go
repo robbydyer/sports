@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -116,7 +116,7 @@ func (a *API) scheduledEventsFromAPI(ctx context.Context) (*Scoreboard, error) {
 	}
 	defer resp.Body.Close()
 
-	dat, err := ioutil.ReadAll(resp.Body)
+	dat, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

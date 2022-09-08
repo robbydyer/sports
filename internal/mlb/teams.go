@@ -2,11 +2,10 @@ package mlb
 
 import (
 	"context"
-	// embed
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io" // embed
 	"net/http"
 	"net/url"
 	"strconv"
@@ -114,7 +113,7 @@ func GetTeams(ctx context.Context) ([]*Team, error) {
 
 	var teams *teams
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +174,7 @@ func (t *Team) setRoster(ctx context.Context) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"image/color"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -297,7 +297,7 @@ func (g *Game) GetUpdate(ctx context.Context) (sportboard.Game, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
@@ -438,7 +438,7 @@ func (e *ESPNBoard) GetGames(ctx context.Context, dateStr string) ([]*Game, erro
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}

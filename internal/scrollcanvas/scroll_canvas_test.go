@@ -2,7 +2,7 @@ package scrollcanvas
 
 import (
 	"image"
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,7 +13,7 @@ import (
 
 func TestScrollCanvas(t *testing.T) {
 	l := zaptest.NewLogger(t)
-	m := matrix.NewConsoleMatrix(64, 32, ioutil.Discard, l)
+	m := matrix.NewConsoleMatrix(64, 32, io.Discard, l)
 	c, err := NewScrollCanvas(m, l)
 	require.NoError(t, err)
 

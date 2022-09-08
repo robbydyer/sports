@@ -3,13 +3,13 @@ package espnboard
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
-	"sync"
 	"time"
 
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 )
 
 var preferedPolls = []string{"cfp", "ap", "usa"}
@@ -35,10 +35,11 @@ type ncaafRanks struct {
 }
 
 func (n *ncaaf) setRecords(ctx context.Context, e *ESPNBoard, season string, teams []*Team) error {
-	workers := 10
-	wg := &sync.WaitGroup{}
-	doLoad := func(ch chan *Team) {
-		for t := range ch {
+	wg, _ := errgroup.WithContext(ctx)
+	wg.SetLimit(10)
+	for _, t := range teams {
+		t := t
+		wg.Go(func() error {
 			if err := t.setDetails(ctx, season, n.APIPath(), e.log); err != nil {
 				e.log.Error("failed to set team details",
 					zap.Error(err),
@@ -46,26 +47,12 @@ func (n *ncaaf) setRecords(ctx context.Context, e *ESPNBoard, season string, tea
 					zap.String("team", t.GetAbbreviation()),
 				)
 			}
-		}
-		wg.Done()
-	}
-	ch := make(chan *Team)
-	for w := 0; w < workers; w++ {
-		wg.Add(1)
-		go doLoad(ch)
-	}
-	for _, t := range teams {
-		if t.record != "" {
+
 			return nil
-		}
-		ch <- t
+		})
 	}
 
-	close(ch)
-
-	wg.Wait()
-
-	return nil
+	return wg.Wait()
 }
 
 func (n *ncaaf) setRankings(ctx context.Context, e *ESPNBoard, season string, teams []*Team) error {
@@ -107,7 +94,7 @@ func (n *ncaaf) setRankings(ctx context.Context, e *ESPNBoard, season string, te
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}

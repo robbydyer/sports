@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"image"
 	"image/png"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -267,7 +267,7 @@ func pullTeams(ctx context.Context, sport string, league string) ([]byte, error)
 	}
 	defer resp.Body.Close()
 
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 }
 
 func teamEndpoint(sport string, league string) string {
