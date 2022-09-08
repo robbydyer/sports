@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"image"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -155,7 +154,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 }
 
 func (r *rootArgs) setConfig(filename string) error {
-	f, err := ioutil.ReadFile(filename)
+	f, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}

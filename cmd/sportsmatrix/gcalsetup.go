@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -45,7 +44,7 @@ func newGcalSetupCmd(args *rootArgs) *cobra.Command {
 }
 
 func (g *gcalSetupCmd) run(cmd *cobra.Command, args []string) error {
-	b, err := ioutil.ReadFile(gcal.CredentialsFile)
+	b, err := os.ReadFile(gcal.CredentialsFile)
 	if err != nil {
 		return err
 	}
