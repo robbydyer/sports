@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"image"
-	"io/ioutil"
 	"os"
 	"sort"
 	"sync"
@@ -71,7 +70,7 @@ func (g *Gcal) connect(ctx context.Context) error {
 
 	g.log.Info("using ouath2 token file for calendar auth")
 
-	b, err := ioutil.ReadFile(CredentialsFile)
+	b, err := os.ReadFile(CredentialsFile)
 	if err != nil {
 		return err
 	}
