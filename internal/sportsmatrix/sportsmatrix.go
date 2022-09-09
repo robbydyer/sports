@@ -83,6 +83,7 @@ type Config struct {
 	CombinedScroll        *atomic.Bool        `json:"combinedScroll"`
 	CombinedScrollDelay   string              `json:"combinedScrollDelay"`
 	CombinedScrollPadding int                 `json:"combinedScrollPadding"`
+	PreloadThreads        int                 `json:"preloadThreads"`
 }
 
 type orderedBoard struct {
@@ -584,6 +585,7 @@ CANVASES:
 			scrcnvs.WithScrollSpeed(s.cfg.combinedScrollDelay),
 			scrcnvs.WithScrollDirection(scrcnvs.RightToLeft),
 			scrcnvs.WithMergePadding(s.cfg.CombinedScrollPadding),
+			scrcnvs.WithPreloadThreads(s.cfg.PreloadThreads),
 		)
 		if err != nil {
 			cancel()
