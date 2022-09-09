@@ -14,6 +14,11 @@ sportsMatrixConfig:
   # Decrease this interval to speed up the scroll speed on the combined mode
   combinedScrollDelay: "50ms"
 
+  # Set the number of threads allowed when preparing a combined scroll canvas.
+  # Default is 0 which means unlimited. Set this number to something above 0
+  # if you are experiencing Out of Memory errors in /var/log/sportsmatrix_out.log
+  preloadThreads: 0
+
   # Serves the single page web UI for controlling the matrix
   # accessible at http://[IP or hostname of Pi]
   serveWebUI: true

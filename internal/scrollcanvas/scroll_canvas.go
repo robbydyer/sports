@@ -42,6 +42,7 @@ type ScrollCanvas struct {
 	w, h                int
 	Matrix              matrix.Matrix
 	enabled             *atomic.Bool
+	preloadThreads      int
 	actual              *image.RGBA
 	direction           ScrollDirection
 	interval            *atomic.Duration
@@ -597,6 +598,12 @@ func (c *ScrollCanvas) horizontalPrep(ctx context.Context) error {
 
 	sceneIndex := 0
 	wg, _ := errgroup.WithContext(ctx)
+	if c.preloadThreads > 0 {
+		c.log.Info("limiting preload threads for horizontal prep",
+			zap.Int("threads", c.preloadThreads),
+		)
+		wg.SetLimit(c.preloadThreads)
+	}
 	for {
 		if virtualX == finish {
 			break
@@ -671,6 +678,13 @@ func WithScrollDirection(direct ScrollDirection) ScrollCanvasOption {
 func WithMergePadding(pad int) ScrollCanvasOption {
 	return func(c *ScrollCanvas) error {
 		c.mergePad = pad
+		return nil
+	}
+}
+
+func WithPreloadThreads(t int) ScrollCanvasOption {
+	return func(c *ScrollCanvas) error {
+		c.preloadThreads = t
 		return nil
 	}
 }
