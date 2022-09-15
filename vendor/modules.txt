@@ -303,7 +303,7 @@ golang.org/x/image/font
 golang.org/x/image/math/fixed
 golang.org/x/image/tiff
 golang.org/x/image/tiff/lzw
-# golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e
+# golang.org/x/net v0.0.0-20220909164309-bea034e7d591
 ## explicit; go 1.17
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
@@ -325,7 +325,7 @@ golang.org/x/oauth2/jwt
 # golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
 ## explicit
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.0.0-20220624220833-87e55d714810
+# golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10
 ## explicit; go 1.17
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
@@ -342,7 +342,7 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# google.golang.org/api v0.95.0
+# google.golang.org/api v0.96.0
 ## explicit; go 1.15
 google.golang.org/api/calendar/v3
 google.golang.org/api/googleapi
