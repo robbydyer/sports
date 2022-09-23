@@ -484,6 +484,58 @@
         }
       }
     },
+    "/matrix.v1.Sportsmatrix/SlowDown": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "SlowDown",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/matrix.v1.Sportsmatrix/SpeedUp": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "SpeedUp",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
     "/matrix.v1.Sportsmatrix/Version": {
       "post": {
         "tags": [
@@ -679,9 +731,12 @@
       }
     },
     "sport.v1_Status": {
-      "description": "Fields: enabled, favorite_hidden, favorite_sticky, scroll_enabled, tight_scroll_enabled, record_rank_enabled, odds_enabled, use_gradient, live_only",
+      "description": "Fields: enabled, favorite_hidden, favorite_sticky, scroll_enabled, tight_scroll_enabled, record_rank_enabled, odds_enabled, use_gradient, live_only, detailed_live, show_league_logo",
       "type": "object",
       "properties": {
+        "detailed_live": {
+          "type": "boolean"
+        },
         "enabled": {
           "type": "boolean"
         },
@@ -701,6 +756,9 @@
           "type": "boolean"
         },
         "scroll_enabled": {
+          "type": "boolean"
+        },
+        "show_league_logo": {
           "type": "boolean"
         },
         "tight_scroll_enabled": {
