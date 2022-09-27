@@ -37,6 +37,9 @@ If you feel so inclined, beer money can be sent to my Venmo (www.venmo.com/u/Rob
   - NCAA Men's Basketball
   - English Premiere League
   - PGA Tour Leaderboards
+  - UEFA Champions League
+  - Bundesliga
+  - DFB German Pokal
 - Racing. Currently just shows upcoming event schedule
   - F1
   - Indy Car
