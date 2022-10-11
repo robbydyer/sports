@@ -6,8 +6,10 @@ import (
 	"image"
 	"image/draw"
 	"image/gif"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -205,28 +207,27 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		}
 	}
 
-	gifs := make(map[string]img)
+	imageList := []img{}
+	gifList := []img{}
 
-	images := make(map[string]img)
-
-	dirWalker := func(jumpOnly bool) func(string, os.FileInfo, error) error {
-		return func(path string, info os.FileInfo, err error) error {
+	dirWalker := func(jumpOnly bool) func(string, fs.DirEntry, error) error {
+		return func(path string, dirEntry fs.DirEntry, err error) error {
 			if err != nil {
 				return err
 			}
-			if info.IsDir() {
-				// recurse?
+			if dirEntry.IsDir() {
 				return nil
 			}
 
-			if strings.HasSuffix(strings.ToLower(info.Name()), "gif") {
+			if strings.HasSuffix(strings.ToLower(dirEntry.Name()), "gif") {
 				i.log.Debug("found gif during walk",
 					zap.String("path", path),
 				)
-				gifs[path] = img{
+				gifList = append(gifList, img{
 					path:     path,
 					jumpOnly: jumpOnly,
-				}
+				})
+
 				return nil
 			}
 
@@ -234,10 +235,10 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 				zap.String("path", path),
 			)
 
-			images[path] = img{
+			imageList = append(imageList, img{
 				path:     path,
 				jumpOnly: jumpOnly,
-			}
+			})
 
 			return nil
 		}
@@ -246,7 +247,9 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	for _, dir := range i.config.Directories {
 		i.log.Debug("walking directory", zap.String("directory", dir))
 
-		if err := filepath.Walk(dir, dirWalker(false)); err != nil {
+		fileSystem := os.DirFS(dir)
+
+		if err := fs.WalkDir(fileSystem, ".", dirWalker(false)); err != nil {
 			i.log.Error("failed to prepare image for board", zap.Error(err))
 		}
 	}
@@ -256,21 +259,21 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 			zap.String("directory", dir.Directory),
 		)
 
-		if err := filepath.Walk(dir.Directory, dirWalker(dir.JumpOnly)); err != nil {
+		fileSystem := os.DirFS(dir.Directory)
+
+		if err := fs.WalkDir(fileSystem, ".", dirWalker(dir.JumpOnly)); err != nil {
 			i.log.Error("failed to prepare image walking directory list",
 				zap.Error(err),
 			)
 		}
 	}
 
-	imageList := []img{}
-	for _, thisImg := range images {
-		imageList = append(imageList, thisImg)
-	}
-	gifList := []img{}
-	for _, thisImg := range gifs {
-		gifList = append(gifList, thisImg)
-	}
+	sort.SliceStable(imageList, func(i, j int) bool {
+		return imageList[i].path < imageList[j].path
+	})
+	sort.SliceStable(gifList, func(i, j int) bool {
+		return gifList[i].path < gifList[j].path
+	})
 
 	jump := ""
 	isJumping := false
