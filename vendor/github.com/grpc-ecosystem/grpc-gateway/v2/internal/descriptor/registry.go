@@ -2,6 +2,7 @@ package descriptor
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/golang/glog"
@@ -127,6 +128,10 @@ type Registry struct {
 
 	// annotationMap is used to check for duplicate HTTP annotations
 	annotationMap map[annotationIdentifier]struct{}
+
+	// disableServiceTags disables the generation of service tags.
+	// This is useful if you do not want to expose the names of your backend grpc services.
+	disableServiceTags bool
 }
 
 type repeatedFieldSeparator struct {
@@ -183,12 +188,18 @@ func (r *Registry) LoadFromPlugin(gen *protogen.Plugin) error {
 }
 
 func (r *Registry) load(gen *protogen.Plugin) error {
-	for filePath, f := range gen.FilesByPath {
-		r.loadFile(filePath, f)
+	filePaths := make([]string, 0, len(gen.FilesByPath))
+	for filePath := range gen.FilesByPath {
+		filePaths = append(filePaths, filePath)
+	}
+	sort.Strings(filePaths)
+
+	for _, filePath := range filePaths {
+		r.loadFile(filePath, gen.FilesByPath[filePath])
 	}
 
-	for filePath, f := range gen.FilesByPath {
-		if !f.Generate {
+	for _, filePath := range filePaths {
+		if !gen.FilesByPath[filePath].Generate {
 			continue
 		}
 		file := r.files[filePath]
@@ -736,4 +747,14 @@ func (r *Registry) CheckDuplicateAnnotation(httpMethod string, httpTemplate stri
 	}
 	r.annotationMap[a] = struct{}{}
 	return nil
+}
+
+// SetDisableServiceTags sets disableServiceTags
+func (r *Registry) SetDisableServiceTags(use bool) {
+	r.disableServiceTags = use
+}
+
+// GetDisableServiceTags returns disableServiceTags
+func (r *Registry) GetDisableServiceTags() bool {
+	return r.disableServiceTags
 }
