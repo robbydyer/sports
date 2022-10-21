@@ -269,7 +269,8 @@ func nestedQueryParams(message *descriptor.Message, field *descriptor.Field, pre
 		// verify if the field is required in message options
 		if messageSchema, err := extractSchemaOptionFromMessageDescriptor(message.DescriptorProto); err == nil {
 			for _, fieldName := range messageSchema.GetJsonSchema().GetRequired() {
-				if fieldName == reg.FieldName(field) {
+				// Required fields can be field names or json_name values
+				if fieldName == field.GetJsonName() || fieldName == field.GetName() {
 					required = true
 					break
 				}
@@ -367,6 +368,10 @@ func findServicesMessagesAndEnumerations(s []*descriptor.Service, reg *descripto
 		for _, meth := range svc.Methods {
 			// Request may be fully included in query
 			{
+				if !isVisible(getMethodVisibilityOption(meth), reg) {
+					continue
+				}
+
 				swgReqName, ok := fullyQualifiedNameToOpenAPIName(meth.RequestType.FQMN(), reg)
 				if !ok {
 					glog.Errorf("couldn't resolve OpenAPI name for FQMN '%v'", meth.RequestType.FQMN())
@@ -509,6 +514,12 @@ func renderMessageAsDefinition(msg *descriptor.Message, reg *descriptor.Registry
 			// To avoid populating both the field schema require and message schema require, unset the field schema require.
 			// See issue #2635.
 			fieldSchema.Required = nil
+		}
+
+		if fieldSchema.Ref != "" {
+			// Per the JSON Reference syntax: Any members other than "$ref" in a JSON Reference object SHALL be ignored.
+			// https://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03#section-3
+			fieldSchema = openapiSchemaObject{schemaCore: schemaCore{Ref: fieldSchema.Ref}}
 		}
 
 		kv := keyVal{Value: fieldSchema}
@@ -726,6 +737,12 @@ func schemaOfField(f *descriptor.Field, reg *descriptor.Registry, refs refMap) o
 
 	if j, err := getFieldBehaviorOption(reg, f); err == nil {
 		updateSwaggerObjectFromFieldBehavior(&ret, j, reg, f)
+	}
+
+	for i, required := range ret.Required {
+		if required == f.GetName() {
+			ret.Required[i] = reg.FieldName(f)
+		}
 	}
 
 	if reg.GetProto3OptionalNullable() && f.GetProto3Optional() {
@@ -1007,14 +1024,13 @@ func renderServiceTags(services []*descriptor.Service, reg *descriptor.Registry)
 		tag := openapiTagObject{
 			Name: tagName,
 		}
-		if proto.HasExtension(svc.Options, openapi_options.E_Openapiv2Tag) {
-			ext := proto.GetExtension(svc.Options, openapi_options.E_Openapiv2Tag)
-			opts, ok := ext.(*openapi_options.Tag)
-			if !ok {
-				glog.Errorf("extension is %T; want an OpenAPI Tag object", ext)
-				return nil
-			}
 
+		opts, err := getServiceOpenAPIOption(reg, svc)
+		if err != nil {
+			glog.Error(err)
+			return nil
+		}
+		if opts != nil {
 			tag.Description = opts.Description
 			if opts.ExternalDocs != nil {
 				tag.ExternalDocs = &openapiExternalDocumentationObject{
@@ -1222,6 +1238,12 @@ func renderServices(services []*descriptor.Service, paths openapiPathsObject, re
 						} else {
 							desc = fieldProtoComments(reg, bodyField.Target.Message, bodyField.Target)
 						}
+						if schema.Ref != "" {
+							// Per the JSON Reference syntax: Any members other than "$ref" in a JSON Reference object SHALL be ignored.
+							// https://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03#section-3
+							schema = openapiSchemaObject{schemaCore: schemaCore{Ref: schema.Ref}}
+						}
+
 					}
 
 					if meth.GetClientStreaming() {
@@ -1579,7 +1601,10 @@ func applyTemplate(p param) (*openapiSwaggerObject, error) {
 	if err := renderServices(p.Services, s.Paths, p.reg, requestResponseRefs, customRefs, p.Messages); err != nil {
 		panic(err)
 	}
-	s.Tags = append(s.Tags, renderServiceTags(p.Services, p.reg)...)
+
+	if !p.reg.GetDisableServiceTags() {
+		s.Tags = append(s.Tags, renderServiceTags(p.Services, p.reg)...)
+	}
 
 	messages := messageMap{}
 	streamingMessages := messageMap{}
@@ -1820,6 +1845,28 @@ func applyTemplate(p param) (*openapiSwaggerObject, error) {
 				return nil, err
 			}
 			s.extensions = exts
+		}
+
+		if spb.Tags != nil {
+			for _, v := range spb.Tags {
+				newTag := openapiTagObject{}
+				newTag.Name = v.Name
+				newTag.Description = v.Description
+				if v.ExternalDocs != nil {
+					newTag.ExternalDocs = &openapiExternalDocumentationObject{
+						Description: v.ExternalDocs.Description,
+						URL:         v.ExternalDocs.Url,
+					}
+				}
+				if v.Extensions != nil {
+					exts, err := processExtensions(v.Extensions)
+					if err != nil {
+						return nil, err
+					}
+					newTag.extensions = exts
+				}
+				s.Tags = append(s.Tags, newTag)
+			}
 		}
 
 		// Additional fields on the OpenAPI v2 spec's "OpenAPI" object
@@ -2351,6 +2398,23 @@ func extractSchemaOptionFromMessageDescriptor(msg *descriptorpb.DescriptorProto)
 	return opts, nil
 }
 
+// extractTagOptionFromServiceDescriptor extracts the tag of type
+// openapi_options.Tag from a given proto service's descriptor.
+func extractTagOptionFromServiceDescriptor(svc *descriptorpb.ServiceDescriptorProto) (*openapi_options.Tag, error) {
+	if svc.Options == nil {
+		return nil, nil
+	}
+	if !proto.HasExtension(svc.Options, openapi_options.E_Openapiv2Tag) {
+		return nil, nil
+	}
+	ext := proto.GetExtension(svc.Options, openapi_options.E_Openapiv2Tag)
+	opts, ok := ext.(*openapi_options.Tag)
+	if !ok {
+		return nil, fmt.Errorf("extension is %T; want a Tag", ext)
+	}
+	return opts, nil
+}
+
 // extractOpenAPIOptionFromFileDescriptor extracts the message of type
 // openapi_options.OpenAPI from a given proto method's descriptor.
 func extractOpenAPIOptionFromFileDescriptor(file *descriptorpb.FileDescriptorProto) (*openapi_options.Swagger, error) {
@@ -2488,6 +2552,17 @@ func getMessageOpenAPIOption(reg *descriptor.Registry, msg *descriptor.Message) 
 	return opts, nil
 }
 
+func getServiceOpenAPIOption(reg *descriptor.Registry, svc *descriptor.Service) (*openapi_options.Tag, error) {
+	if opts, ok := reg.GetOpenAPIServiceOption(svc.FQSN()); ok {
+		return opts, nil
+	}
+	opts, err := extractTagOptionFromServiceDescriptor(svc.ServiceDescriptorProto)
+	if err != nil {
+		return nil, err
+	}
+	return opts, nil
+}
+
 func getFileOpenAPIOption(reg *descriptor.Registry, file *descriptor.File) (*openapi_options.Swagger, error) {
 	opts, err := extractOpenAPIOptionFromFileDescriptor(file.FileDescriptorProto)
 	if err != nil {
@@ -2594,12 +2669,6 @@ func updateswaggerObjectFromJSONSchema(s *openapiSchemaObject, j *openapi_option
 	s.MaxItems = j.GetMaxItems()
 	s.MinItems = j.GetMinItems()
 
-	if reg.GetUseJSONNamesForFields() {
-		for i, r := range s.Required {
-			// TODO(oyvindwe): Look up field and use field.GetJsonName()?
-			s.Required[i] = casing.JSONCamelCase(r)
-		}
-	}
 	s.Enum = j.GetEnum()
 	if j.GetExtensions() != nil {
 		exts, err := processExtensions(j.GetExtensions())
@@ -2620,12 +2689,6 @@ func updateswaggerObjectFromJSONSchema(s *openapiSchemaObject, j *openapi_option
 }
 
 func updateSwaggerObjectFromFieldBehavior(s *openapiSchemaObject, j []annotations.FieldBehavior, reg *descriptor.Registry, field *descriptor.Field) {
-	// Per the JSON Reference syntax: Any members other than "$ref" in a JSON Reference object SHALL be ignored.
-	// https://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03#section-3
-	if s.Ref != "" {
-		return
-	}
-
 	for _, fb := range j {
 		switch fb {
 		case annotations.FieldBehavior_REQUIRED:
