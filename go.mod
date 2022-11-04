@@ -26,13 +26,14 @@ require (
 	golang.org/x/image v0.0.0-20201208152932-35266b937fa6
 	golang.org/x/oauth2 v0.1.0
 	golang.org/x/sync v0.1.0
-	google.golang.org/api v0.101.0
+	google.golang.org/api v0.102.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	cloud.google.com/go/compute v1.10.0 // indirect
+	cloud.google.com/go/compute v1.12.1 // indirect
+	cloud.google.com/go/compute/metadata v0.2.1 // indirect
 	github.com/Masterminds/semver v1.4.2 // indirect
 	github.com/Masterminds/sprig v2.15.0+incompatible // indirect
 	github.com/aokoli/goutils v1.0.1 // indirect
