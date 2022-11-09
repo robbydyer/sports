@@ -93,7 +93,7 @@ github.com/google/uuid
 ## explicit; go 1.18
 github.com/googleapis/enterprise-certificate-proxy/client
 github.com/googleapis/enterprise-certificate-proxy/client/util
-# github.com/googleapis/gax-go/v2 v2.6.0
+# github.com/googleapis/gax-go/v2 v2.7.0
 ## explicit; go 1.19
 github.com/googleapis/gax-go/v2
 github.com/googleapis/gax-go/v2/apierror
@@ -255,7 +255,7 @@ github.com/twitchtv/twirp/internal/gen
 github.com/twitchtv/twirp/internal/gen/stringutils
 github.com/twitchtv/twirp/internal/gen/typemap
 github.com/twitchtv/twirp/protoc-gen-twirp
-# go.opencensus.io v0.23.0
+# go.opencensus.io v0.24.0
 ## explicit; go 1.13
 go.opencensus.io
 go.opencensus.io/internal
@@ -342,7 +342,7 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# google.golang.org/api v0.102.0
+# google.golang.org/api v0.103.0
 ## explicit; go 1.19
 google.golang.org/api/calendar/v3
 google.golang.org/api/googleapi
