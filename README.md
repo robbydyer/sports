@@ -38,6 +38,7 @@ If you feel so inclined, beer money can be sent to my Venmo (www.venmo.com/u/Rob
   - English Premiere League
   - PGA Tour Leaderboards
   - UEFA Champions League
+  - FIFA World Cup
   - Bundesliga
   - DFB German Pokal
 - Racing. Currently just shows upcoming event schedule
