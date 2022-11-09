@@ -43,7 +43,7 @@ class All extends React.Component {
     }
 
     render() {
-        var sports = ["ncaaf", "nhl", "mlb", "ncaam", "nfl", "nba", "mls", "epl", "dfl", "dfb", "uefa"].map((sport) =>
+        var sports = ["ncaaf", "nhl", "mlb", "ncaam", "nfl", "nba", "mls", "epl", "dfl", "dfb", "uefa", "fifa"].map((sport) =>
             <Accordion.Item eventKey={sport}>
                 <Accordion.Header as='Image' style={accordionHeaderStyle}>
                     <Image fluid src={LogoSrc(sport)} style={{ height: '100px', width: 'auto' }} />

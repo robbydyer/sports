@@ -18,6 +18,7 @@ import imgimg from './image.png';
 import f1logo from './f1.png';
 import irllogo from './irl.png';
 import uefa from './uefa.png';
+import fifa from './fifa.png'
 
 export function LogoSrc(sport) {
     if (sport === "nhl") {
@@ -62,5 +63,7 @@ export function LogoSrc(sport) {
         return irllogo
     } else if (sport === "uefa") {
         return uefa
+    } else if (sport === "fifa") {
+        return fifa
     }
 }

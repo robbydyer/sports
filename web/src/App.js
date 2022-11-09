@@ -30,6 +30,8 @@ class App extends React.Component {
           <Route path="/epl" render={() => <Sport sport="epl" id="epl" key="epl" withImg="true" />} />
           <Route path="/dfl" render={() => <Sport sport="dfl" id="dfl" key="dfl" withImg="true" />} />
           <Route path="/dfb" render={() => <Sport sport="dfb" id="dfb" key="dfb" withImg="true" />} />
+          <Route path="/uefa" render={() => <Sport sport="uefa" id="uefa" key="uefa" withImg="true" />} />
+          <Route path="/fifa" render={() => <Sport sport="fifa" id="fifa" key="fifa" withImg="true" />} />
           <Route path="/pga" render={() => <BasicBoard id="pga" name="pga" key="pga" path="stat/pga" withImg="true" />} />
           <Route path="/img" render={() => <ImageBoard withImg="true" />} />
           <Route path="/clock" render={() => <BasicBoard id="clock" name="clock" key="clock" withImg="true" />} />
