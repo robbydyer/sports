@@ -345,6 +345,19 @@ func (r *rootArgs) setConfigDefaults() {
 	r.config.UEFAConfig.SetDefaults()
 	r.config.UEFAConfig.Headlines.SetDefaults()
 
+	if r.config.FIFAConfig == nil {
+		r.config.FIFAConfig = &sportboard.Config{
+			StartEnabled: atomic.NewBool(false),
+		}
+	}
+	if r.config.FIFAConfig.Headlines == nil {
+		r.config.FIFAConfig.Headlines = &textboard.Config{
+			StartEnabled: atomic.NewBool(false),
+		}
+	}
+	r.config.FIFAConfig.SetDefaults()
+	r.config.FIFAConfig.Headlines.SetDefaults()
+
 	if r.config.SysConfig == nil {
 		r.config.SysConfig = &sysboard.Config{
 			StartEnabled: atomic.NewBool(false),
@@ -792,6 +805,34 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 		}
 	}
 
+	if r.config.FIFAConfig != nil {
+		api, err := espnboard.NewFIFA(ctx, logger)
+		if err != nil {
+			return nil, err
+		}
+
+		l, err := espnboard.GetLeaguer("fifa")
+		if err != nil {
+			return nil, err
+		}
+		headlineAPI := espnboard.NewHeadlines(l, logger)
+		b, err := sportboard.New(ctx, api, bounds, logger, r.config.FIFAConfig,
+			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		boards = append(boards, b)
+		if r.config.FIFAConfig.Headlines != nil {
+			b, err := textboard.New(headlineAPI, r.config.FIFAConfig.Headlines, logger)
+			if err != nil {
+				return nil, err
+			}
+			boards = append(boards, b)
+		}
+	}
+
 	if r.config.ImageConfig != nil {
 		b, err := imageboard.New(r.config.ImageConfig, logger)
 		if err != nil {
@@ -930,6 +971,7 @@ func (r *rootArgs) setTodayFuncs(today string) error {
 	r.config.DFLConfig.TodayFunc = f
 	r.config.DFBConfig.TodayFunc = f
 	r.config.UEFAConfig.TodayFunc = f
+	r.config.FIFAConfig.TodayFunc = f
 
 	ncaafF := func() []time.Time {
 		return util.NCAAFToday(t)
