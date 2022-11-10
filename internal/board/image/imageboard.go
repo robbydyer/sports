@@ -210,7 +210,7 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	imageList := []img{}
 	gifList := []img{}
 
-	dirWalker := func(jumpOnly bool) func(string, fs.DirEntry, error) error {
+	dirWalker := func(dir string, jumpOnly bool) func(string, fs.DirEntry, error) error {
 		return func(path string, dirEntry fs.DirEntry, err error) error {
 			if err != nil {
 				return err
@@ -219,12 +219,14 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 				return nil
 			}
 
+			fullPath := filepath.Join(dir, path)
+
 			if strings.HasSuffix(strings.ToLower(dirEntry.Name()), "gif") {
 				i.log.Debug("found gif during walk",
 					zap.String("path", path),
 				)
 				gifList = append(gifList, img{
-					path:     path,
+					path:     fullPath,
 					jumpOnly: jumpOnly,
 				})
 
@@ -249,7 +251,7 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 
 		fileSystem := os.DirFS(dir)
 
-		if err := fs.WalkDir(fileSystem, ".", dirWalker(false)); err != nil {
+		if err := fs.WalkDir(fileSystem, ".", dirWalker(dir, false)); err != nil {
 			i.log.Error("failed to prepare image for board", zap.Error(err))
 		}
 	}
@@ -261,7 +263,7 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 
 		fileSystem := os.DirFS(dir.Directory)
 
-		if err := fs.WalkDir(fileSystem, ".", dirWalker(dir.JumpOnly)); err != nil {
+		if err := fs.WalkDir(fileSystem, ".", dirWalker(dir.Directory, dir.JumpOnly)); err != nil {
 			i.log.Error("failed to prepare image walking directory list",
 				zap.Error(err),
 			)
@@ -310,8 +312,6 @@ func (i *ImageBoard) renderGIFs(ctx context.Context, canvas board.Canvas, images
 	defer wg.Wait()
 
 	preload := func(preloadCtx context.Context, path string) {
-		defer wg.Done()
-
 		ch := i.getPreloader(path)
 
 		img, err := i.getSizedGIF(preloadCtx, path, canvas.Bounds(), ch)
@@ -331,7 +331,6 @@ func (i *ImageBoard) renderGIFs(ctx context.Context, canvas board.Canvas, images
 	defer pCancel()
 
 	if len(images) > 0 {
-		wg.Add(1)
 		preload(pCtx, images[0].path)
 	}
 
@@ -350,7 +349,10 @@ IMAGES:
 
 		if nextIndex < len(images) {
 			wg.Add(1)
-			go preload(pCtx, images[nextIndex].path)
+			go func() {
+				defer wg.Done()
+				preload(pCtx, images[nextIndex].path)
+			}()
 		}
 
 		if jump != "" && !filenameCompare(p, jump) {
