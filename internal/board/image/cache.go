@@ -1,6 +1,10 @@
 package imageboard
 
-import "image/gif"
+import (
+	"context"
+	"image/gif"
+	"time"
+)
 
 func (i *ImageBoard) setGIFCache(key string, g *gif.GIF) {
 	i.gifCacheLock.Lock()
@@ -21,16 +25,17 @@ func (i *ImageBoard) getGIFCache(key string) *gif.GIF {
 	return nil
 }
 
-func (i *ImageBoard) getPreloader(key string) chan struct{} {
-	i.preloadLock.Lock()
-	defer i.preloadLock.Unlock()
+func (i *ImageBoard) getPreloaded(ctx context.Context, key string) (*img, error) {
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, context.Canceled
+		case <-time.After(500 * time.Millisecond):
+		}
 
-	p, ok := i.preloaders[key]
-	if ok {
-		return p
+		p, ok := i.preloaded[key]
+		if ok {
+			return p, nil
+		}
 	}
-
-	i.preloaders[key] = make(chan struct{}, 1)
-
-	return i.preloaders[key]
 }
