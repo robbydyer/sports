@@ -48,13 +48,14 @@ type ImageBoard struct {
 	gifCache       map[string]*gif.GIF
 	lockers        map[string]*sync.Mutex
 	preloaders     map[string]chan struct{}
-	preloadLock    sync.Mutex
+	preloadLock    sync.RWMutex
 	jumpLock       sync.Mutex
 	jumper         Jumper
 	jumpTo         chan string
 	rpcServer      pb.TwirpServer
 	priorJumpState *atomic.Bool
 	enabler        board.Enabler
+	preloaded      map[string]*img
 	sync.Mutex
 }
 
@@ -79,7 +80,10 @@ type Config struct {
 
 type img struct {
 	path     string
+	isGif    bool
 	jumpOnly bool
+	img      image.Image
+	gif      *gif.GIF
 }
 
 // SetDefaults sets some Config defaults
@@ -118,6 +122,7 @@ func New(config *Config, logger *zap.Logger) (*ImageBoard, error) {
 		preloaders:     make(map[string]chan struct{}),
 		priorJumpState: atomic.NewBool(config.StartEnabled.Load()),
 		enabler:        enabler.New(),
+		preloaded:      make(map[string]*img),
 	}
 	if config.StartEnabled.Load() {
 		i.enabler.Enable()
@@ -207,10 +212,9 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		}
 	}
 
-	imageList := []img{}
-	gifList := []img{}
+	imageList := []*img{}
 
-	dirWalker := func(jumpOnly bool) func(string, fs.DirEntry, error) error {
+	dirWalker := func(dir string, jumpOnly bool) func(string, fs.DirEntry, error) error {
 		return func(path string, dirEntry fs.DirEntry, err error) error {
 			if err != nil {
 				return err
@@ -219,13 +223,16 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 				return nil
 			}
 
+			fullPath := filepath.Join(dir, path)
+
 			if strings.HasSuffix(strings.ToLower(dirEntry.Name()), "gif") {
 				i.log.Debug("found gif during walk",
 					zap.String("path", path),
 				)
-				gifList = append(gifList, img{
-					path:     path,
+				imageList = append(imageList, &img{
+					path:     fullPath,
 					jumpOnly: jumpOnly,
+					isGif:    true,
 				})
 
 				return nil
@@ -235,8 +242,8 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 				zap.String("path", path),
 			)
 
-			imageList = append(imageList, img{
-				path:     path,
+			imageList = append(imageList, &img{
+				path:     fullPath,
 				jumpOnly: jumpOnly,
 			})
 
@@ -249,7 +256,7 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 
 		fileSystem := os.DirFS(dir)
 
-		if err := fs.WalkDir(fileSystem, ".", dirWalker(false)); err != nil {
+		if err := fs.WalkDir(fileSystem, ".", dirWalker(dir, false)); err != nil {
 			i.log.Error("failed to prepare image for board", zap.Error(err))
 		}
 	}
@@ -261,7 +268,7 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 
 		fileSystem := os.DirFS(dir.Directory)
 
-		if err := fs.WalkDir(fileSystem, ".", dirWalker(dir.JumpOnly)); err != nil {
+		if err := fs.WalkDir(fileSystem, ".", dirWalker(dir.Directory, dir.JumpOnly)); err != nil {
 			i.log.Error("failed to prepare image walking directory list",
 				zap.Error(err),
 			)
@@ -270,9 +277,6 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 
 	sort.SliceStable(imageList, func(i, j int) bool {
 		return imageList[i].path < imageList[j].path
-	})
-	sort.SliceStable(gifList, func(i, j int) bool {
-		return gifList[i].path < gifList[j].path
 	})
 
 	jump := ""
@@ -290,10 +294,6 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 		i.log.Error("error rendering images", zap.Error(err))
 	}
 
-	if err := i.renderGIFs(ctx, canvas, gifList, jump); err != nil {
-		i.log.Error("error rendering GIFs", zap.Error(err))
-	}
-
 	if isJumping {
 		i.Enabler().Store(i.priorJumpState.Load())
 	}
@@ -301,38 +301,58 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	return nil
 }
 
-func (i *ImageBoard) renderGIFs(ctx context.Context, canvas board.Canvas, images []img, jump string) error {
-	preloadImages := make(map[string]*gif.GIF, len(images))
+func (i *ImageBoard) renderImages(ctx context.Context, canvas board.Canvas, images []*img, jump string) error {
+	preloader := make(map[string]chan struct{})
 
 	jump = strings.ToLower(jump)
 
-	wg := sync.WaitGroup{}
-	defer wg.Wait()
+	preloadCh := make(chan *img)
 
-	preload := func(preloadCtx context.Context, path string) {
-		defer wg.Done()
-
-		ch := i.getPreloader(path)
-
-		img, err := i.getSizedGIF(preloadCtx, path, canvas.Bounds(), ch)
-		if err != nil {
-			i.log.Error("failed to prepare image", zap.Error(err), zap.String("path", path))
+	go func() {
+		for p := range preloadCh {
 			i.preloadLock.Lock()
-			preloadImages[path] = nil
+			i.preloaded[p.path] = p
 			i.preloadLock.Unlock()
+		}
+	}()
+
+	wg := sync.WaitGroup{}
+	defer func() {
+		wg.Wait()
+		close(preloadCh)
+	}()
+
+	preload := func(im *img) {
+		defer wg.Done()
+		img, err := i.getSizedImage(im.path, canvas.Bounds(), preloader[im.path])
+		if err != nil {
+			i.log.Error("failed to prepare image", zap.Error(err), zap.String("path", im.path))
 			return
 		}
-		i.preloadLock.Lock()
-		preloadImages[path] = img
-		i.preloadLock.Unlock()
+		im.img = img
+		select {
+		case preloadCh <- im:
+		default:
+		}
 	}
 
-	pCtx, pCancel := context.WithTimeout(ctx, preloaderTimeout)
-	defer pCancel()
+	preloadGif := func(preloadCtx context.Context, im *img) {
+		defer wg.Done()
+		img, err := i.getSizedGIF(preloadCtx, im.path, canvas.Bounds())
+		if err != nil {
+			i.log.Error("failed to prepare image", zap.Error(err), zap.String("path", im.path))
+			return
+		}
+		im.gif = img
+		select {
+		case preloadCh <- im:
+		default:
+		}
+	}
 
 	if len(images) > 0 {
 		wg.Add(1)
-		preload(pCtx, images[0].path)
+		preload(images[0])
 	}
 
 IMAGES:
@@ -344,162 +364,70 @@ IMAGES:
 		}
 
 		nextIndex := index + 1
+
+		if nextIndex < len(images) {
+			if images[nextIndex].isGif {
+				pCtx, pCancel := context.WithTimeout(ctx, preloaderTimeout)
+				defer pCancel()
+				wg.Add(1)
+				go preloadGif(pCtx, images[nextIndex])
+			} else {
+				wg.Add(1)
+				go preload(images[nextIndex])
+			}
+		}
+
+		if jump != "" && !filenameCompare(p, jump) {
+			i.log.Debug("skipping image",
+				zap.String("this", p),
+				zap.String("jump", jump),
+			)
+			continue IMAGES
+		} else if jump != "" {
+			i.log.Info("jumping to image",
+				zap.String("this", p),
+				zap.String("jump", jump),
+			)
+		}
+
+		if thisImg.jumpOnly && jump == "" {
+			continue IMAGES
+		}
 
 		pCtx, pCancel := context.WithTimeout(ctx, preloaderTimeout)
 		defer pCancel()
 
-		if nextIndex < len(images) {
-			wg.Add(1)
-			go preload(pCtx, images[nextIndex].path)
-		}
-
-		if jump != "" && !filenameCompare(p, jump) {
-			i.log.Debug("skipping image",
-				zap.String("this", p),
-				zap.String("jump", jump),
-			)
-			continue IMAGES
-		} else if jump != "" {
-			i.log.Info("jumping to image",
-				zap.String("this", p),
-				zap.String("jump", jump),
-			)
-		}
-
-		if thisImg.jumpOnly && jump == "" {
-			continue IMAGES
-		}
-
-		ch := i.getPreloader(p)
-
-		select {
-		case <-ctx.Done():
-			return context.Canceled
-		case <-ch:
-			i.log.Debug("preloader finished", zap.String("path", p))
-		case <-time.After(preloaderTimeout):
-			i.log.Error("timed out waiting for image preloader",
-				zap.String("path", p),
-				zap.Duration("preloader timeout", preloaderTimeout),
-			)
-			continue IMAGES
-		}
-
-		g, ok := preloadImages[p]
-		if !ok {
-			i.log.Error("preloaded GIF was not ready", zap.String("path", p))
-			continue IMAGES
-		}
-
-		i.log.Debug("playing GIF", zap.String("path", p))
-		gifCtx, gifCancel := context.WithCancel(ctx)
-		defer gifCancel()
-
-		select {
-		case <-ctx.Done():
-			gifCancel()
-			return context.Canceled
-		default:
-		}
-
-		go func() {
-			time.Sleep(i.config.boardDelay)
-			gifCancel()
-		}()
-
-		if err := rgbrender.PlayGIF(gifCtx, canvas, g); err != nil {
-			i.log.Error("GIF player failed", zap.Error(err))
-		}
-
-		if jump != "" {
-			return nil
-		}
-	}
-
-	return nil
-}
-
-func (i *ImageBoard) renderImages(ctx context.Context, canvas board.Canvas, images []img, jump string) error {
-	preloader := make(map[string]chan struct{})
-	preloadImages := make(map[string]image.Image, len(images))
-
-	jump = strings.ToLower(jump)
-
-	preload := func(path string) {
-		i.preloadLock.Lock()
-		defer i.preloadLock.Unlock()
-		preloader[path] = make(chan struct{}, 1)
-		img, err := i.getSizedImage(path, canvas.Bounds(), preloader[path])
-		if err != nil {
-			i.log.Error("failed to prepare image", zap.Error(err), zap.String("path", path))
-			preloadImages[path] = nil
-			return
-		}
-		preloadImages[path] = img
-	}
-
-	if len(images) > 0 {
-		preload(images[0].path)
-	}
-
-IMAGES:
-	for index, thisImg := range images {
-		p := thisImg.path
-		if !i.enabler.Enabled() {
-			i.log.Warn("ImageBoard is disabled, not rendering")
-			return nil
-		}
-
-		nextIndex := index + 1
-
-		if nextIndex < len(images) {
-			go preload(images[nextIndex].path)
-		}
-
-		if jump != "" && !filenameCompare(p, jump) {
-			i.log.Debug("skipping image",
-				zap.String("this", p),
-				zap.String("jump", jump),
-			)
-			continue IMAGES
-		} else if jump != "" {
-			i.log.Info("jumping to image",
-				zap.String("this", p),
-				zap.String("jump", jump),
-			)
-		}
-
-		if thisImg.jumpOnly && jump == "" {
-			continue IMAGES
-		}
-
-		select {
-		case <-ctx.Done():
-			return context.Canceled
-		case <-preloader[p]:
-			i.log.Debug("preloader finished", zap.String("path", p))
-		case <-time.After(preloaderTimeout):
-			i.log.Error("timed out waiting for image preloader",
-				zap.String("path", p),
-				zap.Duration("preloader timeout", preloaderTimeout),
-			)
-			continue IMAGES
-		}
-
-		img, ok := preloadImages[p]
-		if !ok || img == nil {
-			i.log.Error("preloaded image was not ready", zap.String("path", p))
-			continue IMAGES
-		}
-
-		i.log.Debug("playing image")
-
-		align, err := rgbrender.AlignPosition(rgbrender.CenterCenter, canvas.Bounds(), img.Bounds().Dx(), img.Bounds().Dy())
+		img, err := i.getPreloaded(pCtx, thisImg.path)
 		if err != nil {
 			return err
 		}
 
-		draw.Draw(canvas, align, img, image.Point{}, draw.Over)
+		if img.isGif {
+			i.log.Debug("playing GIF", zap.String("path", p))
+			gifCtx, gifCancel := context.WithTimeout(ctx, i.config.boardDelay)
+			defer gifCancel()
+
+			if err := rgbrender.PlayGIF(gifCtx, canvas, img.gif); err != nil {
+				i.log.Error("GIF player failed", zap.Error(err))
+			}
+
+			if jump != "" {
+				return nil
+			}
+
+			continue IMAGES
+		}
+
+		i.log.Debug("playing image",
+			zap.String("image", img.path),
+		)
+
+		align, err := rgbrender.AlignPosition(rgbrender.CenterCenter, canvas.Bounds(), img.img.Bounds().Dx(), img.img.Bounds().Dy())
+		if err != nil {
+			return err
+		}
+
+		draw.Draw(canvas, align, img.img, image.Point{}, draw.Over)
 
 		if err := canvas.Render(ctx); err != nil {
 			return err
@@ -617,14 +545,7 @@ func (i *ImageBoard) getSizedImage(path string, bounds image.Rectangle, preloade
 	return sizedImg, nil
 }
 
-func (i *ImageBoard) getSizedGIF(ctx context.Context, path string, bounds image.Rectangle, preloader chan<- struct{}) (*gif.GIF, error) {
-	defer func() {
-		select {
-		case preloader <- struct{}{}:
-		default:
-		}
-	}()
-
+func (i *ImageBoard) getSizedGIF(ctx context.Context, path string, bounds image.Rectangle) (*gif.GIF, error) {
 	key := cacheKey(path, bounds)
 
 	// Make sure we don't process the same image simultaneously

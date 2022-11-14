@@ -146,6 +146,9 @@ func PlayImages(ctx context.Context, canvas board.Canvas, images []image.Image, 
 // PlayGIF reads and draw a gif file from r. It use the contained images and
 // delays and loops over it, until a true is sent to the returned chan
 func PlayGIF(ctx context.Context, canvas board.Canvas, gif *gif.GIF) error {
+	if gif == nil {
+		return nil
+	}
 	delay := make([]time.Duration, len(gif.Image))
 	images := make([]image.Image, len(gif.Image))
 	for i, image := range gif.Image {
