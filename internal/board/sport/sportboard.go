@@ -261,10 +261,6 @@ func New(ctx context.Context, api API, bounds image.Rectangle, today time.Time, 
 		enabler:         enabler.New(),
 	}
 
-	// Set todayFunc
-	if s.config.TodayFunc == nil {
-	}
-
 	if config.StartEnabled.Load() {
 		s.enabler.Enable()
 	}
