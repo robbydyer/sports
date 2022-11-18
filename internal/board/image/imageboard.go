@@ -36,7 +36,7 @@ const (
 	Name = "Img"
 )
 
-var preloaderTimeout = (20 * time.Second)
+var preloaderTimeout = (30 * time.Second)
 
 // Jumper is a function that jumps to a board
 type Jumper func(ctx context.Context, boardName string) error
@@ -460,7 +460,7 @@ IMAGES:
 
 		if nextIndex < len(images) {
 			if images[nextIndex].isGif {
-				pCtx, pCancel := context.WithTimeout(ctx, preloaderTimeout)
+				pCtx, pCancel := context.WithTimeout(context.Background(), preloaderTimeout)
 				defer pCancel()
 				wg.Add(1)
 				go preloadGif(pCtx, images[nextIndex])
