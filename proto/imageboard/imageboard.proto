@@ -13,6 +13,7 @@ message Status{
     bool enabled = 1;
     bool diskcache_enabled = 2;
     bool memcache_enabled = 3;
+    bool scroll_enabled = 4;
 }
 
 message SetStatusReq {

@@ -119,6 +119,9 @@ sportsMatrixConfig:
 clockConfig:
   enabled: true
 
+  scrollMode: false
+  scrollDelay: "50ms"
+
   # Set this to true to show the clock board in between every other board
   showBetween: false
 
@@ -1259,7 +1262,16 @@ dfbConfig:
 # All images in the directory will be automatically scaled to fit the matrix
 imageConfig:
   enabled: false
+  
+  # Enable scroll mode. 
+  # WARNING: GIFs will not display when scroll mode is enabled
+  scrollMode: false
+  scrollDelay: "50ms"
+  tightScrollPadding: 10
+
+  # Caches resized images to disk in /tmp. You should probably not disable this
   useDiskCache: true
+
   boardDelay: 5s
 
   directoryList:
