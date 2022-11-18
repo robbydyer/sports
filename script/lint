@@ -48,4 +48,4 @@ mkdir -p "${ROOT}/internal/sportsmatrix/assets/web"
 touch "${ROOT}/internal/sportsmatrix/assets/web/foo"
 
 set -x
-golangci-lint run --verbose ${fix}
+golangci-lint run --verbose --timeout="5m" ${fix}
