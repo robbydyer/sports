@@ -18,6 +18,7 @@ function jsonToStatus(jsonDat) {
     status.setEnabled(dat.enabled);
     status.setDiskcacheEnabled(dat.diskcache_enabled);
     status.setMemcacheEnabled(dat.memcache_enabled);
+    status.setScrollEnabled(dat.scroll_enabled);
 
     return status;
 }
@@ -68,6 +69,12 @@ class ImageBoard extends React.Component {
                     <Col>
                         <Form.Switch id="imgenabler" label="Enable/Disable" checked={this.state.status.getEnabled()}
                             onChange={() => { this.state.status.setEnabled(!this.state.status.getEnabled()); this.updateStatus(); }} />
+                    </Col>
+                </Row>
+                <Row className="text-left">
+                    <Col>
+                        <Form.Switch id="imgscroll" label="Scroll Mode" checked={this.state.status.getScrollEnabled()}
+                            onChange={() => { this.state.status.setScrollEnabled(!this.state.status.getScrollEnabled()); this.updateStatus(); }} />
                     </Col>
                 </Row>
                 <Row className="text-left">
