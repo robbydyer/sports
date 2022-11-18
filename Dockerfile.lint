@@ -1,5 +1,5 @@
 # 2022-09-12
-FROM debian:buster-20221114-slim AS builder
+FROM debian:buster-20221114 AS builder
 
 # What's the meaning of all this? Well, you apparently can't run the linter
 # without the requried libs for the cgo imports. So here we are, building the C
