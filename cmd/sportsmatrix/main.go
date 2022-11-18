@@ -57,6 +57,7 @@ type rootArgs struct {
 	writer       *os.File
 	alternateAPI bool
 	debug        bool
+	todayT       time.Time
 }
 
 func main() {
@@ -474,7 +475,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 		headlineAPI := espnboard.NewHeadlines(l, logger)
-		b, err := sportboard.New(ctx, api, bounds, logger, r.config.NHLConfig,
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.NHLConfig,
 			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
 		)
 		if err != nil {
@@ -536,7 +537,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 		headlineAPI := espnboard.NewHeadlines(l, logger)
 		opts = append(opts, sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo))
 
-		b, err := sportboard.New(ctx, api, bounds, logger, r.config.MLBConfig, opts...)
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.MLBConfig, opts...)
 		if err != nil {
 			return boards, err
 		}
@@ -568,7 +569,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 		}
 		headlineAPI := espnboard.NewHeadlines(l, logger)
 
-		b, err := sportboard.New(ctx, api, bounds, logger, r.config.NCAAMConfig,
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.NCAAMConfig,
 			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
 		)
 		if err != nil {
@@ -596,7 +597,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 		}
 		headlineAPI := espnboard.NewHeadlines(l, logger)
 
-		b, err := sportboard.New(ctx, api, bounds, logger, r.config.NCAAFConfig,
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.NCAAFConfig,
 			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
 		)
 		if err != nil {
@@ -623,7 +624,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 		}
 		headlineAPI := espnboard.NewHeadlines(l, logger)
 
-		b, err := sportboard.New(ctx, api, bounds, logger, r.config.NBAConfig,
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.NBAConfig,
 			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
 		)
 		if err != nil {
@@ -650,7 +651,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 		}
 		headlineAPI := espnboard.NewHeadlines(l, logger)
 
-		b, err := sportboard.New(ctx, api, bounds, logger, r.config.NFLConfig,
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.NFLConfig,
 			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
 		)
 		if err != nil {
@@ -677,7 +678,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 		headlineAPI := espnboard.NewHeadlines(l, logger)
-		b, err := sportboard.New(ctx, api, bounds, logger, r.config.MLSConfig,
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.MLSConfig,
 			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
 		)
 		if err != nil {
@@ -704,7 +705,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 		headlineAPI := espnboard.NewHeadlines(l, logger)
-		b, err := sportboard.New(ctx, api, bounds, logger, r.config.EPLConfig,
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.EPLConfig,
 			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
 		)
 		if err != nil {
@@ -732,7 +733,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 		headlineAPI := espnboard.NewHeadlines(l, logger)
-		b, err := sportboard.New(ctx, api, bounds, logger, r.config.DFLConfig,
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.DFLConfig,
 			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
 		)
 		if err != nil {
@@ -760,7 +761,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 		headlineAPI := espnboard.NewHeadlines(l, logger)
-		b, err := sportboard.New(ctx, api, bounds, logger, r.config.DFBConfig,
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.DFBConfig,
 			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
 		)
 		if err != nil {
@@ -788,7 +789,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 		headlineAPI := espnboard.NewHeadlines(l, logger)
-		b, err := sportboard.New(ctx, api, bounds, logger, r.config.UEFAConfig,
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.UEFAConfig,
 			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
 		)
 		if err != nil {
@@ -816,7 +817,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 		headlineAPI := espnboard.NewHeadlines(l, logger)
-		b, err := sportboard.New(ctx, api, bounds, logger, r.config.FIFAConfig,
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.FIFAConfig,
 			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
 		)
 		if err != nil {
@@ -950,36 +951,23 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 
 func (r *rootArgs) setTodayFuncs(today string) error {
 	if today == "" {
+		r.todayT = util.Today()[0]
 		return nil
 	}
 
-	t, err := time.Parse("2006-01-02T15:04:05", fmt.Sprintf("%sT12:00:00", today))
+	var err error
+	r.todayT, err = time.Parse("2006-01-02T15:04:05", fmt.Sprintf("%sT12:00:00", today))
 	if err != nil {
 		return err
 	}
 
-	f := func() []time.Time {
-		return []time.Time{t}
-	}
-
-	r.config.NHLConfig.TodayFunc = f
-	r.config.MLBConfig.TodayFunc = f
-	r.config.NCAAMConfig.TodayFunc = f
-	r.config.NBAConfig.TodayFunc = f
-	r.config.MLSConfig.TodayFunc = f
-	r.config.EPLConfig.TodayFunc = f
-	r.config.DFLConfig.TodayFunc = f
-	r.config.DFBConfig.TodayFunc = f
-	r.config.UEFAConfig.TodayFunc = f
-	r.config.FIFAConfig.TodayFunc = f
-
 	ncaafF := func() []time.Time {
-		return util.NCAAFToday(t)
+		return util.NCAAFToday(r.todayT)
 	}
 	r.config.NCAAFConfig.TodayFunc = ncaafF
 
 	nflF := func() []time.Time {
-		return util.NFLToday(t)
+		return util.NFLToday(r.todayT)
 	}
 	r.config.NFLConfig.TodayFunc = nflF
 

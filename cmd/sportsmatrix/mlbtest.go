@@ -136,7 +136,7 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	b, err := sportboard.New(ctx, api, bounds, logger, c.rArgs.config.MLBConfig, sportboard.WithDetailedLiveRenderer(dR))
+	b, err := sportboard.New(ctx, api, bounds, c.rArgs.todayT, logger, c.rArgs.config.MLBConfig, sportboard.WithDetailedLiveRenderer(dR))
 	if err != nil {
 		return err
 	}
