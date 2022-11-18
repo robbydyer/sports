@@ -99,6 +99,25 @@ func NFLToday(t time.Time) []time.Time {
 	return todays
 }
 
+func AddTodays(today time.Time, previousDays int, advanceDays int) []time.Time {
+	todays := []time.Time{}
+
+	if previousDays > 0 {
+		for i := 1; i <= previousDays; i++ {
+			todays = append(todays, today.AddDate(0, 0, -1*i))
+		}
+	}
+	todays = append(todays, today)
+
+	if advanceDays > 0 {
+		for i := 1; i <= advanceDays; i++ {
+			todays = append(todays, today.AddDate(0, 0, i))
+		}
+	}
+
+	return todays
+}
+
 // PullPng GETs a png and returns it decoded as an image.Image
 func PullPng(ctx context.Context, url string) (image.Image, error) {
 	req, err := http.NewRequest("GET", url, nil)

@@ -111,6 +111,8 @@ type Config struct {
 	DetailedLive         *atomic.Bool      `json:"detailedLive"`
 	ShowLeagueLogo       *atomic.Bool      `json:"showLeagueLogo"`
 	Enable24Hour         *atomic.Bool      `json:"enable24Hour"`
+	AdvanceDays          int               `json:"advanceDays"`
+	PreviousDays         int               `json:"previousDays"`
 }
 
 // FontConfig ...
@@ -244,7 +246,7 @@ func (c *Config) SetDefaults() {
 }
 
 // New ...
-func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logger, config *Config, opts ...OptionFunc) (*SportBoard, error) {
+func New(ctx context.Context, api API, bounds image.Rectangle, today time.Time, logger *zap.Logger, config *Config, opts ...OptionFunc) (*SportBoard, error) {
 	s := &SportBoard{
 		config:          config,
 		api:             api,
@@ -270,6 +272,11 @@ func New(ctx context.Context, api API, bounds image.Rectangle, logger *zap.Logge
 
 	if s.config.TodayFunc == nil {
 		s.config.TodayFunc = util.Today
+		if s.config.PreviousDays > 0 || s.config.AdvanceDays > 0 {
+			s.config.TodayFunc = func() []time.Time {
+				return util.AddTodays(today, s.config.PreviousDays, s.config.AdvanceDays)
+			}
+		}
 		if strings.ToLower(s.api.League()) == "ncaaf" {
 			f := func() []time.Time {
 				return util.NCAAFToday(util.Today()[0])
