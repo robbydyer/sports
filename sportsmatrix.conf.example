@@ -477,6 +477,12 @@ mlbConfig:
   # 24 Hour Clock format for Game schedules
   enable24Hour: false
 
+  # Number of days in advance to show scheduled games for. Defaults to today only
+  advanceDays: 0
+
+  # Number of previous days to show scores for. Defaults to today only
+  previousDays: 0
+
 ## NCAA Mens Basketball Config
 ncaamConfig:
   enabled: true
@@ -578,6 +584,12 @@ ncaamConfig:
   # 24 Hour Clock format for Game schedules
   enable24Hour: false
 
+  # Number of days in advance to show scheduled games for. Defaults to today only
+  advanceDays: 0
+
+  # Number of previous days to show scores for. Defaults to today only
+  previousDays: 0
+
 ## NBA Config
 nbaConfig:
   enabled: true
@@ -675,6 +687,12 @@ nbaConfig:
 
   # 24 Hour Clock format for Game schedules
   enable24Hour: false
+
+  # Number of days in advance to show scheduled games for. Defaults to today only
+  advanceDays: 0
+
+  # Number of previous days to show scores for. Defaults to today only
+  previousDays: 0
 
 ## NFL Config
 nflConfig:
@@ -872,6 +890,12 @@ mlsConfig:
   # 24 Hour Clock format for Game schedules
   enable24Hour: false
 
+  # Number of days in advance to show scheduled games for. Defaults to today only
+  advanceDays: 0
+
+  # Number of previous days to show scores for. Defaults to today only
+  previousDays: 0
+
 ## English Premiere League Config
 eplConfig:
   enabled: true
@@ -969,6 +993,12 @@ eplConfig:
 
   # 24 Hour Clock format for Game schedules
   enable24Hour: false
+
+  # Number of days in advance to show scheduled games for. Defaults to today only
+  advanceDays: 0
+
+  # Number of previous days to show scores for. Defaults to today only
+  previousDays: 0
 
 ## Bundesliga
 dflConfig:
@@ -1068,6 +1098,12 @@ dflConfig:
   # 24 Hour Clock format for Game schedules
   enable24Hour: false
 
+  # Number of days in advance to show scheduled games for. Defaults to today only
+  advanceDays: 0
+
+  # Number of previous days to show scores for. Defaults to today only
+  previousDays: 0
+
 ## FIFA World Cup 
 fifaConfig:
   enabled: true
@@ -1165,6 +1201,12 @@ fifaConfig:
 
   # 24 Hour Clock format for Game schedules
   enable24Hour: false
+
+  # Number of days in advance to show scheduled games for. Defaults to today only
+  advanceDays: 0
+
+  # Number of previous days to show scores for. Defaults to today only
+  previousDays: 0
   
 ## DFB Pokal - German Soccer Cup
 dfbConfig:
@@ -1263,6 +1305,12 @@ dfbConfig:
 
   # 24 Hour Clock format for Game schedules
   enable24Hour: false
+
+  # Number of days in advance to show scheduled games for. Defaults to today only
+  advanceDays: 0
+
+  # Number of previous days to show scores for. Defaults to today only
+  previousDays: 0
 
 # Image Board. Rotates showing all the images in a list of directories
 # All images in the directory will be automatically scaled to fit the matrix
