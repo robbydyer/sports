@@ -3,6 +3,7 @@ package espnboard
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -67,6 +68,9 @@ func (n *nfl) HomeSideSwap() bool {
 	return false
 }
 
+func (n *nfl) SetScoreboardQuery(v url.Values) {
+}
+
 // NewNFL ...
 func NewNFL(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &nfl{}, logger, defaultRankSetter, defaultRankSetter)
@@ -101,6 +105,10 @@ func (n *ncaam) HomeSideSwap() bool {
 	return false
 }
 
+func (n *ncaam) SetScoreboardQuery(v url.Values) {
+	v.Set("groups", "50")
+}
+
 // NewNCAAMensBasketball ...
 func NewNCAAMensBasketball(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &ncaam{}, logger, defaultRankSetter, defaultRankSetter)
@@ -132,6 +140,9 @@ func (n *nba) HomeSideSwap() bool {
 	return false
 }
 
+func (n *nba) SetScoreboardQuery(v url.Values) {
+}
+
 // NewNBA ...
 func NewNBA(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &nba{}, logger, defaultRankSetter, defaultRankSetter)
@@ -161,6 +172,9 @@ func (n *mls) HeadlinePath() string {
 
 func (n *mls) HomeSideSwap() bool {
 	return true
+}
+
+func (n *mls) SetScoreboardQuery(v url.Values) {
 }
 
 // NewMLS ...
@@ -197,6 +211,9 @@ func (n *nhl) HomeSideSwap() bool {
 	return false
 }
 
+func (n *nhl) SetScoreboardQuery(v url.Values) {
+}
+
 // NewNHL ...
 func NewNHL(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &nhl{}, logger, defaultRankSetter, defaultRankSetter)
@@ -229,6 +246,9 @@ func (n *mlb) HeadlinePath() string {
 
 func (n *mlb) HomeSideSwap() bool {
 	return false
+}
+
+func (n *mlb) SetScoreboardQuery(v url.Values) {
 }
 
 // NewMLB ...
@@ -273,6 +293,9 @@ func NewNCAAF(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, n, logger, n.setRankings, n.setRecords)
 }
 
+func (n *ncaaf) SetScoreboardQuery(v url.Values) {
+}
+
 // NewEPL ...
 func NewEPL(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &epl{}, logger, defaultRankSetter, defaultRankSetter)
@@ -304,6 +327,9 @@ func (n *epl) HeadlinePath() string {
 
 func (n *epl) HomeSideSwap() bool {
 	return true
+}
+
+func (n *epl) SetScoreboardQuery(v url.Values) {
 }
 
 // NewDFL ...
@@ -339,6 +365,9 @@ func (n *dfl) HomeSideSwap() bool {
 	return true
 }
 
+func (n *dfl) SetScoreboardQuery(v url.Values) {
+}
+
 // NewDFB ...
 func NewDFB(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &dfb{}, logger, defaultRankSetter, defaultRankSetter)
@@ -370,6 +399,9 @@ func (n *dfb) HeadlinePath() string {
 
 func (n *dfb) HomeSideSwap() bool {
 	return true
+}
+
+func (n *dfb) SetScoreboardQuery(v url.Values) {
 }
 
 // NewUEFA ...
@@ -405,6 +437,9 @@ func (n *uefa) HomeSideSwap() bool {
 	return true
 }
 
+func (n *uefa) SetScoreboardQuery(v url.Values) {
+}
+
 // NewFIFA ...
 func NewFIFA(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	return New(ctx, &fifa{}, logger, defaultRankSetter, defaultRankSetter)
@@ -436,4 +471,7 @@ func (n *fifa) HeadlinePath() string {
 
 func (n *fifa) HomeSideSwap() bool {
 	return true
+}
+
+func (n *fifa) SetScoreboardQuery(v url.Values) {
 }

@@ -3,6 +3,7 @@ package espnboard
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"sort"
 	"strconv"
@@ -33,6 +34,7 @@ type Leaguer interface {
 	HTTPPathPrefix() string
 	HeadlinePath() string
 	HomeSideSwap() bool
+	SetScoreboardQuery(url.Values)
 }
 
 // ESPNBoard ...
