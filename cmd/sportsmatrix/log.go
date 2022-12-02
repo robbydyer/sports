@@ -31,6 +31,6 @@ func (r *rootArgs) getLogger(level zapcore.Level) (*zap.Logger, error) {
 
 	return zap.New(core).WithOptions(
 		zap.ErrorOutput(writer),
-		zap.OnFatal(zapcore.WriteThenFatal),
+		zap.WithFatalHook(zapcore.WriteThenFatal),
 	), nil
 }
