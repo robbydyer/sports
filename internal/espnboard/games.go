@@ -412,9 +412,7 @@ func (e *ESPNBoard) GetGames(ctx context.Context, dateStr string) ([]*Game, erro
 	v.Set("dates", dateStr)
 	v.Set("limit", "500")
 
-	if e.leaguer.League() == "mens-college-basketball" {
-		v.Set("groups", "50")
-	}
+	e.leaguer.SetScoreboardQuery(v)
 
 	uri.RawQuery = v.Encode()
 

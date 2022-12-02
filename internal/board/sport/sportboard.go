@@ -539,6 +539,12 @@ OUTER:
 			s.log.Error("failed to get away team", zap.Error(err))
 			continue OUTER
 		}
+		s.log.Debug("checking teams for watching",
+			zap.String("home", home.GetAbbreviation()),
+			zap.String("home ID", home.GetID()),
+			zap.String("away", away.GetAbbreviation()),
+			zap.String("away ID", away.GetID()),
+		)
 		for _, watchTeamID := range s.watchTeams {
 			if home.GetID() == watchTeamID || away.GetID() == watchTeamID {
 				isLive, err := game.IsLive()
