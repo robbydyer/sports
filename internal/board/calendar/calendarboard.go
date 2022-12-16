@@ -116,7 +116,7 @@ func New(api API, logger *zap.Logger, config *Config) (*CalendarBoard, error) {
 	)
 
 	if s.config.TodayFunc == nil {
-		s.config.TodayFunc = util.Today
+		s.config.TodayFunc = util.TodayFunc(time.Now())
 	}
 
 	if err := util.SetCrons(config.OnTimes, func() {

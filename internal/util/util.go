@@ -13,90 +13,207 @@ import (
 )
 
 // Today is sometimes actually yesterday
-func Today() []time.Time {
-	if time.Now().Local().Hour() < 4 {
-		return []time.Time{time.Now().AddDate(0, 0, -1).Local()}
+func Today(t time.Time) time.Time {
+	if t.Local().Hour() < 4 {
+		return t.AddDate(0, 0, -1).Local()
 	}
 
-	return []time.Time{time.Now().Local()}
+	return t.Local()
+}
+
+func TodayFunc(t time.Time) func() []time.Time {
+	return func() []time.Time {
+		return []time.Time{Today(t)}
+	}
 }
 
 // NCAAFToday takes a single "today" time and adds thurs-sat games for the coming week.
 // Sunday shows previous week's scores
 func NCAAFToday(t time.Time) []time.Time {
-	var todays []time.Time
+	// Bowl season is weird
+	if t.Month() == time.December || t.Month() == time.January {
+		switch t.Weekday() {
+		case time.Monday:
+			return []time.Time{
+				t,
+				t.AddDate(0, 0, 1),
+				t.AddDate(0, 0, 2),
+				t.AddDate(0, 0, 3),
+				t.AddDate(0, 0, 4),
+				t.AddDate(0, 0, 5),
+				t.AddDate(0, 0, 6),
+			}
+		case time.Tuesday:
+			return []time.Time{
+				t.AddDate(0, 0, -1),
+				t,
+				t.AddDate(0, 0, 1),
+				t.AddDate(0, 0, 2),
+				t.AddDate(0, 0, 3),
+				t.AddDate(0, 0, 4),
+				t.AddDate(0, 0, 5),
+			}
+		case time.Wednesday:
+			return []time.Time{
+				t.AddDate(0, 0, -2),
+				t.AddDate(0, 0, -1),
+				t,
+				t.AddDate(0, 0, 1),
+				t.AddDate(0, 0, 2),
+				t.AddDate(0, 0, 3),
+				t.AddDate(0, 0, 4),
+			}
+		case time.Thursday:
+			return []time.Time{
+				t.AddDate(0, 0, -3),
+				t.AddDate(0, 0, -2),
+				t.AddDate(0, 0, -1),
+				t,
+				t.AddDate(0, 0, 1),
+				t.AddDate(0, 0, 2),
+				t.AddDate(0, 0, 3),
+			}
+		case time.Friday:
+			return []time.Time{
+				t.AddDate(0, 0, -4),
+				t.AddDate(0, 0, -3),
+				t.AddDate(0, 0, -2),
+				t.AddDate(0, 0, -1),
+				t,
+				t.AddDate(0, 0, 1),
+				t.AddDate(0, 0, 2),
+			}
+		case time.Saturday:
+			return []time.Time{
+				t.AddDate(0, 0, -5),
+				t.AddDate(0, 0, -4),
+				t.AddDate(0, 0, -3),
+				t.AddDate(0, 0, -2),
+				t.AddDate(0, 0, -1),
+				t,
+				t.AddDate(0, 0, 1),
+			}
+		case time.Sunday:
+			return []time.Time{
+				t.AddDate(0, 0, -6),
+				t.AddDate(0, 0, -5),
+				t.AddDate(0, 0, -4),
+				t.AddDate(0, 0, -3),
+				t.AddDate(0, 0, -2),
+				t.AddDate(0, 0, -1),
+				t,
+			}
+		}
+
+		return []time.Time{t}
+	}
+
 	// Do Thurs-Saturday of the coming week
 	switch t.Weekday() {
 	case time.Monday:
-		todays = append(todays, t.AddDate(0, 0, 3))
-		todays = append(todays, t.AddDate(0, 0, 4))
-		todays = append(todays, t.AddDate(0, 0, 5))
+		return []time.Time{
+			t.AddDate(0, 0, 3),
+			t.AddDate(0, 0, 4),
+			t.AddDate(0, 0, 5),
+		}
 	case time.Tuesday:
-		todays = append(todays, t.AddDate(0, 0, 2))
-		todays = append(todays, t.AddDate(0, 0, 3))
-		todays = append(todays, t.AddDate(0, 0, 4))
+		return []time.Time{
+			t.AddDate(0, 0, 2),
+			t.AddDate(0, 0, 3),
+			t.AddDate(0, 0, 4),
+		}
 	case time.Wednesday:
-		todays = append(todays, t.AddDate(0, 0, 1))
-		todays = append(todays, t.AddDate(0, 0, 2))
-		todays = append(todays, t.AddDate(0, 0, 3))
+		return []time.Time{
+			t.AddDate(0, 0, 1),
+			t.AddDate(0, 0, 2),
+			t.AddDate(0, 0, 3),
+		}
 	case time.Thursday:
-		todays = append(todays, t)
-		todays = append(todays, t.AddDate(0, 0, 1))
-		todays = append(todays, t.AddDate(0, 0, 2))
+		return []time.Time{
+			t,
+			t.AddDate(0, 0, 1),
+			t.AddDate(0, 0, 2),
+		}
 	case time.Friday:
-		todays = append(todays, t)
-		todays = append(todays, t.AddDate(0, 0, -1))
-		todays = append(todays, t.AddDate(0, 0, 1))
+		return []time.Time{
+			t,
+			t.AddDate(0, 0, -1),
+			t.AddDate(0, 0, 1),
+		}
 	case time.Saturday:
-		todays = append(todays, t)
-		todays = append(todays, t.AddDate(0, 0, -1))
-		todays = append(todays, t.AddDate(0, 0, -2))
+		return []time.Time{
+			t,
+			t.AddDate(0, 0, -1),
+			t.AddDate(0, 0, -2),
+		}
 	case time.Sunday:
-		todays = append(todays, t.AddDate(0, 0, -1))
-		todays = append(todays, t.AddDate(0, 0, -2))
-		todays = append(todays, t.AddDate(0, 0, -3))
+		return []time.Time{
+			t.AddDate(0, 0, -1),
+			t.AddDate(0, 0, -2),
+			t.AddDate(0, 0, -3),
+		}
 	}
 
-	return todays
+	return []time.Time{t}
 }
 
 // NFLToday takes a single "today" time and adds thurs, sun, mon games for the coming week.
 // Monday shows previous week's scores
 func NFLToday(t time.Time) []time.Time {
-	var todays []time.Time
 	// Do Thurs-Sunday of the coming week
 	switch t.Weekday() {
 	case time.Monday:
-		todays = append(todays, t)
-		todays = append(todays, t.AddDate(0, 0, -1))
-		todays = append(todays, t.AddDate(0, 0, -4))
+		return []time.Time{
+			t,
+			t.AddDate(0, 0, -1),
+			t.AddDate(0, 0, -2),
+			t.AddDate(0, 0, -4),
+		}
 	case time.Tuesday:
-		todays = append(todays, t.AddDate(0, 0, 2))
-		todays = append(todays, t.AddDate(0, 0, 5))
-		todays = append(todays, t.AddDate(0, 0, 6))
+		return []time.Time{
+			t.AddDate(0, 0, 2),
+			t.AddDate(0, 0, 4),
+			t.AddDate(0, 0, 5),
+			t.AddDate(0, 0, 6),
+		}
 	case time.Wednesday:
-		todays = append(todays, t.AddDate(0, 0, 1))
-		todays = append(todays, t.AddDate(0, 0, 4))
-		todays = append(todays, t.AddDate(0, 0, 5))
+		return []time.Time{
+			t.AddDate(0, 0, 1),
+			t.AddDate(0, 0, 3),
+			t.AddDate(0, 0, 4),
+			t.AddDate(0, 0, 5),
+		}
 	case time.Thursday:
-		todays = append(todays, t)
-		todays = append(todays, t.AddDate(0, 0, 3))
-		todays = append(todays, t.AddDate(0, 0, 4))
+		return []time.Time{
+			t,
+			t.AddDate(0, 0, 2),
+			t.AddDate(0, 0, 3),
+			t.AddDate(0, 0, 4),
+		}
 	case time.Friday:
-		todays = append(todays, t.AddDate(0, 0, -1))
-		todays = append(todays, t.AddDate(0, 0, 2))
-		todays = append(todays, t.AddDate(0, 0, 3))
+		return []time.Time{
+			t.AddDate(0, 0, -1),
+			t.AddDate(0, 0, 1),
+			t.AddDate(0, 0, 2),
+			t.AddDate(0, 0, 3),
+		}
 	case time.Saturday:
-		todays = append(todays, t.AddDate(0, 0, -2))
-		todays = append(todays, t.AddDate(0, 0, 1))
-		todays = append(todays, t.AddDate(0, 0, 2))
+		return []time.Time{
+			t.AddDate(0, 0, -2),
+			t,
+			t.AddDate(0, 0, 1),
+			t.AddDate(0, 0, 2),
+		}
 	case time.Sunday:
-		todays = append(todays, t.AddDate(0, 0, -3))
-		todays = append(todays, t)
-		todays = append(todays, t.AddDate(0, 0, 1))
+		return []time.Time{
+			t.AddDate(0, 0, -3),
+			t.AddDate(0, 0, -1),
+			t,
+			t.AddDate(0, 0, 1),
+		}
 	}
 
-	return todays
+	return []time.Time{t}
 }
 
 func AddTodays(today time.Time, previousDays int, advanceDays int) []time.Time {

@@ -132,9 +132,6 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 	c.rArgs.config.MLBConfig.DetailedLive.Store(true)
 	c.rArgs.config.MLBConfig.GridCols = 0
 	c.rArgs.config.MLBConfig.GridRows = 0
-	if err := c.rArgs.setTodayFuncs("2022-05-23"); err != nil {
-		return err
-	}
 
 	b, err := sportboard.New(ctx, api, bounds, c.rArgs.todayT, logger, c.rArgs.config.MLBConfig, sportboard.WithDetailedLiveRenderer(dR))
 	if err != nil {
