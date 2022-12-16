@@ -271,7 +271,7 @@ func New(ctx context.Context, api API, bounds image.Rectangle, today time.Time, 
 	}
 
 	if s.config.TodayFunc == nil {
-		s.config.TodayFunc = util.Today
+		s.config.TodayFunc = util.TodayFunc(today)
 		if s.config.PreviousDays > 0 || s.config.AdvanceDays > 0 {
 			s.config.TodayFunc = func() []time.Time {
 				return util.AddTodays(today, s.config.PreviousDays, s.config.AdvanceDays)
@@ -279,13 +279,13 @@ func New(ctx context.Context, api API, bounds image.Rectangle, today time.Time, 
 		}
 		if strings.ToLower(s.api.League()) == "ncaaf" {
 			f := func() []time.Time {
-				return util.NCAAFToday(util.Today()[0])
+				return util.NCAAFToday(util.Today(today))
 			}
 			s.config.TodayFunc = f
 		}
 		if strings.ToLower(s.api.League()) == "nfl" {
 			f := func() []time.Time {
-				return util.NFLToday(util.Today()[0])
+				return util.NFLToday(util.Today(today))
 			}
 			s.config.TodayFunc = f
 		}

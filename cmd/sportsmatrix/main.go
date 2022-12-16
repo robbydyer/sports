@@ -125,7 +125,17 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 				}()
 			}
 
-			return args.setTodayFuncs(viper.GetString("date-str"))
+			if today := viper.GetString("date-str"); today != "" {
+				var err error
+				args.todayT, err = time.Parse("2006-01-02T15:04:05", fmt.Sprintf("%sT12:00:00", today))
+				if err != nil {
+					return fmt.Errorf("failed to parse date-str: %w", err)
+				}
+			} else {
+				args.todayT = util.Today(time.Now())
+			}
+
+			return nil
 		},
 	}
 
@@ -947,29 +957,4 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 	}
 
 	return boards, nil
-}
-
-func (r *rootArgs) setTodayFuncs(today string) error {
-	if today == "" {
-		r.todayT = util.Today()[0]
-		return nil
-	}
-
-	var err error
-	r.todayT, err = time.Parse("2006-01-02T15:04:05", fmt.Sprintf("%sT12:00:00", today))
-	if err != nil {
-		return err
-	}
-
-	ncaafF := func() []time.Time {
-		return util.NCAAFToday(r.todayT)
-	}
-	r.config.NCAAFConfig.TodayFunc = ncaafF
-
-	nflF := func() []time.Time {
-		return util.NFLToday(r.todayT)
-	}
-	r.config.NFLConfig.TodayFunc = nflF
-
-	return nil
 }

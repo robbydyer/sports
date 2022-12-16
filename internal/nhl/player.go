@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -191,9 +192,7 @@ func (p *Player) setStats(ctx context.Context) error {
 	v := uri.Query()
 	v.Set("stats", "statsSingleSeason")
 
-	if len(util.Today()) > 0 {
-		v.Set("season", GetSeason(util.Today()[0]))
-	}
+	v.Set("season", GetSeason(util.Today(time.Now())))
 
 	uri.RawQuery = v.Encode()
 

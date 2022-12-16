@@ -155,16 +155,11 @@ OUTER:
 
 func (n *NHL) getTeamAPIData(ctx context.Context) ([]byte, error) {
 	season := ""
-	if d := util.Today(); len(d) > 0 {
-		season = fmt.Sprintf("season=%s", GetSeason(d[0]))
-		n.log.Debug("nhl today season",
-			zap.String("util.Today", d[0].String()),
-		)
-	} else {
-		n.log.Error("failed to determine today",
-			zap.String("league", n.LeagueShortName()),
-		)
-	}
+	d := util.Today(time.Now())
+	season = fmt.Sprintf("season=%s", GetSeason(d))
+	n.log.Debug("nhl today season",
+		zap.String("util.Today", d.String()),
+	)
 	uri := fmt.Sprintf("%s/teams?expand=team.roster,team.schedule.next&%s", baseURL, season)
 	n.log.Debug("fetching team data from API",
 		zap.String("league", n.LeagueShortName()),
