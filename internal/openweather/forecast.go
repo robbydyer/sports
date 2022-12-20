@@ -166,13 +166,14 @@ func (a *API) setWeatherCache(key string, w *weather) {
 	a.forecastLock.Lock()
 	defer a.forecastLock.Unlock()
 
+	a.cache[key] = w
+
 	// Save cache to file
 	cDir, err := cacheDir(dataCacheDir)
 	if err != nil {
 		a.log.Error("failed to get weather data cache dir",
 			zap.Error(err),
 		)
-		a.cache[key] = w
 		return
 	}
 
@@ -181,19 +182,17 @@ func (a *API) setWeatherCache(key string, w *weather) {
 		a.log.Error("failed marshal weather for caching",
 			zap.Error(err),
 		)
-	} else {
-		cacheFile := filepath.Join(cDir, key)
-		if err := os.WriteFile(cacheFile, dat, 0o644); err != nil {
-			a.log.Error("failed to write weather cache to file",
-				zap.Error(err),
-			)
-		}
-		a.log.Info("wrote weather data to cache file",
-			zap.String("file", cacheFile),
-		)
 	}
 
-	a.cache[key] = w
+	cacheFile := filepath.Join(cDir, key)
+	if err := os.WriteFile(cacheFile, dat, 0o644); err != nil {
+		a.log.Error("failed to write weather cache to file",
+			zap.Error(err),
+		)
+	}
+	a.log.Info("wrote weather data to cache file",
+		zap.String("file", cacheFile),
+	)
 }
 
 func (a *API) getWeather(ctx context.Context, zipCode string, country string, metric bool) (*weather, error) {
