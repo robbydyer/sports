@@ -62,6 +62,7 @@ type Config struct {
 	OffTimes           []string     `json:"offTimes"`
 	MetricUnits        *atomic.Bool `json:"metricUnits"`
 	ShowBetween        *atomic.Bool `json:"showBetween"`
+	APIVersion         string       `json:"apiVersion"`
 }
 
 // Forecast ...

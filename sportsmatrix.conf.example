@@ -1407,6 +1407,19 @@ stocksConfig:
 weatherConfig:
   enabled: false
 
+  # Go to openweathermap.org and register an account. You will have to subscribe to the 
+  # "One Call by Call" subscription plan. Don't worry, the matrix app only queries this API every
+  # 30 minutes, so you should never go above the free 1,000 calls per day tier. Data is cached
+  # both in memory and disk to ensure you never call the API more than once every 30 minutes.
+  # Create an API key and put it here.
+  apiKey: ""
+
+  # If you had an openweathermap key prior to their v 3.0 API, you can change this to "2.5".
+  # If you have issues getting weather data, you probably need to set this to the defualt of "3.0"
+  # and ensure that you have subscribed to the "One Call by Call" subscription plan:
+  # https://home.openweathermap.org/subscriptions/unauth_subscribe/onecall_30/base
+  apiVersion: "3.0"
+
   # Set this to true if you want temps in Celsius
   metricUnits: false
 
@@ -1414,9 +1427,6 @@ weatherConfig:
   showBetween: false
 
   scrollMode: true
-
-  # Go to openweathermap.org and register an account, then put your API key here
-  apiKey: ""
 
   # Enter your Zip code here
   zipCode: 90210

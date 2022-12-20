@@ -2,6 +2,7 @@ package openweather
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"image"
 	"os"
@@ -16,14 +17,17 @@ import (
 )
 
 const (
-	baseURL = "https://api.openweathermap.org"
-	imgURL  = "http://openweathermap.org/img/wn"
+	baseURL      = "https://api.openweathermap.org"
+	imgURL       = "http://openweathermap.org/img/wn"
+	dataCacheDir = "/tmp/sportsmatrix/weather_cache"
+	logoCacheDir = "/tmp/sportsmatrix_logos/weather"
 )
 
 // API ...
 type API struct {
 	log          *zap.Logger
 	apiKey       string
+	apiVersion   string
 	icons        map[string]*logo.Logo
 	refresh      time.Duration
 	coordinates  map[string]*geo
@@ -36,7 +40,7 @@ type API struct {
 }
 
 type weather struct {
-	lastUpdate time.Time
+	LastUpdate time.Time
 	Current    *forecast   `json:"current"`
 	Hourly     []*forecast `json:"hourly"`
 	Daily      []*daily    `json:"daily"`
@@ -71,12 +75,16 @@ type forecast struct {
 }
 
 // New ...
-func New(apiKey string, refresh time.Duration, log *zap.Logger) (*API, error) {
+func New(apiKey string, refresh time.Duration, apiVersion string, log *zap.Logger) (*API, error) {
 	if apiKey == "" {
 		return nil, fmt.Errorf("must pass a valid API key from openweathermap.org")
 	}
+	if apiVersion == "" {
+		apiVersion = "2.5"
+	}
 	a := &API{
 		apiKey:      apiKey,
+		apiVersion:  apiVersion,
 		log:         log,
 		icons:       make(map[string]*logo.Logo),
 		refresh:     refresh,
@@ -158,7 +166,7 @@ func (a *API) getIcon(icon string, bounds image.Rectangle) (*logo.Logo, error) {
 		return util.PullPng(ctx, url)
 	}
 
-	d, err := cacheDir()
+	d, err := cacheDir(logoCacheDir)
 	if err != nil {
 		return nil, err
 	}
@@ -181,8 +189,7 @@ func (a *API) getIcon(icon string, bounds image.Rectangle) (*logo.Logo, error) {
 	return l, nil
 }
 
-func cacheDir() (string, error) {
-	d := "/tmp/sportsmatrix_logos/weather"
+func cacheDir(d string) (string, error) {
 	if _, err := os.Stat(d); err != nil {
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(d, 0o755); err != nil {
@@ -192,4 +199,32 @@ func cacheDir() (string, error) {
 		}
 	}
 	return d, nil
+}
+
+func (w *weather) MarshalJSON() ([]byte, error) {
+	type Alias weather
+	return json.Marshal(&struct {
+		LastUpdate int64 `json:"lastUpdate"`
+		*Alias
+	}{
+		LastUpdate: w.LastUpdate.Unix(),
+		Alias:      (*Alias)(w),
+	})
+}
+
+func (w *weather) UnmarshalJSON(data []byte) error {
+	type Alias weather
+	aux := &struct {
+		LastUpdate int64 `json:"lastUpdate"`
+		*Alias
+	}{
+		Alias: (*Alias)(w),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	w.LastUpdate = time.Unix(aux.LastUpdate, 0)
+
+	return nil
 }

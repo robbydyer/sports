@@ -908,7 +908,7 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 		if r.config.WeatherConfig.APIKey == "" {
 			logger.Warn("Missing Weather API key. Weather Board will not be enabled")
 		} else {
-			api, err := openweather.New(r.config.WeatherConfig.APIKey, 30*time.Minute, logger)
+			api, err := openweather.New(r.config.WeatherConfig.APIKey, 30*time.Minute, r.config.WeatherConfig.APIVersion, logger)
 			if err != nil {
 				return nil, err
 			}
