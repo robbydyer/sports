@@ -77,7 +77,7 @@ func (e *ESPNBoard) GetLogo(ctx context.Context, logoKey string, logoConf *logo.
 	defer e.setLogoCache(logoKey, l)
 
 	logoGetter := func(ctx context.Context) (image.Image, error) {
-		return e.GetLogoSource(ctx, teamID, logoSearch(teamID))
+		return e.GetLogoSource(ctx, teamID, logoSearch(e.leaguer, teamID))
 	}
 
 	if logoConf != nil {
@@ -127,11 +127,20 @@ func (e *ESPNBoard) loadDefaultLogoConfigs(bounds image.Rectangle) error {
 	return nil
 }
 
-func logoSearch(teamID string) string {
-	switch teamID {
-	case "2294":
-		// IOWA
-		return "dark"
+func logoSearch(leaguer Leaguer, teamID string) string {
+	switch leaguer.(type) {
+	case *ncaaf:
+		switch teamID {
+		case "2294":
+			// IOWA
+			return "dark"
+		}
+	case *nba:
+		switch teamID {
+		// Utah Jazz
+		case "26":
+			return "dark"
+		}
 	}
 
 	return "scoreboard"
