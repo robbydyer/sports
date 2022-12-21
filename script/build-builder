@@ -56,11 +56,10 @@ dockerlogin
 docker --config="${DOCKERCONF}" buildx create --use --name=build --node=build
 
 if [ "${BUILDARCH}" = "all" ]; then
-  dobuild aarch64 &
-  dobuild armv7l &
-  dobuild amd64 &
-  dobuild armv6l &
-  wait
+  dobuild aarch64
+  dobuild armv7l
+  dobuild amd64
+  dobuild armv6l
 else
   dobuild "${BUILDARCH}"
 fi
