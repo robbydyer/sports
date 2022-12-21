@@ -30,6 +30,10 @@ func (s *WeatherBoard) getSmallWriter(canvasBounds image.Rectangle) (*rgbrender.
 		writer.YStartCorrection = -1 * ((bounds.Dy() / 32) + 1)
 	}
 
+	if s.config.SmallFont != nil && s.config.SmallFont.Size > 0 {
+		writer.FontSize = s.config.SmallFont.Size
+	}
+
 	s.smallWriter = writer
 	return writer, nil
 }
@@ -62,6 +66,10 @@ func (s *WeatherBoard) getBigWriter(canvasBounds image.Rectangle) (*rgbrender.Te
 		writer = rgbrender.NewTextWriter(fnt, size)
 		yCorrect := math.Ceil(float64(3.0/32.0) * float64(bounds.Dy()))
 		writer.YStartCorrection = int(yCorrect * -1)
+	}
+
+	if s.config.BigFont != nil && s.config.BigFont.Size > 0 {
+		writer.FontSize = s.config.BigFont.Size
 	}
 
 	s.bigWriter = writer
