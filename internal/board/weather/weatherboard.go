@@ -63,6 +63,12 @@ type Config struct {
 	MetricUnits        *atomic.Bool `json:"metricUnits"`
 	ShowBetween        *atomic.Bool `json:"showBetween"`
 	APIVersion         string       `json:"apiVersion"`
+	BigFont            *FontConfig  `json:"bigFont"`
+	SmallFont          *FontConfig  `json:"smallFont"`
+}
+
+type FontConfig struct {
+	Size float64 `json:"size"`
 }
 
 // Forecast ...

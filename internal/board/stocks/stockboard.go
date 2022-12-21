@@ -66,6 +66,12 @@ type Config struct {
 	OffTimes           []string     `json:"offTimes"`
 	UseLogos           *atomic.Bool `json:"useLogos"`
 	MaxChartWidthRatio float64      `json:"maxChartWidthRatio"`
+	SymbolFont         *FontConfig  `json:"symbolFont"`
+	PriceFont          *FontConfig  `json:"priceFont"`
+}
+
+type FontConfig struct {
+	Size float64 `json:"size"`
 }
 
 // Price represents a price of a stock at a particular time

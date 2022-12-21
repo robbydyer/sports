@@ -1402,6 +1402,13 @@ stocksConfig:
   # Interval in which pricing data is pulled from API. Default is 5m
   updateInterval: "5m"
 
+  # Manually adjust font sizes for stock symbol and price.
+  # Leave these options commented out to get the auto-adjusted sizes
+  #symbolFont:
+    #size: 16.0
+  #priceFont:
+    #size: 8.0
+
   # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
   #onTimes:
   #- 00 18 * * *
@@ -1464,6 +1471,13 @@ weatherConfig:
   #- 00 18 * * *
   #offTimes:
   #- 00 02 * * *
+
+  # Manual adjustments to the two font sizes used for weather.
+  # Leave these options commented out to use the default auto-adjusting sizes.
+  #bigFont:
+    #size: 16.0
+  #smallFont:
+    #size: 8.0
 
 # Formula 1 Racing
 f1Config:

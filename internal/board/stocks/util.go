@@ -182,6 +182,10 @@ func (s *StockBoard) getPriceWriter(canvasBounds image.Rectangle) (*rgbrender.Te
 		writer.YStartCorrection = -1 * ((bounds.Dy() / 32) + 1)
 	}
 
+	if s.config.PriceFont != nil && s.config.PriceFont.Size > 0 {
+		writer.FontSize = s.config.PriceFont.Size
+	}
+
 	s.priceWriter = writer
 	return writer, nil
 }
@@ -214,6 +218,10 @@ func (s *StockBoard) getSymbolWriter(canvasBounds image.Rectangle) (*rgbrender.T
 		writer = rgbrender.NewTextWriter(fnt, size)
 		yCorrect := math.Ceil(float64(3.0/32.0) * float64(bounds.Dy()))
 		writer.YStartCorrection = int(yCorrect * -1)
+	}
+
+	if s.config.SymbolFont != nil && s.config.SymbolFont.Size > 0 {
+		writer.FontSize = s.config.SymbolFont.Size
 	}
 
 	s.symbolWriter = writer
