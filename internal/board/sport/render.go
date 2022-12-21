@@ -18,7 +18,7 @@ import (
 
 const (
 	defaultTeamInfoArea = 22
-	teamInfoPad         = 2
+	teamInfoPad         = 3
 )
 
 var (

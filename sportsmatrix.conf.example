@@ -109,11 +109,15 @@ sportsMatrixConfig:
     # Type of multiplexing. 0 = direct, 1 = stripe, 2 = checker,...
     #multiplexing: 0
 
-  # Hardware runtime options. Pi 4's and possibly 3's might need to set gpioSlowdown to something
-  # higher than the default of 0.
+  # Hardware runtime options. 
   runtimeOptions:
-    # GPIO slowdown for faster pi's. Range 0..4. Defaults to 0
-    gpioSlowdown: 0
+    
+    # GPIO slowdown for faster pi's. Range 0..4. 
+    # Try adjusting this number up/down if you have weird screen glitches
+    # or no image at all.
+    # Pi 3/4 typically should match this setting with their version.
+    # i.e. Pi4 should use 4, etc.
+    gpioSlowdown: 3
 
 # Clock Board
 clockConfig:
