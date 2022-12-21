@@ -141,7 +141,6 @@ func logoSearch(leaguer Leaguer, teamID string) string {
 		case "26":
 			return "dark"
 		}
-
 	}
 
 	return "scoreboard"
