@@ -1,15 +1,20 @@
-FROM alpine:3.14.1 as base
+FROM alpine:3.17.0 as base
 
-RUN apk --update --no-cache add \
-  rsync \
-  protoc=3.15.7-r1 \
-  protobuf=3.15.7-r1 \
-  protobuf-dev=3.15.7-r1 \
-  nodejs \
-  alpine-sdk \
-  bash
+RUN echo "@edge-testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
+  apk --update --no-cache add \
+    rsync \
+    protoc=3.21.9-r0 \
+    protobuf=3.21.9-r0 \
+    protobuf-dev=3.21.9-r0 \
+    nodejs \
+    alpine-sdk \
+    bash \
+    bazel4@edge-testing \
+    build-base \
+    git
 
-FROM golang:1.19.1 as builder
+
+FROM golang:1.19.4 as builder
 
 ARG CGO_ENABLED=0
 ARG GOOS=linux
@@ -25,10 +30,15 @@ RUN cd /src && go build -mod=vendor -o /tmp/protoc-gen-openapiv2 ./vendor/github
 RUN cd /src && go build -mod=vendor -o /tmp/protoc-gen-gotag ./vendor/github.com/srikrsna/protoc-gen-gotag
 
 # This lib doesn't support Twirp v7
-RUN cd /src && go build -mod=vendor -o /tmp/protoc-gen-twirp_js ./vendor/github.com/thechriswalker/protoc-gen-twirp_js
-
+#RUN cd /src && go build -mod=vendor -o /tmp/protoc-gen-twirp_js ./vendor/github.com/thechriswalker/protoc-gen-twirp_js
 
 FROM base
+
+# Install the javascript crap
+RUN  git clone --branch v3.21.2 https://github.com/protocolbuffers/protobuf-javascript && \
+  cd protobuf-javascript && \
+  bazel build plugin_files && \
+  install -o root -g root -m 0755 bazel-bin/generator/protoc-gen-js -t /usr/bin
 
 COPY vendor/github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 /tmp/protoc-gen-openapiv2
 RUN rsync -av --include="*/" --include "*.proto" --exclude="*" /tmp/protoc-gen-openapiv2 /usr/include/
