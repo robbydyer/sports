@@ -75,7 +75,6 @@ def _run_proto_gen_openapi(
     args.add("--plugin", "protoc-gen-openapiv2=%s" % protoc_gen_openapiv2.path)
 
     args.add("--openapiv2_opt", "logtostderr=true")
-    args.add("--openapiv2_opt", "allow_repeated_fields_in_body=true")
 
     extra_inputs = []
     if grpc_api_configuration:
@@ -356,6 +355,12 @@ protoc_gen_openapiv2 = rule(
                   " in the generated output when a visibility annotation is defined." +
                   " Repeat this option to supply multiple values. Elements without" +
                   " visibility annotations are unaffected by this setting.",
+        ),
+        "use_allof_for_refs": attr.bool(
+            default = False,
+            mandatory = False,
+            doc = "if set, will use allOf as container for $ref to preserve" +
+                  " same-level properties.",
         ),
         "_protoc": attr.label(
             default = "@com_google_protobuf//:protoc",
