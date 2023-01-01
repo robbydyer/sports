@@ -86,7 +86,15 @@ func (s *abbrevCmd) run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	sports = append(sports, ncaaf, nba, nfl, ncaam, mlb, mls, nhl)
+	ncaaw, err := espnboard.NewNCAAWomensBasketball(ctx, logger)
+	if err != nil {
+		return err
+	}
+	wnba, err := espnboard.NewWNBA(ctx, logger)
+	if err != nil {
+		return err
+	}
+	sports = append(sports, ncaaf, nba, nfl, ncaam, mlb, mls, nhl, ncaaw, wnba)
 
 	for _, e := range sports {
 		if err := printESPNAbbrev(ctx, e); err != nil {

@@ -43,6 +43,11 @@ class App extends React.Component {
           <Route path="/docs" exact component={() => <SwaggerUI spec={swag} />} />
           <Route path="/f1" exact component={() => <Racing sport="f1" id="f1" key="f1" withImg="true" />} />
           <Route path="/irl" exact component={() => <Racing sport="irl" id="irl" key="irl" withImg="true" />} />
+          <Route path="/ncaaw" render={() => <Sport sport="ncaaw" id="ncaaw" key="ncaaw" withImg="true" />} />
+          <Route path="/wnba" render={() => <Sport sport="wnba" id="wnba" key="wnba" withImg="true" />} />
+          <Route path="/ligue" render={() => <Sport sport="ligue" id="ligue" key="ligue" withImg="true" />} />
+          <Route path="/seriea" render={() => <Sport sport="seriea" id="seriea" key="seriea" withImg="true" />} />
+          <Route path="/laliga" render={() => <Sport sport="laliga" id="laliga" key="laliga" withImg="true" />} />
         </Router>
         <hr />
       </>

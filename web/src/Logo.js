@@ -18,7 +18,12 @@ import imgimg from './image.png';
 import f1logo from './f1.png';
 import irllogo from './irl.png';
 import uefa from './uefa.png';
-import fifa from './fifa.png'
+import fifa from './fifa.png';
+import ncaawlogo from './ncaaw.png';
+import wnbalogo from './wnba.png';
+import liguelogo from './ligue.png';
+import seriealogo from './seriea.png';
+import laligalogo from './laliga.png'
 
 export function LogoSrc(sport) {
     if (sport === "nhl") {
@@ -65,5 +70,15 @@ export function LogoSrc(sport) {
         return uefa
     } else if (sport === "fifa") {
         return fifa
-    }
+    } else if (sport === "ncaaw") {
+        return ncaawlogo
+    } else if (sport === "wnba") {
+        return wnbalogo
+    } else if (sport === "ligue") {
+        return liguelogo
+    } else if (sport === "seriea") {
+        return seriealogo
+    } else if (sport === "laliga") {
+        return laligalogo
+    } 
 }

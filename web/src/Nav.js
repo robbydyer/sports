@@ -49,6 +49,11 @@ class TopNav extends React.Component {
                                 <NavDropDown.Item as={Link} to="/dfb">DFB</NavDropDown.Item>
                                 <NavDropDown.Item as={Link} to="/uefa">UEFA</NavDropDown.Item>
                                 <NavDropDown.Item as={Link} to="/fifa">FIFA</NavDropDown.Item>
+                                <NavDropDown.Item as={Link} to="/ncaaw">NCAA Women's Basketball</NavDropDown.Item>
+                                <NavDropDown.Item as={Link} to="/wnba">WNBA</NavDropDown.Item>
+                                <NavDropDown.Item as={Link} to="/ligue">Ligue 1</NavDropDown.Item>
+                                <NavDropDown.Item as={Link} to="/seriea">Serie A</NavDropDown.Item>
+                                <NavDropDown.Item as={Link} to="/laliga">La Liga</NavDropDown.Item>
                             </NavDropDown>
                             <Nav.Link as={Link} to="/stocks">Stocks</Nav.Link>
                             <Nav.Link as={Link} to="/weather">Weather</Nav.Link>
