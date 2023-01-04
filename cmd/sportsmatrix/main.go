@@ -448,13 +448,13 @@ func (r *rootArgs) setConfigDefaults() {
 	}
 	r.config.WNBAConfig.SetDefaults()
 	r.config.WNBAConfig.Headlines.SetDefaults()
-	
+
 	if r.config.LigueConfig == nil {
 		r.config.LigueConfig = &sportboard.Config{
 			StartEnabled: atomic.NewBool(false),
 		}
 	}
-	
+
 	if r.config.LigueConfig.Headlines == nil {
 		r.config.LigueConfig.Headlines = &textboard.Config{
 			StartEnabled: atomic.NewBool(false),
@@ -462,7 +462,7 @@ func (r *rootArgs) setConfigDefaults() {
 	}
 	r.config.LigueConfig.SetDefaults()
 	r.config.LigueConfig.Headlines.SetDefaults()
-	
+
 	if r.config.SerieaConfig == nil {
 		r.config.SerieaConfig = &sportboard.Config{
 			StartEnabled: atomic.NewBool(false),
@@ -475,7 +475,7 @@ func (r *rootArgs) setConfigDefaults() {
 	}
 	r.config.SerieaConfig.SetDefaults()
 	r.config.SerieaConfig.Headlines.SetDefaults()
-	
+
 	if r.config.LaligaConfig == nil {
 		r.config.LaligaConfig = &sportboard.Config{
 			StartEnabled: atomic.NewBool(false),
