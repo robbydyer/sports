@@ -20,7 +20,7 @@ import (
 	"github.com/robbydyer/sports/internal/twirphelpers"
 )
 
-// go:embed assets
+//go:embed assets
 var assets embed.FS
 
 // EmbedDir is a wrapper to return index.html by default
