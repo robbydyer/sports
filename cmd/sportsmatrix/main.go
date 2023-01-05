@@ -422,6 +422,72 @@ func (r *rootArgs) setConfigDefaults() {
 		}
 	}
 	r.config.CalenderConfig.SetDefaults()
+
+	if r.config.NCAAWConfig == nil {
+		r.config.NCAAWConfig = &sportboard.Config{
+			StartEnabled: atomic.NewBool(false),
+		}
+	}
+	if r.config.NCAAWConfig.Headlines == nil {
+		r.config.NCAAWConfig.Headlines = &textboard.Config{
+			StartEnabled: atomic.NewBool(false),
+		}
+	}
+	r.config.NCAAWConfig.SetDefaults()
+	r.config.NCAAWConfig.Headlines.SetDefaults()
+
+	if r.config.WNBAConfig == nil {
+		r.config.WNBAConfig = &sportboard.Config{
+			StartEnabled: atomic.NewBool(false),
+		}
+	}
+	if r.config.WNBAConfig.Headlines == nil {
+		r.config.WNBAConfig.Headlines = &textboard.Config{
+			StartEnabled: atomic.NewBool(false),
+		}
+	}
+	r.config.WNBAConfig.SetDefaults()
+	r.config.WNBAConfig.Headlines.SetDefaults()
+
+	if r.config.LigueConfig == nil {
+		r.config.LigueConfig = &sportboard.Config{
+			StartEnabled: atomic.NewBool(false),
+		}
+	}
+
+	if r.config.LigueConfig.Headlines == nil {
+		r.config.LigueConfig.Headlines = &textboard.Config{
+			StartEnabled: atomic.NewBool(false),
+		}
+	}
+	r.config.LigueConfig.SetDefaults()
+	r.config.LigueConfig.Headlines.SetDefaults()
+
+	if r.config.SerieaConfig == nil {
+		r.config.SerieaConfig = &sportboard.Config{
+			StartEnabled: atomic.NewBool(false),
+		}
+	}
+	if r.config.SerieaConfig.Headlines == nil {
+		r.config.SerieaConfig.Headlines = &textboard.Config{
+			StartEnabled: atomic.NewBool(false),
+		}
+	}
+	r.config.SerieaConfig.SetDefaults()
+	r.config.SerieaConfig.Headlines.SetDefaults()
+
+	if r.config.LaligaConfig == nil {
+		r.config.LaligaConfig = &sportboard.Config{
+			StartEnabled: atomic.NewBool(false),
+		}
+	}
+	if r.config.LaligaConfig.Headlines == nil {
+		r.config.LaligaConfig.Headlines = &textboard.Config{
+			StartEnabled: atomic.NewBool(false),
+		}
+	}
+	r.config.LaligaConfig.SetDefaults()
+	r.config.LaligaConfig.Headlines.SetDefaults()
 }
 
 func (r *rootArgs) getRGBMatrix(logger *zap.Logger) (matrix.Matrix, error) {
@@ -954,6 +1020,146 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 		boards = append(boards, b)
+	}
+
+	if r.config.NCAAWConfig != nil {
+		api, err := espnboard.NewNCAAWomensBasketball(ctx, logger)
+		if err != nil {
+			return boards, err
+		}
+		l, err := espnboard.GetLeaguer("ncaaw")
+		if err != nil {
+			return nil, err
+		}
+		headlineAPI := espnboard.NewHeadlines(l, logger)
+
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.NCAAWConfig,
+			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
+		)
+		if err != nil {
+			return boards, err
+		}
+
+		boards = append(boards, b)
+		if r.config.NCAAWConfig.Headlines != nil {
+			b, err := textboard.New(headlineAPI, r.config.NCAAWConfig.Headlines, logger)
+			if err != nil {
+				return nil, err
+			}
+			boards = append(boards, b)
+		}
+	}
+
+	if r.config.WNBAConfig != nil {
+		api, err := espnboard.NewWNBA(ctx, logger)
+		if err != nil {
+			return nil, err
+		}
+		l, err := espnboard.GetLeaguer("wnba")
+		if err != nil {
+			return nil, err
+		}
+		headlineAPI := espnboard.NewHeadlines(l, logger)
+
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.WNBAConfig,
+			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		boards = append(boards, b)
+		if r.config.WNBAConfig.Headlines != nil {
+			b, err := textboard.New(headlineAPI, r.config.WNBAConfig.Headlines, logger)
+			if err != nil {
+				return nil, err
+			}
+			boards = append(boards, b)
+		}
+	}
+
+	if r.config.LigueConfig != nil {
+		api, err := espnboard.NewLigue(ctx, logger)
+		if err != nil {
+			return nil, err
+		}
+
+		l, err := espnboard.GetLeaguer("ligue")
+		if err != nil {
+			return nil, err
+		}
+		headlineAPI := espnboard.NewHeadlines(l, logger)
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.LigueConfig,
+			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		boards = append(boards, b)
+		if r.config.LigueConfig.Headlines != nil {
+			b, err := textboard.New(headlineAPI, r.config.LigueConfig.Headlines, logger)
+			if err != nil {
+				return nil, err
+			}
+			boards = append(boards, b)
+		}
+	}
+
+	if r.config.SerieaConfig != nil {
+		api, err := espnboard.NewSerieA(ctx, logger)
+		if err != nil {
+			return nil, err
+		}
+
+		l, err := espnboard.GetLeaguer("seriea")
+		if err != nil {
+			return nil, err
+		}
+		headlineAPI := espnboard.NewHeadlines(l, logger)
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.SerieaConfig,
+			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		boards = append(boards, b)
+		if r.config.SerieaConfig.Headlines != nil {
+			b, err := textboard.New(headlineAPI, r.config.SerieaConfig.Headlines, logger)
+			if err != nil {
+				return nil, err
+			}
+			boards = append(boards, b)
+		}
+	}
+
+	if r.config.LaligaConfig != nil {
+		api, err := espnboard.NewLaLiga(ctx, logger)
+		if err != nil {
+			return nil, err
+		}
+
+		l, err := espnboard.GetLeaguer("laliga")
+		if err != nil {
+			return nil, err
+		}
+		headlineAPI := espnboard.NewHeadlines(l, logger)
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.LaligaConfig,
+			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		boards = append(boards, b)
+		if r.config.LaligaConfig.Headlines != nil {
+			b, err := textboard.New(headlineAPI, r.config.LaligaConfig.Headlines, logger)
+			if err != nil {
+				return nil, err
+			}
+			boards = append(boards, b)
+		}
 	}
 
 	return boards, nil

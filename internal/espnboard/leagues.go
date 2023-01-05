@@ -37,6 +37,16 @@ func GetLeaguer(league string) (Leaguer, error) {
 		return &uefa{}, nil
 	case "fifa":
 		return &fifa{}, nil
+	case "ncaaw":
+		return &ncaaw{}, nil
+	case "wnba":
+		return &wnba{}, nil
+	case "ligue":
+		return &ligue{}, nil
+	case "seriea":
+		return &seriea{}, nil
+	case "laliga":
+		return &laliga{}, nil
 	}
 
 	return nil, fmt.Errorf("invalid league '%s'", league)
@@ -474,4 +484,184 @@ func (n *fifa) HomeSideSwap() bool {
 }
 
 func (n *fifa) SetScoreboardQuery(v url.Values) {
+}
+
+// NewNCAAWomensBasketball ...
+func NewNCAAWomensBasketball(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
+	return New(ctx, &ncaaw{}, logger, defaultRankSetter, defaultRankSetter)
+}
+
+type ncaaw struct{}
+
+func (n *ncaaw) League() string {
+	return "NCAA Women's Basketball"
+}
+
+func (n *ncaaw) APIPath() string {
+	return "basketball/womens-college-basketball"
+}
+
+func (n *ncaaw) TeamEndpoints() []string {
+	return []string{
+		filepath.Join(n.APIPath(), "groups"),
+		filepath.Join(n.APIPath(), "teams"),
+	}
+}
+
+func (n *ncaaw) HTTPPathPrefix() string {
+	return "ncaaw"
+}
+
+func (n *ncaaw) HeadlinePath() string {
+	return fmt.Sprintf("%s/news", n.APIPath())
+}
+
+func (n *ncaaw) HomeSideSwap() bool {
+	return false
+}
+
+func (n *ncaaw) SetScoreboardQuery(v url.Values) {
+	v.Set("groups", "50")
+}
+
+// NewWNBA ...
+func NewWNBA(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
+	return New(ctx, &wnba{}, logger, defaultRankSetter, defaultRankSetter)
+}
+
+type wnba struct{}
+
+func (n *wnba) League() string {
+	return "WNBA"
+}
+
+func (n *wnba) APIPath() string {
+	return "basketball/wnba"
+}
+
+func (n *wnba) TeamEndpoints() []string {
+	return []string{filepath.Join(n.APIPath(), "groups")}
+}
+
+func (n *wnba) HTTPPathPrefix() string {
+	return "wnba"
+}
+
+func (n *wnba) HeadlinePath() string {
+	return fmt.Sprintf("%s/news", n.APIPath())
+}
+
+func (n *wnba) HomeSideSwap() bool {
+	return false
+}
+
+func (n *wnba) SetScoreboardQuery(v url.Values) {
+}
+
+// NewLigue1 ...
+func NewLigue(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
+	return New(ctx, &ligue{}, logger, defaultRankSetter, defaultRankSetter)
+}
+
+type ligue struct{}
+
+func (n *ligue) League() string {
+	return "Ligue 1"
+}
+
+func (n *ligue) APIPath() string {
+	return "soccer/fra.1"
+}
+
+func (n *ligue) TeamEndpoints() []string {
+	return []string{
+		filepath.Join(n.APIPath(), "teams"),
+	}
+}
+
+func (n *ligue) HTTPPathPrefix() string {
+	return "ligue"
+}
+
+func (n *ligue) HeadlinePath() string {
+	return fmt.Sprintf("%s/news", n.APIPath())
+}
+
+func (n *ligue) HomeSideSwap() bool {
+	return true
+}
+
+func (n *ligue) SetScoreboardQuery(v url.Values) {
+}
+
+// NewSerieA ...
+func NewSerieA(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
+	return New(ctx, &seriea{}, logger, defaultRankSetter, defaultRankSetter)
+}
+
+type seriea struct{}
+
+func (n *seriea) League() string {
+	return "Serie A"
+}
+
+func (n *seriea) APIPath() string {
+	return "soccer/ita.1"
+}
+
+func (n *seriea) TeamEndpoints() []string {
+	return []string{
+		filepath.Join(n.APIPath(), "teams"),
+	}
+}
+
+func (n *seriea) HTTPPathPrefix() string {
+	return "seriea"
+}
+
+func (n *seriea) HeadlinePath() string {
+	return fmt.Sprintf("%s/news", n.APIPath())
+}
+
+func (n *seriea) HomeSideSwap() bool {
+	return true
+}
+
+func (n *seriea) SetScoreboardQuery(v url.Values) {
+}
+
+// LaLiga ...
+func NewLaLiga(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
+	return New(ctx, &laliga{}, logger, defaultRankSetter, defaultRankSetter)
+}
+
+type laliga struct{}
+
+func (n *laliga) League() string {
+	return "La Liga"
+}
+
+func (n *laliga) APIPath() string {
+	return "soccer/esp.1"
+}
+
+func (n *laliga) TeamEndpoints() []string {
+	return []string{
+		filepath.Join(n.APIPath(), "teams"),
+	}
+}
+
+func (n *laliga) HTTPPathPrefix() string {
+	return "laliga"
+}
+
+func (n *laliga) HeadlinePath() string {
+	return fmt.Sprintf("%s/news", n.APIPath())
+}
+
+func (n *laliga) HomeSideSwap() bool {
+	return true
+}
+
+func (n *laliga) SetScoreboardQuery(v url.Values) {
 }

@@ -39,4 +39,9 @@ type Config struct {
 	F1Config           *racingboard.Config   `json:"f1Config"`
 	IRLConfig          *racingboard.Config   `json:"irlConfig"`
 	CalenderConfig     *calendarboard.Config `json:"calendarConfig"`
+	NCAAWConfig        *sportboard.Config    `json:"ncaawConfig,omitempty"`
+	WNBAConfig         *sportboard.Config    `json:"wnbaConfig,omitempty"`
+	LigueConfig        *sportboard.Config    `json:"ligueConfig,omitempty"`
+	SerieaConfig       *sportboard.Config    `json:"serieaConfig,omitempty"`
+	LaligaConfig       *sportboard.Config    `json:"laligaConfig,omitempty"`
 }

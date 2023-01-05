@@ -201,7 +201,7 @@
     "/nhl/sport.v1.Sport/GetStatus": {
       "post": {
         "tags": [
-          "Sport - nhl, mlb, nfl, ncaaf, ncaam, epl, mls, nba"
+          "Sport - nhl, mlb, nfl, ncaaf, ncaam, epl, mls, nba, ncaaw, wnba, fifa, uefa, ligue, seriea, laliga"
         ],
         "operationId": "GetStatus",
         "parameters": [
@@ -227,7 +227,7 @@
     "/nhl/sport.v1.Sport/SetStatus": {
       "post": {
         "tags": [
-          "Sport - nhl, mlb, nfl, ncaaf, ncaam, epl, mls, nba"
+          "Sport - nhl, mlb, nfl, ncaaf, ncaam, epl, mls, nba, ncaaw, wnba, fifa, uefa, ligue, seriea, laliga"
         ],
         "operationId": "SetStatus",
         "parameters": [
