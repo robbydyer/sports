@@ -246,7 +246,7 @@ func (c *Config) SetDefaults() {
 }
 
 // New ...
-func New(ctx context.Context, api API, bounds image.Rectangle, today time.Time, logger *zap.Logger, config *Config, opts ...OptionFunc) (*SportBoard, error) {
+func New(ctx context.Context, api API, bounds image.Rectangle, today *time.Time, logger *zap.Logger, config *Config, opts ...OptionFunc) (*SportBoard, error) {
 	s := &SportBoard{
 		config:          config,
 		api:             api,
@@ -270,22 +270,44 @@ func New(ctx context.Context, api API, bounds image.Rectangle, today time.Time, 
 		s.config.boardDelay = 10 * time.Second
 	}
 
+	// If today is not nil, it means we're testing a given date.
+	// Otherwise, we always want to use time.Now()
 	if s.config.TodayFunc == nil {
-		s.config.TodayFunc = util.TodayFunc(today)
+		if today != nil {
+			s.log.Info("using fake day for scheduling",
+				zap.String("league", s.api.League()),
+				zap.Time("fake day", *today),
+			)
+			s.config.TodayFunc = util.FakeTodayFunc(*today)
+		} else {
+			s.log.Info("using actual day for scheduling",
+				zap.String("league", s.api.League()),
+			)
+			s.config.TodayFunc = util.TodayFunc()
+		}
 		if s.config.PreviousDays > 0 || s.config.AdvanceDays > 0 {
 			s.config.TodayFunc = func() []time.Time {
-				return util.AddTodays(today, s.config.PreviousDays, s.config.AdvanceDays)
+				if today != nil {
+					return util.AddTodays(*today, s.config.PreviousDays, s.config.AdvanceDays)
+				}
+				return util.AddTodays(time.Now(), s.config.PreviousDays, s.config.AdvanceDays)
 			}
 		}
 		if strings.ToLower(s.api.League()) == "ncaaf" {
 			f := func() []time.Time {
-				return util.NCAAFToday(util.Today(today))
+				if today != nil {
+					return util.NCAAFToday(util.Today(*today))
+				}
+				return util.NCAAFToday(util.Today(time.Now()))
 			}
 			s.config.TodayFunc = f
 		}
 		if strings.ToLower(s.api.League()) == "nfl" {
 			f := func() []time.Time {
-				return util.NFLToday(util.Today(today))
+				if today != nil {
+					return util.NFLToday(util.Today(*today))
+				}
+				return util.NFLToday(util.Today(time.Now()))
 			}
 			s.config.TodayFunc = f
 		}

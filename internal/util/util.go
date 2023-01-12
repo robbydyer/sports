@@ -21,9 +21,15 @@ func Today(t time.Time) time.Time {
 	return t.Local()
 }
 
-func TodayFunc(t time.Time) func() []time.Time {
+func FakeTodayFunc(t time.Time) func() []time.Time {
 	return func() []time.Time {
 		return []time.Time{Today(t)}
+	}
+}
+
+func TodayFunc() func() []time.Time {
+	return func() []time.Time {
+		return []time.Time{Today(time.Now())}
 	}
 }
 

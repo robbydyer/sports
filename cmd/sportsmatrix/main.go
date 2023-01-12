@@ -38,7 +38,6 @@ import (
 	"github.com/robbydyer/sports/internal/pga"
 	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
-	"github.com/robbydyer/sports/internal/util"
 	"github.com/robbydyer/sports/internal/yahoo"
 )
 
@@ -57,7 +56,7 @@ type rootArgs struct {
 	writer       *os.File
 	alternateAPI bool
 	debug        bool
-	todayT       time.Time
+	todayT       *time.Time
 }
 
 func main() {
@@ -127,12 +126,13 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 
 			if today := viper.GetString("date-str"); today != "" {
 				var err error
-				args.todayT, err = time.Parse("2006-01-02T15:04:05", fmt.Sprintf("%sT12:00:00", today))
+				t, err := time.Parse("2006-01-02T15:04:05", fmt.Sprintf("%sT12:00:00", today))
 				if err != nil {
 					return fmt.Errorf("failed to parse date-str: %w", err)
 				}
+				args.todayT = &t
 			} else {
-				args.todayT = util.Today(time.Now())
+				args.todayT = nil
 			}
 
 			return nil
