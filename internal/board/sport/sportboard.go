@@ -288,9 +288,9 @@ func New(ctx context.Context, api API, bounds image.Rectangle, today *time.Time,
 		if s.config.PreviousDays > 0 || s.config.AdvanceDays > 0 {
 			s.config.TodayFunc = func() []time.Time {
 				if today != nil {
-					return util.AddTodays(*today, s.config.PreviousDays, s.config.AdvanceDays)
+					return util.AddTodays(util.Today(*today), s.config.PreviousDays, s.config.AdvanceDays)
 				}
-				return util.AddTodays(time.Now(), s.config.PreviousDays, s.config.AdvanceDays)
+				return util.AddTodays(util.Today(time.Now()), s.config.PreviousDays, s.config.AdvanceDays)
 			}
 		}
 		if strings.ToLower(s.api.League()) == "ncaaf" {
