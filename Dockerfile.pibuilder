@@ -5,7 +5,7 @@ FROM $BASE
 # Replace shell with bash so we can source files
 SHELL ["/bin/bash", "--login", "-ce"]
 
-ARG GOVERSION=1.19.4
+ARG GOVERSION=1.20
 
 RUN apt-get update && \
     apt-get install -y \
@@ -21,7 +21,7 @@ RUN apt-get update && \
 RUN update-ca-certificates -f
 ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 COPY .nvmrc /root/.nvmrc
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
 RUN cd /root && nvm install
 
 RUN mkdir -p /src/internal/rgbmatrix-rpi/lib /src/web
