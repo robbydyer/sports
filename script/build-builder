@@ -49,7 +49,7 @@ dobuild() {
 }
 
 # Install qemu emulators
-docker run --privileged --rm tonistiigi/binfmt --install all
+docker run --privileged --rm tonistiigi/binfmt:qemu-v7.0.0 --install all
 
 dockerlogin
 
