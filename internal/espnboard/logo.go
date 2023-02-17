@@ -18,6 +18,8 @@ import (
 	"github.com/robbydyer/sports/internal/util"
 )
 
+const dark = "dark"
+
 func (e *ESPNBoard) getLogoCache(logoKey string) (*logo.Logo, error) {
 	e.logoLock.RLock()
 	defer e.logoLock.RUnlock()
@@ -131,15 +133,21 @@ func logoSearch(leaguer Leaguer, teamID string) string {
 	switch leaguer.(type) {
 	case *ncaaf:
 		switch teamID {
-		case "2294":
-			// IOWA
-			return "dark"
+		// IOWA, CIN
+		case "2294", "2132":
+			return dark
+		}
+	case *ncaam:
+		switch teamID {
+		// IOWA, CIN
+		case "2294", "2132":
+			return dark
 		}
 	case *nba:
 		switch teamID {
 		// Utah Jazz
 		case "26":
-			return "dark"
+			return dark
 		}
 	}
 
