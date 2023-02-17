@@ -131,8 +131,14 @@ func logoSearch(leaguer Leaguer, teamID string) string {
 	switch leaguer.(type) {
 	case *ncaaf:
 		switch teamID {
-		case "2294":
-			// IOWA
+		// IOWA, CIN
+		case "2294", "2132":
+			return "dark"
+		}
+	case *ncaam:
+		switch teamID {
+		// IOWA, CIN
+		case "2294", "2132":
 			return "dark"
 		}
 	case *nba:
