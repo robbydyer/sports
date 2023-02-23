@@ -145,9 +145,12 @@ func getEnumDefault(reg *descriptor.Registry, enum *descriptor.Enum) string {
 }
 
 // messageToQueryParameters converts a message to a list of OpenAPI query parameters.
-func messageToQueryParameters(message *descriptor.Message, reg *descriptor.Registry, pathParams []descriptor.Parameter, body *descriptor.Body) (params []openapiParameterObject, err error) {
+func messageToQueryParameters(message *descriptor.Message, reg *descriptor.Registry, pathParams []descriptor.Parameter, body *descriptor.Body, httpMethod string) (params []openapiParameterObject, err error) {
 	for _, field := range message.Fields {
 		if !isVisible(getFieldVisibilityOption(field), reg) {
+			continue
+		}
+		if reg.GetAllowPatchFeature() && field.GetTypeName() == ".google.protobuf.FieldMask" && field.GetName() == "update_mask" && httpMethod == "PATCH" && len(body.FieldPath) != 0 {
 			continue
 		}
 
@@ -373,7 +376,7 @@ func findServicesMessagesAndEnumerations(s []*descriptor.Service, reg *descripto
 
 				swgReqName, ok := fullyQualifiedNameToOpenAPIName(meth.RequestType.FQMN(), reg)
 				if !ok {
-					glog.Errorf("couldn't resolve OpenAPI name for FQMN '%v'", meth.RequestType.FQMN())
+					glog.Errorf("couldn't resolve OpenAPI name for FQMN %q", meth.RequestType.FQMN())
 					continue
 				}
 				if _, ok := refs[fmt.Sprintf("#/definitions/%s", swgReqName)]; ok {
@@ -385,7 +388,7 @@ func findServicesMessagesAndEnumerations(s []*descriptor.Service, reg *descripto
 
 			swgRspName, ok := fullyQualifiedNameToOpenAPIName(meth.ResponseType.FQMN(), reg)
 			if !ok && !skipRenderingRef(meth.ResponseType.FQMN()) {
-				glog.Errorf("couldn't resolve OpenAPI name for FQMN '%v'", meth.ResponseType.FQMN())
+				glog.Errorf("couldn't resolve OpenAPI name for FQMN %q", meth.ResponseType.FQMN())
 				continue
 			}
 
@@ -601,7 +604,7 @@ func renderMessagesAsDefinition(messages messageMap, d openapiDefinitionsObject,
 	for name, msg := range messages {
 		swgName, ok := fullyQualifiedNameToOpenAPIName(msg.FQMN(), reg)
 		if !ok {
-			return fmt.Errorf("can't resolve OpenAPI name from '%v'", msg.FQMN())
+			return fmt.Errorf("can't resolve OpenAPI name from %q", msg.FQMN())
 		}
 		if skipRenderingRef(name) {
 			continue
@@ -700,7 +703,7 @@ func schemaOfField(f *descriptor.Field, reg *descriptor.Registry, refs refMap) o
 		} else {
 			swgRef, ok := fullyQualifiedNameToOpenAPIName(fd.GetTypeName(), reg)
 			if !ok {
-				panic(fmt.Sprintf("can't resolve OpenAPI ref from typename '%v'", fd.GetTypeName()))
+				panic(fmt.Sprintf("can't resolve OpenAPI ref from typename %q", fd.GetTypeName()))
 			}
 			core = schemaCore{
 				Ref: "#/definitions/" + swgRef,
@@ -722,6 +725,9 @@ func schemaOfField(f *descriptor.Field, reg *descriptor.Registry, refs refMap) o
 
 	switch aggregate {
 	case array:
+		if _, ok := wktSchemas[fd.GetTypeName()]; !ok && fd.GetType() == descriptorpb.FieldDescriptorProto_TYPE_MESSAGE {
+			core.Type = "object"
+		}
 		ret = openapiSchemaObject{
 			schemaCore: schemaCore{
 				Type:  "array",
@@ -793,7 +799,8 @@ func primitiveSchema(t descriptorpb.FieldDescriptorProto_Type) (ftype, format st
 		// NOTE: in OpenAPI specification, format should be empty on boolean type
 		return "boolean", "", true
 	case descriptorpb.FieldDescriptorProto_TYPE_STRING:
-		// NOTE: in OpenAPI specification, format should be empty on string type
+		// NOTE: in OpenAPI specification, can be empty on string type
+		// see: https://swagger.io/specification/v2/#data-types
 		return "string", "", true
 	case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
 		return "string", "byte", true
@@ -874,7 +881,7 @@ func lookupMsgAndOpenAPIName(location, name string, reg *descriptor.Registry) (*
 	}
 	swgName, ok := fullyQualifiedNameToOpenAPIName(msg.FQMN(), reg)
 	if !ok {
-		return nil, "", fmt.Errorf("can't map OpenAPI name from FQMN '%v'", msg.FQMN())
+		return nil, "", fmt.Errorf("can't map OpenAPI name from FQMN %q", msg.FQMN())
 	}
 	return msg, swgName, nil
 }
@@ -1133,6 +1140,11 @@ func renderServices(services []*descriptor.Service, paths openapiPathsObject, re
 						desc = schema.Description
 						defaultValue = schema.Default
 						extensions = schema.extensions
+						// If there is no mandatory format based on the field,
+						// allow it to be overridden by the user
+						if paramFormat == "" {
+							paramFormat = schema.Format
+						}
 					}
 
 					if parameter.IsRepeated() {
@@ -1262,7 +1274,7 @@ func renderServices(services []*descriptor.Service, paths openapiPathsObject, re
 				}
 
 				// add the parameters to the query string
-				queryParams, err := messageToQueryParameters(meth.RequestType, reg, b.PathParams, b.Body)
+				queryParams, err := messageToQueryParameters(meth.RequestType, reg, b.PathParams, b.Body, b.HTTPMethod)
 				if err != nil {
 					return err
 				}
@@ -2765,7 +2777,7 @@ func openapiExamplesFromProtoExamples(in map[string]string) map[string]interface
 		switch mimeType {
 		case "application/json":
 			// JSON example objects are rendered raw.
-			out[mimeType] = json.RawMessage(exampleStr)
+			out[mimeType] = RawExample(exampleStr)
 		default:
 			// All other mimetype examples are rendered as strings.
 			out[mimeType] = exampleStr
