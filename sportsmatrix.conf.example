@@ -2069,3 +2069,101 @@ laligaConfig:
 
   # Number of previous days to show scores for. Defaults to today only
   previousDays: 0
+
+## XFL Config
+xflConfig:
+  enabled: true
+
+  # Headline news from ESPN
+  headlines:
+    enabled: false
+
+    # Shows the league logo before each headline
+    useLogos: true
+
+    # Max number of headlines to show for this league
+    max: 3
+
+    tightScrollPadding: 2
+
+    # Increase this number to slow down the headline scroll
+    scrollDelay: "10ms"
+
+  # Shows the league logo at the start of each board cycle
+  showLeagueLogo: false
+  
+  # Displays the scoreboard in a scrolling style instead of statically
+  scrollMode: false
+
+  # Makes the games within this league scroll back-to-back instead of clearing
+  # the screen between each
+  tightScroll: true
+
+  # Sets the spacing between games when tightScroll is enabled
+  tightScrollPadding: 10
+
+  # Delay between screen draws in scroll mode. Default is 50ms.
+  scrollDelay: "50ms"
+
+  boardDelay: "10s"
+
+  # Number of columns in a grid layout. Default 1
+  #gridCols: 3
+
+  # Number of rows in a grid layout. Default 1
+  #gridRows: 2
+
+  # This will draw lines between each cell in a grid. The ratio is a percentage of the
+  # total width of the canvas, so this should be a pretty small number. Defaults to 0,
+  # which has no lines separating cells.
+  #gridPadRatio: 0.015
+
+  # watchTeams are teams we show games for. ALL shows all teams in the league
+  watchTeams:
+  - ALL
+
+  # favoriteTeams are teams that we can hide scores for, and set to "Sticky" on live games
+  #favoriteTeams:
+  #- ATL
+
+  # Hides scores for your favoriteTeams games. DVR is a father's life saver
+  hideFavoriteScore: true
+
+  # Tells the matrix to lock onto a live game that a favorite team is playing in
+  favoriteSticky: false
+
+  # If this is set and favoriteSticky is enabled, live sticky games will exit the sticky
+  # cycle every stickyDelay interval. They will re-stick the favorited games once the cycle comes back around.
+  #stickyDelay: "5m"
+
+  # Set to true to show a team's record on the scoreboard
+  showRecord: false
+
+  # Set to true to show gambling odds for a game
+  showOdds: false
+
+  # If set to true and this sport is enabled, a message will
+  # appear if there are no scheduled games for the day
+  showNotScheduled: false
+
+  # This sets the number of runs through the scoreboard that a score change will be highlighted in red
+  scoreHighlightRepeat: 3
+
+  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
+  #onTimes:
+  #- 00 18 * * *
+  #offTimes:
+  #- 00 02 * * *
+
+  # Adjust font sizes of the Time/Quarter/Inning font and the Score/VS. font.
+  # Leave these commented out to use the default values that scale based on matrix size.
+  #timeFont:
+    #size: 8.0
+  #scoreFont:
+    #size: 16.0
+
+  # Set this to false to disable the logo gradient effect
+  useGradient: true
+
+  # 24 Hour Clock format for Game schedules
+  enable24Hour: false

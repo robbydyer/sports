@@ -44,4 +44,5 @@ type Config struct {
 	LigueConfig        *sportboard.Config    `json:"ligueConfig,omitempty"`
 	SerieaConfig       *sportboard.Config    `json:"serieaConfig,omitempty"`
 	LaligaConfig       *sportboard.Config    `json:"laligaConfig,omitempty"`
+	XFLConfig          *sportboard.Config    `json:"xflConfig,omitempty"`
 }
