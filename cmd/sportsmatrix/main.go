@@ -488,6 +488,19 @@ func (r *rootArgs) setConfigDefaults() {
 	}
 	r.config.LaligaConfig.SetDefaults()
 	r.config.LaligaConfig.Headlines.SetDefaults()
+
+	if r.config.XFLConfig == nil {
+		r.config.XFLConfig = &sportboard.Config{
+			StartEnabled: atomic.NewBool(false),
+		}
+	}
+	if r.config.XFLConfig.Headlines == nil {
+		r.config.XFLConfig.Headlines = &textboard.Config{
+			StartEnabled: atomic.NewBool(false),
+		}
+	}
+	r.config.XFLConfig.SetDefaults()
+	r.config.XFLConfig.Headlines.SetDefaults()
 }
 
 func (r *rootArgs) getRGBMatrix(logger *zap.Logger) (matrix.Matrix, error) {
@@ -1155,6 +1168,34 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 		boards = append(boards, b)
 		if r.config.LaligaConfig.Headlines != nil {
 			b, err := textboard.New(headlineAPI, r.config.LaligaConfig.Headlines, logger)
+			if err != nil {
+				return nil, err
+			}
+			boards = append(boards, b)
+		}
+	}
+
+	if r.config.XFLConfig != nil {
+		api, err := espnboard.NewXFL(ctx, logger)
+		if err != nil {
+			return nil, err
+		}
+		l, err := espnboard.GetLeaguer("xfl")
+		if err != nil {
+			return nil, err
+		}
+		headlineAPI := espnboard.NewHeadlines(l, logger)
+
+		b, err := sportboard.New(ctx, api, bounds, r.todayT, logger, r.config.XFLConfig,
+			sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		boards = append(boards, b)
+		if r.config.XFLConfig.Headlines != nil {
+			b, err := textboard.New(headlineAPI, r.config.XFLConfig.Headlines, logger, textboard.WithHalfSizeLogo())
 			if err != nil {
 				return nil, err
 			}
