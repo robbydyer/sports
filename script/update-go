@@ -1,0 +1,16 @@
+#!/bin/bash
+
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+cd "${ROOT}"
+
+go_ver="$(curl -L https://golang.org/VERSION?m=text | sed 's,go,,g')"
+lint_ver="$(curl https://api.github.com/repos/golangci/golangci-lint/releases/latest | jq -r .tag_name)"
+
+echo "Updating Go to ${go_ver}, Linter ${lint_ver}"
+
+gsed -i "s,GOVERSION=.*,GOVERSION=${go_ver},g" Dockerfile.pibuilder
+gsed -i "s,GO_VERSION=.*,GO_VERSION=\"${go_ver}\",g" script/common
+gsed -i "s,golangci/golangci-lint:.*,golangci/golangci-lint:${lint_ver},g" Dockerfile.lint
+
+script/build-builder
+script/build-linter
