@@ -1966,7 +1966,7 @@ serieaConfig:
   # Number of previous days to show scores for. Defaults to today only
   previousDays: 0
 
-  ## Spanish La Liga Config
+## Spanish La Liga Config
 laligaConfig:
   enabled: false
 
@@ -2167,3 +2167,9 @@ xflConfig:
 
   # 24 Hour Clock format for Game schedules
   enable24Hour: false
+
+  # Number of days in advance to show scheduled games for. Defaults to today only
+  advanceDays: 0
+
+  # Number of previous days to show scores for. Defaults to today only
+  previousDays: 0
