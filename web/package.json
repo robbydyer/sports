@@ -43,7 +43,7 @@
     "tmpl": ">=1.0.5",
     "url-parse": ">=1.5.9",
     "web-vitals": "^3.3.0",
-    "ws": "^8.12.1"
+    "ws": "^8.13.0"
   },
   "scripts": {
     "start": "react-scripts start",
