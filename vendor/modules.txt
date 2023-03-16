@@ -149,7 +149,7 @@ github.com/josharian/intern
 ## explicit; go 1.14
 github.com/lyft/protoc-gen-star
 github.com/lyft/protoc-gen-star/lang/go
-# github.com/mackerelio/go-osstat v0.2.3
+# github.com/mackerelio/go-osstat v0.2.4
 ## explicit; go 1.18
 github.com/mackerelio/go-osstat/cpu
 github.com/mackerelio/go-osstat/memory
