@@ -11,7 +11,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.2
 	github.com/hashicorp/go-multierror v1.1.0
-	github.com/mackerelio/go-osstat v0.2.3
+	github.com/mackerelio/go-osstat v0.2.4
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/pseudomuto/protoc-gen-doc v1.5.1
 	github.com/robfig/cron/v3 v3.0.1
@@ -27,7 +27,7 @@ require (
 	golang.org/x/oauth2 v0.6.0
 	golang.org/x/sync v0.1.0
 	google.golang.org/api v0.112.0
-	google.golang.org/protobuf v1.29.1
+	google.golang.org/protobuf v1.30.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
