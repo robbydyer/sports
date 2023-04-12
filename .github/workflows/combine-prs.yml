@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: combine-prs
         id: combine-prs
-        uses: github/combine-prs@v3.0.0 # where X.X.X is the latest version
+        uses: github/combine-prs@v3.1.1 # where X.X.X is the latest version
 
 ## Controls when the action will run - in this case triggered manually
 #on:
