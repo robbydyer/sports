@@ -7,6 +7,7 @@ import (
 	"image"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -119,6 +120,10 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 		Logger: logger,
 	}
 
+	if c.rArgs.config.MLBConfig.LiveViewFont != nil {
+		m.FontSize = c.rArgs.config.MLBConfig.LiveViewFont.Size
+	}
+
 	dR := func(ctx context.Context, canvas board.Canvas, game sportboard.Game, hLogo *logo.Logo, aLogo *logo.Logo) error {
 		logger.Info("render detailed live view")
 		mlbGame, ok := game.(*espnboard.Game)
@@ -133,7 +138,21 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 	c.rArgs.config.MLBConfig.GridCols = 0
 	c.rArgs.config.MLBConfig.GridRows = 0
 
-	b, err := sportboard.New(ctx, api, bounds, c.rArgs.todayT, logger, c.rArgs.config.MLBConfig, sportboard.WithDetailedLiveRenderer(dR))
+	testT, err := time.Parse("2006-01-02", "2022-05-25")
+	if err != nil {
+		return err
+	}
+
+	l, err := espnboard.GetLeaguer("mlb")
+	if err != nil {
+		return err
+	}
+	headlineAPI := espnboard.NewHeadlines(l, logger)
+
+	b, err := sportboard.New(ctx, api, bounds, &testT, logger, c.rArgs.config.MLBConfig,
+		sportboard.WithDetailedLiveRenderer(dR),
+		sportboard.WithLeagueLogoGetter(headlineAPI.GetLogo),
+	)
 	if err != nil {
 		return err
 	}

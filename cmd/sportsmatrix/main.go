@@ -607,6 +607,10 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 				Logger: logger,
 			}
 
+			if r.config.MLBConfig.LiveViewFont != nil {
+				m.FontSize = r.config.MLBConfig.LiveViewFont.Size
+			}
+
 			opts = append(opts,
 				sportboard.WithDetailedLiveRenderer(
 					func(ctx context.Context, canvas board.Canvas, game sportboard.Game, hLogo *logo.Logo, aLogo *logo.Logo) error {

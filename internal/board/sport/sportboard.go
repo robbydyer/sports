@@ -85,6 +85,7 @@ type Config struct {
 	StickyDelay          string            `json:"stickyDelay"`
 	ScoreFont            *FontConfig       `json:"scoreFont"`
 	TimeFont             *FontConfig       `json:"timeFont"`
+	LiveViewFont         *FontConfig       `json:"liveViewFont"`
 	LogoConfigs          []*logo.Config    `json:"logoConfigs"`
 	WatchTeams           []string          `json:"watchTeams"`
 	FavoriteTeams        []string          `json:"favoriteTeams"`
