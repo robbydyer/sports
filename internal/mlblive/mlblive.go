@@ -18,8 +18,9 @@ import (
 var fillColor = color.RGBA{255, 255, 0, 100}
 
 type MlbLive struct {
-	Logger *zap.Logger
-	writer *rgbrender.TextWriter
+	Logger   *zap.Logger
+	FontSize float64
+	writer   *rgbrender.TextWriter
 }
 
 type Runners struct {
@@ -298,10 +299,14 @@ func (m *MlbLive) getWriter(canvasBounds image.Rectangle) (*rgbrender.TextWriter
 		return nil, err
 	}
 
-	if canvasBounds.Dy() <= 256 {
-		w.FontSize = 8.0
+	if m.FontSize > 0 {
+		w.FontSize = m.FontSize
 	} else {
-		w.FontSize = 0.25 * float64(canvasBounds.Dy())
+		if canvasBounds.Dy() <= 256 {
+			w.FontSize = 8.0
+		} else {
+			w.FontSize = 0.25 * float64(canvasBounds.Dy())
+		}
 	}
 
 	if canvasBounds.Dy() <= 256 {
