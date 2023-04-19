@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -28,6 +29,7 @@ type PGA struct {
 	players        []*Player
 	updateInterval time.Duration
 	lastUpdate     time.Time
+	sync.Mutex
 }
 
 type eventDat struct {
@@ -88,7 +90,10 @@ func (p *PGA) StatShortName(stat string) string {
 
 // ListPlayers ...
 func (p *PGA) ListPlayers(ctx context.Context, teamAbbreviation string) ([]statboard.Player, error) {
-	if len(p.players) < 1 || time.Since(p.lastUpdate) > p.updateInterval {
+	p.Lock()
+	defer p.Unlock()
+
+	if time.Since(p.lastUpdate) > p.updateInterval {
 		var err error
 		p.log.Debug("updating PGA leaderboard",
 			zap.Duration("update interval", p.updateInterval),
@@ -123,6 +128,10 @@ func (p *PGA) PlayerCategories() []string {
 }
 
 func (p *PGA) updatePlayers(ctx context.Context) ([]*Player, error) {
+	defer func() {
+		p.lastUpdate = time.Now()
+	}()
+
 	req, err := http.NewRequest("GET", leaderboardURL, nil)
 	if err != nil {
 		return nil, err
@@ -154,12 +163,10 @@ func (p *PGA) updatePlayers(ctx context.Context) ([]*Player, error) {
 
 	comp := dat.Events[0].Competitions[0]
 	if len(comp.Competitors) > 1 {
-		p.lastUpdate = time.Now()
 		return comp.Competitors, nil
 	}
 
 	if strings.Contains(comp.DataFormat, "RAW") && comp.RawData != "" {
-		p.lastUpdate = time.Now()
 		return p.parseRaw(comp.RawData)
 	}
 

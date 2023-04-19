@@ -225,6 +225,14 @@ func defaultSorter(players []Player) []Player {
 	return players
 }
 
+func (s *StatBoard) SetHorizontal(set bool) {
+	s.config.Horizontal.Store(set)
+}
+
+func (s *StatBoard) GetHorizontal() bool {
+	return s.config.Horizontal.Load()
+}
+
 func (s *StatBoard) Enabler() board.Enabler {
 	return s.enabler
 }

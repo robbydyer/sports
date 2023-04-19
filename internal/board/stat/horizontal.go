@@ -8,6 +8,8 @@ import (
 	"image/draw"
 	"strings"
 
+	"go.uber.org/zap"
+
 	"github.com/robbydyer/sports/internal/board"
 	"github.com/robbydyer/sports/internal/rgbrender"
 )
@@ -23,6 +25,10 @@ func (s *StatBoard) doHorizontal(ctx context.Context, canvas board.Canvas, playe
 		num := 0
 	PLIST:
 		for _, player := range playerList {
+			if player == nil {
+				continue PLIST
+			}
+
 			num++
 			if num > s.config.HorizontalLimit {
 				break PLIST
@@ -41,7 +47,17 @@ func (s *StatBoard) doHorizontal(ctx context.Context, canvas board.Canvas, playe
 				clrLine.Clrs = append(clrLine.Clrs, color.RGBA{30, 144, 255, 255})
 			}
 
-			for _, s := range fmt.Sprintf(" %s. %s  ", fName[0:1], lName) {
+			name := ""
+			if len(fName) > 0 {
+				name = fName[0:1] + ". "
+			} else {
+				s.log.Info("first name was empty",
+					zap.String("first", fName),
+					zap.String("last", lName),
+				)
+			}
+			name += lName
+			for _, s := range name {
 				clrLine.Chars = append(clrLine.Chars, string(s))
 				clrLine.Clrs = append(clrLine.Clrs, color.White)
 			}
