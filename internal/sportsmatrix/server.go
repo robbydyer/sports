@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	sportboard "github.com/robbydyer/sports/internal/board/sport"
+	statboard "github.com/robbydyer/sports/internal/board/stat"
 	pb "github.com/robbydyer/sports/internal/proto/sportsmatrix"
 )
 
@@ -109,6 +110,21 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.Status) (*emptypb.Empty,
 		if _, err := s.ScreenOff(ctx, &emptypb.Empty{}); err != nil {
 			return nil, twirp.NewError(twirp.Internal, err.Error())
 		}
+
+		// Set statboards to horizontal or not
+		for _, b := range s.sm.boards {
+			if statBoard, ok := b.(*statboard.StatBoard); ok {
+				statBoard.SetHorizontal(true)
+				if s.sm.cfg.CombinedScroll.Load() {
+					statBoard.SetHorizontal(true)
+				} else {
+					if orig, ok := s.sm.statboardOrigHorizontal[statBoard.Name()]; ok {
+						statBoard.SetHorizontal(orig)
+					}
+				}
+			}
+		}
+
 		if _, err := s.ScreenOn(ctx, &emptypb.Empty{}); err != nil {
 			return nil, twirp.NewError(twirp.Internal, err.Error())
 		}

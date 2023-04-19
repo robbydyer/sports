@@ -15,6 +15,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/robbydyer/sports/internal/board"
+	statboard "github.com/robbydyer/sports/internal/board/stat"
 	"github.com/robbydyer/sports/internal/imgcanvas"
 	"github.com/robbydyer/sports/internal/matrix"
 	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
@@ -27,43 +28,44 @@ var version = "noversion"
 
 // SportsMatrix controls the RGB matrix. It rotates through a list of given board.Board
 type SportsMatrix struct {
-	cfg                  *Config
-	isServing            chan struct{}
-	canvases             []board.Canvas
-	boards               []board.Board
-	screenIsOn           *atomic.Bool
-	webBoardIsOn         *atomic.Bool
-	webBoardOn           chan struct{}
-	webBoardOff          chan struct{}
-	serveBlock           chan struct{}
-	log                  *zap.Logger
-	boardCtx             context.Context
-	boardCancel          context.CancelFunc
-	currentBoardCtx      context.Context
-	currentBoardCancel   context.CancelFunc
-	server               http.Server
-	close                chan struct{}
-	httpEndpoints        []string
-	jumpLock             sync.Mutex
-	boardLock            sync.Mutex
-	webBoardLock         sync.Mutex
-	screenSwitch         chan struct{}
-	jumpTo               chan string
-	betweenBoards        []board.Board
-	currentJump          string
-	jumping              *atomic.Bool
-	switchedOn           int
-	switchedOff          int
-	switchTestSleep      bool
-	webBoardWasOn        *atomic.Bool
-	serveContext         context.Context
-	webBoardCtx          context.Context
-	webBoardCancel       context.CancelFunc
-	liveOnly             *atomic.Bool
-	scrollStatus         chan float64
-	scrollInProgress     *atomic.Bool
-	defaultScrollSpeeds  map[string]time.Duration
-	activeScrollCanvases []*scrcnvs.ScrollCanvas
+	cfg                     *Config
+	isServing               chan struct{}
+	canvases                []board.Canvas
+	boards                  []board.Board
+	screenIsOn              *atomic.Bool
+	webBoardIsOn            *atomic.Bool
+	webBoardOn              chan struct{}
+	webBoardOff             chan struct{}
+	serveBlock              chan struct{}
+	log                     *zap.Logger
+	boardCtx                context.Context
+	boardCancel             context.CancelFunc
+	currentBoardCtx         context.Context
+	currentBoardCancel      context.CancelFunc
+	server                  http.Server
+	close                   chan struct{}
+	httpEndpoints           []string
+	jumpLock                sync.Mutex
+	boardLock               sync.Mutex
+	webBoardLock            sync.Mutex
+	screenSwitch            chan struct{}
+	jumpTo                  chan string
+	betweenBoards           []board.Board
+	currentJump             string
+	jumping                 *atomic.Bool
+	switchedOn              int
+	switchedOff             int
+	switchTestSleep         bool
+	webBoardWasOn           *atomic.Bool
+	serveContext            context.Context
+	webBoardCtx             context.Context
+	webBoardCancel          context.CancelFunc
+	liveOnly                *atomic.Bool
+	scrollStatus            chan float64
+	scrollInProgress        *atomic.Bool
+	defaultScrollSpeeds     map[string]time.Duration
+	activeScrollCanvases    []*scrcnvs.ScrollCanvas
+	statboardOrigHorizontal map[string]bool
 	sync.Mutex
 }
 
@@ -158,25 +160,26 @@ func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.
 	cfg.Defaults()
 
 	s := &SportsMatrix{
-		boards:              boards,
-		cfg:                 cfg,
-		log:                 logger,
-		serveBlock:          make(chan struct{}),
-		close:               make(chan struct{}),
-		screenIsOn:          atomic.NewBool(true),
-		webBoardIsOn:        atomic.NewBool(false),
-		webBoardOn:          make(chan struct{}),
-		webBoardOff:         make(chan struct{}),
-		isServing:           make(chan struct{}, 1),
-		jumpTo:              make(chan string, 1),
-		canvases:            canvases,
-		jumping:             atomic.NewBool(false),
-		screenSwitch:        make(chan struct{}, 1),
-		webBoardWasOn:       atomic.NewBool(false),
-		liveOnly:            atomic.NewBool(false),
-		scrollStatus:        make(chan float64),
-		scrollInProgress:    atomic.NewBool(false),
-		defaultScrollSpeeds: make(map[string]time.Duration),
+		boards:                  boards,
+		cfg:                     cfg,
+		log:                     logger,
+		serveBlock:              make(chan struct{}),
+		close:                   make(chan struct{}),
+		screenIsOn:              atomic.NewBool(true),
+		webBoardIsOn:            atomic.NewBool(false),
+		webBoardOn:              make(chan struct{}),
+		webBoardOff:             make(chan struct{}),
+		isServing:               make(chan struct{}, 1),
+		jumpTo:                  make(chan string, 1),
+		canvases:                canvases,
+		jumping:                 atomic.NewBool(false),
+		screenSwitch:            make(chan struct{}, 1),
+		webBoardWasOn:           atomic.NewBool(false),
+		liveOnly:                atomic.NewBool(false),
+		scrollStatus:            make(chan float64),
+		scrollInProgress:        atomic.NewBool(false),
+		defaultScrollSpeeds:     make(map[string]time.Duration),
+		statboardOrigHorizontal: make(map[string]bool),
 	}
 
 	for _, canvas := range canvases {
@@ -443,6 +446,11 @@ func (s *SportsMatrix) Serve(ctx context.Context) error {
 
 		for _, inb := range s.betweenBoards {
 			boardOrder = append(boardOrder, inb.Name())
+		}
+
+		// Get the default horizontal scroll setting for statboards
+		if statboard, ok := b.(*statboard.StatBoard); ok {
+			s.statboardOrigHorizontal[statboard.Name()] = statboard.GetHorizontal()
 		}
 	}
 
