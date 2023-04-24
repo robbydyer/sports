@@ -40,7 +40,8 @@ dockerlogin() {
   if [ -d "${DOCKERCONF}" ]; then
     return
   fi
-  docker --config="${DOCKERCONF}" login -u robbydyer
+  echo "Enter docker hub credentials:"
+  docker --config="${DOCKERCONF}" login
 }
 
 buildprotoc() {
