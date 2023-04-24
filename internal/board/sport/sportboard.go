@@ -760,12 +760,13 @@ GAMES:
 
 		loadCancel()
 
-		if err := s.renderGame(s.renderCtx, canvas, cachedGame, counter); err != nil {
-			s.log.Error("failed to render sportboard game", zap.Error(err))
-			continue GAMES
-		}
-
+		// Tight scroll mode
 		if canvas.Scrollable() && s.config.TightScroll.Load() && tightCanvas != nil {
+			if err := s.renderGame(s.renderCtx, canvas, cachedGame, counter); err != nil {
+				s.log.Error("failed to render sportboard game in tight scroll mode", zap.Error(err))
+				continue GAMES
+			}
+
 			s.log.Debug("adding to tight scroll canvas",
 				zap.Int("total width", tightCanvas.Width()),
 			)
@@ -775,16 +776,50 @@ GAMES:
 			continue GAMES
 		}
 
-		if err := canvas.Render(s.renderCtx); err != nil {
-			s.log.Error("failed to render", zap.Error(err))
-			continue GAMES
+		isFav, err := s.isFavoriteGame(cachedGame)
+		if err != nil {
+			s.log.Error("failed to determine if game is a favorite",
+				zap.Error(err),
+			)
 		}
 
-		if !s.config.ScrollMode.Load() {
-			select {
-			case <-s.renderCtx.Done():
-				return nil, context.Canceled
-			case <-time.After(s.config.boardDelay):
+		stickyStart := time.Now()
+		stickyDelay := s.getStickyDelay()
+
+	FAV:
+		for {
+			if err := s.renderGame(s.renderCtx, canvas, cachedGame, counter); err != nil {
+				s.log.Error("failed to render sportboard game", zap.Error(err))
+				continue GAMES
+			}
+
+			if err := canvas.Render(s.renderCtx); err != nil {
+				s.log.Error("failed to render", zap.Error(err))
+				continue GAMES
+			}
+
+			if !s.config.ScrollMode.Load() {
+				select {
+				case <-s.renderCtx.Done():
+					return nil, context.Canceled
+				case <-time.After(s.config.boardDelay):
+				}
+			}
+
+			if !(isFav && s.config.FavoriteSticky.Load()) {
+				break FAV
+			}
+			if stickyDelay != nil && time.Since(stickyStart) > *stickyDelay {
+				break FAV
+			}
+
+			// Update the game data in sticky mode
+			cachedGame, err = cachedGame.GetUpdate(s.renderCtx)
+			if err != nil {
+				s.log.Error("failed to update live game during sticky",
+					zap.Error(err),
+				)
+				break FAV
 			}
 		}
 	}
@@ -948,6 +983,7 @@ func (s *SportBoard) doGrid(ctx context.Context, grid *rgbrender.Grid, canvas bo
 	return canvas.Render(ctx)
 }
 
+// renderGame draws a game to the given canvas. It does not Render the canvas itself, the caller is responsible for doing so
 func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGame Game, counter image.Image) error {
 	select {
 	case <-ctx.Done():
@@ -968,57 +1004,31 @@ func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGa
 	s.logCanvas(canvas, "sportboard renderGame canvas")
 
 	if isLive {
-		isFavorite, err := s.isFavoriteGame(liveGame)
-		if err != nil {
-			isFavorite = false
-		}
+		if s.config.DetailedLive.Load() && s.detailedLiveRenderer != nil {
+			h, err := liveGame.HomeTeam()
+			if err != nil {
+				return err
+			}
+			a, err := liveGame.AwayTeam()
+			if err != nil {
+				return err
+			}
+			hLogo, err := s.getLogo(ctx, h.GetID())
+			if err != nil {
+				return err
+			}
+			aLogo, err := s.getLogo(ctx, a.GetID())
+			if err != nil {
+				return err
+			}
 
-		stickyStart := time.Now()
-		stickyDelay := s.getStickyDelay()
-
-	FAV:
-		for {
-			if s.config.DetailedLive.Load() && s.detailedLiveRenderer != nil {
-				h, err := liveGame.HomeTeam()
-				if err != nil {
-					return err
-				}
-				a, err := liveGame.AwayTeam()
-				if err != nil {
-					return err
-				}
-				hLogo, err := s.getLogo(ctx, h.GetID())
-				if err != nil {
-					return err
-				}
-				aLogo, err := s.getLogo(ctx, a.GetID())
-				if err != nil {
-					return err
-				}
-
-				if err := s.detailedLiveRenderer(ctx, canvas, liveGame, hLogo, aLogo); err != nil {
-					return err
-				}
-				draw.Draw(canvas, counter.Bounds(), counter, image.Point{}, draw.Over)
-			} else {
-				if err := s.renderLiveGame(ctx, canvas, liveGame, counter); err != nil {
-					return fmt.Errorf("failed to render live game: %w", err)
-				}
+			if err := s.detailedLiveRenderer(ctx, canvas, liveGame, hLogo, aLogo); err != nil {
+				return err
 			}
-			if !(isFavorite && s.config.FavoriteSticky.Load()) {
-				break FAV
-			}
-			if stickyDelay != nil && time.Since(stickyStart) > *stickyDelay {
-				break FAV
-			}
-			s.log.Debug("rendering sticky game")
-			if err := canvas.Render(ctx); err != nil {
-				return fmt.Errorf("failed to render canvas during sticky live game: %w", err)
-			}
-			select {
-			case <-ctx.Done():
-				return context.Canceled
-			case <-time.After(s.config.boardDelay):
+			draw.Draw(canvas, counter.Bounds(), counter, image.Point{}, draw.Over)
+		} else {
+			if err := s.renderLiveGame(ctx, canvas, liveGame, counter); err != nil {
+				return fmt.Errorf("failed to render live game: %w", err)
 			}
 		}
 	} else if isOver {

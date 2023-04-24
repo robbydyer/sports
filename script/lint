@@ -12,6 +12,8 @@ if [ "${IN_DOCKER}" = "no" ]; then
     MOUNTOPTION=":delegated"
   fi
 
+  dockerlogin
+
   set -x
   exec docker run -t --rm \
       -e IN_DOCKER=yes \
