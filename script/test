@@ -2,7 +2,7 @@
 set -euo pipefail
 set -x
 
-ROOT=$(git rev-parse --show-toplevel)
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 cd "${ROOT}"
 IN_DOCKER="${IN_DOCKER:-no}"
 SUFFIX="build"
