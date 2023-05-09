@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
 DOCKERCONF="${ROOT}/.dockerconfig"
-GO_VERSION="1.20.3"
+GO_VERSION="1.20.4"
 
 getsha() {
   if uname -s | grep -i darwin &> /dev/null; then
@@ -41,7 +41,7 @@ dockerlogin() {
     return
   fi
   echo "Enter docker hub credentials:"
-  docker --config="${DOCKERCONF}" login
+  echo "${DOCKERHUB_PASS}" | docker --config="${DOCKERCONF}" login -u robbydyer --password-stdin
 }
 
 buildprotoc() {
