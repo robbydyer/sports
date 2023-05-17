@@ -39,7 +39,7 @@
     "swagger-ui": "^4.18.3",
     "swagger-ui-dist": "^4.18.3",
     "swagger-ui-react": "^4.18.3",
-    "tar": ">=6.1.14",
+    "tar": ">=6.1.15",
     "tmpl": ">=1.0.5",
     "url-parse": ">=1.5.9",
     "web-vitals": "^3.3.1",
