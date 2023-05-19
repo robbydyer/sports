@@ -7,4 +7,3 @@ VERSION="${VERSION/v/}"
 
 BUILDARCH=aarch64 DEB_BUILD=yes VERSION="${VERSION}" "${ROOT}/script/build"
 BUILDARCH=armv7l DEB_BUILD=yes VERSION="${VERSION}" "${ROOT}/script/build"
-BUILDARCH=armv6l DEB_BUILD=yes VERSION="${VERSION}" "${ROOT}/script/build"
