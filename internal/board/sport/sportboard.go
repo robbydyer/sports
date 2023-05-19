@@ -689,6 +689,12 @@ GAMES:
 				continue GAMES
 			}
 
+			select {
+			case <-s.renderCtx.Done():
+				return context.Canceled
+			case <-time.After(s.config.boardDelay):
+			}
+
 			if !(isFav && s.config.FavoriteSticky.Load()) {
 				break FAV
 			}
