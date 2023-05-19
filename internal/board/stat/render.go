@@ -11,7 +11,6 @@ import (
 
 	"github.com/robbydyer/sports/internal/board"
 	"github.com/robbydyer/sports/internal/rgbrender"
-	scrcnvs "github.com/robbydyer/sports/internal/scrollcanvas"
 )
 
 func (s *StatBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc) {
@@ -34,21 +33,18 @@ func (s *StatBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc
 
 // Render ...
 func (s *StatBoard) Render(ctx context.Context, canvas board.Canvas) error {
-	c, err := s.render(ctx, canvas)
+	err := s.render(ctx, canvas)
 	if err != nil {
 		return err
-	}
-	if c != nil {
-		return c.Render(ctx)
 	}
 
 	return nil
 }
 
 // Render ...
-func (s *StatBoard) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
+func (s *StatBoard) render(ctx context.Context, canvas board.Canvas) error {
 	if len(s.config.Players) == 0 && len(s.config.Teams) == 0 {
-		return nil, fmt.Errorf("no players or teams configured for stats %s", s.api.LeagueShortName())
+		return fmt.Errorf("no players or teams configured for stats %s", s.api.LeagueShortName())
 	}
 
 	boardCtx, boardCancel := context.WithCancel(ctx)
@@ -76,7 +72,7 @@ func (s *StatBoard) render(ctx context.Context, canvas board.Canvas) (board.Canv
 	for _, abbrev := range s.config.Teams {
 		p, err := s.api.ListPlayers(ctx, abbrev)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		for _, player := range p {
 			cat := player.GetCategory()
@@ -121,26 +117,6 @@ func (s *StatBoard) render(ctx context.Context, canvas board.Canvas) (board.Canv
 		players[cat] = append(players[cat], player)
 	}
 
-	if s.config.Horizontal.Load() {
-		base, ok := canvas.(*scrcnvs.ScrollCanvas)
-		if !ok {
-			return nil, fmt.Errorf("unexpected canvas type for statboard")
-		}
-		tightCanvas, err := scrcnvs.NewScrollCanvas(base.Matrix, s.log)
-		if err != nil {
-			return nil, err
-		}
-		tightCanvas.SetScrollSpeed(base.GetScrollSpeed())
-		tightCanvas.SetScrollDirection(scrcnvs.RightToLeft)
-		img, err := s.doHorizontal(ctx, canvas, players)
-		if err != nil {
-			return nil, err
-		}
-		tightCanvas.AddCanvas(img)
-		go tightCanvas.MatchScroll(ctx, base)
-		return tightCanvas, nil
-	}
-
 	for cat, p := range players {
 		s.log.Debug("rendering category",
 			zap.String("category", cat),
@@ -148,11 +124,11 @@ func (s *StatBoard) render(ctx context.Context, canvas board.Canvas) (board.Canv
 		)
 
 		if err := s.doRender(boardCtx, canvas, p); err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return nil, nil
+	return nil
 }
 
 func (s *StatBoard) doRender(ctx context.Context, canvas board.Canvas, players []Player) error {

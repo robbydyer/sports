@@ -13,7 +13,6 @@ import (
 	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/logo"
 	"github.com/robbydyer/sports/internal/matrix"
-	scrcnvs "github.com/robbydyer/sports/internal/scrollcanvas"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
 )
 
@@ -93,12 +92,7 @@ func (c *calCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	scroll, err := scrcnvs.NewScrollCanvas(matrix, logger)
-	if err != nil {
-		return err
-	}
-
-	canvases = append(canvases, cnvs.NewCanvas(matrix), scroll)
+	canvases = append(canvases, cnvs.NewCanvas(matrix))
 
 	mtrx, err := sportsmatrix.New(ctx, logger, c.rArgs.config.SportsMatrixConfig, canvases, calBoard)
 	if err != nil {

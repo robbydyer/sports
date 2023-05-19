@@ -432,7 +432,7 @@ func (s *SportBoard) callCancelBoard() {
 
 // Render ...
 func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
-	_, err := s.render(ctx, canvas)
+	err := s.render(ctx, canvas)
 	if err != nil {
 		return err
 	}
@@ -441,10 +441,10 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 }
 
 // Render ...
-func (s *SportBoard) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
+func (s *SportBoard) render(ctx context.Context, canvas board.Canvas) error {
 	if !s.Enabler().Enabled() {
 		s.log.Warn("skipping disabled board", zap.String("board", s.api.League()))
-		return nil, nil
+		return nil
 	}
 
 	s.logCanvas(canvas, "sportboard Render() called canvas")
@@ -462,7 +462,7 @@ func (s *SportBoard) render(ctx context.Context, canvas board.Canvas) (board.Can
 			zap.String("league", s.api.League()),
 			zap.Error(err),
 		)
-		return nil, err
+		return err
 	}
 
 	if len(allGames) < 1 {
@@ -474,11 +474,11 @@ func (s *SportBoard) render(ctx context.Context, canvas board.Canvas) (board.Can
 		if len(todays) > 0 {
 			today = todays[0].String()
 		}
-		return nil, fmt.Errorf("no games scheduled for %s on %s", s.api.League(), today)
+		return fmt.Errorf("no games scheduled for %s on %s", s.api.League(), today)
 	}
 
 	if _, err := s.api.GetTeams(ctx); err != nil {
-		return nil, err
+		return err
 	}
 
 	// Determine which games are watched so that the game counter is accurate
@@ -547,7 +547,7 @@ OUTER:
 
 	select {
 	case <-s.renderCtx.Done():
-		return nil, context.Canceled
+		return context.Canceled
 	default:
 	}
 
@@ -569,7 +569,7 @@ OUTER:
 			zap.Int("cell height", height),
 		)
 		loadCancel()
-		return nil, s.renderGrid(s.renderCtx, canvas, games, w, h)
+		return s.renderGrid(s.renderCtx, canvas, games, w, h)
 	}
 
 	s.logCanvas(canvas, "sportboard Render() called canvas after grid")
@@ -577,11 +577,11 @@ OUTER:
 		s.log.Debug("no scheduled games, not rendering", zap.String("league", s.api.League()))
 		if !s.config.ShowNoScheduledLogo.Load() {
 			loadCancel()
-			return nil, fmt.Errorf("no schedule games for %s", s.api.League())
+			return fmt.Errorf("no schedule games for %s", s.api.League())
 		}
 
 		loadCancel()
-		return nil, s.renderNoScheduled(s.renderCtx, canvas)
+		return s.renderNoScheduled(s.renderCtx, canvas)
 	}
 
 	preloader := make(map[int]chan struct{})
@@ -597,14 +597,14 @@ OUTER:
 
 	if s.config.ShowLeagueLogo.Load() {
 		if err := s.renderLeagueLogo(ctx, canvas); err != nil {
-			return nil, err
+			return err
 		}
 		if err := canvas.Render(ctx); err != nil {
-			return nil, err
+			return err
 		}
 		select {
 		case <-s.renderCtx.Done():
-			return nil, context.Canceled
+			return context.Canceled
 		case <-time.After(s.config.boardDelay):
 		}
 	}
@@ -613,13 +613,13 @@ GAMES:
 	for gameIndex, game := range games {
 		select {
 		case <-s.renderCtx.Done():
-			return nil, context.Canceled
+			return context.Canceled
 		default:
 		}
 
 		if !s.Enabler().Enabled() {
 			s.log.Warn("skipping disabled board", zap.String("board", s.api.League()))
-			return nil, nil
+			return nil
 		}
 
 		nextGameIndex := gameIndex + 1
@@ -638,7 +638,7 @@ GAMES:
 		// Wait for the preloader to finish getting data, but with a timeout.
 		select {
 		case <-s.renderCtx.Done():
-			return nil, context.Canceled
+			return context.Canceled
 		case <-preloader[game.GetID()]:
 			s.log.Debug("preloader marked ready", zap.Int("game ID", game.GetID()))
 		case <-time.After(preloaderTimeout):
@@ -707,7 +707,7 @@ GAMES:
 		}
 	}
 
-	return nil, nil
+	return nil
 }
 
 func (s *SportBoard) renderGrid(ctx context.Context, canvas board.Canvas, games []Game, cols int, rows int) error {

@@ -19,7 +19,6 @@ import (
 	"github.com/robbydyer/sports/internal/logo"
 	"github.com/robbydyer/sports/internal/matrix"
 	"github.com/robbydyer/sports/internal/mlblive"
-	scrcnvs "github.com/robbydyer/sports/internal/scrollcanvas"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
 )
 
@@ -105,12 +104,6 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	}
-
-	scroll, err := scrcnvs.NewScrollCanvas(matrix, logger)
-	if err != nil {
-		return err
-	}
-	canvases = append(canvases, scroll)
 
 	canvases = append(canvases, cnvs.NewCanvas(matrix))
 

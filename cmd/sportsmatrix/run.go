@@ -15,7 +15,6 @@ import (
 	imageboard "github.com/robbydyer/sports/internal/board/image"
 	cnvs "github.com/robbydyer/sports/internal/canvas"
 	"github.com/robbydyer/sports/internal/matrix"
-	scrcnvs "github.com/robbydyer/sports/internal/scrollcanvas"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
 )
 
@@ -76,12 +75,7 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	scroll, err := scrcnvs.NewScrollCanvas(matrix, logger)
-	if err != nil {
-		return err
-	}
-
-	canvases = append(canvases, cnvs.NewCanvas(matrix), scroll)
+	canvases = append(canvases, cnvs.NewCanvas(matrix))
 
 	newBoards := []board.Board{}
 	inBetweenBoards := []board.Board{}
