@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"image"
-	"image/color"
 	"image/draw"
 	"image/gif"
 	"io/fs"
@@ -24,7 +23,6 @@ import (
 	"github.com/robbydyer/sports/internal/enabler"
 	pb "github.com/robbydyer/sports/internal/proto/imageboard"
 	"github.com/robbydyer/sports/internal/rgbrender"
-	scrcnvs "github.com/robbydyer/sports/internal/scrollcanvas"
 	"github.com/robbydyer/sports/internal/twirphelpers"
 	"github.com/robbydyer/sports/internal/util"
 )
@@ -69,19 +67,15 @@ type ImageDirectory struct {
 
 // Config ...
 type Config struct {
-	boardDelay         time.Duration
-	scrollDelay        time.Duration
-	BoardDelay         string            `json:"boardDelay"`
-	StartEnabled       *atomic.Bool      `json:"enabled"`
-	Directories        []string          `json:"directories"`
-	DirectoryList      []*ImageDirectory `json:"directoryList"`
-	UseDiskCache       *atomic.Bool      `json:"useDiskCache"`
-	UseMemCache        *atomic.Bool      `json:"useMemCache"`
-	OnTimes            []string          `json:"onTimes"`
-	OffTimes           []string          `json:"offTimes"`
-	ScrollMode         *atomic.Bool      `json:"scrollMode"`
-	TightScrollPadding int               `json:"tightScrollPadding"`
-	ScrollDelay        string            `json:"scrollDelay"`
+	boardDelay    time.Duration
+	BoardDelay    string            `json:"boardDelay"`
+	StartEnabled  *atomic.Bool      `json:"enabled"`
+	Directories   []string          `json:"directories"`
+	DirectoryList []*ImageDirectory `json:"directoryList"`
+	UseDiskCache  *atomic.Bool      `json:"useDiskCache"`
+	UseMemCache   *atomic.Bool      `json:"useMemCache"`
+	OnTimes       []string          `json:"onTimes"`
+	OffTimes      []string          `json:"offTimes"`
 }
 
 type img struct {
@@ -113,18 +107,6 @@ func (c *Config) SetDefaults() {
 	}
 	if c.UseMemCache == nil {
 		c.UseMemCache = atomic.NewBool(true)
-	}
-	if c.ScrollMode == nil {
-		c.ScrollMode = atomic.NewBool(false)
-	}
-	if c.ScrollDelay != "" {
-		d, err := time.ParseDuration(c.ScrollDelay)
-		if err != nil {
-			c.scrollDelay = scrcnvs.DefaultScrollDelay
-		}
-		c.scrollDelay = d
-	} else {
-		c.scrollDelay = scrcnvs.DefaultScrollDelay
 	}
 }
 
@@ -199,51 +181,31 @@ func (i *ImageBoard) InBetween() bool {
 	return false
 }
 
-// ScrollMode ...
-func (i *ImageBoard) ScrollMode() bool {
-	return i.config.ScrollMode.Load()
-}
-
-// ScrollRender ...
-func (i *ImageBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
-	origScrollMode := i.config.ScrollMode.Load()
-	defer func() {
-		i.config.ScrollMode.Store(origScrollMode)
-	}()
-
-	i.config.ScrollMode.Store(true)
-
-	return i.render(ctx, canvas)
-}
-
 // Render ...
 func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
-	c, err := i.render(ctx, canvas)
+	err := i.render(ctx, canvas)
 	if err != nil {
 		return err
-	}
-	if c != nil {
-		return c.Render(ctx)
 	}
 
 	return nil
 }
 
-func (i *ImageBoard) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
+func (i *ImageBoard) render(ctx context.Context, canvas board.Canvas) error {
 	if !i.Enabler().Enabled() {
 		i.log.Warn("ImageBoard is disabled, not rendering")
-		return nil, nil
+		return nil
 	}
 
 	if len(i.config.Directories) < 1 && len(i.config.DirectoryList) < 1 {
-		return nil, fmt.Errorf("image board has no directories configured")
+		return fmt.Errorf("image board has no directories configured")
 	}
 
 	if i.config.UseDiskCache.Load() {
 		if _, err := os.Stat(diskCacheDir); err != nil {
 			if os.IsNotExist(err) {
 				if err := os.MkdirAll(diskCacheDir, 0o755); err != nil {
-					return nil, err
+					return err
 				}
 			}
 		}
@@ -327,7 +289,7 @@ func (i *ImageBoard) render(ctx context.Context, canvas board.Canvas) (board.Can
 	isJumping := false
 	select {
 	case <-ctx.Done():
-		return nil, context.Canceled
+		return context.Canceled
 	case j := <-i.jumpTo:
 		jump = j
 		isJumping = true
@@ -348,22 +310,11 @@ func (i *ImageBoard) render(ctx context.Context, canvas board.Canvas) (board.Can
 		zap.Strings("images", imgNames),
 	)
 
-	tightCanvas, err := i.renderImages(ctx, canvas, imageList, jump)
-	if err != nil {
-		i.log.Error("error rendering images", zap.Error(err))
-	}
-	if i.config.ScrollMode.Load() && tightCanvas != nil {
-		if len(gifList) > 1 {
-			i.log.Warn("ignoring GIFs in imageboard while scroll mode is enabled")
-		}
-		return tightCanvas, nil
-	}
-
 	i.log.Debug("imageboard rendering gifs",
 		zap.Int("number of gifs", len(gifList)),
 		zap.Strings("images", gifNames),
 	)
-	if _, err := i.renderImages(ctx, canvas, gifList, jump); err != nil {
+	if err := i.renderImages(ctx, canvas, gifList, jump); err != nil {
 		i.log.Error("error rendering gifs", zap.Error(err))
 	}
 
@@ -371,10 +322,10 @@ func (i *ImageBoard) render(ctx context.Context, canvas board.Canvas) (board.Can
 		i.Enabler().Store(i.priorJumpState.Load())
 	}
 
-	return nil, nil
+	return nil
 }
 
-func (i *ImageBoard) renderImages(ctx context.Context, canvas board.Canvas, images []*img, jump string) (board.Canvas, error) {
+func (i *ImageBoard) renderImages(ctx context.Context, canvas board.Canvas, images []*img, jump string) error {
 	preloader := make(map[string]chan struct{})
 
 	jump = strings.ToLower(jump)
@@ -430,30 +381,12 @@ func (i *ImageBoard) renderImages(ctx context.Context, canvas board.Canvas, imag
 		preload(images[0])
 	}
 
-	var tightCanvas *scrcnvs.ScrollCanvas
-	base, ok := canvas.(*scrcnvs.ScrollCanvas)
-	if canvas.Scrollable() && i.config.ScrollMode.Load() && ok {
-		var err error
-		tightCanvas, err = scrcnvs.NewScrollCanvas(base.Matrix, i.log,
-			scrcnvs.WithMergePadding(i.config.TightScrollPadding),
-			scrcnvs.WithName("img"),
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get tight scroll canvas for imageboard: %w", err)
-		}
-		tightCanvas.SetScrollDirection(scrcnvs.RightToLeft)
-		base.SetScrollSpeed(i.config.scrollDelay)
-		tightCanvas.SetScrollSpeed(i.config.scrollDelay)
-
-		go tightCanvas.MatchScroll(ctx, base)
-	}
-
 IMAGES:
 	for index, thisImg := range images {
 		p := thisImg.path
 		if !i.enabler.Enabled() {
 			i.log.Warn("ImageBoard is disabled, not rendering")
-			return nil, nil
+			return nil
 		}
 
 		nextIndex := index + 1
@@ -492,7 +425,7 @@ IMAGES:
 
 		img, err := i.getPreloaded(pCtx, thisImg.path)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		if img.isGif {
@@ -505,7 +438,7 @@ IMAGES:
 			}
 
 			if jump != "" {
-				return nil, nil
+				return nil
 			}
 
 			continue IMAGES
@@ -522,40 +455,27 @@ IMAGES:
 			img.img.Bounds().Dy(),
 		)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		draw.Draw(canvas, align, img.img, image.Point{}, draw.Over)
 
-		if i.config.ScrollMode.Load() && tightCanvas != nil {
-			tightCanvas.AddCanvas(canvas)
-			draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
-			if jump != "" {
-				return tightCanvas, nil
-			}
-			continue IMAGES
-		}
-
 		if err := canvas.Render(ctx); err != nil {
-			return nil, err
+			return err
 		}
 
 		select {
 		case <-ctx.Done():
-			return nil, context.Canceled
+			return context.Canceled
 		case <-time.After(i.config.boardDelay):
 		}
 
 		if jump != "" {
-			return nil, nil
+			return nil
 		}
 	}
 
-	if i.config.ScrollMode.Load() && tightCanvas != nil {
-		return tightCanvas, nil
-	}
-
-	return nil, nil
+	return nil
 }
 
 func cacheKey(path string, bounds image.Rectangle) string {

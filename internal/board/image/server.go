@@ -32,7 +32,6 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 	s.board.Enabler().Store(req.Status.Enabled)
 	s.board.config.UseDiskCache.Store(req.Status.DiskcacheEnabled)
 	s.board.config.UseMemCache.Store(req.Status.MemcacheEnabled)
-	s.board.config.ScrollMode.Store(req.Status.ScrollEnabled)
 
 	return &emptypb.Empty{}, nil
 }
@@ -44,7 +43,6 @@ func (s *Server) GetStatus(ctx context.Context, req *emptypb.Empty) (*pb.StatusR
 			Enabled:          s.board.Enabler().Enabled(),
 			DiskcacheEnabled: s.board.config.UseDiskCache.Load(),
 			MemcacheEnabled:  s.board.config.UseMemCache.Load(),
-			ScrollEnabled:    s.board.config.ScrollMode.Load(),
 		},
 	}, nil
 }

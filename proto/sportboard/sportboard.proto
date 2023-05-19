@@ -12,14 +12,11 @@ message Status{
     bool enabled = 1;
     bool favorite_hidden = 2;
     bool favorite_sticky = 3;
-    bool scroll_enabled = 4;
-    bool tight_scroll_enabled = 5;
-    bool record_rank_enabled = 6;
-    bool odds_enabled = 7;
-    bool use_gradient = 8;
-    bool live_only = 9;
-    bool detailed_live = 10;
-    bool show_league_logo = 11;
+    bool record_rank_enabled = 4;
+    bool use_gradient = 5;
+    bool live_only = 6;
+    bool detailed_live = 7;
+    bool show_league_logo = 8;
 }
 
 message SetStatusReq {

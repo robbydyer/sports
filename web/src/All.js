@@ -10,7 +10,6 @@ import Sport from './Sport.js';
 import Racing from './Racing.js';
 import ImageBoard from './ImageBoard.js';
 import BasicBoard from './BasicBoard';
-import Weather from './Weather.js';
 import Accordion from 'react-bootstrap/Accordion';
 import { LogoSrc } from './Logo.js';
 
@@ -89,27 +88,11 @@ class All extends React.Component {
                                     </Card>
                                 </Accordion.Body>
                             </Accordion.Item>
-                            <Accordion.Item eventKey="weather">
-                                <Accordion.Header><Image src={LogoSrc("weather")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
-                                <Accordion.Body>
-                                    <Card style={{ width: { card_border } }}>
-                                        <Weather id="weatherboard" doSync={this.doSync} key={"weather" + this.state.sync} />
-                                    </Card>
-                                </Accordion.Body>
-                            </Accordion.Item>
                             <Accordion.Item eventKey="imgboard">
                                 <Accordion.Header><Image src={LogoSrc("img")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
                                 <Accordion.Body>
                                     <Card style={{ width: { card_border } }}>
                                         <ImageBoard id="imgboard" doSync={this.doSync} key={"img" + this.state.sync} />
-                                    </Card>
-                                </Accordion.Body>
-                            </Accordion.Item>
-                            <Accordion.Item eventKey="stocks">
-                                <Accordion.Header><Image src={LogoSrc("stocks")} style={{ height: '100px', width: 'auto' }} fluid /></Accordion.Header>
-                                <Accordion.Body>
-                                    <Card style={{ width: { card_border } }}>
-                                        <BasicBoard id="stocks" name="stocks" doSync={this.doSync} key={"stocks" + this.state.sync} />
                                     </Card>
                                 </Accordion.Body>
                             </Accordion.Item>

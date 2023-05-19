@@ -2,7 +2,6 @@ package sportsmatrix
 
 import (
 	"context"
-	"math"
 	"os"
 	"syscall"
 	"time"
@@ -12,7 +11,6 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	sportboard "github.com/robbydyer/sports/internal/board/sport"
-	statboard "github.com/robbydyer/sports/internal/board/stat"
 	pb "github.com/robbydyer/sports/internal/proto/sportsmatrix"
 )
 
@@ -106,39 +104,14 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.Status) (*emptypb.Empty,
 		}
 	}
 
-	if s.sm.cfg.CombinedScroll.CompareAndSwap(!req.CombinedScroll, req.CombinedScroll) {
-		if _, err := s.ScreenOff(ctx, &emptypb.Empty{}); err != nil {
-			return nil, twirp.NewError(twirp.Internal, err.Error())
-		}
-
-		// Set statboards to horizontal or not
-		for _, b := range s.sm.boards {
-			if statBoard, ok := b.(*statboard.StatBoard); ok {
-				statBoard.SetHorizontal(true)
-				if s.sm.cfg.CombinedScroll.Load() {
-					statBoard.SetHorizontal(true)
-				} else {
-					if orig, ok := s.sm.statboardOrigHorizontal[statBoard.Name()]; ok {
-						statBoard.SetHorizontal(orig)
-					}
-				}
-			}
-		}
-
-		if _, err := s.ScreenOn(ctx, &emptypb.Empty{}); err != nil {
-			return nil, twirp.NewError(twirp.Internal, err.Error())
-		}
-	}
-
 	return &emptypb.Empty{}, nil
 }
 
 // GetStatus ...
 func (s *Server) GetStatus(ctx context.Context, req *emptypb.Empty) (*pb.Status, error) {
 	return &pb.Status{
-		ScreenOn:       s.sm.screenIsOn.Load(),
-		WebboardOn:     s.sm.webBoardIsOn.Load(),
-		CombinedScroll: s.sm.cfg.CombinedScroll.Load(),
+		ScreenOn:   s.sm.screenIsOn.Load(),
+		WebboardOn: s.sm.webBoardIsOn.Load(),
 	}, nil
 }
 
@@ -182,32 +155,5 @@ func (s *Server) SetLiveOnly(ctx context.Context, req *pb.LiveOnlyReq) (*emptypb
 		}
 	}
 
-	return &emptypb.Empty{}, nil
-}
-
-func (s *Server) SpeedUp(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
-	for _, scrollCanvas := range s.sm.getActiveScrollCanvases() {
-		spd := time.Duration(int64(math.Ceil(float64(scrollCanvas.GetScrollSpeed()) - float64(speedUpIncrement))))
-		if spd < 0 {
-			spd = time.Duration(0)
-		}
-		s.sm.log.Info("speeding up scroll canvas",
-			zap.String("name", scrollCanvas.Name()),
-			zap.Duration("new interval", spd),
-		)
-		scrollCanvas.SetScrollSpeed(spd)
-	}
-	return &emptypb.Empty{}, nil
-}
-
-func (s *Server) SlowDown(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
-	for _, scrollCanvas := range s.sm.getActiveScrollCanvases() {
-		spd := time.Duration(int64(math.Ceil(float64(scrollCanvas.GetScrollSpeed()) + float64(speedUpIncrement))))
-		s.sm.log.Info("speeding up scroll canvas",
-			zap.String("name", scrollCanvas.Name()),
-			zap.Duration("new interval", spd),
-		)
-		scrollCanvas.SetScrollSpeed(spd)
-	}
 	return &emptypb.Empty{}, nil
 }

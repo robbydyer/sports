@@ -32,21 +32,6 @@ func (s *StatBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc
 	}
 }
 
-// ScrollRender ...
-func (s *StatBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
-	origScrollMode := s.config.ScrollMode.Load()
-	origHoriz := s.config.Horizontal.Load()
-	defer func() {
-		s.config.ScrollMode.Store(origScrollMode)
-		s.config.Horizontal.Store(origHoriz)
-	}()
-
-	s.config.ScrollMode.Store(true)
-	s.config.Horizontal.Store(true)
-
-	return s.render(ctx, canvas)
-}
-
 // Render ...
 func (s *StatBoard) Render(ctx context.Context, canvas board.Canvas) error {
 	c, err := s.render(ctx, canvas)
@@ -156,19 +141,11 @@ func (s *StatBoard) render(ctx context.Context, canvas board.Canvas) (board.Canv
 		return tightCanvas, nil
 	}
 
-PLAYERS:
 	for cat, p := range players {
 		s.log.Debug("rendering category",
 			zap.String("category", cat),
 			zap.Int("num players", len(p)),
 		)
-
-		if s.config.ScrollMode.Load() && canvas.Scrollable() {
-			if err := s.doScroll(boardCtx, canvas, p); err != nil {
-				return nil, err
-			}
-			continue PLAYERS
-		}
 
 		if err := s.doRender(boardCtx, canvas, p); err != nil {
 			return nil, err

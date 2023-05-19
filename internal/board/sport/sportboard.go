@@ -22,7 +22,6 @@ import (
 	"github.com/robbydyer/sports/internal/logo"
 	pb "github.com/robbydyer/sports/internal/proto/sportboard"
 	"github.com/robbydyer/sports/internal/rgbrender"
-	scrcnvs "github.com/robbydyer/sports/internal/scrollcanvas"
 	"github.com/robbydyer/sports/internal/twirphelpers"
 	"github.com/robbydyer/sports/internal/util"
 )
@@ -75,7 +74,6 @@ type Todayer func() []time.Time
 type Config struct {
 	TodayFunc            Todayer
 	boardDelay           time.Duration
-	scrollDelay          time.Duration
 	stickyDelay          *time.Duration
 	TimeColor            color.Color
 	ScoreColor           color.Color
@@ -98,18 +96,12 @@ type Config struct {
 	MinimumGridHeight    int               `json:"minimumGridHeight"`
 	Stats                *statboard.Config `json:"stats"`
 	Headlines            *textboard.Config `json:"headlines"`
-	ScrollMode           *atomic.Bool      `json:"scrollMode"`
-	TightScroll          *atomic.Bool      `json:"tightScroll"`
-	TightScrollPadding   int               `json:"tightScrollPadding"`
-	ScrollDelay          string            `json:"scrollDelay"`
-	GamblingSpread       *atomic.Bool      `json:"showOdds"`
 	ShowNoScheduledLogo  *atomic.Bool      `json:"showNotScheduled"`
 	ScoreHighlightRepeat *int              `json:"scoreHighlightRepeat"`
 	OnTimes              []string          `json:"onTimes"`
 	OffTimes             []string          `json:"offTimes"`
 	UseGradient          *atomic.Bool      `json:"useGradient"`
 	LiveOnly             *atomic.Bool      `json:"liveOnly"`
-	DetailedLive         *atomic.Bool      `json:"detailedLive"`
 	ShowLeagueLogo       *atomic.Bool      `json:"showLeagueLogo"`
 	Enable24Hour         *atomic.Bool      `json:"enable24Hour"`
 	AdvanceDays          int               `json:"advanceDays"`
@@ -196,15 +188,6 @@ func (c *Config) SetDefaults() {
 	if c.ShowRecord == nil {
 		c.ShowRecord = atomic.NewBool(false)
 	}
-	if c.ScrollMode == nil {
-		c.ScrollMode = atomic.NewBool(false)
-	}
-	if c.TightScroll == nil {
-		c.TightScroll = atomic.NewBool(false)
-	}
-	if c.GamblingSpread == nil {
-		c.GamblingSpread = atomic.NewBool(false)
-	}
 	if c.ShowNoScheduledLogo == nil {
 		c.ShowNoScheduledLogo = atomic.NewBool(false)
 	}
@@ -217,15 +200,6 @@ func (c *Config) SetDefaults() {
 	if c.LiveOnly == nil {
 		c.LiveOnly = atomic.NewBool(false)
 	}
-	if c.ScrollDelay != "" {
-		d, err := time.ParseDuration(c.ScrollDelay)
-		if err != nil {
-			c.scrollDelay = scrcnvs.DefaultScrollDelay
-		}
-		c.scrollDelay = d
-	} else {
-		c.scrollDelay = scrcnvs.DefaultScrollDelay
-	}
 
 	if c.ScoreHighlightRepeat == nil {
 		p := 3
@@ -233,9 +207,6 @@ func (c *Config) SetDefaults() {
 	}
 	if c.UseGradient == nil {
 		c.UseGradient = atomic.NewBool(true)
-	}
-	if c.DetailedLive == nil {
-		c.DetailedLive = atomic.NewBool(true)
 	}
 	if c.ShowLeagueLogo == nil {
 		c.ShowLeagueLogo = atomic.NewBool(false)
@@ -408,7 +379,7 @@ func (s *SportBoard) InBetween() bool {
 
 // ScrollMode ...
 func (s *SportBoard) ScrollMode() bool {
-	return s.config.ScrollMode.Load()
+	return false
 }
 
 // SetLiveOnly sets this board to show only live games or not
@@ -461,39 +432,12 @@ func (s *SportBoard) callCancelBoard() {
 
 // Render ...
 func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
-	c, err := s.render(ctx, canvas)
+	_, err := s.render(ctx, canvas)
 	if err != nil {
 		return err
 	}
-	if c != nil {
-		defer func() {
-			if scr, ok := c.(*scrcnvs.ScrollCanvas); ok {
-				s.config.scrollDelay = scr.GetScrollSpeed()
-				s.log.Info("updating configured sport scroll speed after tight scroll",
-					zap.String("sport", s.api.League()),
-					zap.Duration("speed", s.config.scrollDelay),
-				)
-			}
-		}()
-		return c.Render(ctx)
-	}
 
 	return nil
-}
-
-// ScrollRender ...
-func (s *SportBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
-	origScrollMode := s.config.ScrollMode.Load()
-	origTight := s.config.TightScroll.Load()
-	defer func() {
-		s.config.ScrollMode.Store(origScrollMode)
-		s.config.TightScroll.Store(origTight)
-	}()
-
-	s.config.ScrollMode.Store(true)
-	s.config.TightScroll.Store(true)
-
-	return s.render(ctx, canvas)
 }
 
 // Render ...
@@ -607,27 +551,25 @@ OUTER:
 	default:
 	}
 
-	if (!s.config.ScrollMode.Load()) || (!canvas.Scrollable()) {
-		bounds := rgbrender.ZeroedBounds(canvas.Bounds())
-		w, h := s.GridSize(bounds)
-		s.log.Debug("calculated grid size",
+	bounds := rgbrender.ZeroedBounds(canvas.Bounds())
+	w, h := s.GridSize(bounds)
+	s.log.Debug("calculated grid size",
+		zap.Int("cols", w),
+		zap.Int("rows", h),
+		zap.Int("canvas width", canvas.Bounds().Dx()),
+		zap.Int("canvas height", canvas.Bounds().Dy()),
+	)
+	if w > 1 || h > 1 {
+		width := bounds.Dx() / w
+		height := bounds.Dy() / h
+		s.log.Debug("rendering board as grid",
 			zap.Int("cols", w),
 			zap.Int("rows", h),
-			zap.Int("canvas width", canvas.Bounds().Dx()),
-			zap.Int("canvas height", canvas.Bounds().Dy()),
+			zap.Int("cell width", width),
+			zap.Int("cell height", height),
 		)
-		if w > 1 || h > 1 {
-			width := bounds.Dx() / w
-			height := bounds.Dy() / h
-			s.log.Debug("rendering board as grid",
-				zap.Int("cols", w),
-				zap.Int("rows", h),
-				zap.Int("cell width", width),
-				zap.Int("cell height", height),
-			)
-			loadCancel()
-			return nil, s.renderGrid(s.renderCtx, canvas, games, w, h)
-		}
+		loadCancel()
+		return nil, s.renderGrid(s.renderCtx, canvas, games, w, h)
 	}
 
 	s.logCanvas(canvas, "sportboard Render() called canvas after grid")
@@ -653,52 +595,17 @@ OUTER:
 
 	defer func() { _ = canvas.Clear() }()
 
-	var tightCanvas *scrcnvs.ScrollCanvas
-	base, ok := canvas.(*scrcnvs.ScrollCanvas)
-
-	if canvas.Scrollable() && s.config.TightScroll.Load() && ok {
-		var err error
-		tightCanvas, err = scrcnvs.NewScrollCanvas(base.Matrix, s.log,
-			scrcnvs.WithMergePadding(s.config.TightScrollPadding),
-			scrcnvs.WithName(s.api.League()),
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get tight scroll canvas: %w", err)
-		}
-
-		tightCanvas.SetScrollDirection(scrcnvs.RightToLeft)
-		base.SetScrollSpeed(s.config.scrollDelay)
-		tightCanvas.SetScrollSpeed(s.config.scrollDelay)
-
-		go tightCanvas.MatchScroll(ctx, base)
-	} else if canvas.Scrollable() && s.config.ScrollMode.Load() && ok {
-		base.SetScrollSpeed(s.config.scrollDelay)
-
-		defer func() {
-			s.config.scrollDelay = base.GetScrollSpeed()
-			s.log.Info("updating configured sport scroll speed",
-				zap.String("sport", s.api.League()),
-				zap.Duration("speed", s.config.scrollDelay),
-			)
-		}()
-	}
-
 	if s.config.ShowLeagueLogo.Load() {
 		if err := s.renderLeagueLogo(ctx, canvas); err != nil {
 			return nil, err
 		}
-		if s.config.ScrollMode.Load() && tightCanvas != nil {
-			tightCanvas.AddCanvas(canvas)
-			draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
-		} else {
-			if err := canvas.Render(ctx); err != nil {
-				return nil, err
-			}
-			select {
-			case <-s.renderCtx.Done():
-				return nil, context.Canceled
-			case <-time.After(s.config.boardDelay):
-			}
+		if err := canvas.Render(ctx); err != nil {
+			return nil, err
+		}
+		select {
+		case <-s.renderCtx.Done():
+			return nil, context.Canceled
+		case <-time.After(s.config.boardDelay):
 		}
 	}
 
@@ -760,22 +667,6 @@ GAMES:
 
 		loadCancel()
 
-		// Tight scroll mode
-		if canvas.Scrollable() && s.config.TightScroll.Load() && tightCanvas != nil {
-			if err := s.renderGame(s.renderCtx, canvas, cachedGame, counter); err != nil {
-				s.log.Error("failed to render sportboard game in tight scroll mode", zap.Error(err))
-				continue GAMES
-			}
-
-			s.log.Debug("adding to tight scroll canvas",
-				zap.Int("total width", tightCanvas.Width()),
-			)
-			tightCanvas.AddCanvas(canvas)
-
-			draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
-			continue GAMES
-		}
-
 		isFav, err := s.isFavoriteGame(cachedGame)
 		if err != nil {
 			s.log.Error("failed to determine if game is a favorite",
@@ -798,14 +689,6 @@ GAMES:
 				continue GAMES
 			}
 
-			if !s.config.ScrollMode.Load() {
-				select {
-				case <-s.renderCtx.Done():
-					return nil, context.Canceled
-				case <-time.After(s.config.boardDelay):
-				}
-			}
-
 			if !(isFav && s.config.FavoriteSticky.Load()) {
 				break FAV
 			}
@@ -822,10 +705,6 @@ GAMES:
 				break FAV
 			}
 		}
-	}
-
-	if canvas.Scrollable() && tightCanvas != nil {
-		return tightCanvas, nil
 	}
 
 	return nil, nil
@@ -1004,32 +883,8 @@ func (s *SportBoard) renderGame(ctx context.Context, canvas board.Canvas, liveGa
 	s.logCanvas(canvas, "sportboard renderGame canvas")
 
 	if isLive {
-		if s.config.DetailedLive.Load() && s.detailedLiveRenderer != nil {
-			h, err := liveGame.HomeTeam()
-			if err != nil {
-				return err
-			}
-			a, err := liveGame.AwayTeam()
-			if err != nil {
-				return err
-			}
-			hLogo, err := s.getLogo(ctx, h.GetID())
-			if err != nil {
-				return err
-			}
-			aLogo, err := s.getLogo(ctx, a.GetID())
-			if err != nil {
-				return err
-			}
-
-			if err := s.detailedLiveRenderer(ctx, canvas, liveGame, hLogo, aLogo); err != nil {
-				return err
-			}
-			draw.Draw(canvas, counter.Bounds(), counter, image.Point{}, draw.Over)
-		} else {
-			if err := s.renderLiveGame(ctx, canvas, liveGame, counter); err != nil {
-				return fmt.Errorf("failed to render live game: %w", err)
-			}
+		if err := s.renderLiveGame(ctx, canvas, liveGame, counter); err != nil {
+			return fmt.Errorf("failed to render live game: %w", err)
 		}
 	} else if isOver {
 		if err := s.renderCompleteGame(ctx, canvas, liveGame, counter); err != nil {

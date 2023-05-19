@@ -16,7 +16,6 @@ import (
 	"github.com/robbydyer/sports/internal/enabler"
 	"github.com/robbydyer/sports/internal/logo"
 	"github.com/robbydyer/sports/internal/rgbrender"
-	scrcnvs "github.com/robbydyer/sports/internal/scrollcanvas"
 	"github.com/robbydyer/sports/internal/twirphelpers"
 	"github.com/robbydyer/sports/internal/util"
 
@@ -45,11 +44,8 @@ type Todayer func() []time.Time
 type Config struct {
 	TodayFunc          Todayer
 	boardDelay         time.Duration
-	scrollDelay        time.Duration
 	StartEnabled       *atomic.Bool `json:"enabled"`
 	BoardDelay         string       `json:"boardDelay"`
-	ScrollMode         *atomic.Bool `json:"scrollMode"`
-	ScrollDelay        string       `json:"scrollDelay"`
 	OnTimes            []string     `json:"onTimes"`
 	OffTimes           []string     `json:"offTimes"`
 	TightScrollPadding int          `json:"tightScrollPadding"`
@@ -83,18 +79,6 @@ func (c *Config) SetDefaults() {
 
 	if c.StartEnabled == nil {
 		c.StartEnabled = atomic.NewBool(false)
-	}
-	if c.ScrollMode == nil {
-		c.ScrollMode = atomic.NewBool(false)
-	}
-	if c.ScrollDelay != "" {
-		d, err := time.ParseDuration(c.ScrollDelay)
-		if err != nil {
-			c.scrollDelay = scrcnvs.DefaultScrollDelay
-		}
-		c.scrollDelay = d
-	} else {
-		c.scrollDelay = scrcnvs.DefaultScrollDelay
 	}
 }
 
@@ -165,7 +149,7 @@ func (s *CalendarBoard) InBetween() bool {
 
 // ScrollMode ...
 func (s *CalendarBoard) ScrollMode() bool {
-	return s.config.ScrollMode.Load()
+	return false
 }
 
 // HasPriority ...

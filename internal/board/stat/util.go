@@ -12,7 +12,6 @@ import (
 
 	"github.com/robbydyer/sports/internal/board"
 	"github.com/robbydyer/sports/internal/rgbrender"
-	scrcnvs "github.com/robbydyer/sports/internal/scrollcanvas"
 )
 
 const padSize = float64(0.005)
@@ -189,23 +188,6 @@ func (s *StatBoard) getStatGrid(ctx context.Context, canvas board.Canvas, player
 	numRows := int(math.Floor((float64(rgbrender.ZeroedBounds(canvas.Bounds()).Dy()) / writer.FontSize)))
 
 	var pad int
-	if canvas.Scrollable() && s.config.ScrollMode.Load() {
-		numRows = len(players)
-		if s.withTitleRow {
-			numRows++
-		}
-		pad = int(math.Ceil((writer.FontSize) * float64(numRows)))
-		pad -= rgbrender.ZeroedBounds(canvas.Bounds()).Dy()
-		scroller, ok := canvas.(*scrcnvs.ScrollCanvas)
-		if ok {
-			s.log.Debug("stat board getStatGrid set padding",
-				zap.Int("padding", pad),
-				zap.Int("num rows", numRows),
-				zap.Int("canvas Y", canvas.Bounds().Dy()),
-			)
-			scroller.SetPadding(pad)
-		}
-	}
 
 	heightRatio := float64(1.0) / float64(numRows)
 

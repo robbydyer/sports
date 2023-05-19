@@ -10,7 +10,6 @@ service Racing {
 
 message Status{
     bool enabled = 1;
-    bool scroll_enabled = 2;
 }
 
 message SetStatusReq {

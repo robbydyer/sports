@@ -67,12 +67,6 @@ class BasicBoard extends React.Component {
                 </Row>
                 <Row className="text-left">
                     <Col>
-                        <Form.Switch id={this.props.name + "scroll"} label="Scroll Mode" checked={this.state.status.getScrollEnabled()}
-                            onChange={() => { this.state.status.setScrollEnabled(!this.state.status.getScrollEnabled()); this.updateStatus(); }} />
-                    </Col>
-                </Row>
-                <Row className="text-left">
-                    <Col>
                         <Button variant="primary" onClick={() => { this.doJump(); }}>Jump</Button>
 
                     </Col>

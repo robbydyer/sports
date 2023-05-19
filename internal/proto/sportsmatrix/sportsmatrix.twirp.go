@@ -53,10 +53,6 @@ type Sportsmatrix interface {
 	RestartService(context.Context, *google_protobuf.Empty) (*google_protobuf.Empty, error)
 
 	SetLiveOnly(context.Context, *LiveOnlyReq) (*google_protobuf.Empty, error)
-
-	SpeedUp(context.Context, *google_protobuf.Empty) (*google_protobuf.Empty, error)
-
-	SlowDown(context.Context, *google_protobuf.Empty) (*google_protobuf.Empty, error)
 }
 
 // ============================
@@ -65,7 +61,7 @@ type Sportsmatrix interface {
 
 type sportsmatrixProtobufClient struct {
 	client      HTTPClient
-	urls        [12]string
+	urls        [10]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -93,7 +89,7 @@ func NewSportsmatrixProtobufClient(baseURL string, client HTTPClient, opts ...tw
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "matrix.v1", "Sportsmatrix")
-	urls := [12]string{
+	urls := [10]string{
 		serviceURL + "Version",
 		serviceURL + "ScreenOn",
 		serviceURL + "ScreenOff",
@@ -104,8 +100,6 @@ func NewSportsmatrixProtobufClient(baseURL string, client HTTPClient, opts ...tw
 		serviceURL + "NextBoard",
 		serviceURL + "RestartService",
 		serviceURL + "SetLiveOnly",
-		serviceURL + "SpeedUp",
-		serviceURL + "SlowDown",
 	}
 
 	return &sportsmatrixProtobufClient{
@@ -576,105 +570,13 @@ func (c *sportsmatrixProtobufClient) callSetLiveOnly(ctx context.Context, in *Li
 	return out, nil
 }
 
-func (c *sportsmatrixProtobufClient) SpeedUp(ctx context.Context, in *google_protobuf.Empty) (*google_protobuf.Empty, error) {
-	ctx = ctxsetters.WithPackageName(ctx, "matrix.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "Sportsmatrix")
-	ctx = ctxsetters.WithMethodName(ctx, "SpeedUp")
-	caller := c.callSpeedUp
-	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *google_protobuf.Empty) (*google_protobuf.Empty, error) {
-			resp, err := c.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*google_protobuf.Empty)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
-					}
-					return c.callSpeedUp(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*google_protobuf.Empty)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-	return caller(ctx, in)
-}
-
-func (c *sportsmatrixProtobufClient) callSpeedUp(ctx context.Context, in *google_protobuf.Empty) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[10], in, out)
-	if err != nil {
-		twerr, ok := err.(twirp.Error)
-		if !ok {
-			twerr = twirp.InternalErrorWith(err)
-		}
-		callClientError(ctx, c.opts.Hooks, twerr)
-		return nil, err
-	}
-
-	callClientResponseReceived(ctx, c.opts.Hooks)
-
-	return out, nil
-}
-
-func (c *sportsmatrixProtobufClient) SlowDown(ctx context.Context, in *google_protobuf.Empty) (*google_protobuf.Empty, error) {
-	ctx = ctxsetters.WithPackageName(ctx, "matrix.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "Sportsmatrix")
-	ctx = ctxsetters.WithMethodName(ctx, "SlowDown")
-	caller := c.callSlowDown
-	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *google_protobuf.Empty) (*google_protobuf.Empty, error) {
-			resp, err := c.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*google_protobuf.Empty)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
-					}
-					return c.callSlowDown(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*google_protobuf.Empty)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-	return caller(ctx, in)
-}
-
-func (c *sportsmatrixProtobufClient) callSlowDown(ctx context.Context, in *google_protobuf.Empty) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[11], in, out)
-	if err != nil {
-		twerr, ok := err.(twirp.Error)
-		if !ok {
-			twerr = twirp.InternalErrorWith(err)
-		}
-		callClientError(ctx, c.opts.Hooks, twerr)
-		return nil, err
-	}
-
-	callClientResponseReceived(ctx, c.opts.Hooks)
-
-	return out, nil
-}
-
 // ========================
 // Sportsmatrix JSON Client
 // ========================
 
 type sportsmatrixJSONClient struct {
 	client      HTTPClient
-	urls        [12]string
+	urls        [10]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -702,7 +604,7 @@ func NewSportsmatrixJSONClient(baseURL string, client HTTPClient, opts ...twirp.
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "matrix.v1", "Sportsmatrix")
-	urls := [12]string{
+	urls := [10]string{
 		serviceURL + "Version",
 		serviceURL + "ScreenOn",
 		serviceURL + "ScreenOff",
@@ -713,8 +615,6 @@ func NewSportsmatrixJSONClient(baseURL string, client HTTPClient, opts ...twirp.
 		serviceURL + "NextBoard",
 		serviceURL + "RestartService",
 		serviceURL + "SetLiveOnly",
-		serviceURL + "SpeedUp",
-		serviceURL + "SlowDown",
 	}
 
 	return &sportsmatrixJSONClient{
@@ -1185,98 +1085,6 @@ func (c *sportsmatrixJSONClient) callSetLiveOnly(ctx context.Context, in *LiveOn
 	return out, nil
 }
 
-func (c *sportsmatrixJSONClient) SpeedUp(ctx context.Context, in *google_protobuf.Empty) (*google_protobuf.Empty, error) {
-	ctx = ctxsetters.WithPackageName(ctx, "matrix.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "Sportsmatrix")
-	ctx = ctxsetters.WithMethodName(ctx, "SpeedUp")
-	caller := c.callSpeedUp
-	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *google_protobuf.Empty) (*google_protobuf.Empty, error) {
-			resp, err := c.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*google_protobuf.Empty)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
-					}
-					return c.callSpeedUp(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*google_protobuf.Empty)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-	return caller(ctx, in)
-}
-
-func (c *sportsmatrixJSONClient) callSpeedUp(ctx context.Context, in *google_protobuf.Empty) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[10], in, out)
-	if err != nil {
-		twerr, ok := err.(twirp.Error)
-		if !ok {
-			twerr = twirp.InternalErrorWith(err)
-		}
-		callClientError(ctx, c.opts.Hooks, twerr)
-		return nil, err
-	}
-
-	callClientResponseReceived(ctx, c.opts.Hooks)
-
-	return out, nil
-}
-
-func (c *sportsmatrixJSONClient) SlowDown(ctx context.Context, in *google_protobuf.Empty) (*google_protobuf.Empty, error) {
-	ctx = ctxsetters.WithPackageName(ctx, "matrix.v1")
-	ctx = ctxsetters.WithServiceName(ctx, "Sportsmatrix")
-	ctx = ctxsetters.WithMethodName(ctx, "SlowDown")
-	caller := c.callSlowDown
-	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *google_protobuf.Empty) (*google_protobuf.Empty, error) {
-			resp, err := c.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*google_protobuf.Empty)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
-					}
-					return c.callSlowDown(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*google_protobuf.Empty)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-	return caller(ctx, in)
-}
-
-func (c *sportsmatrixJSONClient) callSlowDown(ctx context.Context, in *google_protobuf.Empty) (*google_protobuf.Empty, error) {
-	out := new(google_protobuf.Empty)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[11], in, out)
-	if err != nil {
-		twerr, ok := err.(twirp.Error)
-		if !ok {
-			twerr = twirp.InternalErrorWith(err)
-		}
-		callClientError(ctx, c.opts.Hooks, twerr)
-		return nil, err
-	}
-
-	callClientResponseReceived(ctx, c.opts.Hooks)
-
-	return out, nil
-}
-
 // ===========================
 // Sportsmatrix Server Handler
 // ===========================
@@ -1403,12 +1211,6 @@ func (s *sportsmatrixServer) ServeHTTP(resp http.ResponseWriter, req *http.Reque
 		return
 	case "SetLiveOnly":
 		s.serveSetLiveOnly(ctx, resp, req)
-		return
-	case "SpeedUp":
-		s.serveSpeedUp(ctx, resp, req)
-		return
-	case "SlowDown":
-		s.serveSlowDown(ctx, resp, req)
 		return
 	default:
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
@@ -3217,366 +3019,6 @@ func (s *sportsmatrixServer) serveSetLiveOnlyProtobuf(ctx context.Context, resp 
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *sportsmatrixServer) serveSpeedUp(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
-	header := req.Header.Get("Content-Type")
-	i := strings.Index(header, ";")
-	if i == -1 {
-		i = len(header)
-	}
-	switch strings.TrimSpace(strings.ToLower(header[:i])) {
-	case "application/json":
-		s.serveSpeedUpJSON(ctx, resp, req)
-	case "application/protobuf":
-		s.serveSpeedUpProtobuf(ctx, resp, req)
-	default:
-		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
-		twerr := badRouteError(msg, req.Method, req.URL.Path)
-		s.writeError(ctx, resp, twerr)
-	}
-}
-
-func (s *sportsmatrixServer) serveSpeedUpJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
-	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "SpeedUp")
-	ctx, err = callRequestRouted(ctx, s.hooks)
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-
-	d := json.NewDecoder(req.Body)
-	rawReqBody := json.RawMessage{}
-	if err := d.Decode(&rawReqBody); err != nil {
-		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
-		return
-	}
-	reqContent := new(google_protobuf.Empty)
-	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
-	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
-		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
-		return
-	}
-
-	handler := s.Sportsmatrix.SpeedUp
-	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *google_protobuf.Empty) (*google_protobuf.Empty, error) {
-			resp, err := s.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*google_protobuf.Empty)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
-					}
-					return s.Sportsmatrix.SpeedUp(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*google_protobuf.Empty)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-
-	// Call service method
-	var respContent *google_protobuf.Empty
-	func() {
-		defer ensurePanicResponses(ctx, resp, s.hooks)
-		respContent, err = handler(ctx, reqContent)
-	}()
-
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *google_protobuf.Empty and nil error while calling SpeedUp. nil responses are not supported"))
-		return
-	}
-
-	ctx = callResponsePrepared(ctx, s.hooks)
-
-	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
-	respBytes, err := marshaler.Marshal(respContent)
-	if err != nil {
-		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
-		return
-	}
-
-	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
-	resp.Header().Set("Content-Type", "application/json")
-	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
-	resp.WriteHeader(http.StatusOK)
-
-	if n, err := resp.Write(respBytes); err != nil {
-		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
-		twerr := twirp.NewError(twirp.Unknown, msg)
-		ctx = callError(ctx, s.hooks, twerr)
-	}
-	callResponseSent(ctx, s.hooks)
-}
-
-func (s *sportsmatrixServer) serveSpeedUpProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
-	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "SpeedUp")
-	ctx, err = callRequestRouted(ctx, s.hooks)
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-
-	buf, err := io.ReadAll(req.Body)
-	if err != nil {
-		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
-		return
-	}
-	reqContent := new(google_protobuf.Empty)
-	if err = proto.Unmarshal(buf, reqContent); err != nil {
-		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
-		return
-	}
-
-	handler := s.Sportsmatrix.SpeedUp
-	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *google_protobuf.Empty) (*google_protobuf.Empty, error) {
-			resp, err := s.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*google_protobuf.Empty)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
-					}
-					return s.Sportsmatrix.SpeedUp(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*google_protobuf.Empty)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-
-	// Call service method
-	var respContent *google_protobuf.Empty
-	func() {
-		defer ensurePanicResponses(ctx, resp, s.hooks)
-		respContent, err = handler(ctx, reqContent)
-	}()
-
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *google_protobuf.Empty and nil error while calling SpeedUp. nil responses are not supported"))
-		return
-	}
-
-	ctx = callResponsePrepared(ctx, s.hooks)
-
-	respBytes, err := proto.Marshal(respContent)
-	if err != nil {
-		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
-		return
-	}
-
-	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
-	resp.Header().Set("Content-Type", "application/protobuf")
-	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
-	resp.WriteHeader(http.StatusOK)
-	if n, err := resp.Write(respBytes); err != nil {
-		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
-		twerr := twirp.NewError(twirp.Unknown, msg)
-		ctx = callError(ctx, s.hooks, twerr)
-	}
-	callResponseSent(ctx, s.hooks)
-}
-
-func (s *sportsmatrixServer) serveSlowDown(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
-	header := req.Header.Get("Content-Type")
-	i := strings.Index(header, ";")
-	if i == -1 {
-		i = len(header)
-	}
-	switch strings.TrimSpace(strings.ToLower(header[:i])) {
-	case "application/json":
-		s.serveSlowDownJSON(ctx, resp, req)
-	case "application/protobuf":
-		s.serveSlowDownProtobuf(ctx, resp, req)
-	default:
-		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
-		twerr := badRouteError(msg, req.Method, req.URL.Path)
-		s.writeError(ctx, resp, twerr)
-	}
-}
-
-func (s *sportsmatrixServer) serveSlowDownJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
-	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "SlowDown")
-	ctx, err = callRequestRouted(ctx, s.hooks)
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-
-	d := json.NewDecoder(req.Body)
-	rawReqBody := json.RawMessage{}
-	if err := d.Decode(&rawReqBody); err != nil {
-		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
-		return
-	}
-	reqContent := new(google_protobuf.Empty)
-	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
-	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
-		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
-		return
-	}
-
-	handler := s.Sportsmatrix.SlowDown
-	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *google_protobuf.Empty) (*google_protobuf.Empty, error) {
-			resp, err := s.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*google_protobuf.Empty)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
-					}
-					return s.Sportsmatrix.SlowDown(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*google_protobuf.Empty)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-
-	// Call service method
-	var respContent *google_protobuf.Empty
-	func() {
-		defer ensurePanicResponses(ctx, resp, s.hooks)
-		respContent, err = handler(ctx, reqContent)
-	}()
-
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *google_protobuf.Empty and nil error while calling SlowDown. nil responses are not supported"))
-		return
-	}
-
-	ctx = callResponsePrepared(ctx, s.hooks)
-
-	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
-	respBytes, err := marshaler.Marshal(respContent)
-	if err != nil {
-		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
-		return
-	}
-
-	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
-	resp.Header().Set("Content-Type", "application/json")
-	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
-	resp.WriteHeader(http.StatusOK)
-
-	if n, err := resp.Write(respBytes); err != nil {
-		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
-		twerr := twirp.NewError(twirp.Unknown, msg)
-		ctx = callError(ctx, s.hooks, twerr)
-	}
-	callResponseSent(ctx, s.hooks)
-}
-
-func (s *sportsmatrixServer) serveSlowDownProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
-	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "SlowDown")
-	ctx, err = callRequestRouted(ctx, s.hooks)
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-
-	buf, err := io.ReadAll(req.Body)
-	if err != nil {
-		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
-		return
-	}
-	reqContent := new(google_protobuf.Empty)
-	if err = proto.Unmarshal(buf, reqContent); err != nil {
-		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
-		return
-	}
-
-	handler := s.Sportsmatrix.SlowDown
-	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *google_protobuf.Empty) (*google_protobuf.Empty, error) {
-			resp, err := s.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*google_protobuf.Empty)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
-					}
-					return s.Sportsmatrix.SlowDown(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*google_protobuf.Empty)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-
-	// Call service method
-	var respContent *google_protobuf.Empty
-	func() {
-		defer ensurePanicResponses(ctx, resp, s.hooks)
-		respContent, err = handler(ctx, reqContent)
-	}()
-
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *google_protobuf.Empty and nil error while calling SlowDown. nil responses are not supported"))
-		return
-	}
-
-	ctx = callResponsePrepared(ctx, s.hooks)
-
-	respBytes, err := proto.Marshal(respContent)
-	if err != nil {
-		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
-		return
-	}
-
-	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
-	resp.Header().Set("Content-Type", "application/protobuf")
-	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
-	resp.WriteHeader(http.StatusOK)
-	if n, err := resp.Write(respBytes); err != nil {
-		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
-		twerr := twirp.NewError(twirp.Unknown, msg)
-		ctx = callError(ctx, s.hooks, twerr)
-	}
-	callResponseSent(ctx, s.hooks)
-}
-
 func (s *sportsmatrixServer) ServiceDescriptor() ([]byte, int) {
 	return twirpFileDescriptor0, 0
 }
@@ -4158,34 +3600,32 @@ func callClientError(ctx context.Context, h *twirp.ClientHooks, err twirp.Error)
 }
 
 var twirpFileDescriptor0 = []byte{
-	// 451 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x54, 0x51, 0x8b, 0xd3, 0x40,
-	0x10, 0xe6, 0xd4, 0x6b, 0x9b, 0xa9, 0x9c, 0xb8, 0x1c, 0x47, 0xb9, 0x3e, 0x54, 0x02, 0x72, 0xe2,
-	0x43, 0x82, 0x27, 0x9c, 0x54, 0x11, 0xf4, 0x50, 0x04, 0x11, 0x0b, 0x09, 0xfa, 0xe0, 0x4b, 0xc9,
-	0x26, 0xd3, 0x1a, 0xd8, 0xec, 0xc6, 0xdd, 0x6d, 0x7a, 0xf9, 0x9d, 0xfe, 0x21, 0xd9, 0x64, 0x57,
-	0x56, 0xbc, 0x1e, 0xe4, 0xf1, 0x9b, 0xf9, 0xbe, 0x9d, 0xe1, 0xfb, 0x86, 0x85, 0x85, 0xaa, 0x85,
-	0xd4, 0xaa, 0xca, 0xb4, 0x2c, 0x6f, 0x62, 0x1f, 0x44, 0xb5, 0x14, 0x5a, 0x90, 0xc0, 0xa2, 0xe6,
-	0xc5, 0xf9, 0x7c, 0x2b, 0xc4, 0x96, 0x61, 0xdc, 0x35, 0xe8, 0x6e, 0x13, 0x63, 0x55, 0xeb, 0xb6,
-	0xe7, 0x85, 0x17, 0x30, 0xfd, 0x8e, 0x52, 0x95, 0x82, 0x27, 0xa8, 0x6a, 0x32, 0x83, 0x71, 0xd3,
-	0xc3, 0xd9, 0xd1, 0x93, 0xa3, 0x67, 0x41, 0xe2, 0x60, 0x28, 0x60, 0x94, 0xea, 0x4c, 0xef, 0x14,
-	0x99, 0x43, 0xa0, 0x72, 0x89, 0xc8, 0xd7, 0x96, 0x35, 0x49, 0x26, 0x7d, 0x61, 0xc5, 0xc9, 0x02,
-	0xa6, 0x7b, 0xa4, 0x54, 0x64, 0xb2, 0x30, 0xed, 0x7b, 0x5d, 0x1b, 0x5c, 0x69, 0xc5, 0xc9, 0x05,
-	0x3c, 0xca, 0x45, 0x45, 0x4b, 0x8e, 0xc5, 0x5a, 0xe5, 0x52, 0x30, 0x36, 0xbb, 0xdf, 0x91, 0x4e,
-	0x5c, 0x39, 0xed, 0xaa, 0xe1, 0x53, 0x08, 0x52, 0xd4, 0xef, 0x19, 0x4b, 0xf0, 0x97, 0xd9, 0x0b,
-	0x79, 0x46, 0x19, 0x16, 0x76, 0xa2, 0x83, 0xe1, 0x02, 0xc6, 0x9f, 0x77, 0x55, 0x6d, 0x48, 0xa7,
-	0x70, 0xdc, 0x4d, 0xb1, 0xab, 0xf7, 0x20, 0x7c, 0x0e, 0xd3, 0x2f, 0x65, 0x83, 0x2b, 0xce, 0x5a,
-	0x43, 0x9a, 0x43, 0xc0, 0xca, 0x06, 0xd7, 0x82, 0xb3, 0xd6, 0x6d, 0xcf, 0x6c, 0xff, 0xf2, 0xf7,
-	0x31, 0x3c, 0x4c, 0x3d, 0x33, 0xc9, 0x12, 0xc6, 0xd6, 0x1e, 0x72, 0x16, 0xf5, 0x3e, 0x46, 0xce,
-	0xc7, 0xe8, 0xa3, 0xf1, 0xf1, 0xfc, 0x2c, 0xfa, 0x6b, 0x75, 0xe4, 0x5b, 0xf9, 0x1a, 0x26, 0xa9,
-	0x73, 0xe5, 0xb0, 0xf6, 0xd6, 0x3a, 0x79, 0x03, 0x81, 0xd5, 0x6e, 0x36, 0x83, 0xc5, 0x57, 0x10,
-	0x7c, 0x42, 0x6d, 0xc3, 0x3a, 0x24, 0x7e, 0xec, 0x6d, 0x6d, 0xa9, 0x57, 0x9d, 0xe1, 0x16, 0xfc,
-	0xdf, 0xbf, 0x63, 0xde, 0xa8, 0x0f, 0x8a, 0x9c, 0xfa, 0x22, 0x97, 0xdd, 0x41, 0xdd, 0x25, 0x3c,
-	0x30, 0xc9, 0x11, 0xe2, 0xa9, 0x6c, 0x94, 0x77, 0x19, 0xf3, 0x15, 0x6f, 0xf4, 0xb5, 0x49, 0x76,
-	0xb0, 0x31, 0xef, 0xe0, 0x24, 0x41, 0xa5, 0x33, 0xa9, 0x53, 0x94, 0x4d, 0x99, 0xe3, 0xe0, 0x17,
-	0xde, 0xc2, 0x34, 0x45, 0xed, 0xce, 0x89, 0xf8, 0xd1, 0x7b, 0x37, 0x76, 0x50, 0xbe, 0x84, 0x71,
-	0x5a, 0x23, 0x16, 0xdf, 0xea, 0xc1, 0x93, 0xcd, 0x35, 0x31, 0xb1, 0xff, 0x20, 0xf6, 0x83, 0xaf,
-	0xe9, 0x7a, 0xf9, 0xe3, 0xd5, 0xb6, 0xd4, 0x3f, 0x77, 0x34, 0xca, 0x45, 0x15, 0x4b, 0x41, 0x69,
-	0x5b, 0xb4, 0x28, 0xed, 0xb7, 0x11, 0x97, 0x5c, 0xa3, 0xe4, 0x19, 0xeb, 0x3f, 0x88, 0x7f, 0x3e,
-	0x13, 0x3a, 0xea, 0x6a, 0x2f, 0xff, 0x04, 0x00, 0x00, 0xff, 0xff, 0xa0, 0xdc, 0xb9, 0x6b, 0x70,
-	0x04, 0x00, 0x00,
+	// 430 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0xd1, 0x6a, 0xd4, 0x40,
+	0x14, 0xa5, 0x5a, 0x77, 0x37, 0x37, 0x52, 0x71, 0x28, 0x65, 0xe9, 0x3e, 0xac, 0x04, 0xa4, 0xe2,
+	0x43, 0x82, 0x15, 0x2a, 0x55, 0x04, 0x2d, 0x88, 0x20, 0xe2, 0x42, 0x02, 0x3e, 0xf8, 0xb2, 0x64,
+	0x92, 0xbb, 0xeb, 0xc0, 0x64, 0x26, 0xce, 0x4c, 0x62, 0xf3, 0xaf, 0x7e, 0x8c, 0x24, 0x99, 0x91,
+	0x11, 0x4d, 0x61, 0x1f, 0xcf, 0xb9, 0xe7, 0x64, 0x2e, 0xe7, 0xe4, 0xc2, 0x5a, 0xd7, 0x52, 0x19,
+	0x5d, 0xe5, 0x46, 0xb1, 0xdb, 0xc4, 0x07, 0x71, 0xad, 0xa4, 0x91, 0x24, 0xb0, 0xa8, 0x7d, 0x71,
+	0xbe, 0xda, 0x4b, 0xb9, 0xe7, 0x98, 0x0c, 0x03, 0xda, 0xec, 0x12, 0xac, 0x6a, 0xd3, 0x8d, 0xba,
+	0xe8, 0x02, 0xc2, 0xaf, 0xa8, 0x34, 0x93, 0x22, 0x45, 0x5d, 0x93, 0x25, 0xcc, 0xdb, 0x11, 0x2e,
+	0x8f, 0x9e, 0x1c, 0x3d, 0x0b, 0x52, 0x07, 0x23, 0x09, 0xb3, 0xcc, 0xe4, 0xa6, 0xd1, 0x64, 0x05,
+	0x81, 0x2e, 0x14, 0xa2, 0xd8, 0x5a, 0xd5, 0x22, 0x5d, 0x8c, 0xc4, 0x46, 0x90, 0x35, 0x84, 0x3f,
+	0x91, 0x52, 0x99, 0xab, 0xb2, 0x1f, 0xdf, 0x1b, 0xc6, 0xe0, 0xa8, 0x8d, 0x20, 0x17, 0xf0, 0xa8,
+	0x90, 0x15, 0x65, 0x02, 0xcb, 0xad, 0x2e, 0x94, 0xe4, 0x7c, 0x79, 0x7f, 0x10, 0x9d, 0x38, 0x3a,
+	0x1b, 0xd8, 0xe8, 0x29, 0x04, 0x19, 0x9a, 0xf7, 0x9c, 0xa7, 0xf8, 0xa3, 0xdf, 0x0b, 0x45, 0x4e,
+	0x39, 0x96, 0xf6, 0x45, 0x07, 0xa3, 0x35, 0xcc, 0x3f, 0x35, 0x55, 0xdd, 0x8b, 0x4e, 0xe1, 0xc1,
+	0xf0, 0x8a, 0x5d, 0x7d, 0x04, 0xd1, 0x73, 0x08, 0x3f, 0xb3, 0x16, 0x37, 0x82, 0x77, 0xbd, 0x68,
+	0x05, 0x01, 0x67, 0x2d, 0x6e, 0xa5, 0xe0, 0x9d, 0xdb, 0x9e, 0xdb, 0xf9, 0xe5, 0xaf, 0x63, 0x78,
+	0x98, 0x79, 0x61, 0x92, 0x6b, 0x98, 0xdb, 0x78, 0xc8, 0x59, 0x3c, 0xe6, 0x18, 0xbb, 0x1c, 0xe3,
+	0x0f, 0x7d, 0x8e, 0xe7, 0x67, 0xf1, 0x9f, 0xa8, 0x63, 0x3f, 0xca, 0xd7, 0xb0, 0xc8, 0x5c, 0x2a,
+	0xd3, 0xde, 0xff, 0xf2, 0xe4, 0x0d, 0x04, 0xd6, 0xbb, 0xdb, 0x1d, 0x6c, 0xbe, 0x82, 0xe0, 0x23,
+	0x1a, 0x5b, 0xd6, 0x94, 0xf9, 0xb1, 0xb7, 0xb5, 0x95, 0x5e, 0x0d, 0x81, 0x5b, 0xf0, 0xef, 0xfc,
+	0x8e, 0xf7, 0x66, 0x63, 0x51, 0xe4, 0xd4, 0x37, 0xb9, 0xee, 0x26, 0x7d, 0x97, 0x70, 0xdc, 0x37,
+	0x47, 0x88, 0xe7, 0xb2, 0x55, 0xde, 0x15, 0xcc, 0x17, 0xbc, 0x35, 0x37, 0x7d, 0xb3, 0x07, 0x07,
+	0xf3, 0x0e, 0x4e, 0x52, 0xd4, 0x26, 0x57, 0x26, 0x43, 0xd5, 0xb2, 0x02, 0x0f, 0xfe, 0xc2, 0x5b,
+	0x08, 0x33, 0x34, 0xee, 0x77, 0x22, 0x7e, 0xf5, 0xde, 0x3f, 0x36, 0x65, 0xbf, 0xb9, 0xfe, 0xf6,
+	0x6a, 0xcf, 0xcc, 0xf7, 0x86, 0xc6, 0x85, 0xac, 0x12, 0x25, 0x29, 0xed, 0xca, 0x0e, 0x95, 0xbd,
+	0xdf, 0x84, 0x09, 0x83, 0x4a, 0xe4, 0x7c, 0xbc, 0xd4, 0xbf, 0xae, 0x9a, 0xce, 0x06, 0xee, 0xe5,
+	0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0x04, 0xbf, 0x16, 0x0b, 0xf9, 0x03, 0x00, 0x00,
 }

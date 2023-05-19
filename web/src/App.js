@@ -4,7 +4,6 @@ import Sport from './Sport.js';
 import Racing from './Racing.js';
 import ImageBoard from './ImageBoard.js';
 import Board from './Board.js';
-import Weather from './Weather.js';
 import TopNav from './Nav.js';
 import All from './All.js';
 import BasicBoard from './BasicBoard';
@@ -36,9 +35,7 @@ class App extends React.Component {
           <Route path="/img" render={() => <ImageBoard withImg="true" />} />
           <Route path="/clock" render={() => <BasicBoard id="clock" name="clock" key="clock" withImg="true" />} />
           <Route path="/sys" render={() => <BasicBoard id="sys" name="sys" key="sys" withImg="true" />} />
-          <Route path="/stocks" render={() => <BasicBoard id="stocks" name="stocks" key="stocks" withImg="true" />} />
           <Route path="/gcal" render={() => <BasicBoard id="gcal" name="gcal" key="gcal" withImg="true" />} />
-          <Route path="/weather" render={() => <Weather withImg="true" />} />
           <Route path="/board" exact component={Board} />
           <Route path="/docs" exact component={() => <SwaggerUI spec={swag} />} />
           <Route path="/f1" exact component={() => <Racing sport="f1" id="f1" key="f1" withImg="true" />} />

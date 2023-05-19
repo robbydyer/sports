@@ -26,9 +26,7 @@ type Enabler interface {
 type Board interface {
 	Name() string
 	Render(ctx context.Context, canvases Canvas) error
-	ScrollRender(ctx context.Context, canvas Canvas, padding int) (Canvas, error)
 	GetHTTPHandlers() ([]*HTTPHandler, error)
-	ScrollMode() bool
 	GetRPCHandler() (string, http.Handler)
 	InBetween() bool
 	Enabler() Enabler

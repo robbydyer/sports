@@ -145,8 +145,7 @@ proto.imageboard.v1.Status.toObject = function(includeInstance, msg) {
   var f, obj = {
     enabled: jspb.Message.getBooleanFieldWithDefault(msg, 1, false),
     diskcacheEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 2, false),
-    memcacheEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
-    scrollEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 4, false)
+    memcacheEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 3, false)
   };
 
   if (includeInstance) {
@@ -195,10 +194,6 @@ proto.imageboard.v1.Status.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setMemcacheEnabled(value);
       break;
-    case 4:
-      var value = /** @type {boolean} */ (reader.readBool());
-      msg.setScrollEnabled(value);
-      break;
     default:
       reader.skipField();
       break;
@@ -246,13 +241,6 @@ proto.imageboard.v1.Status.serializeBinaryToWriter = function(message, writer) {
   if (f) {
     writer.writeBool(
       3,
-      f
-    );
-  }
-  f = message.getScrollEnabled();
-  if (f) {
-    writer.writeBool(
-      4,
       f
     );
   }
@@ -310,24 +298,6 @@ proto.imageboard.v1.Status.prototype.getMemcacheEnabled = function() {
  */
 proto.imageboard.v1.Status.prototype.setMemcacheEnabled = function(value) {
   return jspb.Message.setProto3BooleanField(this, 3, value);
-};
-
-
-/**
- * optional bool scroll_enabled = 4;
- * @return {boolean}
- */
-proto.imageboard.v1.Status.prototype.getScrollEnabled = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 4, false));
-};
-
-
-/**
- * @param {boolean} value
- * @return {!proto.imageboard.v1.Status} returns this
- */
-proto.imageboard.v1.Status.prototype.setScrollEnabled = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 4, value);
 };
 
 

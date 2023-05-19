@@ -47,8 +47,7 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 func (s *Server) GetStatus(ctx context.Context, req *emptypb.Empty) (*pb.StatusResp, error) {
 	return &pb.StatusResp{
 		Status: &pb.Status{
-			Enabled:       s.board.Enabler().Enabled(),
-			ScrollEnabled: true,
+			Enabled: s.board.Enabler().Enabled(),
 		},
 	}, nil
 }

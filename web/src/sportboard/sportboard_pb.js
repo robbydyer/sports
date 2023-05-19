@@ -124,14 +124,12 @@ proto.sport.v1.Status.toObject = function(includeInstance, msg) {
     enabled: jspb.Message.getBooleanFieldWithDefault(msg, 1, false),
     favoriteHidden: jspb.Message.getBooleanFieldWithDefault(msg, 2, false),
     favoriteSticky: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
-    scrollEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 4, false),
-    tightScrollEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 5, false),
-    recordRankEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 6, false),
-    oddsEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
-    useGradient: jspb.Message.getBooleanFieldWithDefault(msg, 8, false),
-    liveOnly: jspb.Message.getBooleanFieldWithDefault(msg, 9, false),
-    detailedLive: jspb.Message.getBooleanFieldWithDefault(msg, 10, false),
-    showLeagueLogo: jspb.Message.getBooleanFieldWithDefault(msg, 11, false)
+    recordRankEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 4, false),
+    oddsEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 5, false),
+    useGradient: jspb.Message.getBooleanFieldWithDefault(msg, 6, false),
+    liveOnly: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
+    detailedLive: jspb.Message.getBooleanFieldWithDefault(msg, 8, false),
+    showLeagueLogo: jspb.Message.getBooleanFieldWithDefault(msg, 9, false)
   };
 
   if (includeInstance) {
@@ -182,33 +180,25 @@ proto.sport.v1.Status.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 4:
       var value = /** @type {boolean} */ (reader.readBool());
-      msg.setScrollEnabled(value);
+      msg.setRecordRankEnabled(value);
       break;
     case 5:
       var value = /** @type {boolean} */ (reader.readBool());
-      msg.setTightScrollEnabled(value);
+      msg.setOddsEnabled(value);
       break;
     case 6:
       var value = /** @type {boolean} */ (reader.readBool());
-      msg.setRecordRankEnabled(value);
+      msg.setUseGradient(value);
       break;
     case 7:
       var value = /** @type {boolean} */ (reader.readBool());
-      msg.setOddsEnabled(value);
+      msg.setLiveOnly(value);
       break;
     case 8:
       var value = /** @type {boolean} */ (reader.readBool());
-      msg.setUseGradient(value);
-      break;
-    case 9:
-      var value = /** @type {boolean} */ (reader.readBool());
-      msg.setLiveOnly(value);
-      break;
-    case 10:
-      var value = /** @type {boolean} */ (reader.readBool());
       msg.setDetailedLive(value);
       break;
-    case 11:
+    case 9:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setShowLeagueLogo(value);
       break;
@@ -262,59 +252,45 @@ proto.sport.v1.Status.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getScrollEnabled();
+  f = message.getRecordRankEnabled();
   if (f) {
     writer.writeBool(
       4,
       f
     );
   }
-  f = message.getTightScrollEnabled();
+  f = message.getOddsEnabled();
   if (f) {
     writer.writeBool(
       5,
       f
     );
   }
-  f = message.getRecordRankEnabled();
+  f = message.getUseGradient();
   if (f) {
     writer.writeBool(
       6,
       f
     );
   }
-  f = message.getOddsEnabled();
+  f = message.getLiveOnly();
   if (f) {
     writer.writeBool(
       7,
       f
     );
   }
-  f = message.getUseGradient();
+  f = message.getDetailedLive();
   if (f) {
     writer.writeBool(
       8,
       f
     );
   }
-  f = message.getLiveOnly();
-  if (f) {
-    writer.writeBool(
-      9,
-      f
-    );
-  }
-  f = message.getDetailedLive();
-  if (f) {
-    writer.writeBool(
-      10,
-      f
-    );
-  }
   f = message.getShowLeagueLogo();
   if (f) {
     writer.writeBool(
-      11,
+      9,
       f
     );
   }
@@ -376,10 +352,10 @@ proto.sport.v1.Status.prototype.setFavoriteSticky = function(value) {
 
 
 /**
- * optional bool scroll_enabled = 4;
+ * optional bool record_rank_enabled = 4;
  * @return {boolean}
  */
-proto.sport.v1.Status.prototype.getScrollEnabled = function() {
+proto.sport.v1.Status.prototype.getRecordRankEnabled = function() {
   return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 4, false));
 };
 
@@ -388,16 +364,16 @@ proto.sport.v1.Status.prototype.getScrollEnabled = function() {
  * @param {boolean} value
  * @return {!proto.sport.v1.Status} returns this
  */
-proto.sport.v1.Status.prototype.setScrollEnabled = function(value) {
+proto.sport.v1.Status.prototype.setRecordRankEnabled = function(value) {
   return jspb.Message.setProto3BooleanField(this, 4, value);
 };
 
 
 /**
- * optional bool tight_scroll_enabled = 5;
+ * optional bool odds_enabled = 5;
  * @return {boolean}
  */
-proto.sport.v1.Status.prototype.getTightScrollEnabled = function() {
+proto.sport.v1.Status.prototype.getOddsEnabled = function() {
   return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 5, false));
 };
 
@@ -406,16 +382,16 @@ proto.sport.v1.Status.prototype.getTightScrollEnabled = function() {
  * @param {boolean} value
  * @return {!proto.sport.v1.Status} returns this
  */
-proto.sport.v1.Status.prototype.setTightScrollEnabled = function(value) {
+proto.sport.v1.Status.prototype.setOddsEnabled = function(value) {
   return jspb.Message.setProto3BooleanField(this, 5, value);
 };
 
 
 /**
- * optional bool record_rank_enabled = 6;
+ * optional bool use_gradient = 6;
  * @return {boolean}
  */
-proto.sport.v1.Status.prototype.getRecordRankEnabled = function() {
+proto.sport.v1.Status.prototype.getUseGradient = function() {
   return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 6, false));
 };
 
@@ -424,16 +400,16 @@ proto.sport.v1.Status.prototype.getRecordRankEnabled = function() {
  * @param {boolean} value
  * @return {!proto.sport.v1.Status} returns this
  */
-proto.sport.v1.Status.prototype.setRecordRankEnabled = function(value) {
+proto.sport.v1.Status.prototype.setUseGradient = function(value) {
   return jspb.Message.setProto3BooleanField(this, 6, value);
 };
 
 
 /**
- * optional bool odds_enabled = 7;
+ * optional bool live_only = 7;
  * @return {boolean}
  */
-proto.sport.v1.Status.prototype.getOddsEnabled = function() {
+proto.sport.v1.Status.prototype.getLiveOnly = function() {
   return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 7, false));
 };
 
@@ -442,16 +418,16 @@ proto.sport.v1.Status.prototype.getOddsEnabled = function() {
  * @param {boolean} value
  * @return {!proto.sport.v1.Status} returns this
  */
-proto.sport.v1.Status.prototype.setOddsEnabled = function(value) {
+proto.sport.v1.Status.prototype.setLiveOnly = function(value) {
   return jspb.Message.setProto3BooleanField(this, 7, value);
 };
 
 
 /**
- * optional bool use_gradient = 8;
+ * optional bool detailed_live = 8;
  * @return {boolean}
  */
-proto.sport.v1.Status.prototype.getUseGradient = function() {
+proto.sport.v1.Status.prototype.getDetailedLive = function() {
   return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 8, false));
 };
 
@@ -460,16 +436,16 @@ proto.sport.v1.Status.prototype.getUseGradient = function() {
  * @param {boolean} value
  * @return {!proto.sport.v1.Status} returns this
  */
-proto.sport.v1.Status.prototype.setUseGradient = function(value) {
+proto.sport.v1.Status.prototype.setDetailedLive = function(value) {
   return jspb.Message.setProto3BooleanField(this, 8, value);
 };
 
 
 /**
- * optional bool live_only = 9;
+ * optional bool show_league_logo = 9;
  * @return {boolean}
  */
-proto.sport.v1.Status.prototype.getLiveOnly = function() {
+proto.sport.v1.Status.prototype.getShowLeagueLogo = function() {
   return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 9, false));
 };
 
@@ -478,44 +454,8 @@ proto.sport.v1.Status.prototype.getLiveOnly = function() {
  * @param {boolean} value
  * @return {!proto.sport.v1.Status} returns this
  */
-proto.sport.v1.Status.prototype.setLiveOnly = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 9, value);
-};
-
-
-/**
- * optional bool detailed_live = 10;
- * @return {boolean}
- */
-proto.sport.v1.Status.prototype.getDetailedLive = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 10, false));
-};
-
-
-/**
- * @param {boolean} value
- * @return {!proto.sport.v1.Status} returns this
- */
-proto.sport.v1.Status.prototype.setDetailedLive = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 10, value);
-};
-
-
-/**
- * optional bool show_league_logo = 11;
- * @return {boolean}
- */
-proto.sport.v1.Status.prototype.getShowLeagueLogo = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 11, false));
-};
-
-
-/**
- * @param {boolean} value
- * @return {!proto.sport.v1.Status} returns this
- */
 proto.sport.v1.Status.prototype.setShowLeagueLogo = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 11, value);
+  return jspb.Message.setProto3BooleanField(this, 9, value);
 };
 
 

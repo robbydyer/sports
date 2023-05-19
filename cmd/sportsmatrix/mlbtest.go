@@ -133,8 +133,6 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 		return m.RenderLive(ctx, canvas, mlbGame, hLogo, aLogo)
 	}
 
-	c.rArgs.config.MLBConfig.ScrollMode.Store(false)
-	c.rArgs.config.MLBConfig.DetailedLive.Store(true)
 	c.rArgs.config.MLBConfig.GridCols = 0
 	c.rArgs.config.MLBConfig.GridRows = 0
 
@@ -159,7 +157,6 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 
 	b.Enabler().Enable()
 
-	c.rArgs.config.SportsMatrixConfig.CombinedScroll.Store(false)
 	mtrx, err := sportsmatrix.New(ctx, logger, c.rArgs.config.SportsMatrixConfig, canvases, b)
 	if err != nil {
 		return err

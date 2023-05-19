@@ -3,9 +3,7 @@ package clock
 import (
 	"context"
 	"fmt"
-	"image"
 	"image/color"
-	"image/draw"
 	"net/http"
 	"sync"
 	"time"
@@ -19,7 +17,6 @@ import (
 	"github.com/robbydyer/sports/internal/enabler"
 	pb "github.com/robbydyer/sports/internal/proto/basicboard"
 	"github.com/robbydyer/sports/internal/rgbrender"
-	scrcnvs "github.com/robbydyer/sports/internal/scrollcanvas"
 	"github.com/robbydyer/sports/internal/twirphelpers"
 	"github.com/robbydyer/sports/internal/util"
 )
@@ -41,14 +38,11 @@ type Clock struct {
 // Config is a Clock configuration
 type Config struct {
 	boardDelay   time.Duration
-	scrollDelay  time.Duration
 	StartEnabled *atomic.Bool `json:"enabled"`
 	BoardDelay   string       `json:"boardDelay"`
 	OnTimes      []string     `json:"onTimes"`
 	OffTimes     []string     `json:"offTimes"`
 	ShowBetween  *atomic.Bool `json:"showBetween"`
-	ScrollMode   *atomic.Bool `json:"scrollMode"`
-	ScrollDelay  string       `json:"scrollDelay"`
 	Enable24Hour *atomic.Bool `json:"enable24Hour"`
 }
 
@@ -70,18 +64,6 @@ func (c *Config) SetDefaults() {
 
 	if c.ShowBetween == nil {
 		c.ShowBetween = atomic.NewBool(false)
-	}
-	if c.ScrollMode == nil {
-		c.ScrollMode = atomic.NewBool(false)
-	}
-	if c.ScrollDelay != "" {
-		d, err := time.ParseDuration(c.ScrollDelay)
-		if err != nil {
-			c.scrollDelay = scrcnvs.DefaultScrollDelay
-		}
-		c.scrollDelay = d
-	} else {
-		c.scrollDelay = scrcnvs.DefaultScrollDelay
 	}
 
 	if c.Enable24Hour == nil {
@@ -151,36 +133,15 @@ func (c *Clock) Cleanup() {}
 
 // ScrollMode ...
 func (c *Clock) ScrollMode() bool {
-	return c.config.ScrollMode.Load()
-}
-
-// ScrollRender ...
-func (c *Clock) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
-	origScrollMode := c.config.ScrollMode.Load()
-	defer func() {
-		c.config.ScrollMode.Store(origScrollMode)
-	}()
-
-	c.config.ScrollMode.Store(true)
-
-	return c.render(ctx, canvas)
+	return false
 }
 
 // Render ...
 func (c *Clock) Render(ctx context.Context, canvas board.Canvas) error {
 	renderctx, rendercancel := context.WithCancel(ctx)
 	defer rendercancel()
-	canv, err := c.render(renderctx, canvas)
-	if err != nil {
+	if err := c.render(renderctx, canvas); err != nil {
 		return err
-	}
-	if canv != nil {
-		defer func() {
-			if scr, ok := canv.(*scrcnvs.ScrollCanvas); ok {
-				c.config.scrollDelay = scr.GetScrollSpeed()
-			}
-		}()
-		return canv.Render(renderctx)
 	}
 
 	return nil
@@ -216,52 +177,14 @@ func (c *Clock) currentTimeStr() string {
 }
 
 // Render ...
-func (c *Clock) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
+func (c *Clock) render(ctx context.Context, canvas board.Canvas) error {
 	if !c.Enabler().Enabled() {
-		return nil, nil
+		return nil
 	}
 
 	writer, err := c.getWriter(rgbrender.ZeroedBounds(canvas.Bounds()).Dy())
 	if err != nil {
-		return nil, err
-	}
-
-	if c.config.ScrollMode.Load() && canvas.Scrollable() {
-		base, ok := canvas.(*scrcnvs.ScrollCanvas)
-		if !ok {
-			return nil, fmt.Errorf("unsupported scroll canvas")
-		}
-
-		scrollCanvas, err := scrcnvs.NewScrollCanvas(base.Matrix, c.log,
-			scrcnvs.WithScrollDirection(scrcnvs.RightToLeft),
-			scrcnvs.WithScrollSpeed(c.config.scrollDelay),
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		if err := writer.WriteAligned(
-			rgbrender.CenterCenter,
-			canvas,
-			rgbrender.ZeroedBounds(canvas.Bounds()),
-			[]string{
-				c.currentTimeStr(),
-			},
-			color.White,
-		); err != nil {
-			return nil, err
-		}
-		c.log.Debug("clock time",
-			zap.String("time", c.currentTimeStr()),
-		)
-		scrollCanvas.SetPadding(0)
-		scrollCanvas.AddCanvas(canvas)
-		base.SetScrollSpeed(c.config.scrollDelay)
-		go scrollCanvas.MatchScroll(ctx, base)
-
-		draw.Draw(canvas, canvas.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
-
-		return scrollCanvas, nil
+		return err
 	}
 
 	update := make(chan struct{})
@@ -326,11 +249,11 @@ func (c *Clock) render(ctx context.Context, canvas board.Canvas) (board.Canvas, 
 
 	select {
 	case <-ctx.Done():
-		return nil, context.Canceled
+		return context.Canceled
 	case <-time.After(c.config.boardDelay):
 	}
 
-	return nil, nil
+	return nil
 }
 
 // HasPriority ...

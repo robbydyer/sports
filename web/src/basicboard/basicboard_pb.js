@@ -121,8 +121,7 @@ proto.board.v1.Status.prototype.toObject = function(opt_includeInstance) {
  */
 proto.board.v1.Status.toObject = function(includeInstance, msg) {
   var f, obj = {
-    enabled: jspb.Message.getBooleanFieldWithDefault(msg, 1, false),
-    scrollEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 2, false)
+    enabled: jspb.Message.getBooleanFieldWithDefault(msg, 1, false)
   };
 
   if (includeInstance) {
@@ -163,10 +162,6 @@ proto.board.v1.Status.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setEnabled(value);
       break;
-    case 2:
-      var value = /** @type {boolean} */ (reader.readBool());
-      msg.setScrollEnabled(value);
-      break;
     default:
       reader.skipField();
       break;
@@ -203,13 +198,6 @@ proto.board.v1.Status.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getScrollEnabled();
-  if (f) {
-    writer.writeBool(
-      2,
-      f
-    );
-  }
 };
 
 
@@ -228,24 +216,6 @@ proto.board.v1.Status.prototype.getEnabled = function() {
  */
 proto.board.v1.Status.prototype.setEnabled = function(value) {
   return jspb.Message.setProto3BooleanField(this, 1, value);
-};
-
-
-/**
- * optional bool scroll_enabled = 2;
- * @return {boolean}
- */
-proto.board.v1.Status.prototype.getScrollEnabled = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 2, false));
-};
-
-
-/**
- * @param {boolean} value
- * @return {!proto.board.v1.Status} returns this
- */
-proto.board.v1.Status.prototype.setScrollEnabled = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 2, value);
 };
 
 

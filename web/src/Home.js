@@ -14,7 +14,6 @@ function jsonToStatus(jsonDat) {
     var status = new Status();
     status.setScreenOn(dat.screen_on);
     status.setWebboardOn(dat.webboard_on);
-    status.setCombinedScroll(dat.combined_scroll);
 
     return status;
 }
@@ -46,20 +45,6 @@ class Home extends React.Component {
         })
     }
 
-    speedUp = async () => {
-        await MatrixPostRet("matrix.v1.Sportsmatrix/SpeedUp", '{}').then((resp) => {
-            if (!resp.ok) {
-                throw resp;
-            }
-        })
-    }
-    slowDown = async () => {
-        await MatrixPostRet("matrix.v1.Sportsmatrix/SlowDown", '{}').then((resp) => {
-            if (!resp.ok) {
-                throw resp;
-            }
-        })
-    }
 
     updateStatus = async () => {
         var req = this.state.status;
@@ -119,12 +104,6 @@ class Home extends React.Component {
                             onChange={() => { this.state.status.setWebboardOn(!this.state.status.getWebboardOn()); this.updateStatus(); }} />
                     </Col>
                 </Row>
-                <Row>
-                    <Col>
-                        <Form.Switch id="combinedscroll" label="Combined Scroll Mode" checked={this.state.status.getCombinedScroll()}
-                            onChange={() => { this.state.status.setCombinedScroll(!this.state.status.getCombinedScroll()); this.updateStatus(); }} />
-                    </Col>
-                </Row>
                 <Row className="text-left">
                     <Col>
                         <Button variant="primary" onClick={this.nextBoard}>Next Board</Button>
@@ -144,14 +123,6 @@ class Home extends React.Component {
                     </Col>
                     <Col>
                         <Button variant="primary" onClick={this.disableAll}>Disable All</Button>
-                    </Col>
-                </Row>
-                <Row>
-                    <Col>
-                        <Button variant="primary" onClick={this.speedUp}>Speed Up</Button>
-                    </Col>
-                    <Col>
-                        <Button variant="primary" onClick={this.slowDown}>Slow Down</Button>
                     </Col>
                 </Row>
                 <Row className="text-left">

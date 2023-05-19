@@ -2,7 +2,6 @@ package calendarboard
 
 import (
 	"context"
-	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -13,49 +12,25 @@ import (
 
 	"github.com/robbydyer/sports/internal/board"
 	"github.com/robbydyer/sports/internal/rgbrender"
-	scrcnvs "github.com/robbydyer/sports/internal/scrollcanvas"
 )
-
-// ScrollRender ...
-func (s *CalendarBoard) ScrollRender(ctx context.Context, canvas board.Canvas, padding int) (board.Canvas, error) {
-	origScrollMode := s.config.ScrollMode.Load()
-	origPad := s.config.TightScrollPadding
-	defer func() {
-		s.config.ScrollMode.Store(origScrollMode)
-		s.config.TightScrollPadding = origPad
-	}()
-
-	s.config.ScrollMode.Store(true)
-	s.config.TightScrollPadding = padding
-
-	return s.render(ctx, canvas)
-}
 
 // Render ...
 func (s *CalendarBoard) Render(ctx context.Context, canvas board.Canvas) error {
-	c, err := s.render(ctx, canvas)
+	err := s.render(ctx, canvas)
 	if err != nil {
 		return err
-	}
-	if c != nil {
-		defer func() {
-			if scr, ok := c.(*scrcnvs.ScrollCanvas); ok {
-				s.config.scrollDelay = scr.GetScrollSpeed()
-			}
-		}()
-		return c.Render(ctx)
 	}
 
 	return nil
 }
 
 // Render ...
-func (s *CalendarBoard) render(ctx context.Context, canvas board.Canvas) (board.Canvas, error) {
+func (s *CalendarBoard) render(ctx context.Context, canvas board.Canvas) error {
 	s.boardCtx, s.boardCancel = context.WithCancel(ctx)
 
 	events, err := s.api.DailyEvents(ctx, time.Now())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	s.log.Debug("calendar events",
@@ -63,47 +38,27 @@ func (s *CalendarBoard) render(ctx context.Context, canvas board.Canvas) (board.
 	)
 
 	if len(events) < 1 {
-		return nil, nil
+		return nil
 	}
 
 	scheduleWriter, err := s.getScheduleWriter(rgbrender.ZeroedBounds(canvas.Bounds()))
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if s.logo == nil {
 		var err error
 		s.logo, err = s.api.CalendarIcon(ctx, canvas.Bounds())
 		if err != nil {
-			return nil, err
+			return err
 		}
-	}
-
-	var scrollCanvas *scrcnvs.ScrollCanvas
-	if canvas.Scrollable() && s.config.ScrollMode.Load() {
-		base, ok := canvas.(*scrcnvs.ScrollCanvas)
-		if !ok {
-			return nil, fmt.Errorf("invalid scroll canvas")
-		}
-
-		var err error
-		scrollCanvas, err = scrcnvs.NewScrollCanvas(base.Matrix, s.log,
-			scrcnvs.WithMergePadding(s.config.TightScrollPadding),
-		)
-		if err != nil {
-			return nil, err
-		}
-		scrollCanvas.SetScrollSpeed(s.config.scrollDelay)
-		scrollCanvas.SetScrollDirection(scrcnvs.RightToLeft)
-		base.SetScrollSpeed(s.config.scrollDelay)
-		go scrollCanvas.MatchScroll(ctx, base)
 	}
 
 EVENTS:
 	for _, event := range events {
 		select {
 		case <-s.boardCtx.Done():
-			return nil, context.Canceled
+			return context.Canceled
 		default:
 		}
 		img, err := s.renderEvent(s.boardCtx, canvas.Bounds(), event, scheduleWriter)
@@ -111,11 +66,6 @@ EVENTS:
 			s.log.Error("failed to render calendar event",
 				zap.Error(err),
 			)
-			continue EVENTS
-		}
-
-		if scrollCanvas != nil && s.config.ScrollMode.Load() {
-			scrollCanvas.AddCanvas(img)
 			continue EVENTS
 		}
 
@@ -128,20 +78,14 @@ EVENTS:
 			continue EVENTS
 		}
 
-		if !s.config.ScrollMode.Load() {
-			select {
-			case <-ctx.Done():
-				return nil, context.Canceled
-			case <-time.After(s.config.boardDelay):
-			}
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		case <-time.After(s.config.boardDelay):
 		}
 	}
 
-	if canvas.Scrollable() && scrollCanvas != nil {
-		return scrollCanvas, nil
-	}
-
-	return nil, nil
+	return nil
 }
 
 func (s *CalendarBoard) renderEvent(ctx context.Context, bounds image.Rectangle, event *Event, writer *rgbrender.TextWriter) (draw.Image, error) {

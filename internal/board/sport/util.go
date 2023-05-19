@@ -185,7 +185,7 @@ func (s *SportBoard) textAreaWidth(bounds image.Rectangle) int {
 		return bounds.Dx() / 8
 	}
 
-	if s.config.UseGradient.Load() && !s.config.ScrollMode.Load() {
+	if s.config.UseGradient.Load() {
 		if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
 			return 10
 		}
@@ -236,15 +236,6 @@ func scoreStr(g Game, homeSide side) (string, error) {
 		return fmt.Sprintf("%d-%d", h.Score(), a.Score()), nil
 	}
 	return fmt.Sprintf("%d-%d", a.Score(), h.Score()), nil
-}
-
-func numDigits(i int) int {
-	count := 0
-	for i != 0 {
-		i /= 10
-		count = count + 1
-	}
-	return count
 }
 
 func (s *SportBoard) season() string {

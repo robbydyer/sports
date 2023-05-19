@@ -38,18 +38,6 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 	if s.board.config.FavoriteSticky.CompareAndSwap(!req.Status.FavoriteSticky, req.Status.FavoriteSticky) {
 		cancelBoard = true
 	}
-	if s.board.config.GamblingSpread.CompareAndSwap(!req.Status.OddsEnabled, req.Status.OddsEnabled) {
-		cancelBoard = true
-		clearDrawCache = true
-	}
-	if s.board.config.ScrollMode.CompareAndSwap(!req.Status.ScrollEnabled, req.Status.ScrollEnabled) {
-		cancelBoard = true
-		clearDrawCache = true
-	}
-	if s.board.config.TightScroll.CompareAndSwap(!req.Status.TightScrollEnabled, req.Status.TightScrollEnabled) {
-		cancelBoard = true
-		clearDrawCache = true
-	}
 	if s.board.config.ShowRecord.CompareAndSwap(!req.Status.RecordRankEnabled, req.Status.RecordRankEnabled) {
 		cancelBoard = true
 		clearDrawCache = true
@@ -60,10 +48,6 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 	}
 	if s.board.config.LiveOnly.CompareAndSwap(!req.Status.LiveOnly, req.Status.LiveOnly) {
 		cancelBoard = true
-	}
-	if s.board.config.DetailedLive.CompareAndSwap(!req.Status.DetailedLive, req.Status.DetailedLive) {
-		cancelBoard = true
-		clearDrawCache = true
 	}
 	if s.board.config.ShowLeagueLogo.CompareAndSwap(!req.Status.ShowLeagueLogo, req.Status.ShowLeagueLogo) {
 		clearDrawCache = true
@@ -84,17 +68,13 @@ func (s *Server) SetStatus(ctx context.Context, req *pb.SetStatusReq) (*emptypb.
 func (s *Server) GetStatus(ctx context.Context, req *emptypb.Empty) (*pb.StatusResp, error) {
 	return &pb.StatusResp{
 		Status: &pb.Status{
-			Enabled:            s.board.Enabler().Enabled(),
-			FavoriteHidden:     s.board.config.HideFavoriteScore.Load(),
-			FavoriteSticky:     s.board.config.FavoriteSticky.Load(),
-			ScrollEnabled:      s.board.config.ScrollMode.Load(),
-			TightScrollEnabled: s.board.config.TightScroll.Load(),
-			RecordRankEnabled:  s.board.config.ShowRecord.Load(),
-			OddsEnabled:        s.board.config.GamblingSpread.Load(),
-			UseGradient:        s.board.config.UseGradient.Load(),
-			LiveOnly:           s.board.config.LiveOnly.Load(),
-			DetailedLive:       s.board.config.DetailedLive.Load(),
-			ShowLeagueLogo:     s.board.config.ShowLeagueLogo.Load(),
+			Enabled:           s.board.Enabler().Enabled(),
+			FavoriteHidden:    s.board.config.HideFavoriteScore.Load(),
+			FavoriteSticky:    s.board.config.FavoriteSticky.Load(),
+			RecordRankEnabled: s.board.config.ShowRecord.Load(),
+			UseGradient:       s.board.config.UseGradient.Load(),
+			LiveOnly:          s.board.config.LiveOnly.Load(),
+			ShowLeagueLogo:    s.board.config.ShowLeagueLogo.Load(),
 		},
 	}, nil
 }

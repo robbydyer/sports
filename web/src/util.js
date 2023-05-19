@@ -32,7 +32,6 @@ export function JSONToStatus(jsonDat) {
     var dat = d.status;
     var status = new basicboard_pb.Status();
     status.setEnabled(dat.enabled);
-    status.setScrollEnabled(dat.scroll_enabled);
 
     return status;
 }

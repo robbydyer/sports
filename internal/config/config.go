@@ -7,9 +7,7 @@ import (
 	racingboard "github.com/robbydyer/sports/internal/board/racing"
 	sportboard "github.com/robbydyer/sports/internal/board/sport"
 	statboard "github.com/robbydyer/sports/internal/board/stat"
-	stockboard "github.com/robbydyer/sports/internal/board/stocks"
 	sysboard "github.com/robbydyer/sports/internal/board/sys"
-	weatherboard "github.com/robbydyer/sports/internal/board/weather"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
 )
 
@@ -34,8 +32,6 @@ type Config struct {
 	SysConfig          *sysboard.Config      `json:"sysConfig"`
 	PGA                *statboard.Config     `json:"pga"`
 	SportsMatrixConfig *sportsmatrix.Config  `json:"sportsMatrixConfig,omitempty"`
-	StocksConfig       *stockboard.Config    `json:"stocksConfig"`
-	WeatherConfig      *weatherboard.Config  `json:"weatherConfig"`
 	F1Config           *racingboard.Config   `json:"f1Config"`
 	IRLConfig          *racingboard.Config   `json:"irlConfig"`
 	CalenderConfig     *calendarboard.Config `json:"calendarConfig"`

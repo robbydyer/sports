@@ -4,16 +4,6 @@
 # Main matrix config
 sportsMatrixConfig:
 
-  # Enabling this will string together all the boards into one long scroll
-  # instead of blanking the screen between each
-  combinedScroll: false
-
-  # Padding between items in combined scroll mode
-  combinedScrollPadding: 7
-
-  # Decrease this interval to speed up the scroll speed on the combined mode
-  combinedScrollDelay: "50ms"
-
   # Set the number of threads allowed when preparing a combined scroll canvas.
   # Default is 0 which means unlimited. Set this number to something above 0
   # if you are experiencing Out of Memory errors in /var/log/sportsmatrix_out.log
@@ -123,9 +113,6 @@ sportsMatrixConfig:
 clockConfig:
   enabled: true
 
-  scrollMode: false
-  scrollDelay: "50ms"
-
   # Set this to true to show the clock board in between every other board
   showBetween: false
 
@@ -165,26 +152,8 @@ ncaafConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
-
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
 
   boardDelay: "10s"
 
@@ -263,32 +232,13 @@ nhlConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
   
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
-
   # Config for stats board. Either enter a list of teams, players, or both. Goalies and Skaters
   # will display separate stats.
   stats:
     enabled: false
-    #scrollDelay: "200ms"
     teams:
     - NYI
     #players:
@@ -382,34 +332,15 @@ mlbConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
   
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
-
   boardDelay: "10s"
 
   # Config for stats board. Either enter a list of teams, players, or both. Pitchers and Hitters
   # will display separate stats.
   stats:
     enabled: false
-    #scrollDelay: "200ms"
     teams:
     - ATL
     #players:
@@ -504,27 +435,9 @@ ncaamConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
   
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
-
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -611,27 +524,9 @@ nbaConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
   
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
-
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -715,27 +610,9 @@ nflConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
   
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
-
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -813,26 +690,8 @@ mlsConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
-  
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
 
   boardDelay: "10s"
 
@@ -917,27 +776,9 @@ eplConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
   
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
-
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -1021,27 +862,9 @@ dflConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
   
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
-
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -1125,27 +948,9 @@ fifaConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
   
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
-
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -1229,27 +1034,9 @@ dfbConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
   
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
-
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -1324,12 +1111,6 @@ dfbConfig:
 imageConfig:
   enabled: false
   
-  # Enable scroll mode. 
-  # WARNING: GIFs will not display when scroll mode is enabled
-  scrollMode: false
-  scrollDelay: "50ms"
-  tightScrollPadding: 10
-
   # Caches resized images to disk in /tmp. You should probably not disable this
   useDiskCache: true
 
@@ -1354,145 +1135,15 @@ pga:
   # Limit the number of players shown. Defaults to 0, which is no limit
   #limitPlayers: 50
 
-  scrollDelay: "200ms"
-
   # This schedules the PGA leaderboard to turn on Thursday morning, and off Sunday night
   onTimes:
   - 00 07 * * 4
   offTimes:
   - 00 23 * * 0
 
-# Stock ticker configuration
-stocksConfig:
-  enabled: false
-
-  # This is a ratio of board width to maximum chart size. This is actually calculated based on 1/2
-  # the total width. i.e. A ratio of 0.25 will be (0.25 * 0.5 * total_width)
-  # Set this to a smaller ratio if you want to reduce the size of the chart, i.e. 0.5
-  maxChartWidthRatio: 1
-
-  # Set to true to show company logos for stocks. See pkg/stockboard/assets/logos to see which
-  # symbols are supported (mostly S&P500)
-  useLogos: false
-
-  # Enable scroll mode
-  scrollMode: false
-
-  # Set the spacing between the tickers in scroll mode. Default is 10
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
-
-  # List of tickers to pull
-  symbols:
-  # S&P500
-  - ^GSPC
-  # NASDAQ
-  - ^IXIC
-  # DOW
-  - ^DJI
-  - GME
-
-  # The number of price points to use in rendering the chart.
-  # This number should be between 1 and the width of your matrix (i.e. 64).
-  # Larger numbers *might* improve performance on lower-powered Pi's.
-  chartResolution: 4
-
-  # Delay between each ticker
-  boardDelay: "10s"
-
-  # Interval in which pricing data is pulled from API. Default is 5m
-  updateInterval: "5m"
-
-  # Manually adjust font sizes for stock symbol and price.
-  # Leave these options commented out to get the auto-adjusted sizes
-  #symbolFont:
-    #size: 16.0
-  #priceFont:
-    #size: 8.0
-
-  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
-  #onTimes:
-  #- 00 18 * * *
-  #offTimes:
-  #- 00 02 * * *
-
-weatherConfig:
-  enabled: false
-
-  # Go to openweathermap.org and register an account. You will have to subscribe to the 
-  # "One Call by Call" subscription plan. Don't worry, the matrix app only queries this API every
-  # 30 minutes, so you should never go above the free 1,000 calls per day tier. Data is cached
-  # both in memory and disk to ensure you never call the API more than once every 30 minutes.
-  # Create an API key and put it here.
-  apiKey: ""
-
-  # If you had an openweathermap key prior to their v 3.0 API, you can change this to "2.5".
-  # If you have issues getting weather data, you probably need to set this to the defualt of "3.0"
-  # and ensure that you have subscribed to the "One Call by Call" subscription plan:
-  # https://home.openweathermap.org/subscriptions/unauth_subscribe/onecall_30/base
-  apiVersion: "3.0"
-
-  # Set this to true if you want temps in Celsius
-  metricUnits: false
-
-  # Set this to true to show the weather board in between every other board
-  showBetween: false
-
-  scrollMode: true
-
-  # Enter your Zip code here
-  zipCode: 90210
-
-  # Country code
-  country: US
-  # Show the current forecast
-
-  currentForecast: true
-
-  # Show the hourly forecast
-  hourlyForecast: false
-
-  # Show the daily forecast
-  dailyForecast: true
-
-  # Number of days to show in daily forecast
-  dailyNumber: 3
-
-  # Number of days to show in hourly forecast
-  hourlyNumber: 3
-
-  # Set the spacing between the tickers in scroll mode. Default is 10
-  tightScrollPadding: 10
-
-  # Delay between each screen in non-scroll mode
-  boardDelay: "10s"
-
-  # Add cron strings to the list of onTimes/offTimes to schedule times for this board to turn off/on
-  #onTimes:
-  #- 00 18 * * *
-  #offTimes:
-  #- 00 02 * * *
-
-  # Manual adjustments to the two font sizes used for weather.
-  # Leave these options commented out to use the default auto-adjusting sizes.
-  #bigFont:
-    #size: 16.0
-  #smallFont:
-    #size: 8.0
-
 # Formula 1 Racing
 f1Config:
   enabled: false
-
-  scrollMode: true
-
-  # Set the spacing between the tickers in scroll mode.
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  #scrollDelay: "50ms"
 
   # Delay between each screen in non-scroll mode
   boardDelay: "10s"
@@ -1506,14 +1157,6 @@ f1Config:
 # IndyCar Racing
 irlConfig:
   enabled: false
-
-  scrollMode: true
-
-  # Set the spacing between the tickers in scroll mode.
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  #scrollDelay: "50ms"
 
   # Delay between each screen in non-scroll mode
   boardDelay: "10s"
@@ -1529,17 +1172,9 @@ irlConfig:
 calendarConfig:
   enabled: false
 
-  scrollMode: false
-
   # If you leave this option empty, it will pull all the available calendar ID's in your account
   #calendarIDs:
   #- myemail@gmail.com
-
-  # Set the spacing between the tickers in scroll mode.
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  #scrollDelay: "50ms"
 
   # Delay between each screen in non-scroll mode
   boardDelay: "10s"
@@ -1564,27 +1199,9 @@ ncaawConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
   
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
-
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -1671,27 +1288,9 @@ wnbaConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
   
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
-
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -1775,27 +1374,9 @@ ligueConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
   
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
-
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -1879,27 +1460,9 @@ serieaConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
   
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
-
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -1983,27 +1546,9 @@ laligaConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
   
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
-
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1
@@ -2087,27 +1632,9 @@ xflConfig:
     # Max number of headlines to show for this league
     max: 3
 
-    tightScrollPadding: 2
-
-    # Increase this number to slow down the headline scroll
-    scrollDelay: "10ms"
-
   # Shows the league logo at the start of each board cycle
   showLeagueLogo: false
   
-  # Displays the scoreboard in a scrolling style instead of statically
-  scrollMode: false
-
-  # Makes the games within this league scroll back-to-back instead of clearing
-  # the screen between each
-  tightScroll: true
-
-  # Sets the spacing between games when tightScroll is enabled
-  tightScrollPadding: 10
-
-  # Delay between screen draws in scroll mode. Default is 50ms.
-  scrollDelay: "50ms"
-
   boardDelay: "10s"
 
   # Number of columns in a grid layout. Default 1

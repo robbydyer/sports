@@ -21,10 +21,8 @@ import (
 	racingboard "github.com/robbydyer/sports/internal/board/racing"
 	sportboard "github.com/robbydyer/sports/internal/board/sport"
 	statboard "github.com/robbydyer/sports/internal/board/stat"
-	stockboard "github.com/robbydyer/sports/internal/board/stocks"
 	sysboard "github.com/robbydyer/sports/internal/board/sys"
 	textboard "github.com/robbydyer/sports/internal/board/text"
-	weatherboard "github.com/robbydyer/sports/internal/board/weather"
 	"github.com/robbydyer/sports/internal/config"
 	"github.com/robbydyer/sports/internal/espnboard"
 	"github.com/robbydyer/sports/internal/espnracing"
@@ -34,11 +32,9 @@ import (
 	"github.com/robbydyer/sports/internal/mlb"
 	"github.com/robbydyer/sports/internal/mlblive"
 	"github.com/robbydyer/sports/internal/nhl"
-	"github.com/robbydyer/sports/internal/openweather"
 	"github.com/robbydyer/sports/internal/pga"
 	rgb "github.com/robbydyer/sports/internal/rgbmatrix-rpi"
 	"github.com/robbydyer/sports/internal/sportsmatrix"
-	"github.com/robbydyer/sports/internal/yahoo"
 )
 
 var defaultPGAUpdateInterval = 2 * time.Minute
@@ -156,8 +152,6 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 	rootCmd.AddCommand(newRunCmd(args))
 	rootCmd.AddCommand(newNcaaMCmd(args))
 	rootCmd.AddCommand(newAbbrevCmd(args))
-	rootCmd.AddCommand(newStockCmd(args))
-	rootCmd.AddCommand(newWeatherCmd(args))
 	rootCmd.AddCommand(newCalCmd(args))
 	rootCmd.AddCommand(newGcalSetupCmd(args))
 
@@ -387,20 +381,6 @@ func (r *rootArgs) setConfigDefaults() {
 	}
 	r.config.PGA.SetDefaults()
 	r.config.PGA.Teams = append(r.config.PGA.Teams, "players")
-
-	if r.config.StocksConfig == nil {
-		r.config.StocksConfig = &stockboard.Config{
-			StartEnabled: atomic.NewBool(false),
-		}
-	}
-	r.config.StocksConfig.SetDefaults()
-
-	if r.config.WeatherConfig == nil {
-		r.config.WeatherConfig = &weatherboard.Config{
-			StartEnabled: atomic.NewBool(false),
-		}
-	}
-	r.config.WeatherConfig.SetDefaults()
 
 	if r.config.F1Config == nil {
 		r.config.F1Config = &racingboard.Config{
@@ -972,35 +952,6 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 			return nil, err
 		}
 		boards = append(boards, b)
-	}
-
-	if r.config.StocksConfig != nil {
-		api, err := yahoo.New(logger)
-		if err != nil {
-			return nil, err
-		}
-		b, err := stockboard.New(api, r.config.StocksConfig, logger)
-		if err != nil {
-			return nil, err
-		}
-
-		boards = append(boards, b)
-	}
-
-	if r.config.WeatherConfig != nil {
-		if r.config.WeatherConfig.APIKey == "" {
-			logger.Warn("Missing Weather API key. Weather Board will not be enabled")
-		} else {
-			api, err := openweather.New(r.config.WeatherConfig.APIKey, 30*time.Minute, r.config.WeatherConfig.APIVersion, logger)
-			if err != nil {
-				return nil, err
-			}
-			b, err := weatherboard.New(api, r.config.WeatherConfig, logger)
-			if err != nil {
-				return nil, err
-			}
-			boards = append(boards, b)
-		}
 	}
 
 	if r.config.F1Config != nil {

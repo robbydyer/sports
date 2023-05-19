@@ -16,7 +16,6 @@ function jsonToStatus(jsonDat) {
     var dat = d.status;
     var status = new Status();
     status.setEnabled(dat.enabled);
-    status.setScrollEnabled(dat.scroll_enabled);
 
     return status;
 }
@@ -74,12 +73,6 @@ class Sport extends React.Component {
                     <Col>
                         <Form.Switch id={this.props.sport + "enabler"} label="Enable/Disable" checked={this.state.status.getEnabled()}
                             onChange={() => { this.state.status.setEnabled(!this.state.status.getEnabled()); this.updateStatus(); }} />
-                    </Col>
-                </Row>
-                <Row className="text-left">
-                    <Col>
-                        <Form.Switch id={this.props.sport + "scroller"} label="Scroll Mode" checked={this.state.status.getScrollEnabled()}
-                            onChange={() => { this.state.status.setScrollEnabled(!this.state.status.getScrollEnabled()); this.updateStatus(); }} />
                     </Col>
                 </Row>
                 <Row className="text-left">

@@ -17,10 +17,8 @@ function jsonToStatus(jsonDat) {
     var dat = d.status;
     var status = new Status();
     status.setEnabled(dat.enabled);
-    status.setScrollEnabled(dat.scroll_enabled);
     status.setFavoriteHidden(dat.favorite_hidden);
     status.setFavoriteSticky(dat.favorite_sticky);
-    status.setTightScrollEnabled(dat.tight_scroll_enabled);
     status.setRecordRankEnabled(dat.record_rank_enabled);
     status.setOddsEnabled(dat.odds_enabled);
     status.setUseGradient(dat.use_gradient);
@@ -157,18 +155,6 @@ class Sport extends React.Component {
                 </Row>
                 <Row className="text-left">
                     <Col>
-                        <Form.Switch id={this.props.sport + "scroller"} label="Scroll Mode" checked={this.state.status.getScrollEnabled()}
-                            onChange={() => { this.state.status.setScrollEnabled(!this.state.status.getScrollEnabled()); this.updateStatus(); }} />
-                    </Col>
-                </Row>
-                <Row className="text-left">
-                    <Col>
-                        <Form.Switch id={this.props.sport + "tightscroller"} label="Back-to-back Scroll Mode" checked={this.state.status.getTightScrollEnabled()}
-                            onChange={() => { this.state.status.setTightScrollEnabled(!this.state.status.getTightScrollEnabled()); this.updateStatus(); }} />
-                    </Col>
-                </Row>
-                <Row className="text-left">
-                    <Col>
                         <Form.Switch id={this.props.sport + "stats"} label="Stats" checked={this.state.stats.getEnabled()} disabled={!this.state.has_stats}
                             onChange={() => { this.state.stats.setEnabled(!this.state.stats.getEnabled()); this.updateStatus(); }} />
                     </Col>
@@ -181,20 +167,8 @@ class Sport extends React.Component {
                 </Row>
                 <Row className="text-left">
                     <Col>
-                        <Form.Switch id={this.props.sport + "statscroll"} label="Stats Scroll Mode" checked={this.state.stats.getScrollEnabled()} disabled={!this.state.has_stats}
-                            onChange={() => { this.state.stats.setScrollEnabled(!this.state.stats.getScrollEnabled()); this.updateStatus(); }} />
-                    </Col>
-                </Row>
-                <Row className="text-left">
-                    <Col>
                         <Form.Switch id={this.props.sport + "favscore"} label="Hide Favorite Scores" checked={this.state.status.getFavoriteHidden()}
                             onChange={() => { this.state.status.setFavoriteHidden(!this.state.status.getFavoriteHidden()); this.updateStatus(); }} />
-                    </Col>
-                </Row>
-                <Row className="text-left">
-                    <Col>
-                        <Form.Switch id={this.props.sport + "odds"} label="Show Odds" checked={this.state.status.getOddsEnabled()}
-                            onChange={() => { this.state.status.setOddsEnabled(!this.state.status.getOddsEnabled()); this.updateStatus(); }} />
                     </Col>
                 </Row>
                 <Row className="text-left">
