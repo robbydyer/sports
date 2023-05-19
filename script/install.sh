@@ -18,8 +18,7 @@ aarch64|armv7l)
   curl -s "${latesturl}" | grep browser_download_url | grep deb | cut -d: -f2,3 | tr -d \" | wget -qi -
   ;;
 armv6l)
-  echo "This architecture is deprecated! The last supported version is v0.0.83"
-  wget -q "https://github.com/robbydyer/sports/releases/download/v0.0.83/sportsmatrix-0.0.83_armv6l.deb"
+  echo "Sorry, this architecture is not supported. You need a newer Pi with an armv7 processor- Pi 3, 4 or Pi Zero 2"
   ;;
 *)
   echo "Unsupported architecture '${ARCH}'"

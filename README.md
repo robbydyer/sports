@@ -27,7 +27,7 @@ There's a public Discord channel, "RGB Sportsmatrix Help" <https://discord.gg/8v
 
 ## Premium Version
 
-There is a premium version of this app that contains some extra features. See the ![Patreon Page](https://patreon.com/RGBLEDMatrixTickerSoftware?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=creatorshare_creator&utm_content=join_link) for more info
+There is a premium version of this app that contains some extra features. See the [Patreon Page](https://patreon.com/RGBLEDMatrixTickerSoftware?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=creatorshare_creator&utm_content=join_link) for more info
 
 Premium features include:
 
