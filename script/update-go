@@ -1,0 +1,32 @@
+#!/bin/bash
+
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+cd "${ROOT}"
+
+go_ver="$(curl -L https://golang.org/VERSION?m=text | sed 's,go,,g')"
+lint_ver="$(curl https://api.github.com/repos/golangci/golangci-lint/releases/latest | jq -r .tag_name)"
+
+echo "Updating Go to ${go_ver}, Linter ${lint_ver}"
+
+gsed -i "s,GOVERSION=.*,GOVERSION=${go_ver},g" Dockerfile.pibuilder
+gsed -i "s,golang:[^\s]* ,golang:${go_ver} ," Dockerfile.protoc
+gsed -i "s,GO_VERSION=.*,GO_VERSION=\"${go_ver}\",g" script/common
+gsed -i "s,golangci/golangci-lint:.*,golangci/golangci-lint:${lint_ver},g" Dockerfile.lint
+
+if ! git diff --exit-code Dockerfile.pibuilder; then
+  script/build-builder
+else
+  echo "No go version change detected"
+fi
+
+if ! git diff --exit-code Dockerfile.lint; then
+  script/build-linter
+else
+  echo "No linter version change detected"
+fi
+
+if ! git diff --exit-code Dockerfile.protoc; then
+  script/proto-gen
+else
+  echo "No go version change detected for protoc"
+fi

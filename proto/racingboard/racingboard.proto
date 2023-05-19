@@ -1,0 +1,21 @@
+syntax = "proto3";
+package racing.v1;
+option go_package = "github.com/robbydyer/sports/internal/proto/racingboard";
+import "google/protobuf/empty.proto";
+
+service Racing {
+    rpc SetStatus(SetStatusReq) returns (google.protobuf.Empty);
+    rpc GetStatus(google.protobuf.Empty) returns (StatusResp);
+}
+
+message Status{
+    bool enabled = 1;
+}
+
+message SetStatusReq {
+    Status status = 1;
+}
+
+message StatusResp {
+    Status status = 1;
+}

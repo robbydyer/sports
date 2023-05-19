@@ -1,0 +1,37 @@
+#!/bin/bash
+set -euo pipefail
+set -x
+
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+cd "${ROOT}"
+source script/common
+IN_DOCKER="${IN_DOCKER:-no}"
+VERSION="${VERSION:-devbuild}"
+DEB_BUILD="${DEB_BUILD:-no}"
+DO_WEB="${SKIP_WEB:-yes}"
+
+BUILDARCH="${BUILDARCH:-$(uname -m)}"
+
+img=$(latestpibuilder ${BUILDARCH})
+
+if [ "${IN_DOCKER}" = "no" ]; then
+  docker run -t --rm \
+    -e IN_DOCKER=yes \
+    -e BUILDARCH="${BUILDARCH}" \
+    -e VERSION="${VERSION}" \
+    -v "${ROOT}":/app \
+    -w /app \
+    ${img} \
+    /app/script/$(basename $0)
+
+  exit
+fi
+
+# Everything below is inside docker
+. ~/.bashrc
+cd /app/web
+npm install
+npm run build
+[ ! -d /app/internal/sportsmatrix/assets ] && mkdir -p /app/internal/sportsmatrix/assets
+[ -d /app/internal/sportsmatrix/assets/web ] && rm -rf /app/internal/sportsmatrix/assets/web
+mv /app/web/build /app/internal/sportsmatrix/assets/web

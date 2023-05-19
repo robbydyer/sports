@@ -1,0 +1,165 @@
+package rgbrender
+
+import (
+	"context"
+	"fmt"
+	"image"
+	"image/color/palette"
+	"image/draw"
+	"image/gif"
+	"image/png"
+	"os"
+	"time"
+
+	"github.com/disintegration/imaging"
+	"github.com/nfnt/resize"
+
+	"github.com/robbydyer/sports/internal/board"
+)
+
+// ResizeImage ...
+func ResizeImage(img image.Image, bounds image.Rectangle, zoom float64) image.Image {
+	sizeX, sizeY := ZoomImageSize(bounds, zoom)
+
+	return resize.Thumbnail(uint(sizeX), uint(sizeY), img, resize.Lanczos3)
+}
+
+// FitImage ...
+func FitImage(img image.Image, bounds image.Rectangle, zoom float64) image.Image {
+	sizeX, sizeY := ZoomImageSize(bounds, zoom)
+
+	return imaging.Fit(img, sizeX, sizeY, imaging.CatmullRom)
+}
+
+// ResizeGIF ...
+func ResizeGIF(ctx context.Context, g *gif.GIF, bounds image.Rectangle, zoom float64) error {
+	var newPals []*image.Paletted
+	for _, i := range g.Image {
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		default:
+		}
+		resizedI := ResizeImage(i, bounds, 1)
+
+		resizedPal := image.NewPaletted(resizedI.Bounds(), palette.Plan9)
+		draw.Draw(resizedPal, resizedPal.Bounds(), resizedI, resizedPal.Bounds().Min, draw.Over)
+		newPals = append(newPals, resizedPal)
+	}
+
+	g.Image = newPals
+
+	return nil
+}
+
+// SavePng ...
+func SavePng(img image.Image, fileName string) error {
+	if img == nil {
+		return fmt.Errorf("cannot save nil image.Image as PNG")
+	}
+	return imaging.Save(img, fileName, imaging.PNGCompressionLevel(png.NoCompression))
+}
+
+// SaveGif ...
+func SaveGif(img *gif.GIF, fileName string) error {
+	f, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	return gif.EncodeAll(f, img)
+}
+
+// ShiftedSize shifts an image's start location and returns its resulting bounds
+func ShiftedSize(xStart int, yStart int, bounds image.Rectangle) image.Rectangle {
+	startX := bounds.Min.X + xStart
+	startY := bounds.Min.Y + yStart
+	endX := bounds.Dx() + startX
+	endY := bounds.Dy() + startY
+
+	return image.Rect(startX, startY, endX, endY)
+}
+
+// DrawImageAligned draws an image aligned within the given bounds
+func DrawImageAligned(canvas draw.Image, bounds image.Rectangle, img *image.RGBA, align Align) error {
+	aligned, err := AlignPosition(align, bounds, img.Bounds().Dx(), img.Bounds().Dy())
+	if err != nil {
+		return err
+	}
+
+	img.Rect.Min = aligned.Min
+	img.Rect.Max = aligned.Max
+
+	return DrawImage(canvas, canvas.Bounds(), img)
+}
+
+// DrawImage draws an image
+func DrawImage(canvas draw.Image, bounds image.Rectangle, img image.Image) error {
+	draw.Draw(canvas, bounds, img, img.Bounds().Min, draw.Over)
+	return nil
+}
+
+// PlayImages plays s series of images. If loop == 0, it will play forever until the context is canceled
+func PlayImages(ctx context.Context, canvas board.Canvas, images []image.Image, delay []time.Duration, loop int) error {
+	center, err := AlignPosition(CenterCenter, canvas.Bounds(), images[0].Bounds().Dx(), images[0].Bounds().Dy())
+	if err != nil {
+		return err
+	}
+
+	l := len(images)
+	i := 0
+	for {
+		select {
+		case <-ctx.Done():
+			// no error, since this is how we stop the GIF
+			return nil
+		default:
+		}
+
+		if canvas == nil {
+			return fmt.Errorf("nil canvas passed to PlayImages")
+		}
+
+		draw.Draw(canvas, center, images[i], image.Point{}, draw.Over)
+
+		if err := canvas.Render(ctx); err != nil {
+			return err
+		}
+
+		time.Sleep(delay[i])
+
+		i++
+		if i >= l {
+			if loop == 0 {
+				i = 0
+				continue
+			}
+
+			break
+		}
+	}
+
+	return nil
+}
+
+// PlayGIF reads and draw a gif file from r. It use the contained images and
+// delays and loops over it, until a true is sent to the returned chan
+func PlayGIF(ctx context.Context, canvas board.Canvas, gif *gif.GIF) error {
+	if gif == nil {
+		return nil
+	}
+	delay := make([]time.Duration, len(gif.Image))
+	images := make([]image.Image, len(gif.Image))
+	for i, image := range gif.Image {
+		images[i] = image
+		d := gif.Delay[i] * 10
+		var err error
+		delay[i], err = time.ParseDuration(fmt.Sprintf("%dms", d))
+		if err != nil {
+			return err
+		}
+	}
+
+	return PlayImages(ctx, canvas, images, delay, 0)
+}

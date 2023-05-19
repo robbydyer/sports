@@ -1,0 +1,86 @@
+#!/bin/bash
+set -euo pipefail
+
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+DOCKERCONF="${ROOT}/.dockerconfig"
+GO_VERSION="1.20.4"
+
+getsha() {
+  if uname -s | grep -i darwin &> /dev/null; then
+    shasum -a 256 "${1}" | awk '{print $1}'
+  else
+    sha256sum "${1}" | awk '{print $1}'
+  fi
+}
+
+latestpibuilder() {
+  arch="$1"
+  case "${arch}" in
+    amd64|x86_64)
+      arch=amd64
+      ;;
+    arm64)
+      arch=aarch64
+      ;;
+    *)
+    ;;
+  esac
+  echo "robbydyer/pibuilder-${arch}:$(getsha "${ROOT}/Dockerfile.pibuilder")"
+}
+
+latestlinter() {
+  echo "robbydyer/rgbmatrixlint:$(getsha "${ROOT}/Dockerfile.lint")"
+}
+
+latestprotoc() {
+  echo "robbydyer/protoc:$(getsha "${ROOT}/Dockerfile.protoc")"
+}
+
+dockerlogin() {
+  if [ -d "${DOCKERCONF}" ]; then
+    return
+  fi
+  echo "Enter docker hub credentials:"
+  echo "${DOCKERHUB_PASS}" | docker --config="${DOCKERCONF}" login -u robbydyer --password-stdin
+}
+
+buildprotoc() {
+  cd "${ROOT}"
+  dockerlogin
+  img=$(latestprotoc)
+
+  if [ "$(docker images -q ${img})" = "" ]; then
+    docker --config="${DOCKERCONF}" buildx create --use --name=build --node=build
+    docker --config="${DOCKERCONF}" buildx build -t "${img}" -t robbydyer/protoc:latest \
+      --builder=build \
+      -f Dockerfile.protoc \
+      --platform=linux/arm64/v8 \
+      --push \
+      .
+  fi
+}
+
+install_go() {
+  if go version | grep "${GO_VERSION}"; then
+    return
+  fi
+
+  if [ ! -d /usr/local/go ]; then
+    mkdir -p /usr/local/go
+  fi
+
+  case "$(uname -m)" in
+  aarch64)
+    f="go${GO_VERSION}.linux-arm64.tar.gz"
+    ;;
+  armv7l|armv6l)
+    f="go${GO_VERSION}.linux-armv6l.tar.gz"
+    ;;
+  esac
+
+  echo "=> Installing Go from https://golang.org/dl/${f}"
+  wget "https://golang.org/dl/${f}"
+  sudo rm -rf /usr/local/go/*
+  sudo tar -C /usr/local -xzf "${f}"
+  rm -f "${f}"
+}

@@ -1,0 +1,45 @@
+#!/bin/bash
+set -euo pipefail
+set -x
+
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+cd "${ROOT}"
+IN_DOCKER="${IN_DOCKER:-no}"
+SUFFIX="build"
+BUILDARCH="${BUILDARCH:-$(uname -m)}"
+
+if [ "${IN_DOCKER}" = "no" ]; then
+  source "${ROOT}/script/common"
+  pibuilder=$(latestpibuilder ${BUILDARCH})
+
+  docker run -t --rm \
+    -e IN_DOCKER=yes \
+    -v "${ROOT}":/src \
+    -w /src \
+    ${pibuilder} \
+    /src/script/$(basename $0)
+  exit
+fi
+
+# Inside docker
+
+export CGO_ENABLED=1
+export GOCACHE=/src/.cache
+
+set -x
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+
+if [ ! -d ${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ]; then
+  if [ -d /sportslibs/rpi-rgb-led-matrix ]; then
+    cp -r /sportslibs/rpi-rgb-led-matrix ${ROOT}/internal/rgbmatrix-rpi/lib/
+    trap "rm -rf ${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" EXIT
+  fi
+fi
+
+# Put some dummy assets here
+trap "rm -rf ${ROOT}/internal/sportsmatrix/assets" EXIT
+mkdir -p "${ROOT}/internal/sportsmatrix/assets/web"
+touch "${ROOT}/internal/sportsmatrix/assets/web/foo"
+
+cd /src
+go test -v -mod=vendor ./...

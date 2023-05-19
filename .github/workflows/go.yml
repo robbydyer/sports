@@ -1,0 +1,39 @@
+name: Go
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up QEMU
+      id: qemu
+      uses: docker/setup-qemu-action@v2.1.0
+      with:
+        image: tonistiigi/binfmt:latest
+        platforms: all
+
+    - name: Lint
+      run: ./script/lint
+
+    - name: Test
+      run: ./script/test
+
+    - uses: actions/setup-node@v3
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'npm'
+        cache-dependency-path: "web/package-lock.json"
+
+    - run: npm ci
+      working-directory: "./web"
+
+    - run: npm run build
+      working-directory: "./web"
+
+    - name: Build
+      run: ./script/build

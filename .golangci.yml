@@ -1,0 +1,54 @@
+run:
+  # Until https://github.com/golangci/golangci-lint/issues/2649
+  go: 1.17
+  tests: true
+  modules-download-mode: vendor
+  skip-dirs:
+  - vendor
+  - internal/rgbmatrix-rpi
+  - internal/proto
+  timeout: 5m
+linters:
+  disable-all: true
+  enable:
+  - asciicheck
+  - bodyclose
+  - deadcode
+  - durationcheck
+  - errcheck
+  - exportloopref
+  - importas
+  - ineffassign
+  - goconst
+  - gofumpt
+  - goimports
+  - gosimple
+  - govet
+  - misspell
+  - nakedret
+  - nilerr
+  - promlinter
+  - revive
+  - staticcheck
+  - structcheck
+  - tparallel
+  - unconvert
+  - unused
+  - unparam
+  - varcheck
+  - whitespace
+linters-settings:
+  govet:
+    check-shadowing: true
+    enabled-all: true
+  goimports:
+    local-prefixes: github.com/robbydyer/sports
+  revive:
+    rules:
+    - name: exported
+      disabled: true
+issues:
+  exclude-use-default: false
+  exclude:
+  - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv). is not checked
+  - 'shadow: declaration of "err" shadows declaration at line (\d+)'

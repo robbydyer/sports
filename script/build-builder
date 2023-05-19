@@ -1,0 +1,64 @@
+#!/bin/bash
+# This script is used to build the docker image that is used to run builds.
+set -euo pipefail
+
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+
+source "${ROOT}/script/common"
+BUILDARCH="${BUILDARCH:-all}"
+
+dobuild() {
+  buildarch="$1"
+  cd "${ROOT}"
+
+  case "${buildarch}" in
+    aarch64|arm64)
+      base="multiarch/debian-debootstrap:arm64-bullseye-slim"
+      ;;
+    armv7l|armhf|armv6l)
+      base="multiarch/debian-debootstrap:armhf-buster-slim"
+      ;;
+    armv6l)
+      base="ghcr.io/pi-hole/ftl-build:v1.16-armv6hf"
+      ;;
+    amd64|x86_64)
+      base="multiarch/debian-debootstrap:amd64-bullseye"
+      ;;
+    *)
+      echo "Unsupported arch ${buildarch}"
+      exit 1
+      ;;
+  esac
+
+  docker pull "${base}"
+
+  img=$(latestpibuilder ${buildarch})
+
+  if [ "$(docker images -q ${img})" = "" ]; then
+    echo "==> Building ${img}"
+    docker --config="${DOCKERCONF}" buildx build -t "${img}" \
+      --builder=build \
+      -f Dockerfile.pibuilder \
+      --build-arg BASE=${base} \
+      --platform=linux/amd64,linux/arm64/v8 \
+      --push \
+      .
+  fi
+}
+
+# Install qemu emulators
+docker run --privileged --rm tonistiigi/binfmt:qemu-v7.0.0 --install all
+
+dockerlogin
+
+set -x
+docker --config="${DOCKERCONF}" buildx create --use --name=build --node=build
+
+if [ "${BUILDARCH}" = "all" ]; then
+  dobuild aarch64
+  dobuild armv7l
+  dobuild amd64
+  dobuild armv6l
+else
+  dobuild "${BUILDARCH}"
+fi

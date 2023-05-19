@@ -1,0 +1,872 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "title": "Sportsmatrix API",
+    "version": "version not set"
+  },
+  "host": "localhost:8080",
+  "paths": {
+    "/stocks/board.v1.BasicBoard/GetStatus": {
+      "post": {
+        "tags": [
+          "BasicBoard - includes stocks, pga, clock, sys"
+        ],
+        "operationId": "GetStatus",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/board.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/board.v1_StatusResp"
+            }
+          }
+        }
+      }
+    },
+    "/stocks/board.v1.BasicBoard/SetStatus": {
+      "post": {
+        "tags": [
+          "BasicBoard - includes stocks, pga, clock, sys"
+        ],
+        "operationId": "SetStatus",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/board.v1_SetStatusReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/board.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/imageboard.v1.ImageBoard/GetStatus": {
+      "post": {
+        "tags": [
+          "ImageBoard"
+        ],
+        "operationId": "GetStatus",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/imageboard.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/imageboard.v1_StatusResp"
+            }
+          }
+        }
+      }
+    },
+    "/imageboard.v1.ImageBoard/Jump": {
+      "post": {
+        "tags": [
+          "ImageBoard"
+        ],
+        "operationId": "Jump",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/imageboard.v1_JumpReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/imageboard.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/imageboard.v1.ImageBoard/SetStatus": {
+      "post": {
+        "tags": [
+          "ImageBoard"
+        ],
+        "operationId": "SetStatus",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/imageboard.v1_SetStatusReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/imageboard.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/f1/racing.v1.Racing/GetStatus": {
+      "post": {
+        "tags": [
+          "Racing"
+        ],
+        "operationId": "GetStatus",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/racing.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/racing.v1_StatusResp"
+            }
+          }
+        }
+      }
+    },
+    "/f1/racing.v1.Racing/SetStatus": {
+      "post": {
+        "tags": [
+          "Racing"
+        ],
+        "operationId": "SetStatus",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/racing.v1_SetStatusReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/racing.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/nhl/sport.v1.Sport/GetStatus": {
+      "post": {
+        "tags": [
+          "Sport - nhl, mlb, nfl, ncaaf, ncaam, epl, mls, nba, ncaaw, wnba, ligue, seriea, laliga"
+        ],
+        "operationId": "GetStatus",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/sport.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/sport.v1_StatusResp"
+            }
+          }
+        }
+      }
+    },
+    "/nhl/sport.v1.Sport/SetStatus": {
+      "post": {
+        "tags": [
+          "Sport - nhl, mlb, nfl, ncaaf, ncaam, epl, mls, nba, ncaaw, wnba, ligue, seriea, laliga"
+        ],
+        "operationId": "SetStatus",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/sport.v1_SetStatusReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/sport.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/matrix.v1.Sportsmatrix/GetStatus": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "GetStatus",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_Status"
+            }
+          }
+        }
+      }
+    },
+    "/matrix.v1.Sportsmatrix/Jump": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "Jump",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_JumpReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/matrix.v1.Sportsmatrix/NextBoard": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "NextBoard",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/matrix.v1.Sportsmatrix/RestartService": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "RestartService",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/matrix.v1.Sportsmatrix/ScreenOff": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "ScreenOff",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/matrix.v1.Sportsmatrix/ScreenOn": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "ScreenOn",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/matrix.v1.Sportsmatrix/SetAll": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "SetAll",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_SetAllReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/matrix.v1.Sportsmatrix/SetLiveOnly": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "SetLiveOnly",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_LiveOnlyReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/matrix.v1.Sportsmatrix/SetStatus": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "SetStatus",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/matrix.v1.Sportsmatrix/SlowDown": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "SlowDown",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/matrix.v1.Sportsmatrix/SpeedUp": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "SpeedUp",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    },
+    "/matrix.v1.Sportsmatrix/Version": {
+      "post": {
+        "tags": [
+          "Sportsmatrix"
+        ],
+        "operationId": "Version",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/matrix.v1_VersionResp"
+            }
+          }
+        }
+      }
+    },
+    "/weather.v1.WeatherBoard/GetStatus": {
+      "post": {
+        "tags": [
+          "WeatherBoard"
+        ],
+        "operationId": "GetStatus",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/weather.v1_google.protobuf.Empty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/weather.v1_StatusResp"
+            }
+          }
+        }
+      }
+    },
+    "/weather.v1.WeatherBoard/SetStatus": {
+      "post": {
+        "tags": [
+          "WeatherBoard"
+        ],
+        "operationId": "SetStatus",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/weather.v1_SetStatusReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/weather.v1_google.protobuf.Empty"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "board.v1_SetStatusReq": {
+      "description": "Fields: status",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/board.v1_Status"
+        }
+      }
+    },
+    "board.v1_Status": {
+      "description": "Fields: enabled, scroll_enabled",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "scroll_enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "board.v1_StatusResp": {
+      "description": "Fields: status",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/board.v1_Status"
+        }
+      }
+    },
+    "google.protobuf_Empty": {
+      "type": "object"
+    },
+    "imageboard.v1_JumpReq": {
+      "description": "Fields: name",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "imageboard.v1_SetStatusReq": {
+      "description": "Fields: status",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/imageboard.v1_Status"
+        }
+      }
+    },
+    "imageboard.v1_Status": {
+      "description": "Fields: enabled, diskcache_enabled, memcache_enabled, scroll_enabled",
+      "type": "object",
+      "properties": {
+        "diskcache_enabled": {
+          "type": "boolean"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "memcache_enabled": {
+          "type": "boolean"
+        },
+        "scroll_enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "imageboard.v1_StatusResp": {
+      "description": "Fields: status",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/imageboard.v1_Status"
+        }
+      }
+    },
+    "racing.v1_SetStatusReq": {
+      "description": "Fields: status",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/racing.v1_Status"
+        }
+      }
+    },
+    "racing.v1_Status": {
+      "description": "Fields: enabled, scroll_enabled",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "scroll_enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "racing.v1_StatusResp": {
+      "description": "Fields: status",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/racing.v1_Status"
+        }
+      }
+    },
+    "sport.v1_SetStatusReq": {
+      "description": "Fields: status",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/sport.v1_Status"
+        }
+      }
+    },
+    "sport.v1_Status": {
+      "description": "Fields: enabled, favorite_hidden, favorite_sticky, scroll_enabled, tight_scroll_enabled, record_rank_enabled, odds_enabled, use_gradient, live_only, detailed_live, show_league_logo",
+      "type": "object",
+      "properties": {
+        "detailed_live": {
+          "type": "boolean"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "favorite_hidden": {
+          "type": "boolean"
+        },
+        "favorite_sticky": {
+          "type": "boolean"
+        },
+        "live_only": {
+          "type": "boolean"
+        },
+        "odds_enabled": {
+          "type": "boolean"
+        },
+        "record_rank_enabled": {
+          "type": "boolean"
+        },
+        "scroll_enabled": {
+          "type": "boolean"
+        },
+        "show_league_logo": {
+          "type": "boolean"
+        },
+        "tight_scroll_enabled": {
+          "type": "boolean"
+        },
+        "use_gradient": {
+          "type": "boolean"
+        }
+      }
+    },
+    "sport.v1_StatusResp": {
+      "description": "Fields: status",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/sport.v1_Status"
+        }
+      }
+    },
+    "matrix.v1_JumpReq": {
+      "description": "Fields: board",
+      "type": "object",
+      "properties": {
+        "board": {
+          "type": "string"
+        }
+      }
+    },
+    "matrix.v1_LiveOnlyReq": {
+      "description": "Fields: live_only",
+      "type": "object",
+      "properties": {
+        "live_only": {
+          "type": "boolean"
+        }
+      }
+    },
+    "matrix.v1_SetAllReq": {
+      "description": "Fields: enabled",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "matrix.v1_Status": {
+      "description": "Fields: screen_on, webboard_on, combined_scroll",
+      "type": "object",
+      "properties": {
+        "combined_scroll": {
+          "type": "boolean"
+        },
+        "screen_on": {
+          "type": "boolean"
+        },
+        "webboard_on": {
+          "type": "boolean"
+        }
+      }
+    },
+    "matrix.v1_VersionResp": {
+      "description": "Fields: version",
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "weather.v1_SetStatusReq": {
+      "description": "Fields: status",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/weather.v1_Status"
+        }
+      }
+    },
+    "weather.v1_Status": {
+      "description": "Fields: enabled, scroll_enabled, daily_enabled, hourly_enabled",
+      "type": "object",
+      "properties": {
+        "daily_enabled": {
+          "type": "boolean"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "hourly_enabled": {
+          "type": "boolean"
+        },
+        "scroll_enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "weather.v1_StatusResp": {
+      "description": "Fields: status",
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/weather.v1_Status"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+syntax = "proto3";
+package imageboard.v1;
+option go_package = "github.com/robbydyer/sports/internal/proto/imageboard";
+import "google/protobuf/empty.proto";
+
+service ImageBoard {
+    rpc SetStatus(SetStatusReq) returns (google.protobuf.Empty);
+    rpc GetStatus(google.protobuf.Empty) returns (StatusResp);
+    rpc Jump(JumpReq) returns (google.protobuf.Empty);
+}
+
+message Status{
+    bool enabled = 1;
+    bool diskcache_enabled = 2;
+    bool memcache_enabled = 3;
+}
+
+message SetStatusReq {
+    Status status = 1;
+}
+
+message StatusResp {
+    Status status = 1;
+}
+
+message JumpReq {
+    string name = 1;
+}

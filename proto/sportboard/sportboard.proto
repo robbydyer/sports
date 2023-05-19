@@ -1,0 +1,28 @@
+syntax = "proto3";
+package sport.v1;
+option go_package = "github.com/robbydyer/sports/internal/proto/sportboard";
+import "google/protobuf/empty.proto";
+
+service Sport {
+    rpc SetStatus(SetStatusReq) returns (google.protobuf.Empty);
+    rpc GetStatus(google.protobuf.Empty) returns (StatusResp);
+}
+
+message Status{
+    bool enabled = 1;
+    bool favorite_hidden = 2;
+    bool favorite_sticky = 3;
+    bool record_rank_enabled = 4;
+    bool use_gradient = 5;
+    bool live_only = 6;
+    bool detailed_live = 7;
+    bool show_league_logo = 8;
+}
+
+message SetStatusReq {
+    Status status = 1;
+}
+
+message StatusResp {
+    Status status = 1;
+}

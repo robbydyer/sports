@@ -1,0 +1,59 @@
+#!/bin/bash
+set -euo pipefail
+set -x
+
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+cd "${ROOT}"
+source script/common
+IN_DOCKER="${IN_DOCKER:-no}"
+VERSION="${VERSION:-devbuild}"
+DEB_BUILD="${DEB_BUILD:-no}"
+BUILDARCH="${BUILDARCH:-$(uname -m)}"
+
+img=$(latestpibuilder ${BUILDARCH})
+
+if [ "${IN_DOCKER}" = "no" ]; then
+  if [ ! -d "${ROOT}/internal/sportsmatrix/assets" ]; then
+    mkdir -p "${ROOT}/internal/sportsmatrix/assets"
+    cp -r "${ROOT}/web/build" "${ROOT}/internal/sportsmatrix/assets/web"
+  fi
+
+  docker run -t --rm \
+    -e IN_DOCKER=yes \
+    -e BUILDARCH="${BUILDARCH}" \
+    -e VERSION="${VERSION}" \
+    -e DEB_BUILD="${DEB_BUILD}" \
+    -v "${ROOT}":/app \
+    -w /src \
+    ${img} \
+    /app/script/$(basename $0)
+
+  exit
+fi
+
+# Everything below is inside docker
+cd /app
+cp -r \
+  .nvmrc \
+  cmd \
+  internal \
+  vendor \
+  go.mod \
+  go.sum \
+  /src/
+
+cd /src
+
+export CGO_ENABLED=1
+export GOCACHE=/app/.cache
+
+cp -r /sportsmatrix_lib/rpi-rgb-led-matrix /src/internal/rgbmatrix-rpi/lib/
+
+go build -o /app/sportsmatrix.${BUILDARCH} -ldflags="-X github.com/robbydyer/sports/internal/sportsmatrix.version=${VERSION}" ./cmd/sportsmatrix
+
+echo "=> DONE created ${ROOT}/sportsmatrix.${BUILDARCH}"
+
+if [ "${DEB_BUILD}" = "yes" ];
+then
+  BUILDARCH="${BUILDARCH}" VERSION="${VERSION}" /app/script/deb-build.sh
+fi

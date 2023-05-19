@@ -1,0 +1,51 @@
+#!/bin/bash
+set -euo pipefail
+
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+IN_DOCKER="${IN_DOCKER:-no}"
+source "${ROOT}/script/common"
+IMG=$(latestlinter)
+
+if [ "${IN_DOCKER}" = "no" ]; then
+  MOUNTOPTION=""
+  if [ "$(uname -s)" = "Darwin" ]; then
+    MOUNTOPTION=":delegated"
+  fi
+
+  set -x
+  exec docker run -t --rm \
+      -e IN_DOCKER=yes \
+      -u $(id -u):$(id -g) \
+      -v "${ROOT}":/src${MOUNTOPTION} \
+      -w /src \
+      -e GOCACHE="/src/.cache" \
+      -e GOLANGCI_LINT_CACHE="/src/.cache" \
+      -e GO111MODULE=on \
+      -e CGO_ENABLED=1 \
+      -e GITHUB_ACTIONS="${GITHUB_ACTIONS:-}" \
+      "${IMG}" \
+      /src/script/$(basename $0)
+fi
+
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+
+if [ ! -d ${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix ]; then
+  if [ -d /sportslibs/rpi-rgb-led-matrix ]; then
+    cp -r /sportslibs/rpi-rgb-led-matrix ${ROOT}/internal/rgbmatrix-rpi/lib/
+    trap "rm -rf ${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix" EXIT
+  fi
+fi
+
+fix=""
+
+if [ ! -n "${GITHUB_ACTIONS}" ]; then
+  fix="--fix"
+fi
+
+# Put some dummy assets here
+trap "rm -rf ${ROOT}/internal/sportsmatrix/assets" EXIT
+mkdir -p "${ROOT}/internal/sportsmatrix/assets/web"
+touch "${ROOT}/internal/sportsmatrix/assets/web/foo"
+
+set -x
+golangci-lint run --verbose --timeout="5m" ${fix}

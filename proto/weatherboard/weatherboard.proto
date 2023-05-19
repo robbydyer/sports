@@ -1,0 +1,24 @@
+syntax = "proto3";
+package weather.v1;
+option go_package = "github.com/robbydyer/sports/internal/proto/weatherboard";
+import "google/protobuf/empty.proto";
+
+service WeatherBoard {
+    rpc SetStatus(SetStatusReq) returns (google.protobuf.Empty);
+    rpc GetStatus(google.protobuf.Empty) returns (StatusResp);
+}
+
+message Status{
+    bool enabled = 1;
+    bool scroll_enabled = 2;
+    bool daily_enabled = 3;
+    bool hourly_enabled = 4;
+}
+
+message SetStatusReq {
+    Status status = 1;
+}
+
+message StatusResp {
+    Status status = 1;
+}
