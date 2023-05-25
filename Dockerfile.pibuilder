@@ -1,4 +1,4 @@
-# 2022-10-04 09:36
+# 2023-05 10:11
 ARG BASE=multiarch/debian-debootstrap:arm64-bullseye-slim
 
 FROM $BASE
@@ -20,6 +20,19 @@ RUN apt-get update && \
 
 RUN update-ca-certificates -f
 ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+RUN GOIMG= && a="$(dpkg --print-architecture)" && \
+    case "${a##*-}" in \
+      arm64|aarch64) GOIMG="go${GOVERSION}.linux-arm64.tar.gz";; \
+      amd64) GOIMG="go${GOVERSION}.linux-amd64.tar.gz";; \
+      armv7l|armv6l|armhf) GOIMG="go${GOVERSION}.linux-armv6l.tar.gz";; \
+      *) echo "unsupported arch ${a}"; exit 1 ;;\
+    esac && \
+    curl -k -L https://go.dev/dl/${GOIMG} -o /tmp/${GOIMG} && \
+    tar -C /usr/local -xzf /tmp/${GOIMG} && \
+    /usr/local/go/bin/go version
+
+ENV PATH="/usr/local/go/bin:${PATH}"
+
 COPY .nvmrc /root/.nvmrc
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
 RUN cd /root && nvm install
@@ -29,18 +42,6 @@ COPY ./web /src/web
 RUN cd /src/web && \
     npm install
 
-RUN GOIMG= && a="$(dpkg --print-architecture)" && \
-    case "${a##*-}" in \
-      arm64|aarch64) GOIMG="go${GOVERSION}.linux-arm64.tar.gz";; \
-      amd64) GOIMG="go${GOVERSION}.linux-amd64.tar.gz";; \
-      armv7l|armv6l|armhf) GOIMG="go${GOVERSION}.linux-armv6l.tar.gz";; \
-      *) echo "unsupported arch ${a}"; exit 1 ;;\
-    esac && \
-    curl -k -L https://golang.org/dl/${GOIMG} -o /tmp/${GOIMG} && \
-    tar -C /usr/local -xzf /tmp/${GOIMG} && \
-    /usr/local/go/bin/go version
-
-ENV PATH="/usr/local/go/bin:${PATH}"
 
 COPY ./internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE /sportsmatrix_lib/rpi-rgb-led-matrix
 

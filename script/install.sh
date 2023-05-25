@@ -3,7 +3,7 @@ set -euo pipefail
 
 set -x
 
-ARCH="$(uname -m)"
+ARCH="$(dpkg --print-architecture)"
 
 tmp="$(mktemp -d /tmp/sportsinstall.XXXX)"
 trap "rm -rf ${tmp}" EXIT
@@ -11,11 +11,19 @@ trap "rm -rf ${tmp}" EXIT
 cd "${tmp}"
 
 case "${ARCH}" in
-aarch64|armv7l)
+aarch64|arm64)
   echo "Installing sportsmatrix for ${ARCH}"
   latesturl="https://api.github.com/repos/robbydyer/sports/releases/latest"
 
   curl -s "${latesturl}" | grep browser_download_url | grep deb | cut -d: -f2,3 | tr -d \" | wget -qi -
+  ARCH="aarch64"
+  ;;
+armv7l|armhf)
+  echo "Installing sportsmatrix for ${ARCH}"
+  latesturl="https://api.github.com/repos/robbydyer/sports/releases/latest"
+
+  curl -s "${latesturl}" | grep browser_download_url | grep deb | cut -d: -f2,3 | tr -d \" | wget -qi -
+  ARCH="armv7l"
   ;;
 armv6l)
   echo "Sorry, this architecture is not supported. You need a newer Pi with an armv7 processor- Pi 3, 4 or Pi Zero 2"
