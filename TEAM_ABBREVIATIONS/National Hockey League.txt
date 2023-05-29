@@ -1,0 +1,128 @@
+{
+  "name": "Ducks",
+  "abbreviation": "ANA"
+}
+{
+  "name": "Coyotes",
+  "abbreviation": "ARI"
+}
+{
+  "name": "Bruins",
+  "abbreviation": "BOS"
+}
+{
+  "name": "Sabres",
+  "abbreviation": "BUF"
+}
+{
+  "name": "Flames",
+  "abbreviation": "CGY"
+}
+{
+  "name": "Hurricanes",
+  "abbreviation": "CAR"
+}
+{
+  "name": "Blackhawks",
+  "abbreviation": "CHI"
+}
+{
+  "name": "Avalanche",
+  "abbreviation": "COL"
+}
+{
+  "name": "Blue Jackets",
+  "abbreviation": "CBJ"
+}
+{
+  "name": "Stars",
+  "abbreviation": "DAL"
+}
+{
+  "name": "Red Wings",
+  "abbreviation": "DET"
+}
+{
+  "name": "Oilers",
+  "abbreviation": "EDM"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "FLA"
+}
+{
+  "name": "Kings",
+  "abbreviation": "LA"
+}
+{
+  "name": "Wild",
+  "abbreviation": "MIN"
+}
+{
+  "name": "Canadiens",
+  "abbreviation": "MTL"
+}
+{
+  "name": "Predators",
+  "abbreviation": "NSH"
+}
+{
+  "name": "Devils",
+  "abbreviation": "NJ"
+}
+{
+  "name": "Islanders",
+  "abbreviation": "NYI"
+}
+{
+  "name": "Rangers",
+  "abbreviation": "NYR"
+}
+{
+  "name": "Senators",
+  "abbreviation": "OTT"
+}
+{
+  "name": "Flyers",
+  "abbreviation": "PHI"
+}
+{
+  "name": "Penguins",
+  "abbreviation": "PIT"
+}
+{
+  "name": "Sharks",
+  "abbreviation": "SJ"
+}
+{
+  "name": "Kraken",
+  "abbreviation": "SEA"
+}
+{
+  "name": "Blues",
+  "abbreviation": "STL"
+}
+{
+  "name": "Lightning",
+  "abbreviation": "TB"
+}
+{
+  "name": "Maple Leafs",
+  "abbreviation": "TOR"
+}
+{
+  "name": "Canucks",
+  "abbreviation": "VAN"
+}
+{
+  "name": "Golden Knights",
+  "abbreviation": "VGK"
+}
+{
+  "name": "Capitals",
+  "abbreviation": "WSH"
+}
+{
+  "name": "Jets",
+  "abbreviation": "WPG"
+}

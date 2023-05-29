@@ -1,0 +1,72 @@
+{
+  "name": "1. FC Union Berlin",
+  "abbreviation": "FCU"
+}
+{
+  "name": "Bayer Leverkusen",
+  "abbreviation": "B04"
+}
+{
+  "name": "Bayern Munich",
+  "abbreviation": "MUN"
+}
+{
+  "name": "Borussia Dortmund",
+  "abbreviation": "DOR"
+}
+{
+  "name": "Borussia Monchengladbach",
+  "abbreviation": "BMG"
+}
+{
+  "name": "Eintracht Frankfurt",
+  "abbreviation": "SGE"
+}
+{
+  "name": "FC Augsburg",
+  "abbreviation": "FCA"
+}
+{
+  "name": "FC Cologne",
+  "abbreviation": "KOE"
+}
+{
+  "name": "Hertha Berlin",
+  "abbreviation": "BSC"
+}
+{
+  "name": "Mainz",
+  "abbreviation": "M05"
+}
+{
+  "name": "RB Leipzig",
+  "abbreviation": "RBL"
+}
+{
+  "name": "SC Freiburg",
+  "abbreviation": "SCF"
+}
+{
+  "name": "Schalke 04",
+  "abbreviation": "S04"
+}
+{
+  "name": "TSG Hoffenheim",
+  "abbreviation": "TSG"
+}
+{
+  "name": "VfB Stuttgart",
+  "abbreviation": "VFB"
+}
+{
+  "name": "VfL Bochum",
+  "abbreviation": "BOC"
+}
+{
+  "name": "VfL Wolfsburg",
+  "abbreviation": "WOB"
+}
+{
+  "name": "Werder Bremen",
+  "abbreviation": "SVW"
+}

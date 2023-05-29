@@ -1,0 +1,116 @@
+{
+  "name": "Atlanta United FC",
+  "abbreviation": "ATL"
+}
+{
+  "name": "Austin FC",
+  "abbreviation": "ATX"
+}
+{
+  "name": "CF Montréal",
+  "abbreviation": "MTL"
+}
+{
+  "name": "Charlotte FC",
+  "abbreviation": "CLT"
+}
+{
+  "name": "Chicago Fire FC",
+  "abbreviation": "CHI"
+}
+{
+  "name": "Colorado Rapids",
+  "abbreviation": "COL"
+}
+{
+  "name": "Columbus Crew",
+  "abbreviation": "CLB"
+}
+{
+  "name": "D.C. United",
+  "abbreviation": "DC"
+}
+{
+  "name": "FC Cincinnati",
+  "abbreviation": "CIN"
+}
+{
+  "name": "FC Dallas",
+  "abbreviation": "DAL"
+}
+{
+  "name": "Houston Dynamo FC",
+  "abbreviation": "HOU"
+}
+{
+  "name": "Inter Miami CF",
+  "abbreviation": "MIA"
+}
+{
+  "name": "LA Galaxy",
+  "abbreviation": "LA"
+}
+{
+  "name": "LAFC",
+  "abbreviation": "LAFC"
+}
+{
+  "name": "Minnesota United FC",
+  "abbreviation": "MIN"
+}
+{
+  "name": "Nashville SC",
+  "abbreviation": "NSH"
+}
+{
+  "name": "New England Revolution",
+  "abbreviation": "NE"
+}
+{
+  "name": "New York City FC",
+  "abbreviation": "NYC"
+}
+{
+  "name": "New York Red Bulls",
+  "abbreviation": "NY"
+}
+{
+  "name": "Orlando City SC",
+  "abbreviation": "ORL"
+}
+{
+  "name": "Philadelphia Union",
+  "abbreviation": "PHI"
+}
+{
+  "name": "Portland Timbers",
+  "abbreviation": "POR"
+}
+{
+  "name": "Real Salt Lake",
+  "abbreviation": "RSL"
+}
+{
+  "name": "San Jose Earthquakes",
+  "abbreviation": "SJ"
+}
+{
+  "name": "Seattle Sounders FC",
+  "abbreviation": "SEA"
+}
+{
+  "name": "Sporting Kansas City",
+  "abbreviation": "SKC"
+}
+{
+  "name": "St. Louis CITY SC",
+  "abbreviation": "STL"
+}
+{
+  "name": "Toronto FC",
+  "abbreviation": "TOR"
+}
+{
+  "name": "Vancouver Whitecaps",
+  "abbreviation": "VAN"
+}

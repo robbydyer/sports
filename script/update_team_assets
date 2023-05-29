@@ -3,9 +3,7 @@ ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd 
 b="https://site.api.espn.com/apis/site/v2/sports"
 
 curl "${b}/football/nfl/groups?limit=1000" > "${ROOT}/internal/espnboard/assets/nfl_groups.json"
-curl "${b}/soccer/eng.1/teams?limit=1000" > "${ROOT}/internal/espnboard/assets/epl_teams.json"
 curl "${b}/baseball/mlb/groups?limit=1000" > "${ROOT}/internal/espnboard/assets/mlb_groups.json"
-curl "${b}/soccer/usa.1/teams?limit=1000" > "${ROOT}/internal/espnboard/assets/mls_teams.json"
 curl "${b}/basketball/nba/groups?limit=1000" > "${ROOT}/internal/espnboard/assets/nba_groups.json"
 curl "${b}/football/college-football/teams?limit=1000" > "${ROOT}/internal/espnboard/assets/ncaaf_teams.json"
 curl "${b}/basketball/mens-college-basketball/groups?limit=1000" > "${ROOT}/internal/espnboard/assets/ncaam_groups.json"
@@ -15,7 +13,16 @@ curl "${b}/hockey/nhl/teams?limit=1000" > "${ROOT}/internal/espnboard/assets/nhl
 curl "${b}/basketball/womens-college-basketball/groups?limit=1000" > "${ROOT}/internal/espnboard/assets/ncaaw_groups.json"
 curl "${b}/basketball/womens-college-basketball/teams?limit=1000" > "${ROOT}/internal/espnboard/assets/ncaaw_teams.json"
 curl "${b}/basketball/wnba/teams?limit=1000" > "${ROOT}/internal/espnboard/assets/wnba_teams.json"
+curl "${b}/soccer/eng.1/teams?limit=1000" > "${ROOT}/internal/espnboard/assets/epl_teams.json"
+curl "${b}/soccer/usa.1/teams?limit=1000" > "${ROOT}/internal/espnboard/assets/mls_teams.json"
 curl "${b}/soccer/fra.1/teams?limit=1000" > "${ROOT}/internal/espnboard/assets/fra_teams.json"
 curl "${b}/soccer/ita.1/teams?limit=1000" > "${ROOT}/internal/espnboard/assets/ita_teams.json"
 curl "${b}/soccer/esp.1/teams?limit=1000" > "${ROOT}/internal/espnboard/assets/esp_teams.json"
+curl "${b}/soccer/ger.1/teams?limit=1000" > "${ROOT}/internal/espnboard/assets/dfl_teams.json"
+curl "${b}/soccer/ger.dfb_pokal/teams?limit=1000" > "${ROOT}/internal/espnboard/assets/dfb_teams.json"
 curl "${b}/football/xfl/teams?limit=1000" > "${ROOT}/internal/espnboard/assets/xfl_teams.json"
+
+for sport in $(echo "${ROOT}/internal/espnboard/assets/*teams.json"); do
+    league="$(cat "${sport}" | jq -r .sports[].leagues[0].name)"
+    cat "${sport}" | jq -r '.sports[].leagues[0].teams[].team | {name,abbreviation}' > "${ROOT}/TEAM_ABBREVIATIONS/${league}.txt"
+done

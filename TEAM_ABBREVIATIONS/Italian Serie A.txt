@@ -1,0 +1,80 @@
+{
+  "name": "AC Milan",
+  "abbreviation": "MIL"
+}
+{
+  "name": "AS Roma",
+  "abbreviation": "ROMA"
+}
+{
+  "name": "Atalanta",
+  "abbreviation": "ATA"
+}
+{
+  "name": "Bologna",
+  "abbreviation": "BOL"
+}
+{
+  "name": "Cremonese",
+  "abbreviation": "CRE"
+}
+{
+  "name": "Empoli",
+  "abbreviation": "EMP"
+}
+{
+  "name": "Fiorentina",
+  "abbreviation": "FIO"
+}
+{
+  "name": "Hellas Verona",
+  "abbreviation": "VER"
+}
+{
+  "name": "Internazionale",
+  "abbreviation": "INT"
+}
+{
+  "name": "Juventus",
+  "abbreviation": "JUV"
+}
+{
+  "name": "Lazio",
+  "abbreviation": "LAZ"
+}
+{
+  "name": "Lecce",
+  "abbreviation": "LEC"
+}
+{
+  "name": "Monza",
+  "abbreviation": "MON"
+}
+{
+  "name": "Napoli",
+  "abbreviation": "NAP"
+}
+{
+  "name": "Salernitana",
+  "abbreviation": "SAL"
+}
+{
+  "name": "Sampdoria",
+  "abbreviation": "SAM"
+}
+{
+  "name": "Sassuolo",
+  "abbreviation": "SAS"
+}
+{
+  "name": "Spezia",
+  "abbreviation": "SPE"
+}
+{
+  "name": "Torino",
+  "abbreviation": "TOR"
+}
+{
+  "name": "Udinese",
+  "abbreviation": "UDI"
+}

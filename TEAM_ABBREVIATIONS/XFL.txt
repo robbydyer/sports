@@ -1,0 +1,32 @@
+{
+  "name": "Renegades",
+  "abbreviation": "ARL"
+}
+{
+  "name": "Defenders",
+  "abbreviation": "DC"
+}
+{
+  "name": "Roughnecks",
+  "abbreviation": "HOU"
+}
+{
+  "name": "Guardians",
+  "abbreviation": "ORL"
+}
+{
+  "name": "Brahmas",
+  "abbreviation": "SA"
+}
+{
+  "name": "Sea Dragons",
+  "abbreviation": "SEA"
+}
+{
+  "name": "Battlehawks",
+  "abbreviation": "STL"
+}
+{
+  "name": "Vipers",
+  "abbreviation": "VGS"
+}

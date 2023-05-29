@@ -1,0 +1,80 @@
+{
+  "name": "AFC Bournemouth",
+  "abbreviation": "BOU"
+}
+{
+  "name": "Arsenal",
+  "abbreviation": "ARS"
+}
+{
+  "name": "Aston Villa",
+  "abbreviation": "AVL"
+}
+{
+  "name": "Brentford",
+  "abbreviation": "BRE"
+}
+{
+  "name": "Brighton & Hove Albion",
+  "abbreviation": "BHA"
+}
+{
+  "name": "Chelsea",
+  "abbreviation": "CHE"
+}
+{
+  "name": "Crystal Palace",
+  "abbreviation": "CRY"
+}
+{
+  "name": "Everton",
+  "abbreviation": "EVE"
+}
+{
+  "name": "Fulham",
+  "abbreviation": "FUL"
+}
+{
+  "name": "Leeds United",
+  "abbreviation": "LEE"
+}
+{
+  "name": "Leicester City",
+  "abbreviation": "LEI"
+}
+{
+  "name": "Liverpool",
+  "abbreviation": "LIV"
+}
+{
+  "name": "Manchester City",
+  "abbreviation": "MNC"
+}
+{
+  "name": "Manchester United",
+  "abbreviation": "MAN"
+}
+{
+  "name": "Newcastle United",
+  "abbreviation": "NEW"
+}
+{
+  "name": "Nottingham Forest",
+  "abbreviation": "NFO"
+}
+{
+  "name": "Southampton",
+  "abbreviation": "SOU"
+}
+{
+  "name": "Tottenham Hotspur",
+  "abbreviation": "TOT"
+}
+{
+  "name": "West Ham United",
+  "abbreviation": "WHU"
+}
+{
+  "name": "Wolverhampton Wanderers",
+  "abbreviation": "WOL"
+}

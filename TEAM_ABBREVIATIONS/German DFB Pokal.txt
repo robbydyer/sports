@@ -1,0 +1,256 @@
+{
+  "name": "1. FC Heidenheim",
+  "abbreviation": "HDH"
+}
+{
+  "name": "1. FC Magdeburg",
+  "abbreviation": "FCM"
+}
+{
+  "name": "1. FC Union Berlin",
+  "abbreviation": "FCU"
+}
+{
+  "name": "Arminia Bielefeld",
+  "abbreviation": "DSC"
+}
+{
+  "name": "BSV Schwarz-Weiß Rehden",
+  "abbreviation": "SWR"
+}
+{
+  "name": "Bayer Leverkusen",
+  "abbreviation": "B04"
+}
+{
+  "name": "Bayern Munich",
+  "abbreviation": "MUN"
+}
+{
+  "name": "Borussia Dortmund",
+  "abbreviation": "DOR"
+}
+{
+  "name": "Borussia Monchengladbach",
+  "abbreviation": "BMG"
+}
+{
+  "name": "Bremer SV",
+  "abbreviation": "BRE"
+}
+{
+  "name": "Chemnitzer GC",
+  "abbreviation": "CHEM"
+}
+{
+  "name": "Dynamo Dresden",
+  "abbreviation": "SGD"
+}
+{
+  "name": "Einheit",
+  "abbreviation": "EIN"
+}
+{
+  "name": "Eintracht Frankfurt",
+  "abbreviation": "SGE"
+}
+{
+  "name": "Energie Cottbus",
+  "abbreviation": "COT"
+}
+{
+  "name": "FC Augsburg",
+  "abbreviation": "FCA"
+}
+{
+  "name": "FC Carl Zeiss Jena",
+  "abbreviation": "CZJ"
+}
+{
+  "name": "FC Cologne",
+  "abbreviation": "KOE"
+}
+{
+  "name": "FC Erzgebirge Aue",
+  "abbreviation": "ERZ"
+}
+{
+  "name": "FC Ingolstadt 04",
+  "abbreviation": "ING"
+}
+{
+  "name": "FC Viktoria 1889 Berlin",
+  "abbreviation": "FVB"
+}
+{
+  "name": "FV Engers 07",
+  "abbreviation": "FVE"
+}
+{
+  "name": "FV Illertissen",
+  "abbreviation": "ILL"
+}
+{
+  "name": "Fortuna Düsseldorf",
+  "abbreviation": "F95"
+}
+{
+  "name": "Hamburg SV",
+  "abbreviation": "HSV"
+}
+{
+  "name": "Hannover 96",
+  "abbreviation": "H96"
+}
+{
+  "name": "Hansa Rostock",
+  "abbreviation": "FCH"
+}
+{
+  "name": "Hertha Berlin",
+  "abbreviation": "BSC"
+}
+{
+  "name": "Holstein Kiel",
+  "abbreviation": "KIE"
+}
+{
+  "name": "Kaan Marie",
+  "abbreviation": "KAM"
+}
+{
+  "name": "Kaiserslautern",
+  "abbreviation": "FCK"
+}
+{
+  "name": "Karlsruher SC",
+  "abbreviation": "KSC"
+}
+{
+  "name": "Kickers Offenbach",
+  "abbreviation": "KOF"
+}
+{
+  "name": "Lohne",
+  "abbreviation": "LOH"
+}
+{
+  "name": "Mainz",
+  "abbreviation": "M05"
+}
+{
+  "name": "Nurnberg",
+  "abbreviation": "FCN"
+}
+{
+  "name": "Oberachern",
+  "abbreviation": "OBE"
+}
+{
+  "name": "RB Leipzig",
+  "abbreviation": "RBL"
+}
+{
+  "name": "SC Freiburg",
+  "abbreviation": "SCF"
+}
+{
+  "name": "SC Paderborn 07",
+  "abbreviation": "SCP"
+}
+{
+  "name": "SSV Jahn Regensburg",
+  "abbreviation": "REG"
+}
+{
+  "name": "SV 07 Elversberg",
+  "abbreviation": "ELV"
+}
+{
+  "name": "SV Darmstadt 98",
+  "abbreviation": "SVD"
+}
+{
+  "name": "SV Rödinghausen",
+  "abbreviation": "SVR"
+}
+{
+  "name": "SV Sandhausen",
+  "abbreviation": "SVS"
+}
+{
+  "name": "SV Straelen",
+  "abbreviation": "SVS"
+}
+{
+  "name": "SV Waldhof Mannheim",
+  "abbreviation": "SVW"
+}
+{
+  "name": "Schalke 04",
+  "abbreviation": "S04"
+}
+{
+  "name": "Schott",
+  "abbreviation": "SCH"
+}
+{
+  "name": "SpVgg Bayreuth",
+  "abbreviation": "BAY"
+}
+{
+  "name": "SpVgg Greuther Furth",
+  "abbreviation": "SGF"
+}
+{
+  "name": "St. Pauli",
+  "abbreviation": "STP"
+}
+{
+  "name": "Stuttgarter Kickers",
+  "abbreviation": "STK"
+}
+{
+  "name": "TSG Hoffenheim",
+  "abbreviation": "TSG"
+}
+{
+  "name": "TSG Neustrelitz",
+  "abbreviation": "NEU"
+}
+{
+  "name": "TSV 1860 Munich",
+  "abbreviation": "TSV"
+}
+{
+  "name": "TSV Eintracht Braunschweig",
+  "abbreviation": "EBS"
+}
+{
+  "name": "Teutonia Ottensen",
+  "abbreviation": "TTO"
+}
+{
+  "name": "VfB Lübeck",
+  "abbreviation": "LUB"
+}
+{
+  "name": "VfB Stuttgart",
+  "abbreviation": "VFB"
+}
+{
+  "name": "VfL Bochum",
+  "abbreviation": "BOC"
+}
+{
+  "name": "VfL Wolfsburg",
+  "abbreviation": "WOB"
+}
+{
+  "name": "Viktoria Köln",
+  "abbreviation": "VKO"
+}
+{
+  "name": "Werder Bremen",
+  "abbreviation": "SVW"
+}

@@ -1,0 +1,3084 @@
+{
+  "name": "Wildcats",
+  "abbreviation": "ACU"
+}
+{
+  "name": "Grizzlies",
+  "abbreviation": "ADA"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "ADRIAN"
+}
+{
+  "name": "Falcons",
+  "abbreviation": "AFA"
+}
+{
+  "name": "Zips",
+  "abbreviation": "AKR"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "AAMU"
+}
+{
+  "name": "Crimson Tide",
+  "abbreviation": "ALA"
+}
+{
+  "name": "Hornets",
+  "abbreviation": "ALST"
+}
+{
+  "name": "Great Danes",
+  "abbreviation": "ALB"
+}
+{
+  "name": "Golden Rams",
+  "abbreviation": "ALBS"
+}
+{
+  "name": "Britons",
+  "abbreviation": "ALB"
+}
+{
+  "name": "Lions",
+  "abbreviation": "ALB"
+}
+{
+  "name": "Braves",
+  "abbreviation": "ALCN"
+}
+{
+  "name": "Battlers",
+  "abbreviation": "ALD"
+}
+{
+  "name": "Saxons",
+  "abbreviation": "ALF"
+}
+{
+  "name": "Pioneers",
+  "abbreviation": "ALF"
+}
+{
+  "name": "Gators",
+  "abbreviation": "ALL"
+}
+{
+  "name": "Yellow Jackets",
+  "abbreviation": "ALN"
+}
+{
+  "name": "Scots",
+  "abbreviation": "ALM"
+}
+{
+  "name": "Golden Wolves",
+  "abbreviation": "ALV"
+}
+{
+  "name": null,
+  "abbreviation": "AMER"
+}
+{
+  "name": "Yellow Jackets",
+  "abbreviation": "AIC"
+}
+{
+  "name": "Mammoths",
+  "abbreviation": "AMH"
+}
+{
+  "name": "Ravens",
+  "abbreviation": "AND"
+}
+{
+  "name": "Rams",
+  "abbreviation": "ANG"
+}
+{
+  "name": "Amcats",
+  "abbreviation": "ANN"
+}
+{
+  "name": "Mountaineers",
+  "abbreviation": "APP"
+}
+{
+  "name": "Builders",
+  "abbreviation": "APP"
+}
+{
+  "name": "Sun Devils",
+  "abbreviation": "ASU"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "ARIZ"
+}
+{
+  "name": "Razorbacks",
+  "abbreviation": "ARK"
+}
+{
+  "name": "Red Wolves",
+  "abbreviation": "ARST"
+}
+{
+  "name": "Wonder Boys",
+  "abbreviation": "ARK"
+}
+{
+  "name": "Boll Weevils",
+  "abbreviation": "ARK"
+}
+{
+  "name": "Golden Lions",
+  "abbreviation": "UAPB"
+}
+{
+  "name": "Black Knights",
+  "abbreviation": "ARMY"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "ASH"
+}
+{
+  "name": "Greyhounds",
+  "abbreviation": "ASP"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "AUB"
+}
+{
+  "name": "Auggies",
+  "abbreviation": "AUGSBURG"
+}
+{
+  "name": "Vikings",
+  "abbreviation": "AUG"
+}
+{
+  "name": "Vikings",
+  "abbreviation": "AUG"
+}
+{
+  "name": "Spartans",
+  "abbreviation": "AUR"
+}
+{
+  "name": "'Roos",
+  "abbreviation": "AUSTIN"
+}
+{
+  "name": "Governors",
+  "abbreviation": "AUSTINPEAY"
+}
+{
+  "name": "Gyrenes",
+  "abbreviation": "AVE"
+}
+{
+  "name": "Cougars",
+  "abbreviation": "AVE"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "AVI"
+}
+{
+  "name": "Cougars",
+  "abbreviation": "AZU"
+}
+{
+  "name": "Cougars",
+  "abbreviation": "BYU"
+}
+{
+  "name": "Warriors",
+  "abbreviation": "BKN"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "BAK"
+}
+{
+  "name": "Yellow Jackets",
+  "abbreviation": "BAL"
+}
+{
+  "name": "Cardinals",
+  "abbreviation": "BALL"
+}
+{
+  "name": "Bobcats",
+  "abbreviation": "BAT"
+}
+{
+  "name": "Bears",
+  "abbreviation": "BAY"
+}
+{
+  "name": "Blazers",
+  "abbreviation": "BEL"
+}
+{
+  "name": "Buccaneers",
+  "abbreviation": "BEL"
+}
+{
+  "name": "Beavers",
+  "abbreviation": "BST"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "BEN"
+}
+{
+  "name": "Ravens",
+  "abbreviation": "BENC"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "BEN"
+}
+{
+  "name": "Falcons",
+  "abbreviation": "BENTLEY"
+}
+{
+  "name": "Vikings",
+  "abbreviation": "BER"
+}
+{
+  "name": "Swedes",
+  "abbreviation": "BET"
+}
+{
+  "name": "Bison",
+  "abbreviation": "BET"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "BET"
+}
+{
+  "name": "Royals",
+  "abbreviation": "BETHELMN"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "BCU"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "BIR"
+}
+{
+  "name": "Yellow Jackets",
+  "abbreviation": "BHS"
+}
+{
+  "name": "Beavers",
+  "abbreviation": "BLA"
+}
+{
+  "name": "Huskies",
+  "abbreviation": "BLOM"
+}
+{
+  "name": "Big Blues",
+  "abbreviation": "BLUEFIELDS"
+}
+{
+  "name": "Rams",
+  "abbreviation": "BLU"
+}
+{
+  "name": "Beavers",
+  "abbreviation": "BLU"
+}
+{
+  "name": "Broncos",
+  "abbreviation": "BOIS"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "BOSTONCOLL"
+}
+{
+  "name": "Polar Bears",
+  "abbreviation": "BOW"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "BSU"
+}
+{
+  "name": "Falcons",
+  "abbreviation": "BGSU"
+}
+{
+  "name": "Tornados",
+  "abbreviation": "BRE"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "BRI"
+}
+{
+  "name": "Bears",
+  "abbreviation": "BRI"
+}
+{
+  "name": "Thunderbirds",
+  "abbreviation": "BRI"
+}
+{
+  "name": "Golden Eagles",
+  "abbreviation": "THE"
+}
+{
+  "name": "Bears",
+  "abbreviation": "BRWN"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "BRYANT"
+}
+{
+  "name": "Bison",
+  "abbreviation": "BUCK"
+}
+{
+  "name": "Beavers",
+  "abbreviation": "BUE"
+}
+{
+  "name": "Bulls",
+  "abbreviation": "BUFF"
+}
+{
+  "name": "Bengals",
+  "abbreviation": "BUF"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "BUT"
+}
+{
+  "name": "Mustangs",
+  "abbreviation": "CP"
+}
+{
+  "name": "Vulcans",
+  "abbreviation": "CAL"
+}
+{
+  "name": "Golden Bears",
+  "abbreviation": "CAL"
+}
+{
+  "name": "Kingsmen",
+  "abbreviation": "CAL"
+}
+{
+  "name": "Fighting Camels",
+  "abbreviation": "CAMPBELL"
+}
+{
+  "name": "Comets",
+  "abbreviation": "CAPITAL"
+}
+{
+  "name": "Knights",
+  "abbreviation": "CARLETON"
+}
+{
+  "name": "Tartans",
+  "abbreviation": "CAR"
+}
+{
+  "name": "Pioneers",
+  "abbreviation": "CAR"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "CARSNWMAN"
+}
+{
+  "name": "Firebirds",
+  "abbreviation": "CAR"
+}
+{
+  "name": "Spartans",
+  "abbreviation": "CAS"
+}
+{
+  "name": "Spartans",
+  "abbreviation": "CAS"
+}
+{
+  "name": "Indians",
+  "abbreviation": "CATAWBA"
+}
+{
+  "name": "Cardinals",
+  "abbreviation": "CATHOLIC"
+}
+{
+  "name": "Bears",
+  "abbreviation": "CENTRALARK"
+}
+{
+  "name": "Dutch",
+  "abbreviation": "CEN"
+}
+{
+  "name": "Blue Devils",
+  "abbreviation": "CCSU"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "CEN"
+}
+{
+  "name": "Chippewas",
+  "abbreviation": "CMU"
+}
+{
+  "name": "Mules",
+  "abbreviation": "CEN"
+}
+{
+  "name": "Bronchos",
+  "abbreviation": "CEN"
+}
+{
+  "name": "Marauders",
+  "abbreviation": "CEN"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "CEN"
+}
+{
+  "name": "Colonels",
+  "abbreviation": "CEN"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "CHA"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "CHA"
+}
+{
+  "name": "Golden Eagles",
+  "abbreviation": "UNI"
+}
+{
+  "name": "Buccaneers",
+  "abbreviation": "CHSO"
+}
+{
+  "name": "49ers",
+  "abbreviation": "CHARLOTTE"
+}
+{
+  "name": "Mocs",
+  "abbreviation": "UTC"
+}
+{
+  "name": "Wolves",
+  "abbreviation": "CHE"
+}
+{
+  "name": "Maroons",
+  "abbreviation": "CHI"
+}
+{
+  "name": "Hawks",
+  "abbreviation": "CHOWAN"
+}
+{
+  "name": "Captains",
+  "abbreviation": "CHR"
+}
+{
+  "name": "Bearcats",
+  "abbreviation": "CINCINNATI"
+}
+{
+  "name": "Stags",
+  "abbreviation": "CLA"
+}
+{
+  "name": "Golden Eagles",
+  "abbreviation": "CLA"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "CLA"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "CLEMSON"
+}
+{
+  "name": "Bears",
+  "abbreviation": "COA"
+}
+{
+  "name": "Chanticleers",
+  "abbreviation": "CCU"
+}
+{
+  "name": "Kohawks",
+  "abbreviation": "COE"
+}
+{
+  "name": "White Mules",
+  "abbreviation": "COL"
+}
+{
+  "name": "Raiders",
+  "abbreviation": "COLG"
+}
+{
+  "name": "Saints",
+  "abbreviation": "FCH"
+}
+{
+  "name": "Warriors",
+  "abbreviation": "FAI"
+}
+{
+  "name": "Yotes",
+  "abbreviation": "COL"
+}
+{
+  "name": "Buffaloes",
+  "abbreviation": "COLO"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "COLC"
+}
+{
+  "name": "Mavericks",
+  "abbreviation": "MES"
+}
+{
+  "name": "Orediggers",
+  "abbreviation": "COL"
+}
+{
+  "name": "Rams",
+  "abbreviation": "CSU"
+}
+{
+  "name": "Thunderwolves",
+  "abbreviation": "COLP"
+}
+{
+  "name": "Lions",
+  "abbreviation": "COLU"
+}
+{
+  "name": "Mountain Lions",
+  "abbreviation": "CON"
+}
+{
+  "name": "Hornets",
+  "abbreviation": "CON"
+}
+{
+  "name": "Falcons",
+  "abbreviation": "CON"
+}
+{
+  "name": "Cardinals",
+  "abbreviation": "CON"
+}
+{
+  "name": "Cobbers",
+  "abbreviation": "CONCRDIAMN"
+}
+{
+  "name": "Golden Bears",
+  "abbreviation": "CONCRDIASP"
+}
+{
+  "name": "Cougars",
+  "abbreviation": "CON"
+}
+{
+  "name": "Big Red",
+  "abbreviation": "COR"
+}
+{
+  "name": "Rams",
+  "abbreviation": "COR"
+}
+{
+  "name": "Polars",
+  "abbreviation": "CROWN"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "CUL"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "CUM"
+}
+{
+  "name": "Indians",
+  "abbreviation": "CUM"
+}
+{
+  "name": "Colonels",
+  "abbreviation": "CUR"
+}
+{
+  "name": "Trojans",
+  "abbreviation": "DAK"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "DAK"
+}
+{
+  "name": "Big Green",
+  "abbreviation": "DART"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "DAV"
+}
+{
+  "name": "Flyers",
+  "abbreviation": "DAY"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "DEP"
+}
+{
+  "name": "Yellow Jackets",
+  "abbreviation": "DEF"
+}
+{
+  "name": "Blue Hens",
+  "abbreviation": "DEL"
+}
+{
+  "name": "Hornets",
+  "abbreviation": "DSU"
+}
+{
+  "name": "Aggies",
+  "abbreviation": "DEL"
+}
+{
+  "name": "Statesmen",
+  "abbreviation": "DEL"
+}
+{
+  "name": "Big Red",
+  "abbreviation": "DEN"
+}
+{
+  "name": "Red Devils",
+  "abbreviation": "DIC"
+}
+{
+  "name": "Blue Hawks",
+  "abbreviation": "DIC"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "DRKE"
+}
+{
+  "name": "Spartans",
+  "abbreviation": "DUB"
+}
+{
+  "name": "Blue Devils",
+  "abbreviation": "DUKE"
+}
+{
+  "name": "Dukes",
+  "abbreviation": "DUQ"
+}
+{
+  "name": "Flying Fleet",
+  "abbreviation": "ERSKINE"
+}
+{
+  "name": "All-Stars",
+  "abbreviation": "EAST"
+}
+{
+  "name": "Pirates",
+  "abbreviation": "ECU"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "EAS"
+}
+{
+  "name": "Warriors",
+  "abbreviation": "EAS"
+}
+{
+  "name": "Buccaneers",
+  "abbreviation": "ETSU"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "EAS"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "EASTERNILL"
+}
+{
+  "name": "Colonels",
+  "abbreviation": "EASTERNKY"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "EMU"
+}
+{
+  "name": "Greyhounds",
+  "abbreviation": "EAS"
+}
+{
+  "name": "Mountaineers",
+  "abbreviation": "EOR"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "EWU"
+}
+{
+  "name": "Fighting Scots",
+  "abbreviation": "EDI"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "EDWATERS"
+}
+{
+  "name": "Vikings",
+  "abbreviation": "ELI"
+}
+{
+  "name": "Blue Jays",
+  "abbreviation": "ELM"
+}
+{
+  "name": "Phoenix",
+  "abbreviation": "ELON"
+}
+{
+  "name": "Wasps",
+  "abbreviation": "EMORYHENRY"
+}
+{
+  "name": "Hornets",
+  "abbreviation": "EMP"
+}
+{
+  "name": "Gulls",
+  "abbreviation": "END"
+}
+{
+  "name": "Kats",
+  "abbreviation": "ERI"
+}
+{
+  "name": "Red Devils",
+  "abbreviation": "EUR"
+}
+{
+  "name": "Crusaders",
+  "abbreviation": "EVA"
+}
+{
+  "name": "Devils",
+  "abbreviation": "FDU"
+}
+{
+  "name": "Falcons",
+  "abbreviation": "FAI"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "FAU"
+}
+{
+  "name": "Broncos",
+  "abbreviation": "FAY"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "FRST"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "FER"
+}
+{
+  "name": "Oilers",
+  "abbreviation": "FIN"
+}
+{
+  "name": "Lions",
+  "abbreviation": "FINL"
+}
+{
+  "name": "Falcons",
+  "abbreviation": "FIT"
+}
+{
+  "name": "Rattlers",
+  "abbreviation": "FAMU"
+}
+{
+  "name": "Owls",
+  "abbreviation": "FLAATLANTC"
+}
+{
+  "name": "Gators",
+  "abbreviation": "FLA"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "FIU"
+}
+{
+  "name": "Seminoles",
+  "abbreviation": "FLORIDAST"
+}
+{
+  "name": "Rams",
+  "abbreviation": "FOR"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "FOR"
+}
+{
+  "name": "Skyhawks",
+  "abbreviation": "FTLW"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "FOR"
+}
+{
+  "name": "Rams",
+  "abbreviation": "FRA"
+}
+{
+  "name": "Diplomats",
+  "abbreviation": "FRA"
+}
+{
+  "name": "Grizzlies",
+  "abbreviation": "FRA"
+}
+{
+  "name": "Ravens",
+  "abbreviation": "FRANKPIERC"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "FRES"
+}
+{
+  "name": "Bobcats",
+  "abbreviation": "FRO"
+}
+{
+  "name": "Paladins",
+  "abbreviation": "FUR"
+}
+{
+  "name": "Saints",
+  "abbreviation": "LIMESTONE"
+}
+{
+  "name": "Bison",
+  "abbreviation": "GAL"
+}
+{
+  "name": "Golden Knights",
+  "abbreviation": "GAN"
+}
+{
+  "name": "Runnin' Bulldogs",
+  "abbreviation": "GARDNERWEB"
+}
+{
+  "name": "Golden Tornadoes",
+  "abbreviation": "GEN"
+}
+{
+  "name": "Bruins",
+  "abbreviation": "GEO"
+}
+{
+  "name": "Patriots",
+  "abbreviation": "GMU"
+}
+{
+  "name": "Hoyas",
+  "abbreviation": "GTWN"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "UGA"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "GASO"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "GAST"
+}
+{
+  "name": "Yellow Jackets",
+  "abbreviation": "GATECH"
+}
+{
+  "name": "Bullets",
+  "abbreviation": "GET"
+}
+{
+  "name": "Pioneers",
+  "abbreviation": "GLE"
+}
+{
+  "name": "Yellowjackets",
+  "abbreviation": "GRA"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "GRAM"
+}
+{
+  "name": "Lakers",
+  "abbreviation": "GRA"
+}
+{
+  "name": "Vikings",
+  "abbreviation": "GRVW"
+}
+{
+  "name": "Pioneers",
+  "abbreviation": "TUSCULUM"
+}
+{
+  "name": "Pride",
+  "abbreviation": "GRE"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "GRE"
+}
+{
+  "name": "Pioneers",
+  "abbreviation": "GRI"
+}
+{
+  "name": "Wolverines",
+  "abbreviation": "GRO"
+}
+{
+  "name": "Quakers",
+  "abbreviation": "GUI"
+}
+{
+  "name": "Golden Gusties",
+  "abbreviation": "GUSTAVUSAD"
+}
+{
+  "name": "Continentals",
+  "abbreviation": "HAM"
+}
+{
+  "name": "Pipers",
+  "abbreviation": "HAMLINE"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "HAM"
+}
+{
+  "name": "Pirates",
+  "abbreviation": "HAMP"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "HAN"
+}
+{
+  "name": "Cowboys",
+  "abbreviation": "HAR"
+}
+{
+  "name": "Bisons",
+  "abbreviation": "HAR"
+}
+{
+  "name": "Hawks",
+  "abbreviation": "HAR"
+}
+{
+  "name": "Crimson",
+  "abbreviation": "HARV"
+}
+{
+  "name": "Jayhawks",
+  "abbreviation": "HAS"
+}
+{
+  "name": "Rainbow Warriors",
+  "abbreviation": "HAW"
+}
+{
+  "name": "Student Princes",
+  "abbreviation": "HEI"
+}
+{
+  "name": "Reddies",
+  "abbreviation": "HEN"
+}
+{
+  "name": "Warriors",
+  "abbreviation": "HEN"
+}
+{
+  "name": "Hawks",
+  "abbreviation": "HILBERT"
+}
+{
+  "name": "Chargers",
+  "abbreviation": "HIL"
+}
+{
+  "name": "Terriers",
+  "abbreviation": "HIR"
+}
+{
+  "name": "Statesmen",
+  "abbreviation": "HOB"
+}
+{
+  "name": "Hurricanes",
+  "abbreviation": "HOL"
+}
+{
+  "name": "Crusaders",
+  "abbreviation": "HC"
+}
+{
+  "name": "Flying Dutchmen",
+  "abbreviation": "HOP"
+}
+{
+  "name": "Huskies",
+  "abbreviation": "HCU"
+}
+{
+  "name": "Cougars",
+  "abbreviation": "HOUSTON"
+}
+{
+  "name": "Bison",
+  "abbreviation": "HOW"
+}
+{
+  "name": "Yellow Jackets",
+  "abbreviation": "HOW"
+}
+{
+  "name": "Hawks",
+  "abbreviation": "HUN"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "HUS"
+}
+{
+  "name": "Bengals",
+  "abbreviation": "IDST"
+}
+{
+  "name": "Vandals",
+  "abbreviation": "IDHO"
+}
+{
+  "name": "Blueboys",
+  "abbreviation": "ILL"
+}
+{
+  "name": "Fighting Illini",
+  "abbreviation": "ILL"
+}
+{
+  "name": "Redbirds",
+  "abbreviation": "ILST"
+}
+{
+  "name": "Titans",
+  "abbreviation": "ILW"
+}
+{
+  "name": "Cardinals",
+  "abbreviation": "UIW"
+}
+{
+  "name": "Crimson Hawks",
+  "abbreviation": "IND"
+}
+{
+  "name": "Hoosiers",
+  "abbreviation": "IU"
+}
+{
+  "name": "Sycamores",
+  "abbreviation": "INST"
+}
+{
+  "name": "Greyhounds",
+  "abbreviation": "IND"
+}
+{
+  "name": "Hawkeyes",
+  "abbreviation": "IOWA"
+}
+{
+  "name": "Cyclones",
+  "abbreviation": "ISU"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "IOW"
+}
+{
+  "name": "Bombers",
+  "abbreviation": "ITH"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "JKST"
+}
+{
+  "name": "Gamecocks",
+  "abbreviation": "JAXVILLEST"
+}
+{
+  "name": "Dukes",
+  "abbreviation": "JMU"
+}
+{
+  "name": "Jimmies",
+  "abbreviation": "JAM"
+}
+{
+  "name": "Blue Streaks",
+  "abbreviation": "JOH"
+}
+{
+  "name": "Blue Jays",
+  "abbreviation": "JOH"
+}
+{
+  "name": "Golden Bulls",
+  "abbreviation": "JOH"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "JUNIATA"
+}
+{
+  "name": "Hornets",
+  "abbreviation": "KAL"
+}
+{
+  "name": "Jayhawks",
+  "abbreviation": "KU"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "KSU"
+}
+{
+  "name": "Coyotes",
+  "abbreviation": "KAN"
+}
+{
+  "name": "Cougars",
+  "abbreviation": "KEA"
+}
+{
+  "name": "Owls",
+  "abbreviation": "KENN"
+}
+{
+  "name": "Golden Flashes",
+  "abbreviation": "KENT"
+}
+{
+  "name": "Knights",
+  "abbreviation": "KYCH"
+}
+{
+  "name": "Thorobreds",
+  "abbreviation": "KYSTATE"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "KYW"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "UK"
+}
+{
+  "name": "Owls",
+  "abbreviation": "KENYON"
+}
+{
+  "name": "Giants",
+  "abbreviation": "KEYS"
+}
+{
+  "name": "Monarchs",
+  "abbreviation": "KIN"
+}
+{
+  "name": "Prairie Fire",
+  "abbreviation": "KNO"
+}
+{
+  "name": "Golden Bears",
+  "abbreviation": "KUT"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "LSU"
+}
+{
+  "name": "Leopards",
+  "abbreviation": "LA"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "LAG"
+}
+{
+  "name": "Leopards",
+  "abbreviation": "LAF"
+}
+{
+  "name": "Storm",
+  "abbreviation": "LAK"
+}
+{
+  "name": "Foresters",
+  "abbreviation": "LAK"
+}
+{
+  "name": "Muskies",
+  "abbreviation": "LAKE"
+}
+{
+  "name": "Cardinals",
+  "abbreviation": "LAM"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "LAM"
+}
+{
+  "name": "Dragons",
+  "abbreviation": "LAC"
+}
+{
+  "name": "Lions",
+  "abbreviation": "LAN"
+}
+{
+  "name": "Vikings",
+  "abbreviation": "LAW"
+}
+{
+  "name": "Flying Dutchmen",
+  "abbreviation": "LEB"
+}
+{
+  "name": "Mountain Hawks",
+  "abbreviation": "LEH"
+}
+{
+  "name": "Bears",
+  "abbreviation": "LENRHYNE"
+}
+{
+  "name": "Pioneers",
+  "abbreviation": "LEW"
+}
+{
+  "name": "Flames",
+  "abbreviation": "LIBERTY"
+}
+{
+  "name": "Blue Tigers",
+  "abbreviation": "LIN"
+}
+{
+  "name": "Lions",
+  "abbreviation": "LIN"
+}
+{
+  "name": "Oaklanders",
+  "abbreviation": "LINC"
+}
+{
+  "name": "Lynx",
+  "abbreviation": "LIN"
+}
+{
+  "name": "Lions",
+  "abbreviation": "LINDENWOOD"
+}
+{
+  "name": "Blue Raiders",
+  "abbreviation": "LIN"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "LIN"
+}
+{
+  "name": "Blue Bears",
+  "abbreviation": "LIV"
+}
+{
+  "name": "Bald Eagles",
+  "abbreviation": "LOC"
+}
+{
+  "name": "Sharks",
+  "abbreviation": "LIU"
+}
+{
+  "name": "Duhawks",
+  "abbreviation": "LOR"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "LCU"
+}
+{
+  "name": "Ragin' Cajuns",
+  "abbreviation": "UL"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "LT"
+}
+{
+  "name": "Cardinals",
+  "abbreviation": "LOUISVILLE"
+}
+{
+  "name": "Norse",
+  "abbreviation": "LUT"
+}
+{
+  "name": "Warriors",
+  "abbreviation": "LYCOMING"
+}
+{
+  "name": "Engineers",
+  "abbreviation": "MAS"
+}
+{
+  "name": "Scots",
+  "abbreviation": "MACALESTER"
+}
+{
+  "name": "Black Bears",
+  "abbreviation": "ME"
+}
+{
+  "name": "Spartans",
+  "abbreviation": "MAN"
+}
+{
+  "name": "Bisons",
+  "abbreviation": "MAN"
+}
+{
+  "name": "Mountaineers",
+  "abbreviation": "MAN"
+}
+{
+  "name": "Knights",
+  "abbreviation": "MAR"
+}
+{
+  "name": "Pioneers",
+  "abbreviation": "MAR"
+}
+{
+  "name": "Red Foxes",
+  "abbreviation": "MRST"
+}
+{
+  "name": "Privateers",
+  "abbreviation": "MARITIMENY"
+}
+{
+  "name": "Mountain Lions",
+  "abbreviation": "MARSHILL"
+}
+{
+  "name": "Thundering Herd",
+  "abbreviation": "MRSH"
+}
+{
+  "name": "Knights",
+  "abbreviation": "MAR"
+}
+{
+  "name": "Crusaders",
+  "abbreviation": "MAR"
+}
+{
+  "name": "Terrapins",
+  "abbreviation": "MD"
+}
+{
+  "name": "Scots",
+  "abbreviation": "MAR"
+}
+{
+  "name": "Buccaneers",
+  "abbreviation": "MAS"
+}
+{
+  "name": "Comets",
+  "abbreviation": "MAY"
+}
+{
+  "name": "Green Terror",
+  "abbreviation": "MCD"
+}
+{
+  "name": "Bearcats",
+  "abbreviation": "MAN"
+}
+{
+  "name": "War Hawks",
+  "abbreviation": "MCM"
+}
+{
+  "name": "Cowboys",
+  "abbreviation": "MCN"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "MEM"
+}
+{
+  "name": "Oaks",
+  "abbreviation": "MEN"
+}
+{
+  "name": "Bears",
+  "abbreviation": "MER"
+}
+{
+  "name": "Mariners",
+  "abbreviation": "MER"
+}
+{
+  "name": "Lakers",
+  "abbreviation": "MERC"
+}
+{
+  "name": "Warriors",
+  "abbreviation": "MRMK"
+}
+{
+  "name": "Monarchs",
+  "abbreviation": "MET"
+}
+{
+  "name": "RedHawks",
+  "abbreviation": "M-OH"
+}
+{
+  "name": "Hurricanes",
+  "abbreviation": "MIAMI"
+}
+{
+  "name": "Spartans",
+  "abbreviation": "MSU"
+}
+{
+  "name": "Huskies",
+  "abbreviation": "MTU"
+}
+{
+  "name": "Wolverines",
+  "abbreviation": "MICH"
+}
+{
+  "name": "Blue Raiders",
+  "abbreviation": "MTSU"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "MID"
+}
+{
+  "name": "Warriors",
+  "abbreviation": "MID"
+}
+{
+  "name": "Mustangs",
+  "abbreviation": "MID"
+}
+{
+  "name": "Golden Bears",
+  "abbreviation": "MIL"
+}
+{
+  "name": "Marauders",
+  "abbreviation": "MIL"
+}
+{
+  "name": "Big Blue",
+  "abbreviation": "MIL"
+}
+{
+  "name": "Majors",
+  "abbreviation": "MIL"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "UMD"
+}
+{
+  "name": "Golden Gophers",
+  "abbreviation": "MINN"
+}
+{
+  "name": "Mavericks",
+  "abbreviation": "MINNEST"
+}
+{
+  "name": "Dragons",
+  "abbreviation": "MIN"
+}
+{
+  "name": "Cougars",
+  "abbreviation": "MIN"
+}
+{
+  "name": "Beavers",
+  "abbreviation": "MIN"
+}
+{
+  "name": "Cougars",
+  "abbreviation": "MIS"
+}
+{
+  "name": "Choctaws",
+  "abbreviation": "MIS"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "MSST"
+}
+{
+  "name": "Delta Devils",
+  "abbreviation": "MVSU"
+}
+{
+  "name": "Spartans",
+  "abbreviation": "MBAP"
+}
+{
+  "name": "Miners",
+  "abbreviation": "MIS"
+}
+{
+  "name": "Lions",
+  "abbreviation": "MIS"
+}
+{
+  "name": "Bears",
+  "abbreviation": "MOST"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "MIZ"
+}
+{
+  "name": "Griffons",
+  "abbreviation": "MIS"
+}
+{
+  "name": "Fighting Scots",
+  "abbreviation": "MON"
+}
+{
+  "name": "Hawks",
+  "abbreviation": "MONM"
+}
+{
+  "name": "Grizzlies",
+  "abbreviation": "MONT"
+}
+{
+  "name": "Bobcats",
+  "abbreviation": "MTST"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "MTW"
+}
+{
+  "name": "Red Hawks",
+  "abbreviation": "MON"
+}
+{
+  "name": "Rams",
+  "abbreviation": "MON"
+}
+{
+  "name": "Greyhounds",
+  "abbreviation": "MORAVIAN"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "MORE"
+}
+{
+  "name": "Maroon Tigers",
+  "abbreviation": "MOR"
+}
+{
+  "name": "Bears",
+  "abbreviation": "MORG"
+}
+{
+  "name": "Chiefs",
+  "abbreviation": "MOR"
+}
+{
+  "name": "Mustangs",
+  "abbreviation": "MOU"
+}
+{
+  "name": "Lions",
+  "abbreviation": "MOU"
+}
+{
+  "name": "Raiders",
+  "abbreviation": "MOU"
+}
+{
+  "name": "Mules",
+  "abbreviation": "MUH"
+}
+{
+  "name": "Racers",
+  "abbreviation": "MURRAYST"
+}
+{
+  "name": "Fighting Muskies",
+  "abbreviation": "MUS"
+}
+{
+  "name": "Wolfpack",
+  "abbreviation": "NCSTATE"
+}
+{
+  "name": "Battling Bishops",
+  "abbreviation": "NOR"
+}
+{
+  "name": "All-Stars",
+  "abbreviation": "NOR"
+}
+{
+  "name": "STARS",
+  "abbreviation": "UNF"
+}
+{
+  "name": null,
+  "abbreviation": "NAT"
+}
+{
+  "name": "Midshipmen",
+  "abbreviation": "NAVY"
+}
+{
+  "name": "Cornhuskers",
+  "abbreviation": "NEB"
+}
+{
+  "name": "Prairie Wolves",
+  "abbreviation": "NWU"
+}
+{
+  "name": "Lopers",
+  "abbreviation": "NEB"
+}
+{
+  "name": "Wolf Pack",
+  "abbreviation": "NEV"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "UNH"
+}
+{
+  "name": "Chargers",
+  "abbreviation": "NH"
+}
+{
+  "name": "Cowboys",
+  "abbreviation": "NMH"
+}
+{
+  "name": "Lobos",
+  "abbreviation": "UNM"
+}
+{
+  "name": "Aggies",
+  "abbreviation": "NEWMEXST"
+}
+{
+  "name": "Wolves",
+  "abbreviation": "NEWBERRY"
+}
+{
+  "name": "Colonels",
+  "abbreviation": "NICH"
+}
+{
+  "name": "Bison",
+  "abbreviation": "NIC"
+}
+{
+  "name": "Spartans",
+  "abbreviation": "NORF"
+}
+{
+  "name": "Lions",
+  "abbreviation": "NORTHALA"
+}
+{
+  "name": "Aggies",
+  "abbreviation": "NCAT"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "NCCU"
+}
+{
+  "name": "Braves",
+  "abbreviation": "NOR"
+}
+{
+  "name": "Tar Heels",
+  "abbreviation": "UNC"
+}
+{
+  "name": "Cardinals",
+  "abbreviation": "NOR"
+}
+{
+  "name": "Fighting Hawks",
+  "abbreviation": "UND"
+}
+{
+  "name": "Bison",
+  "abbreviation": "NDSU"
+}
+{
+  "name": "Crusaders",
+  "abbreviation": "NG"
+}
+{
+  "name": "Vikings",
+  "abbreviation": "NOR"
+}
+{
+  "name": "Mean Green",
+  "abbreviation": "NORTHTEXAS"
+}
+{
+  "name": "RiverHawks",
+  "abbreviation": "NOR"
+}
+{
+  "name": "Lumberjacks",
+  "abbreviation": "NAU"
+}
+{
+  "name": "Bears",
+  "abbreviation": "UNCO"
+}
+{
+  "name": "Huskies",
+  "abbreviation": "NIU"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "UNI"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "NMI"
+}
+{
+  "name": "Wolves",
+  "abbreviation": "NOR"
+}
+{
+  "name": "Bearcats",
+  "abbreviation": "NOR"
+}
+{
+  "name": "Rangers",
+  "abbreviation": "NOR"
+}
+{
+  "name": "Demons",
+  "abbreviation": "NWST"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "NU"
+}
+{
+  "name": "Timberwolves",
+  "abbreviation": "NOR"
+}
+{
+  "name": "Cadets",
+  "abbreviation": "NOR"
+}
+{
+  "name": "Falcons",
+  "abbreviation": "NDOH"
+}
+{
+  "name": "Fighting Irish",
+  "abbreviation": "ND"
+}
+{
+  "name": "Yeomen",
+  "abbreviation": "OBE"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "OCC"
+}
+{
+  "name": "Bobcats",
+  "abbreviation": "OHIO"
+}
+{
+  "name": "Rams",
+  "abbreviation": "OHI"
+}
+{
+  "name": "Polar Bears",
+  "abbreviation": "OHI"
+}
+{
+  "name": "Buckeyes",
+  "abbreviation": "OSU"
+}
+{
+  "name": "Titans",
+  "abbreviation": "OHI"
+}
+{
+  "name": "Battling Bishops",
+  "abbreviation": "OHI"
+}
+{
+  "name": "Bison",
+  "abbreviation": "OKL"
+}
+{
+  "name": "Aggies",
+  "abbreviation": "OKL"
+}
+{
+  "name": "Sooners",
+  "abbreviation": "OU"
+}
+{
+  "name": "Cowboys",
+  "abbreviation": "OKST"
+}
+{
+  "name": "Monarchs",
+  "abbreviation": "ODU"
+}
+{
+  "name": "Rebels",
+  "abbreviation": "MISS"
+}
+{
+  "name": "Comets",
+  "abbreviation": "OLI"
+}
+{
+  "name": "Mavericks",
+  "abbreviation": "OMA"
+}
+{
+  "name": "Ducks",
+  "abbreviation": "ORE"
+}
+{
+  "name": "Beavers",
+  "abbreviation": "ORST"
+}
+{
+  "name": "Cardinals",
+  "abbreviation": "OTT"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "OUA"
+}
+{
+  "name": "Setters",
+  "abbreviation": "PAC"
+}
+{
+  "name": "Boxers",
+  "abbreviation": "PAC"
+}
+{
+  "name": "Lutes",
+  "abbreviation": "PAC"
+}
+{
+  "name": "Nittany Lions",
+  "abbreviation": "PSU"
+}
+{
+  "name": "Quakers",
+  "abbreviation": "PENN"
+}
+{
+  "name": "Firestorm",
+  "abbreviation": "ARIZCHR"
+}
+{
+  "name": "Bears",
+  "abbreviation": "PIKE"
+}
+{
+  "name": "Gorillas",
+  "abbreviation": "PST"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "PITTSBURGH"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "PLY"
+}
+{
+  "name": "Point",
+  "abbreviation": "POI"
+}
+{
+  "name": "Sagehens",
+  "abbreviation": "POM"
+}
+{
+  "name": "Vikings",
+  "abbreviation": "PRST"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "POSTUNIV"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "PVAM"
+}
+{
+  "name": "Blue Hose",
+  "abbreviation": "PRES"
+}
+{
+  "name": "Saints",
+  "abbreviation": "PRE"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "PRIN"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "PRI"
+}
+{
+  "name": "Loggers",
+  "abbreviation": "PUG"
+}
+{
+  "name": "Boilermakers",
+  "abbreviation": "PUR"
+}
+{
+  "name": "Hawks",
+  "abbreviation": "QUI"
+}
+{
+  "name": "Yellow Jackets",
+  "abbreviation": "RAN"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "RED"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "REI"
+}
+{
+  "name": "Engineers",
+  "abbreviation": "RPI"
+}
+{
+  "name": "Rams",
+  "abbreviation": "URI"
+}
+{
+  "name": "Lynx",
+  "abbreviation": "RHO"
+}
+{
+  "name": "Owls",
+  "abbreviation": "RICE"
+}
+{
+  "name": "Spiders",
+  "abbreviation": "RICH"
+}
+{
+  "name": "Red Hawks",
+  "abbreviation": "RIP"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "ROB"
+}
+{
+  "name": "Colonials",
+  "abbreviation": "ROBMORRIS"
+}
+{
+  "name": "Yellow Jackets",
+  "abbreviation": "RIT"
+}
+{
+  "name": "Regents",
+  "abbreviation": "ROC"
+}
+{
+  "name": "Fightin' Engineers",
+  "abbreviation": "ROS"
+}
+{
+  "name": "Profs",
+  "abbreviation": "ROW"
+}
+{
+  "name": "Scarlet Knights",
+  "abbreviation": "RUTG"
+}
+{
+  "name": "Lions",
+  "abbreviation": "SELA"
+}
+{
+  "name": "Mustangs",
+  "abbreviation": "SMU"
+}
+{
+  "name": "All-Stars",
+  "abbreviation": "SOU"
+}
+{
+  "name": "STARS",
+  "abbreviation": "SFX"
+}
+{
+  "name": "Red Dragons",
+  "abbreviation": "CORTLAND"
+}
+{
+  "name": "Mustangs",
+  "abbreviation": "MOR"
+}
+{
+  "name": "Hornets",
+  "abbreviation": "SAC"
+}
+{
+  "name": "Pioneers",
+  "abbreviation": "SHU"
+}
+{
+  "name": "Cardinals",
+  "abbreviation": "SAG"
+}
+{
+  "name": "Sea Gulls",
+  "abbreviation": "SAL"
+}
+{
+  "name": "Seahawks",
+  "abbreviation": "SAL"
+}
+{
+  "name": "Bearkats",
+  "abbreviation": "SAMHOUSTON"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "SAM"
+}
+{
+  "name": "Aztecs",
+  "abbreviation": "SDSU"
+}
+{
+  "name": "Toreros",
+  "abbreviation": "USD"
+}
+{
+  "name": "Spartans",
+  "abbreviation": "SJSU"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "SAV"
+}
+{
+  "name": "Griffins",
+  "abbreviation": "SET"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "SEW"
+}
+{
+  "name": "Bears",
+  "abbreviation": "SHAW"
+}
+{
+  "name": "Hornets",
+  "abbreviation": "SHE"
+}
+{
+  "name": "Rams",
+  "abbreviation": "SHE"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "STC"
+}
+{
+  "name": "Raiders",
+  "abbreviation": "SHI"
+}
+{
+  "name": "Hawks",
+  "abbreviation": "SHOR"
+}
+{
+  "name": "Saints",
+  "abbreviation": "SIE"
+}
+{
+  "name": "Red Leafs",
+  "abbreviation": "SIMONFRASR"
+}
+{
+  "name": "Storm",
+  "abbreviation": "SIM"
+}
+{
+  "name": "Cougars",
+  "abbreviation": "SIO"
+}
+{
+  "name": "The Rock",
+  "abbreviation": "SLI"
+}
+{
+  "name": "Jaguars",
+  "abbreviation": "USA"
+}
+{
+  "name": "Gamecocks",
+  "abbreviation": "SC"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "SCST"
+}
+{
+  "name": "Coyotes",
+  "abbreviation": "SDAK"
+}
+{
+  "name": "Hardrockers",
+  "abbreviation": "SOU"
+}
+{
+  "name": "Jackrabbits",
+  "abbreviation": "SDST"
+}
+{
+  "name": "Bulls",
+  "abbreviation": "USF"
+}
+{
+  "name": "Redhawks",
+  "abbreviation": "SEMISSOURI"
+}
+{
+  "name": "Savage Storm",
+  "abbreviation": "SOU"
+}
+{
+  "name": "Fire",
+  "abbreviation": "SOU"
+}
+{
+  "name": "Muleriders",
+  "abbreviation": "SOU"
+}
+{
+  "name": "Owls",
+  "abbreviation": "SOU"
+}
+{
+  "name": "Salukis",
+  "abbreviation": "SIU"
+}
+{
+  "name": "Jaguars",
+  "abbreviation": "SOU"
+}
+{
+  "name": "Golden Eagles",
+  "abbreviation": "USM"
+}
+{
+  "name": "Crimson Storm",
+  "abbreviation": "SOU"
+}
+{
+  "name": "Raiders",
+  "abbreviation": "SOU"
+}
+{
+  "name": "Thunderbirds",
+  "abbreviation": "SOUTHUTAH"
+}
+{
+  "name": "Knights",
+  "abbreviation": "SOU"
+}
+{
+  "name": "Bearcats",
+  "abbreviation": "SOU"
+}
+{
+  "name": "Mustangs",
+  "abbreviation": "SOU"
+}
+{
+  "name": "Lions",
+  "abbreviation": "SOU"
+}
+{
+  "name": "Moundbuilders",
+  "abbreviation": "SOU"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "SOU"
+}
+{
+  "name": "Pirates",
+  "abbreviation": "SOU"
+}
+{
+  "name": "Pride",
+  "abbreviation": "SPR"
+}
+{
+  "name": "Johnnies",
+  "abbreviation": "STJOHNSMN"
+}
+{
+  "name": "Fighting Bees",
+  "abbreviation": "ST"
+}
+{
+  "name": "Hawks",
+  "abbreviation": "STA"
+}
+{
+  "name": "Falcons",
+  "abbreviation": "AUG"
+}
+{
+  "name": "Fighting Saints",
+  "abbreviation": "ST"
+}
+{
+  "name": "Cougars",
+  "abbreviation": "UNI"
+}
+{
+  "name": "Red Flash",
+  "abbreviation": "SFPA"
+}
+{
+  "name": "Cardinals",
+  "abbreviation": "ST"
+}
+{
+  "name": "Pumas",
+  "abbreviation": "ST"
+}
+{
+  "name": "Saints",
+  "abbreviation": "STLAWRENCE"
+}
+{
+  "name": "Green Knights",
+  "abbreviation": "ST"
+}
+{
+  "name": "Oles",
+  "abbreviation": "STOLAF"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "STP"
+}
+{
+  "name": "Peacocks",
+  "abbreviation": "SPC"
+}
+{
+  "name": "Saints",
+  "abbreviation": "SCHOLASTIC"
+}
+{
+  "name": "Tommies",
+  "abbreviation": "STMN"
+}
+{
+  "name": "Bearcats",
+  "abbreviation": "ST"
+}
+{
+  "name": "Cougars",
+  "abbreviation": "ST"
+}
+{
+  "name": "Cardinal",
+  "abbreviation": "STAN"
+}
+{
+  "name": "Lumberjacks",
+  "abbreviation": "SFA"
+}
+{
+  "name": "Warriors",
+  "abbreviation": "STE"
+}
+{
+  "name": "Hatters",
+  "abbreviation": "STET"
+}
+{
+  "name": "Mustangs",
+  "abbreviation": "STE"
+}
+{
+  "name": "Skyhawks",
+  "abbreviation": "STO"
+}
+{
+  "name": "Seawolves",
+  "abbreviation": "STBK"
+}
+{
+  "name": "Lobos",
+  "abbreviation": "SUL"
+}
+{
+  "name": "River Hawks",
+  "abbreviation": "SUSQUEHNNA"
+}
+{
+  "name": "Orange",
+  "abbreviation": "SYRACUSE"
+}
+{
+  "name": "Horned Frogs",
+  "abbreviation": "TCU"
+}
+{
+  "name": "Texans",
+  "abbreviation": "TARLETONST"
+}
+{
+  "name": "Trojans",
+  "abbreviation": "TAY"
+}
+{
+  "name": "Owls",
+  "abbreviation": "TEM"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "TENNST"
+}
+{
+  "name": "Golden Eagles",
+  "abbreviation": "TENNTECH"
+}
+{
+  "name": "Volunteers",
+  "abbreviation": "TENN"
+}
+{
+  "name": "Aggies",
+  "abbreviation": "TA&M"
+}
+{
+  "name": "Lions",
+  "abbreviation": "TAMC"
+}
+{
+  "name": "Javelinas",
+  "abbreviation": "TAMK"
+}
+{
+  "name": "Steers",
+  "abbreviation": "TC"
+}
+{
+  "name": "Longhorns",
+  "abbreviation": "TEX"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "TEX"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "TXSO"
+}
+{
+  "name": "Bobcats",
+  "abbreviation": "TXST"
+}
+{
+  "name": "Red Raiders",
+  "abbreviation": "TTU"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "CIT"
+}
+{
+  "name": "Lions",
+  "abbreviation": "TCNJ"
+}
+{
+  "name": "Tomcats",
+  "abbreviation": "THI"
+}
+{
+  "name": "Saints",
+  "abbreviation": "THO"
+}
+{
+  "name": "Dragons",
+  "abbreviation": "TIF"
+}
+{
+  "name": "Dragons",
+  "abbreviation": "TIF"
+}
+{
+  "name": "Rockets",
+  "abbreviation": "TOL"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "TOW"
+}
+{
+  "name": "Thunder",
+  "abbreviation": "TRI"
+}
+{
+  "name": "Trojans",
+  "abbreviation": "TRI"
+}
+{
+  "name": "Lions",
+  "abbreviation": "TRI"
+}
+{
+  "name": "Bantams",
+  "abbreviation": "TRI"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "TRI"
+}
+{
+  "name": "Trojans",
+  "abbreviation": "TROY"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "TRU"
+}
+{
+  "name": "Jumbos",
+  "abbreviation": "TUF"
+}
+{
+  "name": "Green Wave",
+  "abbreviation": "TULN"
+}
+{
+  "name": "Golden Hurricane",
+  "abbreviation": "TLSA"
+}
+{
+  "name": "Golden Tigers",
+  "abbreviation": "TUS"
+}
+{
+  "name": "Blazers",
+  "abbreviation": "UAB"
+}
+{
+  "name": "Aggies",
+  "abbreviation": "UCD"
+}
+{
+  "name": "Knights",
+  "abbreviation": "UCF"
+}
+{
+  "name": "Bruins",
+  "abbreviation": "UCLA"
+}
+{
+  "name": "Huskies",
+  "abbreviation": "CONN"
+}
+{
+  "name": "Warhawks",
+  "abbreviation": "ULM"
+}
+{
+  "name": "Corsairs",
+  "abbreviation": "UMASSDART"
+}
+{
+  "name": "River Hawks",
+  "abbreviation": "UML"
+}
+{
+  "name": "Minutemen",
+  "abbreviation": "MASS"
+}
+{
+  "name": "Rebels",
+  "abbreviation": "UNLV"
+}
+{
+  "name": "Trojans",
+  "abbreviation": "USC"
+}
+{
+  "name": "Skyhawks",
+  "abbreviation": "TENNMARTIN"
+}
+{
+  "name": "Miners",
+  "abbreviation": "UTEP"
+}
+{
+  "name": "Roadrunners",
+  "abbreviation": "UTSA"
+}
+{
+  "name": "Dutchmen",
+  "abbreviation": "UNION NY"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "NOR"
+}
+{
+  "name": "Glory Eagles",
+  "abbreviation": "UFTH"
+}
+{
+  "name": "Marauders",
+  "abbreviation": "UNI"
+}
+{
+  "name": "Nor'Easters",
+  "abbreviation": "UNE"
+}
+{
+  "name": "Falcons",
+  "abbreviation": "UTPB"
+}
+{
+  "name": "Peacocks",
+  "abbreviation": "UPP"
+}
+{
+  "name": "Bears",
+  "abbreviation": "URS"
+}
+{
+  "name": "Aggies",
+  "abbreviation": "USU"
+}
+{
+  "name": "Trailblazers",
+  "abbreviation": "UTAHTECH"
+}
+{
+  "name": "Utes",
+  "abbreviation": "UTAH"
+}
+{
+  "name": "Pioneers",
+  "abbreviation": "UTI"
+}
+{
+  "name": "Keydets",
+  "abbreviation": "VMI"
+}
+{
+  "name": "Blazers",
+  "abbreviation": "VAL"
+}
+{
+  "name": "Vikings",
+  "abbreviation": "VAL"
+}
+{
+  "name": "Beacons",
+  "abbreviation": "VAL"
+}
+{
+  "name": "Commodores",
+  "abbreviation": "VAN"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "VILL"
+}
+{
+  "name": "Cavaliers",
+  "abbreviation": "VIRGINIA"
+}
+{
+  "name": "Dragons",
+  "abbreviation": "UVAL"
+}
+{
+  "name": "Trojans",
+  "abbreviation": "VIR"
+}
+{
+  "name": "Hokies",
+  "abbreviation": "VATECH"
+}
+{
+  "name": "Panthers",
+  "abbreviation": "VU"
+}
+{
+  "name": "Cavaliers",
+  "abbreviation": "VIRGINIAWS"
+}
+{
+  "name": "Little Giants",
+  "abbreviation": "WAB"
+}
+{
+  "name": "Seahawks",
+  "abbreviation": "WAG"
+}
+{
+  "name": "Demon Deacons",
+  "abbreviation": "WAKEFOREST"
+}
+{
+  "name": "Warriors",
+  "abbreviation": "WAL"
+}
+{
+  "name": "Cavaliers",
+  "abbreviation": "WAL"
+}
+{
+  "name": "Royals",
+  "abbreviation": "WAR"
+}
+{
+  "name": "Knights",
+  "abbreviation": "WAR"
+}
+{
+  "name": "Ichabods",
+  "abbreviation": "WAS"
+}
+{
+  "name": "Presidents",
+  "abbreviation": "WAS"
+}
+{
+  "name": "Generals",
+  "abbreviation": "WAS"
+}
+{
+  "name": "Huskies",
+  "abbreviation": "WASH"
+}
+{
+  "name": "Cougars",
+  "abbreviation": "WSU"
+}
+{
+  "name": "Bears",
+  "abbreviation": "WAS"
+}
+{
+  "name": "Pioneers",
+  "abbreviation": "WAY"
+}
+{
+  "name": "Warriors",
+  "abbreviation": "WAY"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "WAY"
+}
+{
+  "name": "Yellow Jackets",
+  "abbreviation": "WAY"
+}
+{
+  "name": "Warriors",
+  "abbreviation": "WEBB"
+}
+{
+  "name": "Wildcats",
+  "abbreviation": "WEB"
+}
+{
+  "name": "Cardinals",
+  "abbreviation": "WES"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "WES"
+}
+{
+  "name": "All-Stars",
+  "abbreviation": "WEST"
+}
+{
+  "name": "Golden Rams",
+  "abbreviation": "WES"
+}
+{
+  "name": "Argonauts",
+  "abbreviation": "WESTFLA"
+}
+{
+  "name": "Wolves",
+  "abbreviation": "WES"
+}
+{
+  "name": "Hilltoppers",
+  "abbreviation": "WES"
+}
+{
+  "name": "Buffaloes",
+  "abbreviation": "WES"
+}
+{
+  "name": "Mountaineers",
+  "abbreviation": "WVU"
+}
+{
+  "name": "Yellow Jackets",
+  "abbreviation": "WES"
+}
+{
+  "name": "Golden Bears",
+  "abbreviation": "WES"
+}
+{
+  "name": "Bobcats",
+  "abbreviation": "WES"
+}
+{
+  "name": "Catamounts",
+  "abbreviation": "WCU"
+}
+{
+  "name": "Mountaineers",
+  "abbreviation": "WSCO"
+}
+{
+  "name": "Wolves",
+  "abbreviation": "WESTCONN"
+}
+{
+  "name": "Leathernecks",
+  "abbreviation": "WIU"
+}
+{
+  "name": "Hilltoppers",
+  "abbreviation": "WESTERNKY"
+}
+{
+  "name": "Broncos",
+  "abbreviation": "WMU"
+}
+{
+  "name": "Golden Bears",
+  "abbreviation": "WES"
+}
+{
+  "name": "Mustangs",
+  "abbreviation": "WES"
+}
+{
+  "name": "Wolves",
+  "abbreviation": "WES"
+}
+{
+  "name": "Vikings",
+  "abbreviation": "WES"
+}
+{
+  "name": "Owls",
+  "abbreviation": "WES"
+}
+{
+  "name": "Blue Jays",
+  "abbreviation": "WES"
+}
+{
+  "name": "Titans",
+  "abbreviation": "WES"
+}
+{
+  "name": "Thunder",
+  "abbreviation": "WHE"
+}
+{
+  "name": "Cardinals",
+  "abbreviation": "WHL"
+}
+{
+  "name": "Poets",
+  "abbreviation": "WHI"
+}
+{
+  "name": "Pirates",
+  "abbreviation": "WHI"
+}
+{
+  "name": "Pride",
+  "abbreviation": "WID"
+}
+{
+  "name": "Colonels",
+  "abbreviation": "WILKES"
+}
+{
+  "name": "Bearcats",
+  "abbreviation": "WIL"
+}
+{
+  "name": "Tribe",
+  "abbreviation": "W&M"
+}
+{
+  "name": "Cardinals",
+  "abbreviation": "WIJ"
+}
+{
+  "name": "Pioneers",
+  "abbreviation": "WMPATERSON"
+}
+{
+  "name": "Statesmen",
+  "abbreviation": "WIL"
+}
+{
+  "name": "Ephs",
+  "abbreviation": "WIL"
+}
+{
+  "name": "Mechanics",
+  "abbreviation": "WIL"
+}
+{
+  "name": "Fightin' Quakers",
+  "abbreviation": "WIL"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "BARTON"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "WINGATE"
+}
+{
+  "name": "Warriors",
+  "abbreviation": "WIN"
+}
+{
+  "name": "Rams",
+  "abbreviation": "WIN"
+}
+{
+  "name": "Badgers",
+  "abbreviation": "WISC"
+}
+{
+  "name": "Warriors",
+  "abbreviation": "WIS"
+}
+{
+  "name": "Blugolds",
+  "abbreviation": "WIS"
+}
+{
+  "name": "Eagles",
+  "abbreviation": "WIS"
+}
+{
+  "name": "Titans",
+  "abbreviation": "WIS"
+}
+{
+  "name": "Pioneers",
+  "abbreviation": "WIS"
+}
+{
+  "name": "Falcons",
+  "abbreviation": "WIS"
+}
+{
+  "name": "Pointers",
+  "abbreviation": "WIS"
+}
+{
+  "name": "Blue Devils",
+  "abbreviation": "WIS"
+}
+{
+  "name": "Warhawks",
+  "abbreviation": "UWWH"
+}
+{
+  "name": "Tigers",
+  "abbreviation": "WIT"
+}
+{
+  "name": "Terriers",
+  "abbreviation": "WOF"
+}
+{
+  "name": "Fighting Scots",
+  "abbreviation": "THE"
+}
+{
+  "name": "Engineers",
+  "abbreviation": "WOR"
+}
+{
+  "name": "Lancers",
+  "abbreviation": "WOR"
+}
+{
+  "name": "Raiders",
+  "abbreviation": "WRST"
+}
+{
+  "name": "Cowboys",
+  "abbreviation": "WYO"
+}
+{
+  "name": "Bulldogs",
+  "abbreviation": "YALE"
+}
+{
+  "name": "Penguins",
+  "abbreviation": "YSU"
+}

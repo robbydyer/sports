@@ -1,0 +1,48 @@
+{
+  "name": "Dream",
+  "abbreviation": "ATL"
+}
+{
+  "name": "Sky",
+  "abbreviation": "CHI"
+}
+{
+  "name": "Sun",
+  "abbreviation": "CONN"
+}
+{
+  "name": "Wings",
+  "abbreviation": "DAL"
+}
+{
+  "name": "Fever",
+  "abbreviation": "IND"
+}
+{
+  "name": "Aces",
+  "abbreviation": "LV"
+}
+{
+  "name": "Sparks",
+  "abbreviation": "LA"
+}
+{
+  "name": "Lynx",
+  "abbreviation": "MIN"
+}
+{
+  "name": "Liberty",
+  "abbreviation": "NY"
+}
+{
+  "name": "Mercury",
+  "abbreviation": "PHX"
+}
+{
+  "name": "Storm",
+  "abbreviation": "SEA"
+}
+{
+  "name": "Mystics",
+  "abbreviation": "WSH"
+}
