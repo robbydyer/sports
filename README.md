@@ -27,7 +27,16 @@ There's a public Discord channel, "RGB Sportsmatrix Help" <https://discord.gg/8v
 
 ## Premium Version
 
-There is a premium version of this app that contains some extra features. See the [Patreon Page](https://patreon.com/RGBLEDMatrixTickerSoftware?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=creatorshare_creator&utm_content=join_link) for more info
+There is a new PREMIUM version of this app that adds the following features:
+- **Scroll mode** - enable scrolling for the entire board or on a per-board basis
+- **Weather Board**
+- **Spotify Now-Playing**
+- **MLB Live View** - shows baserunners, outs, pitch count, inning
+- **Stock Ticker**
+- **Gambling Odds** - shows gambling odds overlaid on each game's scoreboard (where available)
+
+Visit the [Patreon Page](https://patreon.com/RGBLEDMatrixTickerSoftware?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=creatorshare_creator&utm_content=join_link) to get a membership.
+Visit the [PREMIUM Version Installation Instructions](https://github.com/robbydyer/rgb-led-matrix-sports-premium)
 
 Premium features include:
 
@@ -43,16 +52,22 @@ Premium features include:
   - NHL
   - MLB
   - NFL
-  - NBA
   - MLS
   - NCAA Football
-  - NCAA Men's Basketball
-  - English Premiere League
-  - PGA Tour Leaderboards
-  - UEFA Champions League
-  - FIFA World Cup
-  - Bundesliga
-  - DFB German Pokal
+  - NCAAM Basketball
+  - NCAAW Basketball
+  - NBA
+  - PGA Tour
+  - WNBA
+  - XFL
+  - Soccer Leagues:
+    - Spanish Laliga
+    - FIFA World Cup
+    - English Premier League
+    - Italian Serie A
+    - French Ligue 1
+    - DFB Pokal
+    - Bundesliga
 - Racing. Currently just shows upcoming event schedule
   - F1
   - Indy Car
@@ -72,7 +87,7 @@ but those can run version v0.0.83 and older- this would include the original Pi 
 You can check your Pi's architecture by running the following command:
 
 ```shell
-uname -m
+dpkg --print-architecture
 ```
 
 ### Install script
@@ -84,12 +99,6 @@ Run the following command in a Terminal on your Pi
 
 ```shell
 curl https://raw.githubusercontent.com/robbydyer/sports/master/script/install.sh | sudo bash
-```
-
-To try out the latest beta release, run the following on your Pi:
-
-```shell
-curl https://raw.githubusercontent.com/robbydyer/sports/master/script/beta-install.sh | sudo bash
 ```
 
 ## Configuration
