@@ -38,13 +38,6 @@ There is a new PREMIUM version of this app that adds the following features:
 Visit the [Patreon Page](https://patreon.com/RGBLEDMatrixTickerSoftware?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=creatorshare_creator&utm_content=join_link) to get a membership.
 Visit the [PREMIUM Version Installation Instructions](https://github.com/robbydyer/rgb-led-matrix-sports-premium)
 
-Premium features include:
-
-- Scroll Mode
-- Weather Board
-- Stock Board
-- Live MLB game view - shows baserunners, pitch count, outs, inning
-- Gambling odds
 
 ## Current Board Types
 
