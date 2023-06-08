@@ -4,10 +4,6 @@ Go-based software to control a raspberry pi LED matrix.
 
 ![example1](assets/images/nhl_example2.jpg)
 
-This is a Go project for displaying various types of "Boards" on a Raspberry Pi controlled RGB Matrix. The ideas here were heavily inspired by <https://github.com/riffnshred/nhl-led-scoreboard> . It uses some CGO bindings for the RGB matrix library <https://github.com/hzeller/rpi-rgb-led-matrix>. I chose to create my own project based off of those existing ideas because I wanted to be able to easily extend support for additional sports (see [Roadmap](#roadmap) section). I chose to write this in Go because I prefer it over Python, and theoretically it will run more efficiently than a Python-based one.
-
-I run this on a Pi zero and a Pi 4. If you want to use the "Web Board" feature (see [Web UI](#web-ui)), I recommend at least a Pi 3.
-
 #### Table of Contents
 
 - [Getting Help](#getting-help)<br>
@@ -26,14 +22,18 @@ I run this on a Pi zero and a Pi 4. If you want to use the "Web Board" feature (
 There's a public Discord channel, "RGB Sportsmatrix Help" <https://discord.gg/8vPp4xfdtV>
 
 ## Premium Version
+This repo contains the FREE version of this app. The free version is no longer receiving new features- it will only get bug fixes and dependency updates. To get the latest and greatest features, check out the Premium version.
 
-There is a new PREMIUM version of this app that adds the following features:
+The new PREMIUM version of this app that adds the following features:
 - **Scroll mode** - enable scrolling for the entire board or on a per-board basis
 - **Weather Board**
 - **Spotify Now-Playing**
 - **MLB Live View** - shows baserunners, outs, pitch count, inning
 - **Stock Ticker**
 - **Gambling Odds** - shows gambling odds overlaid on each game's scoreboard (where available)
+- **Additional Sports** 
+  - FIFA Women's World Cup
+  - More to Come!
 
 Visit the [Patreon Page](https://patreon.com/RGBLEDMatrixTickerSoftware?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=creatorshare_creator&utm_content=join_link) to get a membership.
 Visit the [PREMIUM Version Installation Instructions](https://github.com/robbydyer/rgb-led-matrix-sports-premium)
