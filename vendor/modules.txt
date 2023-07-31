@@ -127,7 +127,7 @@ github.com/googleapis/gax-go/v2/internal
 # github.com/gorilla/mux v1.8.0
 ## explicit; go 1.12
 github.com/gorilla/mux
-# github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.1
+# github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.2
 ## explicit; go 1.17
 github.com/grpc-ecosystem/grpc-gateway/v2/internal/casing
 github.com/grpc-ecosystem/grpc-gateway/v2/internal/codegenerator
@@ -403,17 +403,17 @@ google.golang.org/appengine/urlfetch
 # google.golang.org/genproto v0.0.0-20230706204954-ccb25ca9f130
 ## explicit; go 1.19
 google.golang.org/genproto/internal
-# google.golang.org/genproto/googleapis/api v0.0.0-20230724170836-66ad5b6ff146
+# google.golang.org/genproto/googleapis/api v0.0.0-20230726155614-23370e0ffb3e
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/api
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/visibility
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20230724170836-66ad5b6ff146
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20230726155614-23370e0ffb3e
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/rpc/code
 google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.56.2
+# google.golang.org/grpc v1.57.0
 ## explicit; go 1.17
 google.golang.org/grpc
 google.golang.org/grpc/attributes
