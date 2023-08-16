@@ -28,7 +28,7 @@
     "normalize-url": ">=8.0.0",
     "nth-check": "^2.1.1",
     "path-parse": ">=1.0.7",
-    "postcss": "^8.4.27",
+    "postcss": "^8.4.28",
     "react": "^17.0.1",
     "react-bootstrap": "^2.8.0",
     "react-dev-utils": ">=11.0.4",
