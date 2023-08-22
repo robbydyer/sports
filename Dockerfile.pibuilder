@@ -1,11 +1,11 @@
-# 2023-05 10:11
+# 2023-05-26 16:16
 ARG BASE=multiarch/debian-debootstrap:arm64-bullseye-slim
 
 FROM $BASE
 # Replace shell with bash so we can source files
 SHELL ["/bin/bash", "--login", "-ce"]
 
-ARG GOVERSION=1.20.4
+ARG GOVERSION=1.21.0
 
 RUN apt-get update && \
     apt-get install -y \
@@ -16,6 +16,7 @@ RUN apt-get update && \
     gcc \
     git \
     g++ \
+    python3 \
     rsync
 
 RUN update-ca-certificates -f
@@ -36,12 +37,6 @@ ENV PATH="/usr/local/go/bin:${PATH}"
 COPY .nvmrc /root/.nvmrc
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
 RUN cd /root && nvm install
-
-RUN mkdir -p /src/internal/rgbmatrix-rpi/lib /src/web
-COPY ./web /src/web
-RUN cd /src/web && \
-    npm install
-
 
 COPY ./internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE /sportsmatrix_lib/rpi-rgb-led-matrix
 

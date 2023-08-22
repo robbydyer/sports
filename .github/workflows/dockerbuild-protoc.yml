@@ -1,0 +1,39 @@
+name: Build Protoc Image
+on: 
+  pull_request:
+    paths:
+    - Dockerfile.protoc
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up QEMU
+      id: qemu
+      uses: docker/setup-qemu-action@v2
+      with:
+        image: tonistiigi/binfmt:latest
+        platforms: all
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_PASS }}
+
+    - name: get sha256
+      id: sha
+      run: echo "sha=$(sha256sum Dockerfile.protoc | awk '{print $1}')" >> $GITHUB_OUTPUT
+
+    - name: build linter
+      uses: docker/build-push-action@v4
+      with:
+        push: true
+        file: Dockerfile.protoc
+        tags:  robbydyer/protoc:${{steps.sha.outputs.sha}},robbydyer/protoc:latest
+        platforms: linux/amd64,linux/arm64/v8

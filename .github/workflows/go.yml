@@ -3,6 +3,17 @@ name: Go
 on:
   pull_request:
     branches: [ master ]
+    paths:
+    - 'cmd/**'
+    - 'internal/**'
+    - 'vendor/**'
+    - go.mod
+    - go.sum
+    - 'web/**'
+    - 'proto/**'
+    - 'pkg/**'
+    - 'Dockerfile.pibuilder'
+    - 'Dockerfile.lint'
 
 jobs:
   build:

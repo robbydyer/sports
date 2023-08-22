@@ -1,0 +1,57 @@
+name: Build Docker Images
+on: 
+  pull_request:
+    paths:
+    - Dockerfile.pibuilder
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        arch:
+        - aarch64
+        - armv7l
+        - amd64
+        os:
+        - bullseye
+        - buster
+        include:
+        - arch: aarch64
+          base: arm64
+        - arch: armv7l
+          base: armhf
+        - arch: amd64
+          base: amd64
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up QEMU
+      id: qemu
+      uses: docker/setup-qemu-action@v2
+      with:
+        image: tonistiigi/binfmt:latest
+        platforms: all
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_PASS }}
+
+    - name: get sha256
+      id: sha
+      run: echo "sha=$(sha256sum Dockerfile.pibuilder | awk '{print $1}')" >> $GITHUB_OUTPUT
+
+    - name: Build ${{matrix.arch}}
+      uses: docker/build-push-action@v4
+      with:
+        push: true
+        file: Dockerfile.pibuilder
+        tags:  robbydyer/pibuilder-${{matrix.arch}}-${{matrix.os}}:${{steps.sha.outputs.sha}}
+        build-args: |
+          BASE=multiarch/debian-debootstrap:${{matrix.base}}-${{matrix.os}}-slim
+        platforms: linux/amd64,linux/arm64/v8
