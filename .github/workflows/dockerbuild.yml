@@ -6,6 +6,19 @@ on:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        arch:
+        - aarch64
+        - armv7l
+        - amd64
+        include:
+        - arch: aarch64
+          base: multiarch/debian-debootstrap:arm64-bullseye-slim
+        - arch: armv7l
+          base: multiarch/debian-debootstrap:armhf-buster-slim
+        - arch: amd64
+          base: multiarch/debian-debootstrap:amd64-bullseye
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -30,32 +43,12 @@ jobs:
       id: sha
       run: echo "sha=$(sha256sum Dockerfile.pibuilder | awk '{print $1}')" >> $GITHUB_OUTPUT
 
-    - name: arm64
+    - name: Build ${{matrix.arch}}
       uses: docker/build-push-action@v4
       with:
         push: true
         file: Dockerfile.pibuilder
-        tags:  robbydyer/pibuilder-aarch64:${{steps.sha.outputs.sha}}
+        tags:  robbydyer/pibuilder-${{matrix.arch}}:${{steps.sha.outputs.sha}}
         build-args: |
-          BASE=multiarch/debian-debootstrap:arm64-bullseye-slim
-        platforms: linux/amd64,linux/arm64/v8
-
-    - name: armv7l
-      uses: docker/build-push-action@v4
-      with:
-        push: true
-        file: Dockerfile.pibuilder
-        tags:  robbydyer/pibuilder-armv7l:${{steps.sha.outputs.sha}}
-        build-args: |
-          BASE=multiarch/debian-debootstrap:armhf-buster-slim
-        platforms: linux/amd64,linux/arm64/v8
-
-    - name: amd64
-      uses: docker/build-push-action@v4
-      with:
-        push: true
-        file: Dockerfile.pibuilder
-        tags:  robbydyer/pibuilder-amd64:${{steps.sha.outputs.sha}}
-        build-args: |
-          BASE=multiarch/debian-debootstrap:amd64-bullseye
+          BASE=${{matrix.base}}
         platforms: linux/amd64,linux/arm64/v8
