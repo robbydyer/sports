@@ -12,13 +12,16 @@ jobs:
         - aarch64
         - armv7l
         - amd64
+        os:
+        - bullseye
+        - buster
         include:
         - arch: aarch64
-          base: multiarch/debian-debootstrap:arm64-bullseye-slim
+          base: arm64
         - arch: armv7l
-          base: multiarch/debian-debootstrap:armhf-buster-slim
+          base: armhf
         - arch: amd64
-          base: multiarch/debian-debootstrap:amd64-bullseye
+          base: amd64
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -48,7 +51,7 @@ jobs:
       with:
         push: true
         file: Dockerfile.pibuilder
-        tags:  robbydyer/pibuilder-${{matrix.arch}}:${{steps.sha.outputs.sha}}
+        tags:  robbydyer/pibuilder-${{matrix.arch}}-${{matrix.os}}:${{steps.sha.outputs.sha}}
         build-args: |
-          BASE=${{matrix.base}}
+          BASE=multiarch/debian-bootstrap:${{matrix.base}}-${{matrix.os}}-slim
         platforms: linux/amd64,linux/arm64/v8

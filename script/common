@@ -15,6 +15,7 @@ getsha() {
 
 latestpibuilder() {
   arch="$1"
+  buildos="${2:-bullseye}"
   case "${arch}" in
     amd64|x86_64)
       arch=amd64
@@ -25,7 +26,7 @@ latestpibuilder() {
     *)
     ;;
   esac
-  echo "robbydyer/pibuilder-${arch}:$(getsha "${ROOT}/Dockerfile.pibuilder")"
+  echo "robbydyer/pibuilder-${arch}-${buildos}:$(getsha "${ROOT}/Dockerfile.pibuilder")"
 }
 
 latestlinter() {
