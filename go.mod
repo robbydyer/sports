@@ -9,7 +9,7 @@ require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/golang/protobuf v1.5.3
 	github.com/gorilla/mux v1.8.0
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.2
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.17.0
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/mackerelio/go-osstat v0.2.4
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
@@ -83,8 +83,8 @@ require (
 	golang.org/x/text v0.12.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230803162519-f966b187b2e5 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20230803162519-f966b187b2e5 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230807174057-1744710a1577 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/grpc v1.57.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
