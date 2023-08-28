@@ -12,7 +12,7 @@
     "browserslist": "^4.21.10",
     "btoa": "^1.2.1",
     "color-string": "^1.9.1",
-    "dns-packet": "^5.6.0",
+    "dns-packet": "^5.6.1",
     "elliptic": ">=6.5.4",
     "follow-redirects": "^1.15.2",
     "glob-parent": ">=5.1.2",
