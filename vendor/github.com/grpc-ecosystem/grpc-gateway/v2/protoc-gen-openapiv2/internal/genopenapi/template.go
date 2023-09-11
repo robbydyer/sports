@@ -2,7 +2,6 @@ package genopenapi
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -980,9 +979,9 @@ pathLoop:
 			buffer += string(char)
 			if reg.GetUseJSONNamesForFields() &&
 				len(jsonBuffer) > 1 {
-				jsonSnakeCaseName := string(jsonBuffer[1:])
-				jsonCamelCaseName := string(lowerCamelCase(jsonSnakeCaseName, fields, msgs))
-				prev := string(buffer[:len(buffer)-len(jsonSnakeCaseName)-2])
+				jsonSnakeCaseName := jsonBuffer[1:]
+				jsonCamelCaseName := lowerCamelCase(jsonSnakeCaseName, fields, msgs)
+				prev := buffer[:len(buffer)-len(jsonSnakeCaseName)-2]
 				buffer = strings.Join([]string{prev, "{", jsonCamelCaseName, "}"}, "")
 				jsonBuffer = ""
 			}
@@ -1342,6 +1341,7 @@ func renderServices(services []*descriptor.Service, paths *openapiPathsObject, r
 						var firstPathParameter *openapiParameterObject
 						var firstParamIndex int
 						for index, param := range parameters {
+							param := param
 							if param.In == "path" {
 								firstPathParameter = &param
 								firstParamIndex = index
@@ -2036,7 +2036,7 @@ func processExtensions(inputExts map[string]*structpb.Value) ([]extension, error
 		if err != nil {
 			return nil, err
 		}
-		exts = append(exts, extension{key: k, value: json.RawMessage(ext)})
+		exts = append(exts, extension{key: k, value: ext})
 	}
 	sort.Slice(exts, func(i, j int) bool { return exts[i].key < exts[j].key })
 	return exts, nil
@@ -2204,6 +2204,37 @@ func processHeaders(inputHdrs map[string]*openapi_options.Header) (openapiHeader
 	return hdrs, nil
 }
 
+func removeInternalComments(comment string) string {
+	c := []string{}
+	for len(comment) > 0 {
+		open := strings.SplitN(comment, "(--", 2)
+		if len(open) == 1 {
+			c = append(c, open[0])
+			break
+		}
+		ex := strings.TrimRight(open[0], " \t")
+		// Trim only one line prior to all spaces
+		switch {
+		case strings.HasSuffix(ex, "\r\n"):
+			ex = strings.TrimSuffix(ex, "\r\n")
+		case strings.HasSuffix(ex, "\n"):
+			ex = strings.TrimSuffix(ex, "\n")
+		}
+		if ex != "" {
+			c = append(c, ex)
+		}
+		comment = open[1]
+
+		close := strings.SplitN(comment, "--)", 2)
+		if len(close) > 1 {
+			comment = close[1]
+		} else {
+			break
+		}
+	}
+	return strings.Join(c, "")
+}
+
 // updateOpenAPIDataFromComments updates a OpenAPI object based on a comment
 // from the proto file.
 //
@@ -2224,6 +2255,11 @@ func updateOpenAPIDataFromComments(reg *descriptor.Registry, swaggerObject inter
 	// Checks whether the "ignore_comments" flag is set to true
 	if reg.GetIgnoreComments() {
 		return nil
+	}
+
+	// Checks whether the "remove_internal_comments" flag is set to true
+	if reg.GetRemoveInternalComments() {
+		comment = removeInternalComments(comment)
 	}
 
 	// Checks whether the "use_go_templates" flag is set to true
@@ -2502,11 +2538,10 @@ func protoPathIndex(descriptorType reflect.Type, what string) int32 {
 	if pbtag == "" {
 		panic(fmt.Errorf("no Go tag 'protobuf' on protobuf descriptor for %s", what))
 	}
-	path, err := strconv.Atoi(strings.Split(pbtag, ",")[1])
+	path, err := strconv.ParseInt(strings.Split(pbtag, ",")[1], 10, 32)
 	if err != nil {
 		panic(fmt.Errorf("protobuf descriptor id for %s cannot be converted to a number: %s", what, err.Error()))
 	}
-
 	return int32(path)
 }
 
@@ -3013,7 +3048,7 @@ func lowerCamelCase(fieldName string, fields []*descriptor.Field, msgs []*descri
 		fieldNames := strings.Split(fieldName, ".")
 		fieldNamesWithCamelCase := make([]string, 0)
 		for i := 0; i < len(fieldNames)-1; i++ {
-			fieldNamesWithCamelCase = append(fieldNamesWithCamelCase, casing.JSONCamelCase(string(fieldNames[i])))
+			fieldNamesWithCamelCase = append(fieldNamesWithCamelCase, casing.JSONCamelCase(fieldNames[i]))
 		}
 		prefix := strings.Join(fieldNamesWithCamelCase, ".")
 		reservedJSONName := getReservedJSONName(fieldName, messageNameToFieldsToJSONName, fieldNameToType)
