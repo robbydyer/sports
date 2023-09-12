@@ -31,7 +31,7 @@ jobs:
       run: echo "sha=$(sha256sum Dockerfile.protoc | awk '{print $1}')" >> $GITHUB_OUTPUT
 
     - name: build linter
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v5
       with:
         push: true
         file: Dockerfile.protoc
