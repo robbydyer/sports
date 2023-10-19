@@ -7,10 +7,7 @@ SHELL ["/bin/bash", "--login", "-ce"]
 
 ARG GOVERSION=1.21.3
 
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 04EE7237B7D453EC 648ACFD622F3D138 
-RUN echo 'deb http://httpredir.debian.org/debian buster-backports main contrib non-free' | sudo tee -a /etc/apt/sources.list.d/debian-backports.list && \
-    apt-get update && \
-    apt-get install -y libseccomp2 -t buster-backports
+RUN apt-get update && apt-get install -y debian-archive-keyring
 
 RUN apt-get update && \
     apt-get install -y \
