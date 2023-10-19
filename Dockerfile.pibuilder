@@ -7,7 +7,7 @@ SHELL ["/bin/bash", "--login", "-ce"]
 
 ARG GOVERSION=1.21.3
 
-RUN apt-get update && apt-get install -y debian-archive-keyring
+RUN apt-get update && apt-get install --allow-unauthenticated --allow-insecure-repositories -y debian-archive-keyring
 
 RUN apt-get update && \
     apt-get install -y \
