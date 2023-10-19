@@ -7,7 +7,7 @@ SHELL ["/bin/bash", "--login", "-ce"]
 
 ARG GOVERSION=1.21.3
 
-RUN apt-get install -y gnupg2
+RUN apt-get install -y gpgv
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0E98404D386FA1D9 || true
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6ED0E7B82643E131 || true
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 605C66F00D6C9793 || true
