@@ -23,7 +23,7 @@ require (
 	github.com/twitchtv/twirp v8.1.3+incompatible
 	go.uber.org/atomic v1.11.0
 	go.uber.org/zap v1.26.0
-	golang.org/x/image v0.13.0
+	golang.org/x/image v0.14.0
 	golang.org/x/oauth2 v0.13.0
 	golang.org/x/sync v0.5.0
 	google.golang.org/api v0.149.0
