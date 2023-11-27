@@ -5,7 +5,7 @@ FROM $BASE
 # Replace shell with bash so we can source files
 SHELL ["/bin/bash", "--login", "-ce"]
 
-ARG GOVERSION=1.21.3
+ARG GOVERSION=1.21.4
 
 RUN apt-get update --allow-unauthenticated --allow-insecure-repositories && \
     apt-get install --allow-unauthenticated -y debian-archive-keyring && \
