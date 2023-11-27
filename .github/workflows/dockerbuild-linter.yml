@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
     - Dockerfile.lint
+    - .github/workflows/dockerbuild-linter.yml
 
 jobs:
   build:
