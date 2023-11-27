@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
     - Dockerfile.pibuilder
+    - .github/workflows/dockerbuild.yml
 
 jobs:
   build:
