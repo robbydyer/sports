@@ -55,5 +55,5 @@ jobs:
         file: Dockerfile.pibuilder
         tags:  robbydyer/pibuilder-${{matrix.arch}}-${{matrix.os}}:${{steps.sha.outputs.sha}}
         build-args: |
-          BASE=multiarch/debian-debootstrap:${{matrix.base}}-${{matrix.os}}-slim
+          BASE=robbydyer/debian-debootstrap:${{matrix.base}}-${{matrix.os}}-slim
         platforms: linux/amd64,linux/arm64/v8
