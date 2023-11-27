@@ -15,6 +15,7 @@ jobs:
         os:
         - bullseye
         - buster
+        - bookworm
         include:
         - arch: aarch64
           base: arm64
