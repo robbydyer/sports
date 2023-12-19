@@ -16,7 +16,7 @@ require (
 	github.com/pseudomuto/protoc-gen-doc v1.5.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cobra v1.8.0
-	github.com/spf13/viper v1.18.1
+	github.com/spf13/viper v1.18.2
 	github.com/srikrsna/protoc-gen-gotag v0.6.2
 	github.com/stretchr/testify v1.8.4
 	github.com/thechriswalker/protoc-gen-twirp_js v0.0.0-20190627152235-0fe8731d4d8f
