@@ -913,7 +913,7 @@ func fullyQualifiedNameToOpenAPIName(fqn string, reg *descriptor.Registry) (stri
 		ret, ok := mapping[fqn]
 		return ret, ok
 	}
-	mapping := resolveFullyQualifiedNameToOpenAPINames(append(reg.GetAllFQMNs(), reg.GetAllFQENs()...), reg.GetOpenAPINamingStrategy())
+	mapping := resolveFullyQualifiedNameToOpenAPINames(append(reg.GetAllFQMNs(), append(reg.GetAllFQENs(), reg.GetAllFQMethNs()...)...), reg.GetOpenAPINamingStrategy())
 	registriesSeen[reg] = mapping
 	ret, ok := mapping[fqn]
 	return ret, ok
@@ -1108,13 +1108,16 @@ func renderServiceTags(services []*descriptor.Service, reg *descriptor.Registry)
 					tag.ExternalDocs.Description = goTemplateComments(opts.ExternalDocs.Description, svc, reg)
 				}
 			}
+			if opts.GetName() != "" {
+				tag.Name = opts.GetName()
+			}
 		}
 		tags = append(tags, tag)
 	}
 	return tags
 }
 
-func renderServices(services []*descriptor.Service, paths *openapiPathsObject, reg *descriptor.Registry, requestResponseRefs, customRefs refMap, msgs []*descriptor.Message) error {
+func renderServices(services []*descriptor.Service, paths *openapiPathsObject, reg *descriptor.Registry, requestResponseRefs, customRefs refMap, msgs []*descriptor.Message, defs openapiDefinitionsObject) error {
 	// Correctness of svcIdx and methIdx depends on 'services' containing the services in the same order as the 'file.Service' array.
 	svcBaseIdx := 0
 	var lastFile *descriptor.File = nil
@@ -1282,9 +1285,19 @@ func renderServices(services []*descriptor.Service, paths *openapiPathsObject, r
 								}
 								desc = messageSchema.Description
 							} else {
-								schema = messageSchema
-								if schema.Properties == nil || len(*schema.Properties) == 0 {
-									grpclog.Warningf("created a body with 0 properties in the message, this might be unintended: %s", *meth.RequestType)
+								if meth.Name != nil {
+									methFQN, ok := fullyQualifiedNameToOpenAPIName(meth.FQMN(), reg)
+									if !ok {
+										panic(fmt.Errorf("failed to resolve method FQN: '%s'", meth.FQMN()))
+									}
+									defName := methFQN + "Body"
+									schema.Ref = fmt.Sprintf("#/definitions/%s", defName)
+									defs[defName] = messageSchema
+								} else {
+									schema = messageSchema
+									if schema.Properties == nil || len(*schema.Properties) == 0 {
+										grpclog.Warningf("created a body with 0 properties in the message, this might be unintended: %s", *meth.RequestType)
+									}
 								}
 							}
 						}
@@ -1521,6 +1534,11 @@ func renderServices(services []*descriptor.Service, paths *openapiPathsObject, r
 					panic(err)
 				}
 
+				svcOpts, err := getServiceOpenAPIOption(reg, svc)
+				if err != nil {
+					grpclog.Error(err)
+					return err
+				}
 				opts, err := getMethodOpenAPIOption(reg, meth)
 				if opts != nil {
 					if err != nil {
@@ -1539,6 +1557,8 @@ func renderServices(services []*descriptor.Service, paths *openapiPathsObject, r
 					if len(opts.Tags) > 0 {
 						operationObject.Tags = make([]string, len(opts.Tags))
 						copy(operationObject.Tags, opts.Tags)
+					} else if svcOpts.GetName() != "" {
+						operationObject.Tags = []string{svcOpts.GetName()}
 					}
 					if opts.OperationId != "" {
 						operationObject.OperationID = opts.OperationId
@@ -1748,7 +1768,7 @@ func applyTemplate(p param) (*openapiSwaggerObject, error) {
 	// and create entries for all of them.
 	// Also adds custom user specified references to second map.
 	requestResponseRefs, customRefs := refMap{}, refMap{}
-	if err := renderServices(p.Services, &s.Paths, p.reg, requestResponseRefs, customRefs, p.Messages); err != nil {
+	if err := renderServices(p.Services, &s.Paths, p.reg, requestResponseRefs, customRefs, p.Messages, s.Definitions); err != nil {
 		panic(err)
 	}
 
@@ -2485,6 +2505,12 @@ func goTemplateComments(comment string, data interface{}, reg *descriptor.Regist
 		// Grabs title and description from a field
 		"fieldcomments": func(msg *descriptor.Message, field *descriptor.Field) string {
 			return strings.ReplaceAll(fieldProtoComments(reg, msg, field), "\n", "<br>")
+		},
+		"arg": func(name string) string {
+			if v, f := reg.GetGoTemplateArgs()[name]; f {
+				return v
+			}
+			return fmt.Sprintf("goTemplateArg %s not found", name)
 		},
 	}).Parse(comment)
 	if err != nil {
