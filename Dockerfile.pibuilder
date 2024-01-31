@@ -40,7 +40,7 @@ ENV PATH="/usr/local/go/bin:${PATH}"
 
 COPY .nvmrc /root/.nvmrc
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-RUN cd /root && nvm install
+RUN cd /root && nvm install && nvm install 18.16.0 && nvm install 20.11.0
 
 COPY ./internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE /sportsmatrix_lib/rpi-rgb-led-matrix
 
