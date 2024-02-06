@@ -5,8 +5,16 @@ import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 import NavDropDown from 'react-bootstrap/NavDropdown';
 import { Link } from 'react-router-dom';
-import { withRouter } from "react-router";
 import { GetVersion } from './util';
+import { useNavigate } from 'react-router';
+
+export const withRouter = (Component) => {
+    const Wrapper = (props) => {
+        const history = useNavigate();
+        return <Component history={history} {...props} />
+    }
+    return Wrapper;
+}
 
 class TopNav extends React.Component {
     constructor(props) {

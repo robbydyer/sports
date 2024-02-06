@@ -1,0 +1,880 @@
+{
+  "displayName": "Abilene Christian Wildcats",
+  "name": "Abilene Christian",
+  "abbreviation": "ACU"
+}
+{
+  "displayName": "Alabama A&M Bulldogs",
+  "name": "Alabama A&M",
+  "abbreviation": "AAMU"
+}
+{
+  "displayName": "Alabama Crimson Tide",
+  "name": "Alabama",
+  "abbreviation": "ALA"
+}
+{
+  "displayName": "Appalachian State Mountaineers",
+  "name": "Appalachian State",
+  "abbreviation": "APP"
+}
+{
+  "displayName": "Arizona State Sun Devils",
+  "name": "Arizona State",
+  "abbreviation": "ASU"
+}
+{
+  "displayName": "Arkansas Razorbacks",
+  "name": "Arkansas",
+  "abbreviation": "ARK"
+}
+{
+  "displayName": "Auburn Tigers",
+  "name": "Auburn",
+  "abbreviation": "AUB"
+}
+{
+  "displayName": "BYU Cougars",
+  "name": "BYU",
+  "abbreviation": "BYU"
+}
+{
+  "displayName": "Baylor Bears",
+  "name": "Baylor",
+  "abbreviation": "BAY"
+}
+{
+  "displayName": "Belmont Bruins",
+  "name": "Belmont",
+  "abbreviation": "BEL"
+}
+{
+  "displayName": "Binghamton Bearcats",
+  "name": "Binghamton",
+  "abbreviation": "BING"
+}
+{
+  "displayName": "Boston College Eagles",
+  "name": "Boston College",
+  "abbreviation": "BC"
+}
+{
+  "displayName": "Boston University Terriers",
+  "name": "Boston University",
+  "abbreviation": "BU"
+}
+{
+  "displayName": "Bowling Green Falcons",
+  "name": "Bowling Green",
+  "abbreviation": "BGSU"
+}
+{
+  "displayName": "Brown Bears",
+  "name": "Brown",
+  "abbreviation": "BRWN"
+}
+{
+  "displayName": "Bucknell Bison",
+  "name": "Bucknell",
+  "abbreviation": "BUCK"
+}
+{
+  "displayName": "Cal State Fullerton Titans",
+  "name": "Cal State Fullerton",
+  "abbreviation": "CSUF"
+}
+{
+  "displayName": "Cal State Northridge Matadors",
+  "name": "Cal State Northridge",
+  "abbreviation": "CSUN"
+}
+{
+  "displayName": "Central Michigan Chippewas",
+  "name": "Central Michigan",
+  "abbreviation": "CMU"
+}
+{
+  "displayName": "Charleston Cougars",
+  "name": "Charleston",
+  "abbreviation": "CofC"
+}
+{
+  "displayName": "Charlotte 49ers",
+  "name": "Charlotte",
+  "abbreviation": "CLT"
+}
+{
+  "displayName": "Chattanooga Mocs",
+  "name": "Chattanooga",
+  "abbreviation": "UTC"
+}
+{
+  "displayName": "Cincinnati Bearcats",
+  "name": "Cincinnati",
+  "abbreviation": "CIN"
+}
+{
+  "displayName": "Clemson Tigers",
+  "name": "Clemson",
+  "abbreviation": "CLEM"
+}
+{
+  "displayName": "Coastal Carolina Chanticleers",
+  "name": "Coastal Carolina",
+  "abbreviation": "CCU"
+}
+{
+  "displayName": "Colgate Raiders",
+  "name": "Colgate",
+  "abbreviation": "COLG"
+}
+{
+  "displayName": "Colorado Buffaloes",
+  "name": "Colorado",
+  "abbreviation": "COLO"
+}
+{
+  "displayName": "Columbia Lions",
+  "name": "Columbia",
+  "abbreviation": "COLU"
+}
+{
+  "displayName": "Creighton Bluejays",
+  "name": "Creighton",
+  "abbreviation": "CREI"
+}
+{
+  "displayName": "Dartmouth Big Green",
+  "name": "Dartmouth",
+  "abbreviation": "DART"
+}
+{
+  "displayName": "Dayton Flyers",
+  "name": "Dayton",
+  "abbreviation": "DAY"
+}
+{
+  "displayName": "DePaul Blue Demons",
+  "name": "DePaul",
+  "abbreviation": "DEP"
+}
+{
+  "displayName": "Denver Pioneers",
+  "name": "Denver",
+  "abbreviation": "DEN"
+}
+{
+  "displayName": "Duke Blue Devils",
+  "name": "Duke",
+  "abbreviation": "DUKE"
+}
+{
+  "displayName": "Duquesne Dukes",
+  "name": "Duquesne",
+  "abbreviation": "DUQ"
+}
+{
+  "displayName": "East Carolina Pirates",
+  "name": "East Carolina",
+  "abbreviation": "ECU"
+}
+{
+  "displayName": "Eastern Kentucky Colonels",
+  "name": "Eastern Kentucky",
+  "abbreviation": "EKU"
+}
+{
+  "displayName": "Eastern Michigan Eagles",
+  "name": "Eastern Michigan",
+  "abbreviation": "EMU"
+}
+{
+  "displayName": "Eastern Washington Eagles",
+  "name": "Eastern Washington",
+  "abbreviation": "EWU"
+}
+{
+  "displayName": "Evansville Purple Aces",
+  "name": "Evansville",
+  "abbreviation": "EVAN"
+}
+{
+  "displayName": "Fairleigh Dickinson Knights",
+  "name": "Fairleigh Dickinson",
+  "abbreviation": "FDU"
+}
+{
+  "displayName": "Florida Atlantic Owls",
+  "name": "Florida Atlantic",
+  "abbreviation": "FAU"
+}
+{
+  "displayName": "Florida Gators",
+  "name": "Florida",
+  "abbreviation": "FLA"
+}
+{
+  "displayName": "Florida Gulf Coast Eagles",
+  "name": "Florida Gulf Coast",
+  "abbreviation": "FGCU"
+}
+{
+  "displayName": "Florida State Seminoles",
+  "name": "Florida State",
+  "abbreviation": "FSU"
+}
+{
+  "displayName": "Fordham Rams",
+  "name": "Fordham",
+  "abbreviation": "FOR"
+}
+{
+  "displayName": "Furman Paladins",
+  "name": "Furman",
+  "abbreviation": "FUR"
+}
+{
+  "displayName": "George Mason Patriots",
+  "name": "George Mason",
+  "abbreviation": "GMU"
+}
+{
+  "displayName": "George Washington Revolutionaries",
+  "name": "George Washington",
+  "abbreviation": "GW"
+}
+{
+  "displayName": "Georgetown Hoyas",
+  "name": "Georgetown",
+  "abbreviation": "GTWN"
+}
+{
+  "displayName": "Georgia Bulldogs",
+  "name": "Georgia",
+  "abbreviation": "UGA"
+}
+{
+  "displayName": "Georgia Southern Eagles",
+  "name": "Georgia Southern",
+  "abbreviation": "GASO"
+}
+{
+  "displayName": "Georgia State Panthers",
+  "name": "Georgia State",
+  "abbreviation": "GAST"
+}
+{
+  "displayName": "Gonzaga Bulldogs",
+  "name": "Gonzaga",
+  "abbreviation": "GONZ"
+}
+{
+  "displayName": "Grambling State Tigers",
+  "name": "Grambling State",
+  "abbreviation": "GRAM"
+}
+{
+  "displayName": "Hawai'i' Rainbow Warriors",
+  "name": "Hawai'i'",
+  "abbreviation": "HAW"
+}
+{
+  "displayName": "Hofstra Pride",
+  "name": "Hofstra",
+  "abbreviation": "HOF"
+}
+{
+  "displayName": "Idaho Vandals",
+  "name": "Idaho",
+  "abbreviation": "IDHO"
+}
+{
+  "displayName": "Indiana Hoosiers",
+  "name": "Indiana",
+  "abbreviation": "IU"
+}
+{
+  "displayName": "Iowa Hawkeyes",
+  "name": "Iowa",
+  "abbreviation": "IOWA"
+}
+{
+  "displayName": "Iowa State Cyclones",
+  "name": "Iowa State",
+  "abbreviation": "ISU"
+}
+{
+  "displayName": "Jacksonville Dolphins",
+  "name": "Jacksonville",
+  "abbreviation": "JAX"
+}
+{
+  "displayName": "Jacksonville State Gamecocks",
+  "name": "Jacksonville State",
+  "abbreviation": "JVST"
+}
+{
+  "displayName": "James Madison Dukes",
+  "name": "James Madison",
+  "abbreviation": "JMU"
+}
+{
+  "displayName": "Kansas Jayhawks",
+  "name": "Kansas",
+  "abbreviation": "KU"
+}
+{
+  "displayName": "Kansas State Wildcats",
+  "name": "Kansas State",
+  "abbreviation": "KSU"
+}
+{
+  "displayName": "Kent State Golden Flashes",
+  "name": "Kent State",
+  "abbreviation": "KENT"
+}
+{
+  "displayName": "Kentucky Wildcats",
+  "name": "Kentucky",
+  "abbreviation": "UK"
+}
+{
+  "displayName": "LSU Tigers",
+  "name": "LSU",
+  "abbreviation": "LSU"
+}
+{
+  "displayName": "La Salle Explorers",
+  "name": "La Salle",
+  "abbreviation": "LAS"
+}
+{
+  "displayName": "Lamar Cardinals",
+  "name": "Lamar",
+  "abbreviation": "LAM"
+}
+{
+  "displayName": "Liberty Flames",
+  "name": "Liberty",
+  "abbreviation": "LIB"
+}
+{
+  "displayName": "Little Rock Trojans",
+  "name": "Little Rock",
+  "abbreviation": "LR"
+}
+{
+  "displayName": "Long Beach State Beach",
+  "name": "Long Beach State",
+  "abbreviation": "LBSU"
+}
+{
+  "displayName": "Louisville Cardinals",
+  "name": "Louisville",
+  "abbreviation": "LOU"
+}
+{
+  "displayName": "Loyola Chicago Ramblers",
+  "name": "Loyola Chicago",
+  "abbreviation": "LUC"
+}
+{
+  "displayName": "Loyola Marymount Lions",
+  "name": "Loyola Marymount",
+  "abbreviation": "LMU"
+}
+{
+  "displayName": "Marshall Thundering Herd",
+  "name": "Marshall",
+  "abbreviation": "MRSH"
+}
+{
+  "displayName": "Maryland Terrapins",
+  "name": "Maryland",
+  "abbreviation": "MD"
+}
+{
+  "displayName": "Massachusetts Minutemen",
+  "name": "Massachusetts",
+  "abbreviation": "MASS"
+}
+{
+  "displayName": "McNeese Cowboys",
+  "name": "McNeese",
+  "abbreviation": "MCN"
+}
+{
+  "displayName": "Memphis Tigers",
+  "name": "Memphis",
+  "abbreviation": "MEM"
+}
+{
+  "displayName": "Mercer Bears",
+  "name": "Mercer",
+  "abbreviation": "MER"
+}
+{
+  "displayName": "Merrimack Warriors",
+  "name": "Merrimack",
+  "abbreviation": "MRMK"
+}
+{
+  "displayName": "Miami (OH) RedHawks",
+  "name": "Miami (OH)",
+  "abbreviation": "M-OH"
+}
+{
+  "displayName": "Miami Hurricanes",
+  "name": "Miami",
+  "abbreviation": "MIA"
+}
+{
+  "displayName": "Michigan Wolverines",
+  "name": "Michigan",
+  "abbreviation": "MICH"
+}
+{
+  "displayName": "Minnesota Golden Gophers",
+  "name": "Minnesota",
+  "abbreviation": "MINN"
+}
+{
+  "displayName": "Mississippi State Bulldogs",
+  "name": "Mississippi State",
+  "abbreviation": "MSST"
+}
+{
+  "displayName": "Missouri Tigers",
+  "name": "Missouri",
+  "abbreviation": "MIZ"
+}
+{
+  "displayName": "Monmouth Hawks",
+  "name": "Monmouth",
+  "abbreviation": "MONM"
+}
+{
+  "displayName": "Morehead State Eagles",
+  "name": "Morehead State",
+  "abbreviation": "MORE"
+}
+{
+  "displayName": "Murray State Racers",
+  "name": "Murray State",
+  "abbreviation": "MUR"
+}
+{
+  "displayName": "NC State Wolfpack",
+  "name": "NC State",
+  "abbreviation": "NCSU"
+}
+{
+  "displayName": "Navy Midshipmen",
+  "name": "Navy",
+  "abbreviation": "NAVY"
+}
+{
+  "displayName": "Nebraska Cornhuskers",
+  "name": "Nebraska",
+  "abbreviation": "NEB"
+}
+{
+  "displayName": "New Hampshire Wildcats",
+  "name": "New Hampshire",
+  "abbreviation": "UNH"
+}
+{
+  "displayName": "New Mexico Lobos",
+  "name": "New Mexico",
+  "abbreviation": "UNM"
+}
+{
+  "displayName": "North Alabama Lions",
+  "name": "North Alabama",
+  "abbreviation": "NOR"
+}
+{
+  "displayName": "North Carolina Tar Heels",
+  "name": "North Carolina",
+  "abbreviation": "UNC"
+}
+{
+  "displayName": "North Texas Mean Green",
+  "name": "North Texas",
+  "abbreviation": "UNT"
+}
+{
+  "displayName": "Northeastern Huskies",
+  "name": "Northeastern",
+  "abbreviation": "NE"
+}
+{
+  "displayName": "Northern Colorado Bears",
+  "name": "Northern Colorado",
+  "abbreviation": "UNCO"
+}
+{
+  "displayName": "Northern Kentucky Norse",
+  "name": "Northern Kentucky",
+  "abbreviation": "NKU"
+}
+{
+  "displayName": "Northwestern State Demons",
+  "name": "Northwestern State",
+  "abbreviation": "NWST"
+}
+{
+  "displayName": "Northwestern Wildcats",
+  "name": "Northwestern",
+  "abbreviation": "NU"
+}
+{
+  "displayName": "Notre Dame Fighting Irish",
+  "name": "Notre Dame",
+  "abbreviation": "ND"
+}
+{
+  "displayName": "Oakland Golden Grizzlies",
+  "name": "Oakland",
+  "abbreviation": "OAK"
+}
+{
+  "displayName": "Ohio State Buckeyes",
+  "name": "Ohio State",
+  "abbreviation": "OSU"
+}
+{
+  "displayName": "Oklahoma Sooners",
+  "name": "Oklahoma",
+  "abbreviation": "OU"
+}
+{
+  "displayName": "Oklahoma State Cowboys",
+  "name": "Oklahoma State",
+  "abbreviation": "OKST"
+}
+{
+  "displayName": "Ole Miss Rebels",
+  "name": "Ole Miss",
+  "abbreviation": "MISS"
+}
+{
+  "displayName": "Oregon Ducks",
+  "name": "Oregon",
+  "abbreviation": "ORE"
+}
+{
+  "displayName": "Penn State Nittany Lions",
+  "name": "Penn State",
+  "abbreviation": "PSU"
+}
+{
+  "displayName": "Pepperdine Waves",
+  "name": "Pepperdine",
+  "abbreviation": "PEPP"
+}
+{
+  "displayName": "Pittsburgh Panthers",
+  "name": "Pittsburgh",
+  "abbreviation": "PITT"
+}
+{
+  "displayName": "Portland Pilots",
+  "name": "Portland",
+  "abbreviation": "PORT"
+}
+{
+  "displayName": "Princeton Tigers",
+  "name": "Princeton",
+  "abbreviation": "PRIN"
+}
+{
+  "displayName": "Providence Friars",
+  "name": "Providence",
+  "abbreviation": "PROV"
+}
+{
+  "displayName": "Purdue Boilermakers",
+  "name": "Purdue",
+  "abbreviation": "PUR"
+}
+{
+  "displayName": "Rhode Island Rams",
+  "name": "Rhode Island",
+  "abbreviation": "URI"
+}
+{
+  "displayName": "Rice Owls",
+  "name": "Rice",
+  "abbreviation": "RICE"
+}
+{
+  "displayName": "Rutgers Scarlet Knights",
+  "name": "Rutgers",
+  "abbreviation": "RUTG"
+}
+{
+  "displayName": "SE Louisiana Lions",
+  "name": "SE Louisiana",
+  "abbreviation": "SELA"
+}
+{
+  "displayName": "Saint Joseph's Hawks",
+  "name": "Saint Joseph's",
+  "abbreviation": "JOES"
+}
+{
+  "displayName": "Saint Louis Billikens",
+  "name": "Saint Louis",
+  "abbreviation": "SLU"
+}
+{
+  "displayName": "Samford Bulldogs",
+  "name": "Samford",
+  "abbreviation": "SAM"
+}
+{
+  "displayName": "San Diego State Aztecs",
+  "name": "San Diego State",
+  "abbreviation": "SDSU"
+}
+{
+  "displayName": "San Francisco Dons",
+  "name": "San Francisco",
+  "abbreviation": "SF"
+}
+{
+  "displayName": "Santa Clara Broncos",
+  "name": "Santa Clara",
+  "abbreviation": "SCU"
+}
+{
+  "displayName": "Siena Saints",
+  "name": "Siena",
+  "abbreviation": "SIE"
+}
+{
+  "displayName": "South Alabama Jaguars",
+  "name": "South Alabama",
+  "abbreviation": "USA"
+}
+{
+  "displayName": "South Carolina Gamecocks",
+  "name": "South Carolina",
+  "abbreviation": "SC"
+}
+{
+  "displayName": "South Florida Bulls",
+  "name": "South Florida",
+  "abbreviation": "USF"
+}
+{
+  "displayName": "Southeast Missouri State Redhawks",
+  "name": "Southeast Missouri State",
+  "abbreviation": "SEMO"
+}
+{
+  "displayName": "Southern Miss Golden Eagles",
+  "name": "Southern Miss",
+  "abbreviation": "USM"
+}
+{
+  "displayName": "St. John's Red Storm",
+  "name": "St. John's",
+  "abbreviation": "SJU"
+}
+{
+  "displayName": "Stanford Cardinal",
+  "name": "Stanford",
+  "abbreviation": "STAN"
+}
+{
+  "displayName": "Stephen F. Austin Lumberjacks",
+  "name": "Stephen F. Austin",
+  "abbreviation": "SFA"
+}
+{
+  "displayName": "Stetson Hatters",
+  "name": "Stetson",
+  "abbreviation": "STET"
+}
+{
+  "displayName": "Syracuse Orange",
+  "name": "Syracuse",
+  "abbreviation": "SYR"
+}
+{
+  "displayName": "TCU Horned Frogs",
+  "name": "TCU",
+  "abbreviation": "TCU"
+}
+{
+  "displayName": "Temple Owls",
+  "name": "Temple",
+  "abbreviation": "TEM"
+}
+{
+  "displayName": "Tennessee Volunteers",
+  "name": "Tennessee",
+  "abbreviation": "TENN"
+}
+{
+  "displayName": "Texas A&M Aggies",
+  "name": "Texas A&M",
+  "abbreviation": "TA&M"
+}
+{
+  "displayName": "Texas A&M-Corpus Christi Islanders",
+  "name": "Texas A&M-Corpus Christi",
+  "abbreviation": "AMCC"
+}
+{
+  "displayName": "Texas Longhorns",
+  "name": "Texas",
+  "abbreviation": "TEX"
+}
+{
+  "displayName": "Texas Tech Red Raiders",
+  "name": "Texas Tech",
+  "abbreviation": "TTU"
+}
+{
+  "displayName": "Troy Trojans",
+  "name": "Troy",
+  "abbreviation": "TROY"
+}
+{
+  "displayName": "UC Davis Aggies",
+  "name": "UC Davis",
+  "abbreviation": "UCD"
+}
+{
+  "displayName": "UC Irvine Anteaters",
+  "name": "UC Irvine",
+  "abbreviation": "UCI"
+}
+{
+  "displayName": "UCF Knights",
+  "name": "UCF",
+  "abbreviation": "UCF"
+}
+{
+  "displayName": "UCLA Bruins",
+  "name": "UCLA",
+  "abbreviation": "UCLA"
+}
+{
+  "displayName": "UMass Lowell River Hawks",
+  "name": "UMass Lowell",
+  "abbreviation": "UML"
+}
+{
+  "displayName": "UNC Greensboro Spartans",
+  "name": "UNC Greensboro",
+  "abbreviation": "UNCG"
+}
+{
+  "displayName": "UNC Wilmington Seahawks",
+  "name": "UNC Wilmington",
+  "abbreviation": "UNCW"
+}
+{
+  "displayName": "UNLV Rebels",
+  "name": "UNLV",
+  "abbreviation": "UNLV"
+}
+{
+  "displayName": "USC Trojans",
+  "name": "USC",
+  "abbreviation": "USC"
+}
+{
+  "displayName": "UT Martin Skyhawks",
+  "name": "UT Martin",
+  "abbreviation": "UTM"
+}
+{
+  "displayName": "UT Rio Grande Valley Vaqueros",
+  "name": "UT Rio Grande Valley",
+  "abbreviation": "RGV"
+}
+{
+  "displayName": "Utah Utes",
+  "name": "Utah",
+  "abbreviation": "UTAH"
+}
+{
+  "displayName": "VCU Rams",
+  "name": "VCU",
+  "abbreviation": "VCU"
+}
+{
+  "displayName": "Vanderbilt Commodores",
+  "name": "Vanderbilt",
+  "abbreviation": "VAN"
+}
+{
+  "displayName": "Villanova Wildcats",
+  "name": "Villanova",
+  "abbreviation": "VILL"
+}
+{
+  "displayName": "Virginia Cavaliers",
+  "name": "Virginia",
+  "abbreviation": "UVA"
+}
+{
+  "displayName": "Virginia Tech Hokies",
+  "name": "Virginia Tech",
+  "abbreviation": "VT"
+}
+{
+  "displayName": "Wake Forest Demon Deacons",
+  "name": "Wake Forest",
+  "abbreviation": "WAKE"
+}
+{
+  "displayName": "Washington Huskies",
+  "name": "Washington",
+  "abbreviation": "WASH"
+}
+{
+  "displayName": "West Virginia Mountaineers",
+  "name": "West Virginia",
+  "abbreviation": "WVU"
+}
+{
+  "displayName": "Western Kentucky Hilltoppers",
+  "name": "Western Kentucky",
+  "abbreviation": "WKU"
+}
+{
+  "displayName": "Western Michigan Broncos",
+  "name": "Western Michigan",
+  "abbreviation": "WMU"
+}
+{
+  "displayName": "William & Mary Tribe",
+  "name": "William & Mary",
+  "abbreviation": "W&M"
+}
+{
+  "displayName": "Wisconsin Badgers",
+  "name": "Wisconsin",
+  "abbreviation": "WIS"
+}
+{
+  "displayName": "Xavier Musketeers",
+  "name": "Xavier",
+  "abbreviation": "XAV"
+}
+{
+  "displayName": "Yale Bulldogs",
+  "name": "Yale",
+  "abbreviation": "YALE"
+}
+{
+  "displayName": "Youngstown State Penguins",
+  "name": "Youngstown State",
+  "abbreviation": "YSU"
+}

@@ -1,0 +1,90 @@
+{
+  "displayName": "1. FC Magdeburg",
+  "name": "1. FC Magdeburg",
+  "abbreviation": "FCM"
+}
+{
+  "displayName": "Fortuna Düsseldorf",
+  "name": "Fortuna Düsseldorf",
+  "abbreviation": "F95"
+}
+{
+  "displayName": "Hamburg SV",
+  "name": "Hamburg SV",
+  "abbreviation": "HSV"
+}
+{
+  "displayName": "Hannover 96",
+  "name": "Hannover 96",
+  "abbreviation": "H96"
+}
+{
+  "displayName": "Hansa Rostock",
+  "name": "Hansa Rostock",
+  "abbreviation": "FCH"
+}
+{
+  "displayName": "Hertha Berlin",
+  "name": "Hertha Berlin",
+  "abbreviation": "BSC"
+}
+{
+  "displayName": "Holstein Kiel",
+  "name": "Holstein Kiel",
+  "abbreviation": "KIE"
+}
+{
+  "displayName": "Kaiserslautern",
+  "name": "Kaiserslautern",
+  "abbreviation": "FCK"
+}
+{
+  "displayName": "Karlsruher SC",
+  "name": "Karlsruher SC",
+  "abbreviation": "KSC"
+}
+{
+  "displayName": "Nurnberg",
+  "name": "Nurnberg",
+  "abbreviation": "FCN"
+}
+{
+  "displayName": "SC Paderborn 07",
+  "name": "SC Paderborn 07",
+  "abbreviation": "SCP"
+}
+{
+  "displayName": "SV 07 Elversberg",
+  "name": "SV 07 Elversberg",
+  "abbreviation": "ELV"
+}
+{
+  "displayName": "SV Wehen Wiesbaden",
+  "name": "SV Wehen Wiesbaden",
+  "abbreviation": "WEH"
+}
+{
+  "displayName": "Schalke 04",
+  "name": "Schalke 04",
+  "abbreviation": "S04"
+}
+{
+  "displayName": "SpVgg Greuther Furth",
+  "name": "SpVgg Greuther Furth",
+  "abbreviation": "SGF"
+}
+{
+  "displayName": "St. Pauli",
+  "name": "St. Pauli",
+  "abbreviation": "STP"
+}
+{
+  "displayName": "TSV Eintracht Braunschweig",
+  "name": "TSV Eintracht Braunschweig",
+  "abbreviation": "EBS"
+}
+{
+  "displayName": "VfL Osnabruck",
+  "name": "VfL Osnabruck",
+  "abbreviation": "OSN"
+}

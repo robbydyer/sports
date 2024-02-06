@@ -1,0 +1,120 @@
+{
+  "displayName": "Birmingham City",
+  "name": "Birmingham City",
+  "abbreviation": "BIR"
+}
+{
+  "displayName": "Blackburn Rovers",
+  "name": "Blackburn Rovers",
+  "abbreviation": "BLK"
+}
+{
+  "displayName": "Bristol City",
+  "name": "Bristol City",
+  "abbreviation": "BRC"
+}
+{
+  "displayName": "Cardiff City",
+  "name": "Cardiff City",
+  "abbreviation": "CAR"
+}
+{
+  "displayName": "Coventry City",
+  "name": "Coventry City",
+  "abbreviation": "COV"
+}
+{
+  "displayName": "Huddersfield Town",
+  "name": "Huddersfield Town",
+  "abbreviation": "HUD"
+}
+{
+  "displayName": "Hull City",
+  "name": "Hull City",
+  "abbreviation": "HUL"
+}
+{
+  "displayName": "Ipswich Town",
+  "name": "Ipswich Town",
+  "abbreviation": "IPS"
+}
+{
+  "displayName": "Leeds United",
+  "name": "Leeds United",
+  "abbreviation": "LEE"
+}
+{
+  "displayName": "Leicester City",
+  "name": "Leicester City",
+  "abbreviation": "LEI"
+}
+{
+  "displayName": "Middlesbrough",
+  "name": "Middlesbrough",
+  "abbreviation": "MID"
+}
+{
+  "displayName": "Millwall",
+  "name": "Millwall",
+  "abbreviation": "MIL"
+}
+{
+  "displayName": "Norwich City",
+  "name": "Norwich City",
+  "abbreviation": "NOR"
+}
+{
+  "displayName": "Plymouth Argyle",
+  "name": "Plymouth Argyle",
+  "abbreviation": "PLY"
+}
+{
+  "displayName": "Preston North End",
+  "name": "Preston North End",
+  "abbreviation": "PNE"
+}
+{
+  "displayName": "Queens Park Rangers",
+  "name": "Queens Park Rangers",
+  "abbreviation": "QPR"
+}
+{
+  "displayName": "Rotherham United",
+  "name": "Rotherham United",
+  "abbreviation": "ROT"
+}
+{
+  "displayName": "Sheffield Wednesday",
+  "name": "Sheffield Wednesday",
+  "abbreviation": "SHW"
+}
+{
+  "displayName": "Southampton",
+  "name": "Southampton",
+  "abbreviation": "SOU"
+}
+{
+  "displayName": "Stoke City",
+  "name": "Stoke City",
+  "abbreviation": "STK"
+}
+{
+  "displayName": "Sunderland",
+  "name": "Sunderland",
+  "abbreviation": "SUN"
+}
+{
+  "displayName": "Swansea City",
+  "name": "Swansea City",
+  "abbreviation": "SWA"
+}
+{
+  "displayName": "Watford",
+  "name": "Watford",
+  "abbreviation": "WAT"
+}
+{
+  "displayName": "West Bromwich Albion",
+  "name": "West Bromwich Albion",
+  "abbreviation": "WBA"
+}

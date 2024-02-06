@@ -1,0 +1,100 @@
+{
+  "displayName": "Alavés",
+  "name": "Alavés",
+  "abbreviation": "ALA"
+}
+{
+  "displayName": "Almería",
+  "name": "Almería",
+  "abbreviation": "ALM"
+}
+{
+  "displayName": "Athletic Club",
+  "name": "Athletic Club",
+  "abbreviation": "ATH"
+}
+{
+  "displayName": "Atlético Madrid",
+  "name": "Atlético Madrid",
+  "abbreviation": "ATM"
+}
+{
+  "displayName": "Barcelona",
+  "name": "Barcelona",
+  "abbreviation": "BAR"
+}
+{
+  "displayName": "Celta Vigo",
+  "name": "Celta Vigo",
+  "abbreviation": "CEL"
+}
+{
+  "displayName": "Cádiz",
+  "name": "Cádiz",
+  "abbreviation": "CAD"
+}
+{
+  "displayName": "Getafe",
+  "name": "Getafe",
+  "abbreviation": "GET"
+}
+{
+  "displayName": "Girona",
+  "name": "Girona",
+  "abbreviation": "GIR"
+}
+{
+  "displayName": "Granada",
+  "name": "Granada",
+  "abbreviation": "GRA"
+}
+{
+  "displayName": "Las Palmas",
+  "name": "Las Palmas",
+  "abbreviation": "LPA"
+}
+{
+  "displayName": "Mallorca",
+  "name": "Mallorca",
+  "abbreviation": "MLL"
+}
+{
+  "displayName": "Osasuna",
+  "name": "Osasuna",
+  "abbreviation": "OSA"
+}
+{
+  "displayName": "Rayo Vallecano",
+  "name": "Rayo Vallecano",
+  "abbreviation": "RAY"
+}
+{
+  "displayName": "Real Betis",
+  "name": "Real Betis",
+  "abbreviation": "BET"
+}
+{
+  "displayName": "Real Madrid",
+  "name": "Real Madrid",
+  "abbreviation": "RMA"
+}
+{
+  "displayName": "Real Sociedad",
+  "name": "Real Sociedad",
+  "abbreviation": "RSO"
+}
+{
+  "displayName": "Sevilla",
+  "name": "Sevilla",
+  "abbreviation": "SEV"
+}
+{
+  "displayName": "Valencia",
+  "name": "Valencia",
+  "abbreviation": "VAL"
+}
+{
+  "displayName": "Villarreal",
+  "name": "Villarreal",
+  "abbreviation": "VIL"
+}
