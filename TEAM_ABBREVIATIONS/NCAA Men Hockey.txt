@@ -1,0 +1,540 @@
+{
+  "displayName": "Adrian College",
+  "name": "Adrian College",
+  "abbreviation": "ADR"
+}
+{
+  "displayName": "Air Force",
+  "name": "Falcons",
+  "abbreviation": "AFA"
+}
+{
+  "displayName": "Alabama Huntsville",
+  "name": "Chargers",
+  "abbreviation": "AH"
+}
+{
+  "displayName": "Alaska",
+  "name": "Bulldogs",
+  "abbreviation": "AKFB"
+}
+{
+  "displayName": "Alaska Anchorage",
+  "name": "Seawolves",
+  "abbreviation": "UAA"
+}
+{
+  "displayName": "American International",
+  "name": "Yellow Jackets",
+  "abbreviation": "AIC"
+}
+{
+  "displayName": "Anna Maria College",
+  "name": "Anna Maria College",
+  "abbreviation": "ANNA MARIA"
+}
+{
+  "displayName": "Arizona",
+  "name": "Wildcats",
+  "abbreviation": "ARIZ"
+}
+{
+  "displayName": "Arizona State",
+  "name": "Sun Devils",
+  "abbreviation": "ASU"
+}
+{
+  "displayName": "Army",
+  "name": "Black Knights",
+  "abbreviation": "ARMY"
+}
+{
+  "displayName": "Assumption",
+  "name": "Falcons",
+  "abbreviation": "ASMP"
+}
+{
+  "displayName": "Augsberg",
+  "name": "Auggies",
+  "abbreviation": "AUG"
+}
+{
+  "displayName": "Bemidji State",
+  "name": "Beavers",
+  "abbreviation": "BST"
+}
+{
+  "displayName": "Bentley",
+  "name": "Falcons",
+  "abbreviation": "BENT"
+}
+{
+  "displayName": "Bethel College Minnesota",
+  "name": "Falcons",
+  "abbreviation": "BET"
+}
+{
+  "displayName": "Boston College",
+  "name": "Eagles",
+  "abbreviation": "BC"
+}
+{
+  "displayName": "Boston University",
+  "name": "Terriers",
+  "abbreviation": "BU"
+}
+{
+  "displayName": "Bowling Green",
+  "name": "Falcons",
+  "abbreviation": "BGSU"
+}
+{
+  "displayName": "Brockport State",
+  "name": "Falcons",
+  "abbreviation": "SUNYBROKPT"
+}
+{
+  "displayName": "Brown",
+  "name": "Bears",
+  "abbreviation": "BRWN"
+}
+{
+  "displayName": "Canisius",
+  "name": "Golden Griffins",
+  "abbreviation": "CAN"
+}
+{
+  "displayName": "Clarkson",
+  "name": "Golden Knights",
+  "abbreviation": "CLAR"
+}
+{
+  "displayName": "Colgate",
+  "name": "Raiders ",
+  "abbreviation": "COLG"
+}
+{
+  "displayName": "Colorado College",
+  "name": "Tigers",
+  "abbreviation": "COLC"
+}
+{
+  "displayName": "Concordia Moorhead",
+  "name": "Falcons",
+  "abbreviation": "CMHD"
+}
+{
+  "displayName": "Cornell",
+  "name": "Big Red",
+  "abbreviation": "COR"
+}
+{
+  "displayName": "Dartmouth",
+  "name": "Big Green",
+  "abbreviation": "DART"
+}
+{
+  "displayName": "Denver",
+  "name": "Pioneers",
+  "abbreviation": "DEN"
+}
+{
+  "displayName": "Fairfield",
+  "name": "Badgers",
+  "abbreviation": "FAIR"
+}
+{
+  "displayName": "Ferris State",
+  "name": "Bulldogs",
+  "abbreviation": "FRST"
+}
+{
+  "displayName": "Findlay",
+  "name": "Falcons",
+  "abbreviation": "FIN"
+}
+{
+  "displayName": "Framingham State",
+  "name": "Framingham State",
+  "abbreviation": "FRAMINGHAM"
+}
+{
+  "displayName": "Franklin Pierce",
+  "name": "Franklin Pierce",
+  "abbreviation": "FRANKPIERC"
+}
+{
+  "displayName": "Harvard",
+  "name": "Crimson",
+  "abbreviation": "HARV"
+}
+{
+  "displayName": "Holy Cross",
+  "name": "Crusaders",
+  "abbreviation": "HC"
+}
+{
+  "displayName": "Iona",
+  "name": "Gaels",
+  "abbreviation": "IONA"
+}
+{
+  "displayName": "Lake Superior State",
+  "name": "Lakers",
+  "abbreviation": "LSS"
+}
+{
+  "displayName": "Laurentian",
+  "name": "Voyageur",
+  "abbreviation": "LAUREN"
+}
+{
+  "displayName": "Liberty",
+  "name": "Flames",
+  "abbreviation": "LIB"
+}
+{
+  "displayName": "Lindenwood",
+  "name": "Lions",
+  "abbreviation": "LIN"
+}
+{
+  "displayName": "Long Island University",
+  "name": "Long Island University",
+  "abbreviation": "LIU"
+}
+{
+  "displayName": "Maine",
+  "name": "Black Bears",
+  "abbreviation": "ME"
+}
+{
+  "displayName": "Manhattanville",
+  "name": "Falcons",
+  "abbreviation": "MAN"
+}
+{
+  "displayName": "Manitoba",
+  "name": "Bisons",
+  "abbreviation": "MANITOBA"
+}
+{
+  "displayName": "Mercyhurst",
+  "name": "Lakers",
+  "abbreviation": "MERC"
+}
+{
+  "displayName": "Merrimack",
+  "name": "Warriors",
+  "abbreviation": "MRMK"
+}
+{
+  "displayName": "Miami (OH)",
+  "name": "RedHawks",
+  "abbreviation": "M-OH"
+}
+{
+  "displayName": "Michigan",
+  "name": "Wolverines",
+  "abbreviation": "MICH"
+}
+{
+  "displayName": "Michigan State",
+  "name": "Spartans",
+  "abbreviation": "MSU"
+}
+{
+  "displayName": "Michigan Tech",
+  "name": "Huskies",
+  "abbreviation": "MTU"
+}
+{
+  "displayName": "Middlebury",
+  "name": "Falcons",
+  "abbreviation": "MID"
+}
+{
+  "displayName": "Minnesota",
+  "name": "Golden Gophers",
+  "abbreviation": "MINN"
+}
+{
+  "displayName": "Minnesota Duluth",
+  "name": "Bulldogs",
+  "abbreviation": "UMD"
+}
+{
+  "displayName": "Minnesota State",
+  "name": "Mavericks",
+  "abbreviation": "MNST"
+}
+{
+  "displayName": "Minnesota-Crookston",
+  "name": "Falcons",
+  "abbreviation": "MNCK"
+}
+{
+  "displayName": "New England College",
+  "name": "New England College",
+  "abbreviation": "NEWENGCOLL"
+}
+{
+  "displayName": "New Hampshire",
+  "name": "Wildcats",
+  "abbreviation": "UNH"
+}
+{
+  "displayName": "Niagara",
+  "name": "Purple Eagles",
+  "abbreviation": "NIA"
+}
+{
+  "displayName": "North Dakota",
+  "name": "Fighting Hawks",
+  "abbreviation": "UND"
+}
+{
+  "displayName": "Northeastern",
+  "name": "Huskies",
+  "abbreviation": "NE"
+}
+{
+  "displayName": "Northern Michigan",
+  "name": "Wildcats",
+  "abbreviation": "NMI"
+}
+{
+  "displayName": "Notre Dame",
+  "name": "Fighting Irish",
+  "abbreviation": "ND"
+}
+{
+  "displayName": "Ohio",
+  "name": "Bobcats",
+  "abbreviation": "OHIO"
+}
+{
+  "displayName": "Ohio State",
+  "name": "Buckeyes",
+  "abbreviation": "OSU"
+}
+{
+  "displayName": "Omaha",
+  "name": "Mavericks",
+  "abbreviation": "OMA"
+}
+{
+  "displayName": "Penn State",
+  "name": "Nittany Lions",
+  "abbreviation": "PSU"
+}
+{
+  "displayName": "Post University",
+  "name": "Eagles",
+  "abbreviation": "PU"
+}
+{
+  "displayName": "Princeton",
+  "name": "Tigers",
+  "abbreviation": "PRIN"
+}
+{
+  "displayName": "Providence",
+  "name": "Friars",
+  "abbreviation": "PROV"
+}
+{
+  "displayName": "Quinnipiac",
+  "name": "Bobcats",
+  "abbreviation": "QUIN"
+}
+{
+  "displayName": "Rensselaer",
+  "name": "Engineers",
+  "abbreviation": "RPI"
+}
+{
+  "displayName": "Rivier University",
+  "name": "Rivier University",
+  "abbreviation": "RIVIER"
+}
+{
+  "displayName": "Rob Morris Ill",
+  "name": "Falcons",
+  "abbreviation": "RM"
+}
+{
+  "displayName": "Robert Morris",
+  "name": "Colonials",
+  "abbreviation": "RMU"
+}
+{
+  "displayName": "Rochester",
+  "name": "Tigers",
+  "abbreviation": "RIT"
+}
+{
+  "displayName": "SUNY Canton",
+  "name": "SUNY Canton",
+  "abbreviation": "SUNYCANT"
+}
+{
+  "displayName": "SUNY Cortland",
+  "name": "Red Dragons",
+  "abbreviation": "CORT"
+}
+{
+  "displayName": "SUNY Cortland",
+  "name": "SUNY Cortland",
+  "abbreviation": "SUNYCORT"
+}
+{
+  "displayName": "SUNY Morrisville",
+  "name": "SUNY Morrisville",
+  "abbreviation": "SUNYMORRIS"
+}
+{
+  "displayName": "SUNY-Geneseo",
+  "name": "Falcons",
+  "abbreviation": "SUN"
+}
+{
+  "displayName": "SUNY-Potsdam",
+  "name": "Falcons",
+  "abbreviation": "SUN"
+}
+{
+  "displayName": "Sacred Heart",
+  "name": "Pioneers",
+  "abbreviation": "SHU"
+}
+{
+  "displayName": "Saint Michael's",
+  "name": "Falcons",
+  "abbreviation": "STMI"
+}
+{
+  "displayName": "Salem State Massachusetts",
+  "name": "Falcons",
+  "abbreviation": "SSU"
+}
+{
+  "displayName": "Scranton",
+  "name": "Falcons",
+  "abbreviation": "SCRN"
+}
+{
+  "displayName": "Southern Maine",
+  "name": "Southern Maine",
+  "abbreviation": "SOUMAINE"
+}
+{
+  "displayName": "Southern New Hampshire",
+  "name": "Penmen",
+  "abbreviation": "SONH"
+}
+{
+  "displayName": "St. Anselm",
+  "name": "Hawks",
+  "abbreviation": "STA"
+}
+{
+  "displayName": "St. Cloud State",
+  "name": "Huskies",
+  "abbreviation": "SCSU"
+}
+{
+  "displayName": "St. Lawrence",
+  "name": "Saints",
+  "abbreviation": "USL"
+}
+{
+  "displayName": "St. Thomas - Minnesota",
+  "name": "Tommies",
+  "abbreviation": "STMN"
+}
+{
+  "displayName": "Stonehill",
+  "name": "Stonehill",
+  "abbreviation": "STONEHILL"
+}
+{
+  "displayName": "Trine University",
+  "name": "Trine University",
+  "abbreviation": "TRN"
+}
+{
+  "displayName": "UConn",
+  "name": "Huskies",
+  "abbreviation": "CONN"
+}
+{
+  "displayName": "UMass",
+  "name": "Minutemen",
+  "abbreviation": "MASS"
+}
+{
+  "displayName": "UMass Dartmouth",
+  "name": "UMass Dartmouth",
+  "abbreviation": "MASSDART"
+}
+{
+  "displayName": "UMass Lowell",
+  "name": "River Hawks",
+  "abbreviation": "UML"
+}
+{
+  "displayName": "Union",
+  "name": "Dutchmen",
+  "abbreviation": "UNNY"
+}
+{
+  "displayName": "Vermont",
+  "name": "Catamounts ",
+  "abbreviation": "UVM"
+}
+{
+  "displayName": "Wayne St.",
+  "name": "Falcons",
+  "abbreviation": "WAY"
+}
+{
+  "displayName": "Western Michigan",
+  "name": "Bulldogs",
+  "abbreviation": "WMU"
+}
+{
+  "displayName": "Westfield State",
+  "name": "Westfield State",
+  "abbreviation": "WESTFIELD"
+}
+{
+  "displayName": "Williams",
+  "name": "Falcons",
+  "abbreviation": "WIL"
+}
+{
+  "displayName": "Wisconsin",
+  "name": "Badgers",
+  "abbreviation": "WISC"
+}
+{
+  "displayName": "Wisconsin-Eau Claire",
+  "name": "Wildcats",
+  "abbreviation": "WISCEAUC"
+}
+{
+  "displayName": "Wisconsin-Stout",
+  "name": "Falcons",
+  "abbreviation": "WBS"
+}
+{
+  "displayName": "Worcester State",
+  "name": "Worcester State",
+  "abbreviation": "WORCESTST"
+}
+{
+  "displayName": "Yale",
+  "name": "Bulldogs",
+  "abbreviation": "YALE"
+}

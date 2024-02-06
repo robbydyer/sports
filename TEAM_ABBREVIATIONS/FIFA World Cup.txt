@@ -1,0 +1,160 @@
+{
+  "displayName": "Argentina",
+  "name": "Argentina",
+  "abbreviation": "ARG"
+}
+{
+  "displayName": "Australia",
+  "name": "Australia",
+  "abbreviation": "AUS"
+}
+{
+  "displayName": "Belgium",
+  "name": "Belgium",
+  "abbreviation": "BEL"
+}
+{
+  "displayName": "Brazil",
+  "name": "Brazil",
+  "abbreviation": "BRA"
+}
+{
+  "displayName": "Cameroon",
+  "name": "Cameroon",
+  "abbreviation": "CMR"
+}
+{
+  "displayName": "Canada",
+  "name": "Canada",
+  "abbreviation": "CAN"
+}
+{
+  "displayName": "Costa Rica",
+  "name": "Costa Rica",
+  "abbreviation": "CRC"
+}
+{
+  "displayName": "Croatia",
+  "name": "Croatia",
+  "abbreviation": "CRO"
+}
+{
+  "displayName": "Denmark",
+  "name": "Denmark",
+  "abbreviation": "DEN"
+}
+{
+  "displayName": "Ecuador",
+  "name": "Ecuador",
+  "abbreviation": "ECU"
+}
+{
+  "displayName": "England",
+  "name": "England",
+  "abbreviation": "ENG"
+}
+{
+  "displayName": "France",
+  "name": "France",
+  "abbreviation": "FRA"
+}
+{
+  "displayName": "Germany",
+  "name": "Germany",
+  "abbreviation": "GER"
+}
+{
+  "displayName": "Ghana",
+  "name": "Ghana",
+  "abbreviation": "GHA"
+}
+{
+  "displayName": "Iran",
+  "name": "Iran",
+  "abbreviation": "IRN"
+}
+{
+  "displayName": "Japan",
+  "name": "Japan",
+  "abbreviation": "JPN"
+}
+{
+  "displayName": "Mexico",
+  "name": "Mexico",
+  "abbreviation": "MEX"
+}
+{
+  "displayName": "Morocco",
+  "name": "Morocco",
+  "abbreviation": "MAR"
+}
+{
+  "displayName": "Netherlands",
+  "name": "Netherlands",
+  "abbreviation": "NED"
+}
+{
+  "displayName": "Poland",
+  "name": "Poland",
+  "abbreviation": "POL"
+}
+{
+  "displayName": "Portugal",
+  "name": "Portugal",
+  "abbreviation": "POR"
+}
+{
+  "displayName": "Qatar",
+  "name": "Qatar",
+  "abbreviation": "QAT"
+}
+{
+  "displayName": "Saudi Arabia",
+  "name": "Saudi Arabia",
+  "abbreviation": "KSA"
+}
+{
+  "displayName": "Senegal",
+  "name": "Senegal",
+  "abbreviation": "SEN"
+}
+{
+  "displayName": "Serbia",
+  "name": "Serbia",
+  "abbreviation": "SRB"
+}
+{
+  "displayName": "South Korea",
+  "name": "South Korea",
+  "abbreviation": "KOR"
+}
+{
+  "displayName": "Spain",
+  "name": "Spain",
+  "abbreviation": "ESP"
+}
+{
+  "displayName": "Switzerland",
+  "name": "Switzerland",
+  "abbreviation": "SUI"
+}
+{
+  "displayName": "Tunisia",
+  "name": "Tunisia",
+  "abbreviation": "TUN"
+}
+{
+  "displayName": "United States",
+  "name": "United States",
+  "abbreviation": "USA"
+}
+{
+  "displayName": "Uruguay",
+  "name": "Uruguay",
+  "abbreviation": "URU"
+}
+{
+  "displayName": "Wales",
+  "name": "Wales",
+  "abbreviation": "WAL"
+}
