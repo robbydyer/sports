@@ -30,7 +30,7 @@
     "path-parse": ">=1.0.7",
     "postcss": "^8.4.35",
     "react": ">=18.0.0",
-    "react-bootstrap": "^2.10.0",
+    "react-bootstrap": "^2.10.1",
     "react-dev-utils": ">=11.0.4",
     "react-dom": ">=18.0.0",
     "react-router-dom": ">=6.0.0",
