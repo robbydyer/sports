@@ -6,9 +6,7 @@ ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd 
 cd "${ROOT}"
 source script/common
 IN_DOCKER="${IN_DOCKER:-no}"
-VERSION="${VERSION:-devbuild}"
-DEB_BUILD="${DEB_BUILD:-no}"
-DO_WEB="${SKIP_WEB:-yes}"
+DO_INSTALL="${DO_INSTALL:-yes}"
 
 BUILDARCH="${BUILDARCH:-$(uname -m)}"
 
@@ -17,8 +15,7 @@ img=$(latestpibuilder ${BUILDARCH})
 if [ "${IN_DOCKER}" = "no" ]; then
   docker run -t --rm \
     -e IN_DOCKER=yes \
-    -e BUILDARCH="${BUILDARCH}" \
-    -e VERSION="${VERSION}" \
+    -e DO_INSTALL="${DO_INSTALL}" \
     -v "${ROOT}":/app \
     -w /app \
     ${img} \
@@ -30,7 +27,11 @@ fi
 # Everything below is inside docker
 . ~/.bashrc
 cd /app/web
-npm install
+
+if [ "${DO_INSTALL}" = "yes" ]; then
+  nvm install
+  npm install
+fi
 npm run build
 [ ! -d /app/internal/sportsmatrix/assets ] && mkdir -p /app/internal/sportsmatrix/assets
 [ -d /app/internal/sportsmatrix/assets/web ] && rm -rf /app/internal/sportsmatrix/assets/web
