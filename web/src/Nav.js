@@ -36,7 +36,7 @@ class TopNav extends React.Component {
     render() {
         return (
             <Container fluid>
-                <Navbar expand="sm" bg="dark" variant="dark" hidden={this.props.location.pathname === "/board" ? true : false}>
+                <Navbar expand="sm" bg="dark" variant="dark" hidden={window.location.pathname === "/board" ? true : false}>
                     <Navbar.Brand>SportsMatrix</Navbar.Brand>
                     <Navbar.Toggle aria-controls="basic-navbar-nav"></Navbar.Toggle>
                     <Navbar.Collapse id="basic-navbar-nav">
