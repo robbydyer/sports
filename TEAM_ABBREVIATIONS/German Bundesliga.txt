@@ -1,72 +1,90 @@
 {
+  "displayName": "1. FC Heidenheim 1846",
+  "name": "1. FC Heidenheim 1846",
+  "abbreviation": "HDH"
+}
+{
+  "displayName": "1. FC Union Berlin",
   "name": "1. FC Union Berlin",
   "abbreviation": "FCU"
 }
 {
+  "displayName": "Bayer Leverkusen",
   "name": "Bayer Leverkusen",
   "abbreviation": "B04"
 }
 {
+  "displayName": "Bayern Munich",
   "name": "Bayern Munich",
   "abbreviation": "MUN"
 }
 {
+  "displayName": "Borussia Dortmund",
   "name": "Borussia Dortmund",
   "abbreviation": "DOR"
 }
 {
+  "displayName": "Borussia Monchengladbach",
   "name": "Borussia Monchengladbach",
   "abbreviation": "BMG"
 }
 {
+  "displayName": "Eintracht Frankfurt",
   "name": "Eintracht Frankfurt",
   "abbreviation": "SGE"
 }
 {
+  "displayName": "FC Augsburg",
   "name": "FC Augsburg",
   "abbreviation": "FCA"
 }
 {
+  "displayName": "FC Cologne",
   "name": "FC Cologne",
   "abbreviation": "KOE"
 }
 {
-  "name": "Hertha Berlin",
-  "abbreviation": "BSC"
-}
-{
+  "displayName": "Mainz",
   "name": "Mainz",
   "abbreviation": "M05"
 }
 {
+  "displayName": "RB Leipzig",
   "name": "RB Leipzig",
   "abbreviation": "RBL"
 }
 {
+  "displayName": "SC Freiburg",
   "name": "SC Freiburg",
   "abbreviation": "SCF"
 }
 {
-  "name": "Schalke 04",
-  "abbreviation": "S04"
+  "displayName": "SV Darmstadt 98",
+  "name": "SV Darmstadt 98",
+  "abbreviation": "SVD"
 }
 {
+  "displayName": "TSG Hoffenheim",
   "name": "TSG Hoffenheim",
   "abbreviation": "TSG"
 }
 {
+  "displayName": "VfB Stuttgart",
   "name": "VfB Stuttgart",
   "abbreviation": "VFB"
 }
 {
+  "displayName": "VfL Bochum",
   "name": "VfL Bochum",
   "abbreviation": "BOC"
 }
 {
+  "displayName": "VfL Wolfsburg",
   "name": "VfL Wolfsburg",
   "abbreviation": "WOB"
 }
 {
+  "displayName": "Werder Bremen",
   "name": "Werder Bremen",
   "abbreviation": "SVW"
 }

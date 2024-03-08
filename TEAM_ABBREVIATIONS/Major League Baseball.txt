@@ -1,0 +1,150 @@
+{
+  "displayName": "Arizona Diamondbacks",
+  "name": "Diamondbacks",
+  "abbreviation": "ARI"
+}
+{
+  "displayName": "Atlanta Braves",
+  "name": "Braves",
+  "abbreviation": "ATL"
+}
+{
+  "displayName": "Baltimore Orioles",
+  "name": "Orioles",
+  "abbreviation": "BAL"
+}
+{
+  "displayName": "Boston Red Sox",
+  "name": "Red Sox",
+  "abbreviation": "BOS"
+}
+{
+  "displayName": "Chicago Cubs",
+  "name": "Cubs",
+  "abbreviation": "CHC"
+}
+{
+  "displayName": "Chicago White Sox",
+  "name": "White Sox",
+  "abbreviation": "CHW"
+}
+{
+  "displayName": "Cincinnati Reds",
+  "name": "Reds",
+  "abbreviation": "CIN"
+}
+{
+  "displayName": "Cleveland Guardians",
+  "name": "Guardians",
+  "abbreviation": "CLE"
+}
+{
+  "displayName": "Colorado Rockies",
+  "name": "Rockies",
+  "abbreviation": "COL"
+}
+{
+  "displayName": "Detroit Tigers",
+  "name": "Tigers",
+  "abbreviation": "DET"
+}
+{
+  "displayName": "Houston Astros",
+  "name": "Astros",
+  "abbreviation": "HOU"
+}
+{
+  "displayName": "Kansas City Royals",
+  "name": "Royals",
+  "abbreviation": "KC"
+}
+{
+  "displayName": "Los Angeles Angels",
+  "name": "Angels",
+  "abbreviation": "LAA"
+}
+{
+  "displayName": "Los Angeles Dodgers",
+  "name": "Dodgers",
+  "abbreviation": "LAD"
+}
+{
+  "displayName": "Miami Marlins",
+  "name": "Marlins",
+  "abbreviation": "MIA"
+}
+{
+  "displayName": "Milwaukee Brewers",
+  "name": "Brewers",
+  "abbreviation": "MIL"
+}
+{
+  "displayName": "Minnesota Twins",
+  "name": "Twins",
+  "abbreviation": "MIN"
+}
+{
+  "displayName": "New York Mets",
+  "name": "Mets",
+  "abbreviation": "NYM"
+}
+{
+  "displayName": "New York Yankees",
+  "name": "Yankees",
+  "abbreviation": "NYY"
+}
+{
+  "displayName": "Oakland Athletics",
+  "name": "Athletics",
+  "abbreviation": "OAK"
+}
+{
+  "displayName": "Philadelphia Phillies",
+  "name": "Phillies",
+  "abbreviation": "PHI"
+}
+{
+  "displayName": "Pittsburgh Pirates",
+  "name": "Pirates",
+  "abbreviation": "PIT"
+}
+{
+  "displayName": "San Diego Padres",
+  "name": "Padres",
+  "abbreviation": "SD"
+}
+{
+  "displayName": "San Francisco Giants",
+  "name": "Giants",
+  "abbreviation": "SF"
+}
+{
+  "displayName": "Seattle Mariners",
+  "name": "Mariners",
+  "abbreviation": "SEA"
+}
+{
+  "displayName": "St. Louis Cardinals",
+  "name": "Cardinals",
+  "abbreviation": "STL"
+}
+{
+  "displayName": "Tampa Bay Rays",
+  "name": "Rays",
+  "abbreviation": "TB"
+}
+{
+  "displayName": "Texas Rangers",
+  "name": "Rangers",
+  "abbreviation": "TEX"
+}
+{
+  "displayName": "Toronto Blue Jays",
+  "name": "Blue Jays",
+  "abbreviation": "TOR"
+}
+{
+  "displayName": "Washington Nationals",
+  "name": "Nationals",
+  "abbreviation": "WSH"
+}

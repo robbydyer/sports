@@ -1,80 +1,100 @@
 {
+  "displayName": "AFC Bournemouth",
   "name": "AFC Bournemouth",
   "abbreviation": "BOU"
 }
 {
+  "displayName": "Arsenal",
   "name": "Arsenal",
   "abbreviation": "ARS"
 }
 {
+  "displayName": "Aston Villa",
   "name": "Aston Villa",
   "abbreviation": "AVL"
 }
 {
+  "displayName": "Brentford",
   "name": "Brentford",
   "abbreviation": "BRE"
 }
 {
+  "displayName": "Brighton & Hove Albion",
   "name": "Brighton & Hove Albion",
   "abbreviation": "BHA"
 }
 {
+  "displayName": "Burnley",
+  "name": "Burnley",
+  "abbreviation": "BUR"
+}
+{
+  "displayName": "Chelsea",
   "name": "Chelsea",
   "abbreviation": "CHE"
 }
 {
+  "displayName": "Crystal Palace",
   "name": "Crystal Palace",
   "abbreviation": "CRY"
 }
 {
+  "displayName": "Everton",
   "name": "Everton",
   "abbreviation": "EVE"
 }
 {
+  "displayName": "Fulham",
   "name": "Fulham",
   "abbreviation": "FUL"
 }
 {
-  "name": "Leeds United",
-  "abbreviation": "LEE"
-}
-{
-  "name": "Leicester City",
-  "abbreviation": "LEI"
-}
-{
+  "displayName": "Liverpool",
   "name": "Liverpool",
   "abbreviation": "LIV"
 }
 {
+  "displayName": "Luton Town",
+  "name": "Luton Town",
+  "abbreviation": "LTN"
+}
+{
+  "displayName": "Manchester City",
   "name": "Manchester City",
   "abbreviation": "MNC"
 }
 {
+  "displayName": "Manchester United",
   "name": "Manchester United",
   "abbreviation": "MAN"
 }
 {
+  "displayName": "Newcastle United",
   "name": "Newcastle United",
   "abbreviation": "NEW"
 }
 {
+  "displayName": "Nottingham Forest",
   "name": "Nottingham Forest",
   "abbreviation": "NFO"
 }
 {
-  "name": "Southampton",
-  "abbreviation": "SOU"
+  "displayName": "Sheffield United",
+  "name": "Sheffield United",
+  "abbreviation": "SHU"
 }
 {
+  "displayName": "Tottenham Hotspur",
   "name": "Tottenham Hotspur",
   "abbreviation": "TOT"
 }
 {
+  "displayName": "West Ham United",
   "name": "West Ham United",
   "abbreviation": "WHU"
 }
 {
+  "displayName": "Wolverhampton Wanderers",
   "name": "Wolverhampton Wanderers",
   "abbreviation": "WOL"
 }

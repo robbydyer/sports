@@ -29,11 +29,6 @@
   "abbreviation": "ALST"
 }
 {
-  "displayName": "Albany",
-  "name": "Great Danes",
-  "abbreviation": "ALB"
-}
-{
   "displayName": "Alcorn State",
   "name": "Braves",
   "abbreviation": "ALCN"
@@ -121,7 +116,7 @@
 {
   "displayName": "Barry",
   "name": "Buccaneers",
-  "abbreviation": "BAR"
+  "abbreviation": "BARR"
 }
 {
   "displayName": "Baylor",
@@ -291,7 +286,7 @@
 {
   "displayName": "Central Missouri State",
   "name": "Mules",
-  "abbreviation": "CAO"
+  "abbreviation": "CMST"
 }
 {
   "displayName": "Chaparrals",
@@ -409,7 +404,7 @@
   "abbreviation": "DEP"
 }
 {
-  "displayName": "DePauw University",
+  "displayName": "DePauw",
   "name": "Tigers",
   "abbreviation": "DEP"
 }
@@ -491,7 +486,7 @@
 {
   "displayName": "Emporia St",
   "name": "Hornets",
-  "abbreviation": "EMP"
+  "abbreviation": "EMPO"
 }
 {
   "displayName": "Evansville",
@@ -631,7 +626,7 @@
 {
   "displayName": "Grand View",
   "name": "Vikings",
-  "abbreviation": "GRN"
+  "abbreviation": "GV"
 }
 {
   "displayName": "Green Bay",
@@ -856,7 +851,7 @@
 {
   "displayName": "Linfield",
   "name": "Wildcats",
-  "abbreviation": "LIN"
+  "abbreviation": "LFD"
 }
 {
   "displayName": "Lipscomb",
@@ -886,7 +881,7 @@
 {
   "displayName": "Loras College",
   "name": "Duhawks",
-  "abbreviation": "LOR"
+  "abbreviation": null
 }
 {
   "displayName": "Louisiana",
@@ -1185,7 +1180,7 @@
 }
 {
   "displayName": "North Dakota",
-  "name": null,
+  "name": "Fighting Hawks",
   "abbreviation": "UND"
 }
 {
@@ -1391,7 +1386,7 @@
 {
   "displayName": "Queens University",
   "name": "Royals",
-  "abbreviation": "QUOC"
+  "abbreviation": "QUR"
 }
 {
   "displayName": "Quinnipiac",
@@ -1501,7 +1496,7 @@
 {
   "displayName": "Saint Paul",
   "name": "Golden Bears",
-  "abbreviation": "CON"
+  "abbreviation": "CONC"
 }
 {
   "displayName": "Saint Peter's",
@@ -1586,7 +1581,7 @@
 {
   "displayName": "South Carolina Upstate",
   "name": "Spartans",
-  "abbreviation": "UPST"
+  "abbreviation": "SCUP"
 }
 {
   "displayName": "South Dakota",
@@ -1621,7 +1616,7 @@
 {
   "displayName": "Southern Indiana",
   "name": "Screaming Eagles",
-  "abbreviation": "USI"
+  "abbreviation": "SNI"
 }
 {
   "displayName": "Southern Miss",
@@ -1726,7 +1721,7 @@
 {
   "displayName": "Tarleton State",
   "name": "Texans",
-  "abbreviation": "TAR"
+  "abbreviation": "TaSt"
 }
 {
   "displayName": "Temple",
@@ -1827,6 +1822,11 @@
   "displayName": "UAB",
   "name": "Blazers",
   "abbreviation": "UAB"
+}
+{
+  "displayName": "UAlbany",
+  "name": "Great Danes",
+  "abbreviation": "ALB"
 }
 {
   "displayName": "UC Davis",
@@ -1941,7 +1941,7 @@
 {
   "displayName": "Upper Iowa",
   "name": "Peacocks",
-  "abbreviation": "UPP"
+  "abbreviation": "UIU"
 }
 {
   "displayName": "Utah",
@@ -2031,7 +2031,7 @@
 {
   "displayName": "Wayne State (NE)",
   "name": "Wildcats",
-  "abbreviation": "WAY"
+  "abbreviation": "WNST"
 }
 {
   "displayName": "Weber State",
@@ -2086,7 +2086,7 @@
 {
   "displayName": "Wisconsin",
   "name": "Badgers",
-  "abbreviation": "WIS"
+  "abbreviation": "WISC"
 }
 {
   "displayName": "Wofford",

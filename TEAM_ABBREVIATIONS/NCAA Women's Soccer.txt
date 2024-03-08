@@ -719,14 +719,14 @@
   "abbreviation": "TENN"
 }
 {
+  "displayName": "Texas A&M - Corpus Christi Islanders",
+  "name": "Texas A&M - Corpus Christi",
+  "abbreviation": "AMCC"
+}
+{
   "displayName": "Texas A&M Aggies",
   "name": "Texas A&M",
   "abbreviation": "TA&M"
-}
-{
-  "displayName": "Texas A&M-Corpus Christi Islanders",
-  "name": "Texas A&M-Corpus Christi",
-  "abbreviation": "AMCC"
 }
 {
   "displayName": "Texas Longhorns",

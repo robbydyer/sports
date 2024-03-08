@@ -1,128 +1,160 @@
 {
+  "displayName": "Anaheim Ducks",
   "name": "Ducks",
   "abbreviation": "ANA"
 }
 {
+  "displayName": "Arizona Coyotes",
   "name": "Coyotes",
   "abbreviation": "ARI"
 }
 {
+  "displayName": "Boston Bruins",
   "name": "Bruins",
   "abbreviation": "BOS"
 }
 {
+  "displayName": "Buffalo Sabres",
   "name": "Sabres",
   "abbreviation": "BUF"
 }
 {
+  "displayName": "Calgary Flames",
   "name": "Flames",
   "abbreviation": "CGY"
 }
 {
+  "displayName": "Carolina Hurricanes",
   "name": "Hurricanes",
   "abbreviation": "CAR"
 }
 {
+  "displayName": "Chicago Blackhawks",
   "name": "Blackhawks",
   "abbreviation": "CHI"
 }
 {
+  "displayName": "Colorado Avalanche",
   "name": "Avalanche",
   "abbreviation": "COL"
 }
 {
+  "displayName": "Columbus Blue Jackets",
   "name": "Blue Jackets",
   "abbreviation": "CBJ"
 }
 {
+  "displayName": "Dallas Stars",
   "name": "Stars",
   "abbreviation": "DAL"
 }
 {
+  "displayName": "Detroit Red Wings",
   "name": "Red Wings",
   "abbreviation": "DET"
 }
 {
+  "displayName": "Edmonton Oilers",
   "name": "Oilers",
   "abbreviation": "EDM"
 }
 {
+  "displayName": "Florida Panthers",
   "name": "Panthers",
   "abbreviation": "FLA"
 }
 {
+  "displayName": "Los Angeles Kings",
   "name": "Kings",
   "abbreviation": "LA"
 }
 {
+  "displayName": "Minnesota Wild",
   "name": "Wild",
   "abbreviation": "MIN"
 }
 {
+  "displayName": "Montreal Canadiens",
   "name": "Canadiens",
   "abbreviation": "MTL"
 }
 {
+  "displayName": "Nashville Predators",
   "name": "Predators",
   "abbreviation": "NSH"
 }
 {
+  "displayName": "New Jersey Devils",
   "name": "Devils",
   "abbreviation": "NJ"
 }
 {
+  "displayName": "New York Islanders",
   "name": "Islanders",
   "abbreviation": "NYI"
 }
 {
+  "displayName": "New York Rangers",
   "name": "Rangers",
   "abbreviation": "NYR"
 }
 {
+  "displayName": "Ottawa Senators",
   "name": "Senators",
   "abbreviation": "OTT"
 }
 {
+  "displayName": "Philadelphia Flyers",
   "name": "Flyers",
   "abbreviation": "PHI"
 }
 {
+  "displayName": "Pittsburgh Penguins",
   "name": "Penguins",
   "abbreviation": "PIT"
 }
 {
+  "displayName": "San Jose Sharks",
   "name": "Sharks",
   "abbreviation": "SJ"
 }
 {
+  "displayName": "Seattle Kraken",
   "name": "Kraken",
   "abbreviation": "SEA"
 }
 {
+  "displayName": "St. Louis Blues",
   "name": "Blues",
   "abbreviation": "STL"
 }
 {
+  "displayName": "Tampa Bay Lightning",
   "name": "Lightning",
   "abbreviation": "TB"
 }
 {
+  "displayName": "Toronto Maple Leafs",
   "name": "Maple Leafs",
   "abbreviation": "TOR"
 }
 {
+  "displayName": "Vancouver Canucks",
   "name": "Canucks",
   "abbreviation": "VAN"
 }
 {
+  "displayName": "Vegas Golden Knights",
   "name": "Golden Knights",
   "abbreviation": "VGK"
 }
 {
+  "displayName": "Washington Capitals",
   "name": "Capitals",
   "abbreviation": "WSH"
 }
 {
+  "displayName": "Winnipeg Jets",
   "name": "Jets",
   "abbreviation": "WPG"
 }

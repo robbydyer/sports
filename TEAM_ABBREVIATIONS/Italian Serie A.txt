@@ -1,80 +1,100 @@
 {
+  "displayName": "AC Milan",
   "name": "AC Milan",
   "abbreviation": "MIL"
 }
 {
+  "displayName": "AS Roma",
   "name": "AS Roma",
   "abbreviation": "ROMA"
 }
 {
+  "displayName": "Atalanta",
   "name": "Atalanta",
   "abbreviation": "ATA"
 }
 {
+  "displayName": "Bologna",
   "name": "Bologna",
   "abbreviation": "BOL"
 }
 {
-  "name": "Cremonese",
-  "abbreviation": "CRE"
+  "displayName": "Cagliari",
+  "name": "Cagliari",
+  "abbreviation": "CAG"
 }
 {
+  "displayName": "Empoli",
   "name": "Empoli",
   "abbreviation": "EMP"
 }
 {
+  "displayName": "Fiorentina",
   "name": "Fiorentina",
   "abbreviation": "FIO"
 }
 {
+  "displayName": "Frosinone",
+  "name": "Frosinone",
+  "abbreviation": "FRO"
+}
+{
+  "displayName": "Genoa",
+  "name": "Genoa",
+  "abbreviation": "GEN"
+}
+{
+  "displayName": "Hellas Verona",
   "name": "Hellas Verona",
   "abbreviation": "VER"
 }
 {
+  "displayName": "Internazionale",
   "name": "Internazionale",
   "abbreviation": "INT"
 }
 {
+  "displayName": "Juventus",
   "name": "Juventus",
   "abbreviation": "JUV"
 }
 {
+  "displayName": "Lazio",
   "name": "Lazio",
   "abbreviation": "LAZ"
 }
 {
+  "displayName": "Lecce",
   "name": "Lecce",
   "abbreviation": "LEC"
 }
 {
+  "displayName": "Monza",
   "name": "Monza",
   "abbreviation": "MON"
 }
 {
+  "displayName": "Napoli",
   "name": "Napoli",
   "abbreviation": "NAP"
 }
 {
+  "displayName": "Salernitana",
   "name": "Salernitana",
   "abbreviation": "SAL"
 }
 {
-  "name": "Sampdoria",
-  "abbreviation": "SAM"
-}
-{
+  "displayName": "Sassuolo",
   "name": "Sassuolo",
   "abbreviation": "SAS"
 }
 {
-  "name": "Spezia",
-  "abbreviation": "SPE"
-}
-{
+  "displayName": "Torino",
   "name": "Torino",
   "abbreviation": "TOR"
 }
 {
+  "displayName": "Udinese",
   "name": "Udinese",
   "abbreviation": "UDI"
 }

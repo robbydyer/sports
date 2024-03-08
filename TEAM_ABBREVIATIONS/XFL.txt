@@ -1,32 +1,25 @@
 {
-  "name": "Renegades",
-  "abbreviation": "ARL"
-}
-{
-  "name": "Defenders",
-  "abbreviation": "DC"
-}
-{
+  "displayName": "Houston Roughnecks",
   "name": "Roughnecks",
   "abbreviation": "HOU"
 }
 {
+  "displayName": "Orlando Guardians",
   "name": "Guardians",
   "abbreviation": "ORL"
 }
 {
+  "displayName": "San Antonio Brahmas",
   "name": "Brahmas",
   "abbreviation": "SA"
 }
 {
+  "displayName": "Seattle Sea Dragons",
   "name": "Sea Dragons",
   "abbreviation": "SEA"
 }
 {
-  "name": "Battlehawks",
-  "abbreviation": "STL"
-}
-{
+  "displayName": "Vegas Vipers",
   "name": "Vipers",
   "abbreviation": "VGS"
 }

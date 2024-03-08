@@ -1,80 +1,90 @@
 {
-  "name": "AC Ajaccio",
-  "abbreviation": "ACA"
-}
-{
-  "name": "AJ Auxerre",
-  "abbreviation": "AUX"
-}
-{
+  "displayName": "AS Monaco",
   "name": "AS Monaco",
   "abbreviation": "MON"
 }
 {
-  "name": "Angers",
-  "abbreviation": "ANG"
-}
-{
+  "displayName": "Brest",
   "name": "Brest",
   "abbreviation": "BRES"
 }
 {
+  "displayName": "Clermont Foot",
   "name": "Clermont Foot",
   "abbreviation": "CLE"
 }
 {
+  "displayName": "Le Havre AC",
+  "name": "Le Havre AC",
+  "abbreviation": "HAC"
+}
+{
+  "displayName": "Lens",
   "name": "Lens",
   "abbreviation": "RCL"
 }
 {
+  "displayName": "Lille",
   "name": "Lille",
   "abbreviation": "LILL"
 }
 {
+  "displayName": "Lorient",
   "name": "Lorient",
   "abbreviation": "LOR"
 }
 {
+  "displayName": "Lyon",
   "name": "Lyon",
   "abbreviation": "LYON"
 }
 {
+  "displayName": "Marseille",
   "name": "Marseille",
   "abbreviation": "OLM"
 }
 {
+  "displayName": "Metz",
+  "name": "Metz",
+  "abbreviation": "METZ"
+}
+{
+  "displayName": "Montpellier",
   "name": "Montpellier",
   "abbreviation": "MON"
 }
 {
+  "displayName": "Nantes",
   "name": "Nantes",
   "abbreviation": "NAN"
 }
 {
+  "displayName": "Nice",
   "name": "Nice",
   "abbreviation": "NICE"
 }
 {
+  "displayName": "Paris Saint-Germain",
   "name": "Paris Saint-Germain",
   "abbreviation": "PSG"
 }
 {
+  "displayName": "Stade Rennais",
   "name": "Stade Rennais",
   "abbreviation": "REN"
 }
 {
+  "displayName": "Stade de Reims",
   "name": "Stade de Reims",
   "abbreviation": "REIM"
 }
 {
+  "displayName": "Strasbourg",
   "name": "Strasbourg",
   "abbreviation": "STR"
 }
 {
+  "displayName": "Toulouse",
   "name": "Toulouse",
   "abbreviation": "TOU"
-}
-{
-  "name": "Troyes",
-  "abbreviation": "TRY"
 }

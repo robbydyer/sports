@@ -1,256 +1,320 @@
 {
-  "name": "1. FC Heidenheim",
+  "displayName": "1. FC Heidenheim 1846",
+  "name": "1. FC Heidenheim 1846",
   "abbreviation": "HDH"
 }
 {
+  "displayName": "1. FC Lokomotive Leipzig",
+  "name": "1. FC Lokomotive Leipzig",
+  "abbreviation": "LOK"
+}
+{
+  "displayName": "1. FC Magdeburg",
   "name": "1. FC Magdeburg",
   "abbreviation": "FCM"
 }
 {
+  "displayName": "1. FC Union Berlin",
   "name": "1. FC Union Berlin",
   "abbreviation": "FCU"
 }
 {
+  "displayName": "Arminia Bielefeld",
   "name": "Arminia Bielefeld",
   "abbreviation": "DSC"
 }
 {
-  "name": "BSV Schwarz-Weiß Rehden",
-  "abbreviation": "SWR"
-}
-{
+  "displayName": "Bayer Leverkusen",
   "name": "Bayer Leverkusen",
   "abbreviation": "B04"
 }
 {
+  "displayName": "Bayern Munich",
   "name": "Bayern Munich",
   "abbreviation": "MUN"
 }
 {
+  "displayName": "Borussia Dortmund",
   "name": "Borussia Dortmund",
   "abbreviation": "DOR"
 }
 {
+  "displayName": "Borussia Monchengladbach",
   "name": "Borussia Monchengladbach",
   "abbreviation": "BMG"
 }
 {
-  "name": "Bremer SV",
-  "abbreviation": "BRE"
-}
-{
-  "name": "Chemnitzer GC",
-  "abbreviation": "CHEM"
-}
-{
-  "name": "Dynamo Dresden",
-  "abbreviation": "SGD"
-}
-{
-  "name": "Einheit",
-  "abbreviation": "EIN"
-}
-{
+  "displayName": "Eintracht Frankfurt",
   "name": "Eintracht Frankfurt",
   "abbreviation": "SGE"
 }
 {
+  "displayName": "Energie Cottbus",
   "name": "Energie Cottbus",
   "abbreviation": "COT"
 }
 {
+  "displayName": "FC 08 Homburg",
+  "name": "FC 08 Homburg",
+  "abbreviation": "FCH"
+}
+{
+  "displayName": "FC Astoria Walldorf",
+  "name": "FC Astoria Walldorf",
+  "abbreviation": "ASW"
+}
+{
+  "displayName": "FC Augsburg",
   "name": "FC Augsburg",
   "abbreviation": "FCA"
 }
 {
+  "displayName": "FC Carl Zeiss Jena",
   "name": "FC Carl Zeiss Jena",
   "abbreviation": "CZJ"
 }
 {
+  "displayName": "FC Cologne",
   "name": "FC Cologne",
   "abbreviation": "KOE"
 }
 {
-  "name": "FC Erzgebirge Aue",
-  "abbreviation": "ERZ"
+  "displayName": "FC Gütersloh 2000",
+  "name": "FC Gütersloh 2000",
+  "abbreviation": "FCG"
 }
 {
-  "name": "FC Ingolstadt 04",
-  "abbreviation": "ING"
+  "displayName": "FC Oberneuland",
+  "name": "FC Oberneuland",
+  "abbreviation": "OBR"
 }
 {
-  "name": "FC Viktoria 1889 Berlin",
-  "abbreviation": "FVB"
+  "displayName": "FSV Frankfurt",
+  "name": "FSV Frankfurt",
+  "abbreviation": "FSV"
 }
 {
-  "name": "FV Engers 07",
-  "abbreviation": "FVE"
-}
-{
+  "displayName": "FV Illertissen",
   "name": "FV Illertissen",
   "abbreviation": "ILL"
 }
 {
+  "displayName": "Fortuna Düsseldorf",
   "name": "Fortuna Düsseldorf",
   "abbreviation": "F95"
 }
 {
+  "displayName": "Hallescher FC",
+  "name": "Hallescher FC",
+  "abbreviation": "HAL"
+}
+{
+  "displayName": "Hamburg SV",
   "name": "Hamburg SV",
   "abbreviation": "HSV"
 }
 {
+  "displayName": "Hannover 96",
   "name": "Hannover 96",
   "abbreviation": "H96"
 }
 {
+  "displayName": "Hansa Rostock",
   "name": "Hansa Rostock",
   "abbreviation": "FCH"
 }
 {
+  "displayName": "Hertha Berlin",
   "name": "Hertha Berlin",
   "abbreviation": "BSC"
 }
 {
+  "displayName": "Holstein Kiel",
   "name": "Holstein Kiel",
   "abbreviation": "KIE"
 }
 {
-  "name": "Kaan Marie",
-  "abbreviation": "KAM"
-}
-{
+  "displayName": "Kaiserslautern",
   "name": "Kaiserslautern",
   "abbreviation": "FCK"
 }
 {
+  "displayName": "Karlsruher SC",
   "name": "Karlsruher SC",
   "abbreviation": "KSC"
 }
 {
-  "name": "Kickers Offenbach",
-  "abbreviation": "KOF"
-}
-{
-  "name": "Lohne",
-  "abbreviation": "LOH"
-}
-{
+  "displayName": "Mainz",
   "name": "Mainz",
   "abbreviation": "M05"
 }
 {
+  "displayName": "Nurnberg",
   "name": "Nurnberg",
   "abbreviation": "FCN"
 }
 {
+  "displayName": "Oberachern",
   "name": "Oberachern",
   "abbreviation": "OBE"
 }
 {
+  "displayName": "Preußen Münster",
+  "name": "Preußen Münster",
+  "abbreviation": "PRM"
+}
+{
+  "displayName": "RB Leipzig",
   "name": "RB Leipzig",
   "abbreviation": "RBL"
 }
 {
+  "displayName": "Rostock FC",
+  "name": "Rostock FC",
+  "abbreviation": "ROS"
+}
+{
+  "displayName": "Rot-Weiss Essen",
+  "name": "Rot-Weiss Essen",
+  "abbreviation": "RWE"
+}
+{
+  "displayName": "SC Freiburg",
   "name": "SC Freiburg",
   "abbreviation": "SCF"
 }
 {
+  "displayName": "SC Paderborn 07",
   "name": "SC Paderborn 07",
   "abbreviation": "SCP"
 }
 {
+  "displayName": "SSV Jahn Regensburg",
   "name": "SSV Jahn Regensburg",
   "abbreviation": "REG"
 }
 {
+  "displayName": "SV 07 Elversberg",
   "name": "SV 07 Elversberg",
   "abbreviation": "ELV"
 }
 {
+  "displayName": "SV Atlas Delmenhorst",
+  "name": "SV Atlas Delmenhorst",
+  "abbreviation": "SVA"
+}
+{
+  "displayName": "SV Darmstadt 98",
   "name": "SV Darmstadt 98",
   "abbreviation": "SVD"
 }
 {
-  "name": "SV Rödinghausen",
-  "abbreviation": "SVR"
-}
-{
+  "displayName": "SV Sandhausen",
   "name": "SV Sandhausen",
   "abbreviation": "SVS"
 }
 {
-  "name": "SV Straelen",
-  "abbreviation": "SVS"
+  "displayName": "SV Wehen Wiesbaden",
+  "name": "SV Wehen Wiesbaden",
+  "abbreviation": "WEH"
 }
 {
-  "name": "SV Waldhof Mannheim",
-  "abbreviation": "SVW"
+  "displayName": "Saarbrücken",
+  "name": "Saarbrücken",
+  "abbreviation": "FCS"
 }
 {
+  "displayName": "Schalke 04",
   "name": "Schalke 04",
   "abbreviation": "S04"
 }
 {
+  "displayName": "Schott",
   "name": "Schott",
   "abbreviation": "SCH"
 }
 {
-  "name": "SpVgg Bayreuth",
-  "abbreviation": "BAY"
-}
-{
+  "displayName": "SpVgg Greuther Furth",
   "name": "SpVgg Greuther Furth",
   "abbreviation": "SGF"
 }
 {
+  "displayName": "SpVgg Unterhaching",
+  "name": "SpVgg Unterhaching",
+  "abbreviation": "UNT"
+}
+{
+  "displayName": "St. Pauli",
   "name": "St. Pauli",
   "abbreviation": "STP"
 }
 {
-  "name": "Stuttgarter Kickers",
-  "abbreviation": "STK"
+  "displayName": "TSG Balingen",
+  "name": "TSG Balingen",
+  "abbreviation": "TSG"
 }
 {
+  "displayName": "TSG Hoffenheim",
   "name": "TSG Hoffenheim",
   "abbreviation": "TSG"
 }
 {
-  "name": "TSG Neustrelitz",
-  "abbreviation": "NEU"
-}
-{
-  "name": "TSV 1860 Munich",
-  "abbreviation": "TSV"
-}
-{
+  "displayName": "TSV Eintracht Braunschweig",
   "name": "TSV Eintracht Braunschweig",
   "abbreviation": "EBS"
 }
 {
+  "displayName": "Teutonia Ottensen",
   "name": "Teutonia Ottensen",
   "abbreviation": "TTO"
 }
 {
+  "displayName": "TuS Bersenbrück",
+  "name": "TuS Bersenbrück",
+  "abbreviation": "BER"
+}
+{
+  "displayName": "TuS Makkabi",
+  "name": "TuS Makkabi",
+  "abbreviation": "MAK"
+}
+{
+  "displayName": "TuS Rot-Weiß Koblenz",
+  "name": "TuS Rot-Weiß Koblenz",
+  "abbreviation": "KOB"
+}
+{
+  "displayName": "VfB Lübeck",
   "name": "VfB Lübeck",
   "abbreviation": "LUB"
 }
 {
+  "displayName": "VfB Stuttgart",
   "name": "VfB Stuttgart",
   "abbreviation": "VFB"
 }
 {
+  "displayName": "VfL Bochum",
   "name": "VfL Bochum",
   "abbreviation": "BOC"
 }
 {
+  "displayName": "VfL Osnabruck",
+  "name": "VfL Osnabruck",
+  "abbreviation": "OSN"
+}
+{
+  "displayName": "VfL Wolfsburg",
   "name": "VfL Wolfsburg",
   "abbreviation": "WOB"
 }
 {
+  "displayName": "Viktoria Köln",
   "name": "Viktoria Köln",
   "abbreviation": "VKO"
 }
 {
+  "displayName": "Werder Bremen",
   "name": "Werder Bremen",
   "abbreviation": "SVW"
 }
