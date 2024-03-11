@@ -36,7 +36,7 @@
     "react-router-dom": ">=6.0.0",
     "react-scripts": ">=5.0.1",
     "set-value": ">=4.0.1",
-    "swagger-ui": "^5.11.9",
+    "swagger-ui": "^5.11.10",
     "swagger-ui-dist": "^5.11.10",
     "swagger-ui-react": "^5.11.9",
     "tar": ">=6.2.0",
