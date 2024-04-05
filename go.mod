@@ -25,7 +25,7 @@ require (
 	go.uber.org/zap v1.27.0
 	golang.org/x/image v0.15.0
 	golang.org/x/oauth2 v0.19.0
-	golang.org/x/sync v0.6.0
+	golang.org/x/sync v0.7.0
 	google.golang.org/api v0.172.0
 	google.golang.org/protobuf v1.33.0
 	gopkg.in/yaml.v2 v2.4.0
