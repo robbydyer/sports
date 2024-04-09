@@ -17,6 +17,6 @@ COPY ./internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE /tmp/rpi-rgb-led-matri
 RUN cd /tmp/rpi-rgb-led-matrix && \
     make
 
-FROM golangci/golangci-lint:v1.57.0
+FROM golangci/golangci-lint:v1.57.2
 
 COPY --from=builder /tmp/rpi-rgb-led-matrix /sportslibs/rpi-rgb-led-matrix
