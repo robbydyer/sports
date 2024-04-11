@@ -37,7 +37,7 @@
     "react-scripts": ">=5.0.1",
     "set-value": ">=4.0.1",
     "swagger-ui": "^5.14.0",
-    "swagger-ui-dist": "^5.15.0",
+    "swagger-ui-dist": "^5.15.1",
     "swagger-ui-react": "^5.14.0",
     "tar": ">=6.2.1",
     "tmpl": ">=1.0.5",
