@@ -433,7 +433,7 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# google.golang.org/api v0.176.1
+# google.golang.org/api v0.177.0
 ## explicit; go 1.19
 google.golang.org/api/calendar/v3
 google.golang.org/api/googleapi
@@ -447,12 +447,12 @@ google.golang.org/api/option
 google.golang.org/api/option/internaloption
 google.golang.org/api/transport/http
 google.golang.org/api/transport/http/internal/propagation
-# google.golang.org/genproto/googleapis/api v0.0.0-20240311132316-a219d84964c2
+# google.golang.org/genproto/googleapis/api v0.0.0-20240314234333-6e1732d8331c
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/api
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/visibility
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20240415180920-8c6c420018be
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20240429193739-8cf5692501f6
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/rpc/code
 google.golang.org/genproto/googleapis/rpc/errdetails
