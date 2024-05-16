@@ -106,7 +106,8 @@ var wktSchemas = map[string]schemaCore{
 	},
 }
 
-func listEnumNames(reg *descriptor.Registry, enum *descriptor.Enum) (names []string) {
+func listEnumNames(reg *descriptor.Registry, enum *descriptor.Enum) interface{} {
+	var names []string
 	for _, value := range enum.GetValue() {
 		if !isVisible(getEnumValueVisibilityOption(value), reg) {
 			continue
@@ -124,7 +125,8 @@ func listEnumNames(reg *descriptor.Registry, enum *descriptor.Enum) (names []str
 	return nil
 }
 
-func listEnumNumbers(reg *descriptor.Registry, enum *descriptor.Enum) (numbers []int) {
+func listEnumNumbers(reg *descriptor.Registry, enum *descriptor.Enum) interface{} {
+	var numbers []int
 	for _, value := range enum.GetValue() {
 		if reg.GetOmitEnumDefaultValue() && value.GetNumber() == 0 {
 			continue
@@ -432,6 +434,10 @@ func getMapParamKey(t descriptorpb.FieldDescriptorProto_Type) (string, error) {
 // findServicesMessagesAndEnumerations discovers all messages and enums defined in the RPC methods of the service.
 func findServicesMessagesAndEnumerations(s []*descriptor.Service, reg *descriptor.Registry, m messageMap, ms messageMap, e enumMap, refs refMap) {
 	for _, svc := range s {
+		if !isVisible(getServiceVisibilityOption(svc), reg) {
+			continue
+		}
+
 		for _, meth := range svc.Methods {
 			// Request may be fully included in query
 			{
@@ -1327,7 +1333,7 @@ func renderServices(services []*descriptor.Service, paths *openapiPathsObject, r
 						// "NOTE: the referred field must be present at the top-level of the request message type."
 						// Ref: https://github.com/googleapis/googleapis/blob/b3397f5febbf21dfc69b875ddabaf76bee765058/google/api/http.proto#L350-L352
 						if len(b.Body.FieldPath) > 1 {
-							return fmt.Errorf("Body of request %q is not a top level field: '%v'.", meth.Service.GetName(), b.Body.FieldPath)
+							return fmt.Errorf("body of request %q is not a top level field: '%v'", meth.Service.GetName(), b.Body.FieldPath)
 						}
 						bodyField := b.Body.FieldPath[0]
 						if reg.GetUseJSONNamesForFields() {
