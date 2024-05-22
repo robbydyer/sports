@@ -38,7 +38,7 @@
     "set-value": ">=4.0.1",
     "swagger-ui": "^5.17.6",
     "swagger-ui-dist": "^5.17.10",
-    "swagger-ui-react": "^5.17.6",
+    "swagger-ui-react": "^5.17.12",
     "tar": ">=7.1.0",
     "tmpl": ">=1.0.5",
     "url-parse": ">=1.5.9",
