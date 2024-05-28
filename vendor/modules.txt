@@ -273,7 +273,7 @@ github.com/spf13/viper/internal/encoding/json
 github.com/spf13/viper/internal/encoding/toml
 github.com/spf13/viper/internal/encoding/yaml
 github.com/spf13/viper/internal/features
-# github.com/srikrsna/protoc-gen-gotag v0.6.2
+# github.com/srikrsna/protoc-gen-gotag v1.0.0
 ## explicit; go 1.16
 github.com/srikrsna/protoc-gen-gotag
 github.com/srikrsna/protoc-gen-gotag/module
