@@ -1,5 +1,5 @@
-# cloud.google.com/go/auth v0.4.1
-## explicit; go 1.19
+# cloud.google.com/go/auth v0.4.2
+## explicit; go 1.20
 cloud.google.com/go/auth
 cloud.google.com/go/auth/credentials
 cloud.google.com/go/auth/credentials/internal/externalaccount
@@ -433,7 +433,7 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# google.golang.org/api v0.181.0
+# google.golang.org/api v0.182.0
 ## explicit; go 1.20
 google.golang.org/api/calendar/v3
 google.golang.org/api/googleapi
@@ -452,8 +452,8 @@ google.golang.org/api/transport/http/internal/propagation
 google.golang.org/genproto/googleapis/api
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/visibility
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20240513163218-0867130af1f8
-## explicit; go 1.19
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20240521202816-d264139d666e
+## explicit; go 1.20
 google.golang.org/genproto/googleapis/rpc/code
 google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status
