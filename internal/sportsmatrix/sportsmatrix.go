@@ -2,6 +2,7 @@ package sportsmatrix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	_ "net/http/pprof"
@@ -122,6 +123,7 @@ func (c *Config) Defaults() {
 }
 
 // New ...
+// nolint:contextcheck
 func New(ctx context.Context, logger *zap.Logger, cfg *Config, canvases []board.Canvas, boards ...board.Board) (*SportsMatrix, error) {
 	cfg.Defaults()
 
@@ -329,7 +331,7 @@ func (s *SportsMatrix) startWebBoard(ctx context.Context) {
 		default:
 		}
 		if err := s.launchWebBoard(ctx); err != nil {
-			if err == context.Canceled {
+			if errors.Is(err, context.Canceled) {
 				s.log.Warn("web board context canceled, closing", zap.Error(err))
 				return
 			}

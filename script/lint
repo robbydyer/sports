@@ -19,6 +19,7 @@ if [ "${IN_DOCKER}" = "no" ]; then
       -v "${ROOT}":/src${MOUNTOPTION} \
       -w /src \
       -e GOCACHE="/src/.cache" \
+      -e GOFLAGS="-buildvcs=false" \
       -e GOLANGCI_LINT_CACHE="/src/.cache" \
       -e GO111MODULE=on \
       -e CGO_ENABLED=1 \

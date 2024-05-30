@@ -25,6 +25,7 @@ func (s *CalendarBoard) Render(ctx context.Context, canvas board.Canvas) error {
 }
 
 // Render ...
+// nolint:contextcheck
 func (s *CalendarBoard) render(ctx context.Context, canvas board.Canvas) error {
 	s.boardCtx, s.boardCancel = context.WithCancel(ctx)
 

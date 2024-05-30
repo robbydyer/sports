@@ -74,6 +74,7 @@ func (e *ESPNBoard) logoCacheDir() (string, error) {
 }
 
 // New ...
+// nolint:contextcheck
 func New(ctx context.Context, leaguer Leaguer, logger *zap.Logger, r rankSetter, rec rankSetter, opts ...Option) (*ESPNBoard, error) {
 	e := &ESPNBoard{
 		leaguer:          leaguer,

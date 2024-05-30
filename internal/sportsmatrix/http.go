@@ -163,6 +163,7 @@ func (s *SportsMatrix) startHTTP() chan error {
 	return errChan
 }
 
+//nolint:contextcheck
 func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
 	return []*board.HTTPHandler{
 		{

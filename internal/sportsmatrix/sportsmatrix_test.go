@@ -70,6 +70,7 @@ func (b *TestBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
 }
 
 func TestSportsMatrix(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	logger := zaptest.NewLogger(t, zaptest.Level(zapcore.ErrorLevel))
@@ -151,6 +152,7 @@ func TestSportsMatrix(t *testing.T) {
 }
 
 func TestScreenSwitch(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

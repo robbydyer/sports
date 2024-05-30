@@ -7,6 +7,7 @@ import (
 )
 
 func TestFilenameCompare(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		a        string
@@ -61,12 +62,14 @@ func TestFilenameCompare(t *testing.T) {
 		test := test
 
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			require.Equal(t, test.expected, filenameCompare(test.a, test.b))
 		})
 	}
 }
 
 func TestReverseStrs(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		in       []string
@@ -93,6 +96,7 @@ func TestReverseStrs(t *testing.T) {
 		test := test
 
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			require.Equal(t, test.expected, reverseStrs(test.in))
 		})
 	}

@@ -18,6 +18,8 @@ type jumpRequest struct {
 }
 
 // GetHTTPHandlers ...
+//
+//nolint:contextcheck
 func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 	return []*board.HTTPHandler{
 		{
