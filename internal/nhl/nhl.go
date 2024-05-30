@@ -47,7 +47,7 @@ func New(ctx context.Context, logger *zap.Logger) (*NHL, error) {
 	}
 
 	c := cron.New()
-	if _, err := c.AddFunc("0 5 * * *", func() { n.CacheClear(ctx) }); err != nil {
+	if _, err := c.AddFunc("0 5 * * *", func() { n.CacheClear(context.Background()) }); err != nil {
 		return n, fmt.Errorf("failed to set cron job for cacheClear: %w", err)
 	}
 	c.Start()

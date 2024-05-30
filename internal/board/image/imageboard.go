@@ -393,7 +393,7 @@ IMAGES:
 
 		if nextIndex < len(images) {
 			if images[nextIndex].isGif {
-				pCtx, pCancel := context.WithTimeout(ctx, preloaderTimeout)
+				pCtx, pCancel := context.WithTimeout(context.Background(), preloaderTimeout)
 				defer pCancel()
 				wg.Add(1)
 				go preloadGif(pCtx, images[nextIndex])

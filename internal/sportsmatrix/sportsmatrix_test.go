@@ -69,8 +69,8 @@ func (b *TestBoard) ScrollMode() bool {
 func (b *TestBoard) SetStateChangeNotifier(st board.StateChangeNotifier) {
 }
 
+// nolint: paralleltest
 func TestSportsMatrix(t *testing.T) {
-	t.Parallel()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	logger := zaptest.NewLogger(t, zaptest.Level(zapcore.ErrorLevel))
