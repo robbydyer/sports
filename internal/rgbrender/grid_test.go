@@ -57,6 +57,7 @@ func TestGridLayout(t *testing.T) {
 }
 
 func TestGrid(t *testing.T) {
+	t.Parallel()
 	log, err := zap.NewDevelopment()
 	require.NoError(t, err)
 	canvas := board.NewBlankCanvas(100, 100, log)

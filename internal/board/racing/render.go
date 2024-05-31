@@ -26,6 +26,8 @@ func (s *RacingBoard) Render(ctx context.Context, canvas board.Canvas) error {
 }
 
 // Render ...
+//
+//nolint:contextcheck
 func (s *RacingBoard) render(ctx context.Context, canvas board.Canvas) error {
 	s.boardCtx, s.boardCancel = context.WithCancel(ctx)
 

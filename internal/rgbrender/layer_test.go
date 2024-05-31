@@ -157,6 +157,7 @@ func TestPriorities(t *testing.T) {
 }
 
 func TestRender(t *testing.T) {
+	t.Parallel()
 	layers, err := NewLayerDrawer(60*time.Second, nil)
 	require.NoError(t, err)
 
@@ -203,6 +204,7 @@ func TestRender(t *testing.T) {
 }
 
 func TestBadPrepare(t *testing.T) {
+	t.Parallel()
 	layers, err := NewLayerDrawer(60*time.Second, nil)
 	require.NoError(t, err)
 
@@ -219,6 +221,7 @@ func TestBadPrepare(t *testing.T) {
 }
 
 func TestBadRender(t *testing.T) {
+	t.Parallel()
 	layers, err := NewLayerDrawer(60*time.Second, nil)
 	require.NoError(t, err)
 

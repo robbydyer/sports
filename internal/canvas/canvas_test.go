@@ -12,6 +12,7 @@ import (
 )
 
 func TestNewCanvas(t *testing.T) {
+	t.Parallel()
 	canvas := NewCanvas(NewMatrixMock(64, 32))
 	require.NotNil(t, canvas)
 	require.Equal(t, 64, canvas.w)
@@ -19,6 +20,7 @@ func TestNewCanvas(t *testing.T) {
 }
 
 func TestRender(t *testing.T) {
+	t.Parallel()
 	m := NewMatrixMock(10, 20)
 	canvas := &Canvas{m: m}
 	err := canvas.Render(context.Background())
@@ -26,11 +28,13 @@ func TestRender(t *testing.T) {
 }
 
 func TestColorModel(t *testing.T) {
+	t.Parallel()
 	canvas := &Canvas{}
 	require.Equal(t, color.RGBAModel, canvas.ColorModel())
 }
 
 func TestBounds(t *testing.T) {
+	t.Parallel()
 	canvas := &Canvas{w: 10, h: 20}
 
 	b := canvas.Bounds()
@@ -41,6 +45,7 @@ func TestBounds(t *testing.T) {
 }
 
 func TestSet(t *testing.T) {
+	t.Parallel()
 	m := NewMatrixMock(10, 20)
 	canvas := &Canvas{w: 10, h: 20, m: m}
 	canvas.Set(5, 15, color.White)
@@ -49,6 +54,7 @@ func TestSet(t *testing.T) {
 }
 
 func TestClear(t *testing.T) {
+	t.Parallel()
 	m := NewMatrixMock(10, 20)
 
 	canvas := &Canvas{w: 10, h: 20, m: m}
@@ -61,6 +67,7 @@ func TestClear(t *testing.T) {
 }
 
 func TestClose(t *testing.T) {
+	t.Parallel()
 	m := NewMatrixMock(10, 20)
 	canvas := &Canvas{w: 10, h: 20, m: m}
 	err := canvas.Close()
@@ -85,7 +92,7 @@ func NewMatrixMock(w int, h int) *MatrixMock {
 	}
 }
 
-func (m *MatrixMock) Geometry() (width, height int) {
+func (m *MatrixMock) Geometry() (int, int) {
 	return 64, 32
 }
 

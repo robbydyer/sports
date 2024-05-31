@@ -12,6 +12,7 @@ import (
 )
 
 func TestScrollCanvas(t *testing.T) {
+	t.Parallel()
 	l := zaptest.NewLogger(t)
 	m := matrix.NewConsoleMatrix(64, 32, io.Discard, l)
 	c, err := NewScrollCanvas(m, l)

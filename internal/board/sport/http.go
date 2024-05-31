@@ -11,6 +11,8 @@ import (
 )
 
 // GetHTTPHandlers ...
+//
+//nolint:contextcheck
 func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 	return []*board.HTTPHandler{
 		{

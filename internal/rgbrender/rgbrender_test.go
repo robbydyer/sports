@@ -588,6 +588,7 @@ func TestZoomImageSize(t *testing.T) {
 }
 
 func TestNegativeImagePoint(t *testing.T) {
+	t.Parallel()
 	i := image.NewRGBA(image.Rect(-10, -10, 10, 10))
 
 	i.Set(-5, -5, color.Gray16{0xffff})

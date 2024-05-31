@@ -179,7 +179,7 @@ func (c *ConsoleMatrix) render(leds []uint32) error {
 
 	rendered = append(rendered, strings.Repeat("_ ", c.width+1)+"|")
 
-	fmt.Fprintln(c.out, strings.Join(rendered, "\n"))
+	_, _ = fmt.Fprintln(c.out, strings.Join(rendered, "\n"))
 
 	c.Reset()
 
