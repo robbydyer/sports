@@ -93,9 +93,7 @@ github.com/golang/freetype/truetype
 github.com/golang/groupcache/lru
 # github.com/golang/protobuf v1.5.4
 ## explicit; go 1.17
-github.com/golang/protobuf/internal/gengogrpc
 github.com/golang/protobuf/proto
-github.com/golang/protobuf/protoc-gen-go
 github.com/golang/protobuf/protoc-gen-go/descriptor
 github.com/golang/protobuf/protoc-gen-go/plugin
 github.com/golang/protobuf/ptypes/empty
@@ -182,10 +180,10 @@ github.com/inconshreveable/mousetrap
 # github.com/josharian/intern v1.0.0
 ## explicit; go 1.5
 github.com/josharian/intern
-# github.com/lyft/protoc-gen-star v0.6.1
-## explicit; go 1.14
-github.com/lyft/protoc-gen-star
-github.com/lyft/protoc-gen-star/lang/go
+# github.com/lyft/protoc-gen-star/v2 v2.0.3
+## explicit; go 1.17
+github.com/lyft/protoc-gen-star/v2
+github.com/lyft/protoc-gen-star/v2/lang/go
 # github.com/mackerelio/go-osstat v0.2.5
 ## explicit; go 1.18
 github.com/mackerelio/go-osstat/cpu
@@ -273,7 +271,7 @@ github.com/spf13/viper/internal/encoding/json
 github.com/spf13/viper/internal/encoding/toml
 github.com/spf13/viper/internal/encoding/yaml
 github.com/spf13/viper/internal/features
-# github.com/srikrsna/protoc-gen-gotag v1.0.0
+# github.com/srikrsna/protoc-gen-gotag v1.0.1
 ## explicit; go 1.16
 github.com/srikrsna/protoc-gen-gotag
 github.com/srikrsna/protoc-gen-gotag/module
@@ -387,6 +385,11 @@ golang.org/x/image/font
 golang.org/x/image/math/fixed
 golang.org/x/image/tiff
 golang.org/x/image/tiff/lzw
+# golang.org/x/mod v0.17.0
+## explicit; go 1.18
+golang.org/x/mod/internal/lazyregexp
+golang.org/x/mod/module
+golang.org/x/mod/semver
 # golang.org/x/net v0.26.0
 ## explicit; go 1.18
 golang.org/x/net/http/httpguts
@@ -433,6 +436,18 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
+# golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d
+## explicit; go 1.19
+golang.org/x/tools/go/ast/astutil
+golang.org/x/tools/imports
+golang.org/x/tools/internal/event
+golang.org/x/tools/internal/event/core
+golang.org/x/tools/internal/event/keys
+golang.org/x/tools/internal/event/label
+golang.org/x/tools/internal/gocommand
+golang.org/x/tools/internal/gopathwalk
+golang.org/x/tools/internal/imports
+golang.org/x/tools/internal/stdlib
 # google.golang.org/api v0.184.0
 ## explicit; go 1.20
 google.golang.org/api/calendar/v3
