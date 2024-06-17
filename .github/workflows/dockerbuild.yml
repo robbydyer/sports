@@ -49,7 +49,7 @@ jobs:
       run: echo "sha=$(sha256sum Dockerfile.pibuilder | awk '{print $1}')" >> $GITHUB_OUTPUT
 
     - name: Build ${{matrix.arch}}
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         push: true
         file: Dockerfile.pibuilder
