@@ -448,7 +448,7 @@ golang.org/x/tools/internal/gocommand
 golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/imports
 golang.org/x/tools/internal/stdlib
-# google.golang.org/api v0.184.0
+# google.golang.org/api v0.185.0
 ## explicit; go 1.20
 google.golang.org/api/calendar/v3
 google.golang.org/api/googleapi
@@ -462,12 +462,12 @@ google.golang.org/api/option
 google.golang.org/api/option/internaloption
 google.golang.org/api/transport/http
 google.golang.org/api/transport/http/internal/propagation
-# google.golang.org/genproto/googleapis/api v0.0.0-20240528184218-531527333157
+# google.golang.org/genproto/googleapis/api v0.0.0-20240610135401-a8a62080eff3
 ## explicit; go 1.20
 google.golang.org/genproto/googleapis/api
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/visibility
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20240604185151-ef581f913117
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20240617180043-68d350f18fd4
 ## explicit; go 1.20
 google.golang.org/genproto/googleapis/rpc/code
 google.golang.org/genproto/googleapis/rpc/errdetails
