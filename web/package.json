@@ -16,7 +16,7 @@
     "elliptic": ">=6.5.5",
     "follow-redirects": "^1.15.6",
     "glob-parent": ">=5.1.2",
-    "google-protobuf": "^3.21.2",
+    "google-protobuf": "^3.21.4",
     "hosted-git-info": ">=7.0.2",
     "immer": "^10.1.1",
     "is-svg": ">=5.0.1",
