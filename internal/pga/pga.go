@@ -167,13 +167,14 @@ func (p *PGA) updatePlayers(ctx context.Context) ([]*Player, error) {
 	}
 
 	if strings.Contains(comp.DataFormat, "RAW") && comp.RawData != "" {
-		return p.parseRaw(comp.RawData)
+		players := p.parseRaw(comp.RawData)
+		return players, nil
 	}
 
 	return nil, fmt.Errorf("could not find players")
 }
 
-func (p *PGA) parseRaw(data string) ([]*Player, error) {
+func (p *PGA) parseRaw(data string) []*Player {
 	fields := strings.Split(data, "\n")
 
 	players := []*Player{}
@@ -216,5 +217,5 @@ func (p *PGA) parseRaw(data string) ([]*Player, error) {
 		players = append(players, newP)
 	}
 
-	return players, nil
+	return players
 }
