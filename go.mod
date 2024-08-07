@@ -23,7 +23,7 @@ require (
 	github.com/twitchtv/twirp v8.1.3+incompatible
 	go.uber.org/atomic v1.11.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/image v0.18.0
+	golang.org/x/image v0.19.0
 	golang.org/x/oauth2 v0.22.0
 	golang.org/x/sync v0.8.0
 	google.golang.org/api v0.190.0
@@ -90,7 +90,7 @@ require (
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.27.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240725223205-93522f1f2a9f // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240730163845-b1a4ccb954bf // indirect
