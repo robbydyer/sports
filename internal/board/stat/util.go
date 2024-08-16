@@ -218,12 +218,12 @@ func maxNameLength(canvas image.Rectangle) int {
 	return canvas.Dx() / 8
 }
 
-func maxedStr(str string, max int) string {
-	if max <= 0 || len(str) <= max {
+func maxedStr(str string, maxLen int) string {
+	if maxLen <= 0 || len(str) <= maxLen {
 		return str
 	}
 
-	start := float64(max) / 2.0
+	start := float64(maxLen) / 2.0
 	i := int(start)
 	j := int(start) - 1
 	if math.Trunc(start) != start {

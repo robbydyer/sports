@@ -120,10 +120,10 @@ func (l *LayerDrawer) ClearLayers() {
 
 func (l *LayerDrawer) setForegroundPriority() {
 	hasForeground := false
-	max := BackgroundPriority
+	maxP := BackgroundPriority
 	for i := range l.layerPriorities {
-		if i > max {
-			max = i
+		if i > maxP {
+			maxP = i
 		}
 		if i == ForegroundPriority {
 			hasForeground = true
@@ -131,13 +131,13 @@ func (l *LayerDrawer) setForegroundPriority() {
 		}
 	}
 
-	l.maxLayer = max
+	l.maxLayer = maxP
 
 	if !hasForeground {
 		return
 	}
 
-	l.maxLayer = max + 1
+	l.maxLayer = maxP + 1
 
 	l.layerPriorities[l.maxLayer] = struct{}{}
 

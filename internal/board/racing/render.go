@@ -128,23 +128,23 @@ func (s *RacingBoard) renderEvent(ctx context.Context, bounds image.Rectangle, e
 	if err != nil {
 		return nil, err
 	}
-	max := canvasBounds.Dx() / 2
+	maxX := canvasBounds.Dx() / 2
 
 	for _, length := range lengths {
-		if length > max {
-			max = length
+		if length > maxX {
+			maxX = length
 		}
 	}
 
 	s.log.Debug("max racing schedule text length",
-		zap.Int("max", max),
+		zap.Int("max", maxX),
 		zap.Int("half bounds", canvasBounds.Dy()/2),
 	)
 
 	scheduleBounds := image.Rect(
 		canvasBounds.Max.X/2,
 		canvasBounds.Min.Y,
-		(canvasBounds.Max.X/2)+max,
+		(canvasBounds.Max.X/2)+maxX,
 		canvasBounds.Max.Y,
 	)
 
