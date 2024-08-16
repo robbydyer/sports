@@ -181,10 +181,10 @@ func (c *ScrollCanvas) SetScrollSpeed(d time.Duration) {
 		return
 	}
 
-	max := 2
+	maxTry := 2
 	try := 0
 	for {
-		if try >= max {
+		if try >= maxTry {
 			break
 		}
 		try++

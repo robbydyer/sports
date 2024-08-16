@@ -31,12 +31,12 @@ func filenameCompare(a string, b string) bool {
 		return false
 	}
 
-	max := len(aPaths)
-	if len(bPaths) > max {
-		max = len(bPaths)
+	maxPath := len(aPaths)
+	if len(bPaths) > maxPath {
+		maxPath = len(bPaths)
 	}
 
-	for x := 0; x < max; x++ {
+	for x := 0; x < maxPath; x++ {
 		if len(aPaths) < x+1 || len(bPaths) < x+1 {
 			return true
 		}

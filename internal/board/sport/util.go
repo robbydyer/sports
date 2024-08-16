@@ -204,14 +204,14 @@ func (s *SportBoard) calculateTeamInfoWidth(canvas draw.Image, writer *rgbrender
 		return defaultTeamInfoArea, err
 	}
 
-	max := 0
+	maxLen := 0
 	for _, l := range lengths {
-		if l > max {
-			max = l
+		if l > maxLen {
+			maxLen = l
 		}
 	}
 
-	return max, nil
+	return maxLen, nil
 }
 
 func (s *SportBoard) writeBoxColor() color.Color {
