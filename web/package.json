@@ -14,7 +14,7 @@
     "color-string": "^1.9.1",
     "dns-packet": "^5.6.1",
     "elliptic": ">=6.5.7",
-    "follow-redirects": "^1.15.8",
+    "follow-redirects": "^1.15.9",
     "glob-parent": ">=5.1.2",
     "google-protobuf": "^3.21.4",
     "hosted-git-info": ">=8.0.0",
