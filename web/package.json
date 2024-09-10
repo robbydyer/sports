@@ -7,7 +7,7 @@
     "@testing-library/react": ">=16.0.1",
     "@testing-library/user-event": "^14.5.2",
     "ansi-html": "npm:ansi-html-community@^0.0.8",
-    "ansi-regex": ">=5.0.1",
+    "ansi-regex": ">=6.1.0",
     "bootstrap": "^5.3.2",
     "browserslist": "^4.23.3",
     "btoa": "^1.2.1",
