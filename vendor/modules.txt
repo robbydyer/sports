@@ -1,4 +1,4 @@
-# cloud.google.com/go/auth v0.9.8
+# cloud.google.com/go/auth v0.9.9
 ## explicit; go 1.21
 cloud.google.com/go/auth
 cloud.google.com/go/auth/credentials
@@ -453,7 +453,7 @@ golang.org/x/tools/internal/gocommand
 golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/imports
 golang.org/x/tools/internal/stdlib
-# google.golang.org/api v0.202.0
+# google.golang.org/api v0.203.0
 ## explicit; go 1.21
 google.golang.org/api/calendar/v3
 google.golang.org/api/googleapi
