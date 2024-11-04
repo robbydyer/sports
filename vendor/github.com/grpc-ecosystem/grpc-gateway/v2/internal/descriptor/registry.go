@@ -68,7 +68,7 @@ type Registry struct {
 	// - `legacy`: use the legacy naming strategy from protoc-gen-swagger, that generates unique but not necessarily
 	//             maximally concise names. Components are concatenated directly, e.g., `MyOuterMessageMyNestedMessage`.
 	// - `simple`: use a simple heuristic for generating unique and concise names. Components are concatenated using
-	//             dots as a separator, e.g., `MyOuterMesage.MyNestedMessage` (if `MyNestedMessage` alone is unique,
+	//             dots as a separator, e.g., `MyOuterMessage.MyNestedMessage` (if `MyNestedMessage` alone is unique,
 	//             `MyNestedMessage` will be used as the OpenAPI name).
 	// - `fqn`:    always use the fully-qualified name of the proto message (leading dot removed) as the OpenAPI
 	//             name.
@@ -163,6 +163,18 @@ type Registry struct {
 
 	// enableRpcDeprecation whether to process grpc method's deprecated option
 	enableRpcDeprecation bool
+
+	// expandSlashedPathPatterns, if true, for a path parameter carrying a sub-path, described via parameter pattern (i.e.
+	// the pattern contains forward slashes), this will expand the _pattern_ into the URI and will _replace_ the parameter
+	// with new path parameters inferred from patterns wildcards.
+	//
+	// Example: a Google AIP style path "/v1/{name=projects/*/locations/*}/datasets/{dataset}" with a "name" parameter
+	// containing sub-path will generate "/v1/projects/{project}/locations/{location}/datasets/{dataset}" path in OpenAPI.
+	// Note that the original "name" parameter is replaced with "project" and "location" parameters.
+	//
+	// This leads to more compliant and readable OpenAPI suitable for documentation, but may complicate client
+	// implementation if you want to pass the original "name" parameter.
+	expandSlashedPathPatterns bool
 }
 
 type repeatedFieldSeparator struct {
@@ -244,7 +256,7 @@ func (r *Registry) load(gen *protogen.Plugin) error {
 }
 
 // loadFile loads messages, enumerations and fields from "file".
-// It does not loads services and methods in "file".  You need to call
+// It does not load services and methods in "file".  You need to call
 // loadServices after loadFiles is called for all files to load services and methods.
 func (r *Registry) loadFile(filePath string, file *protogen.File) {
 	pkg := GoPackage{
@@ -350,7 +362,7 @@ func (r *Registry) LookupMsg(location, name string) (*Message, error) {
 	return nil, fmt.Errorf("no message found: %s", name)
 }
 
-// LookupEnum looks up a enum type by "name".
+// LookupEnum looks up an enum type by "name".
 // It tries to resolve "name" from "location" if "name" is a relative enum name.
 func (r *Registry) LookupEnum(location, name string) (*Enum, error) {
 	if grpclog.V(1) {
@@ -519,7 +531,7 @@ func (r *Registry) IsIncludePackageInTags() bool {
 	return r.includePackageInTags
 }
 
-// GetRepeatedPathParamSeparator returns a rune spcifying how
+// GetRepeatedPathParamSeparator returns a rune specifying how
 // path parameter repeated fields are separated.
 func (r *Registry) GetRepeatedPathParamSeparator() rune {
 	return r.repeatedPathParamSeparator.sep
@@ -662,7 +674,7 @@ func (r *Registry) SetVisibilityRestrictionSelectors(selectors []string) {
 	}
 }
 
-// GetVisibilityRestrictionSelectors retrieves he visibility restriction selectors.
+// GetVisibilityRestrictionSelectors retrieves the visibility restriction selectors.
 func (r *Registry) GetVisibilityRestrictionSelectors() map[string]bool {
 	return r.visibilityRestrictionSelectors
 }
@@ -707,12 +719,12 @@ func (r *Registry) GetOmitPackageDoc() bool {
 	return r.omitPackageDoc
 }
 
-// SetProto3OptionalNullable set proto3OtionalNullable
-func (r *Registry) SetProto3OptionalNullable(proto3OtionalNullable bool) {
-	r.proto3OptionalNullable = proto3OtionalNullable
+// SetProto3OptionalNullable set proto3OptionalNullable
+func (r *Registry) SetProto3OptionalNullable(proto3OptionalNullable bool) {
+	r.proto3OptionalNullable = proto3OptionalNullable
 }
 
-// GetProto3OptionalNullable returns proto3OtionalNullable
+// GetProto3OptionalNullable returns proto3OptionalNullable
 func (r *Registry) GetProto3OptionalNullable() bool {
 	return r.proto3OptionalNullable
 }
@@ -839,7 +851,7 @@ func (r *Registry) GetDisableServiceTags() bool {
 	return r.disableServiceTags
 }
 
-// SetDisableDefaultResponses setsdisableDefaultResponses
+// SetDisableDefaultResponses sets disableDefaultResponses
 func (r *Registry) SetDisableDefaultResponses(use bool) {
 	r.disableDefaultResponses = use
 }
@@ -887,4 +899,12 @@ func (r *Registry) SetEnableRpcDeprecation(enable bool) {
 // GetEnableRpcDeprecation returns enableRpcDeprecation
 func (r *Registry) GetEnableRpcDeprecation() bool {
 	return r.enableRpcDeprecation
+}
+
+func (r *Registry) SetExpandSlashedPathPatterns(expandSlashedPathPatterns bool) {
+	r.expandSlashedPathPatterns = expandSlashedPathPatterns
+}
+
+func (r *Registry) GetExpandSlashedPathPatterns() bool {
+	return r.expandSlashedPathPatterns
 }
