@@ -18,7 +18,11 @@ on:
       - completed
 
 jobs:
+  check_docker:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }} || ${{ github.event.workflow_run == null}}
   build:
+    needs: check_docker
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
