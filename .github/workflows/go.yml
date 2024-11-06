@@ -2,7 +2,6 @@ name: Go
 
 on:
   pull_request:
-    branches: [ master ]
     paths:
     - 'cmd/**'
     - 'internal/**'
@@ -12,8 +11,11 @@ on:
     - 'web/**'
     - 'proto/**'
     - 'pkg/**'
-    - 'Dockerfile.pibuilder'
-    - 'Dockerfile.lint'
+  workflow_run:
+    workflows:
+      - "Build Docker Images"
+    types:
+      - completed
 
 jobs:
   build:
