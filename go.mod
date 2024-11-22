@@ -26,7 +26,7 @@ require (
 	golang.org/x/image v0.22.0
 	golang.org/x/oauth2 v0.24.0
 	golang.org/x/sync v0.9.0
-	google.golang.org/api v0.207.0
+	google.golang.org/api v0.209.0
 	google.golang.org/protobuf v1.35.2
 	gopkg.in/yaml.v2 v2.4.0
 )
