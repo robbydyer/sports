@@ -376,7 +376,7 @@ golang.org/x/image/tiff/lzw
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.32.0
+# golang.org/x/net v0.33.0
 ## explicit; go 1.18
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
@@ -435,7 +435,7 @@ golang.org/x/tools/internal/gocommand
 golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/imports
 golang.org/x/tools/internal/stdlib
-# google.golang.org/api v0.213.0
+# google.golang.org/api v0.214.0
 ## explicit; go 1.21
 google.golang.org/api/calendar/v3
 google.golang.org/api/googleapi
