@@ -124,7 +124,7 @@ github.com/google/uuid
 ## explicit; go 1.19
 github.com/googleapis/enterprise-certificate-proxy/client
 github.com/googleapis/enterprise-certificate-proxy/client/util
-# github.com/googleapis/gax-go/v2 v2.14.0
+# github.com/googleapis/gax-go/v2 v2.14.1
 ## explicit; go 1.21
 github.com/googleapis/gax-go/v2
 github.com/googleapis/gax-go/v2/apierror
@@ -435,7 +435,7 @@ golang.org/x/tools/internal/gocommand
 golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/imports
 golang.org/x/tools/internal/stdlib
-# google.golang.org/api v0.214.0
+# google.golang.org/api v0.215.0
 ## explicit; go 1.21
 google.golang.org/api/calendar/v3
 google.golang.org/api/googleapi
@@ -453,7 +453,7 @@ google.golang.org/api/transport/http
 google.golang.org/genproto/googleapis/api
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/visibility
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20241219192143-6b3ec007d9bb
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20241223144023-3abc09e42ca8
 ## explicit; go 1.21
 google.golang.org/genproto/googleapis/rpc/code
 google.golang.org/genproto/googleapis/rpc/errdetails
