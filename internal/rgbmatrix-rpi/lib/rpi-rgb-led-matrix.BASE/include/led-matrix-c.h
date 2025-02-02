@@ -121,6 +121,16 @@ struct RGBLedMatrixOptions {
    */
   int multiplexing;
 
+  /** The following boolean flags are off by default **/
+
+  /* Allow to use the hardware subsystem to create pulses. This won't do
+   * anything if output enable is not connected to GPIO 18.
+   * Corresponding flag: --led-hardware-pulse
+   */
+  bool disable_hardware_pulsing; /* Flag: --led-hardware-pulse */
+  bool show_refresh_rate;        /* Flag: --led-show-refresh   */
+  bool inverse_colors;           /* Flag: --led-inverse        */
+
   /* In case the internal sequence of mapping is not "RGB", this contains the
    * real mapping. Some panels mix up these colors.
    */
@@ -138,20 +148,16 @@ struct RGBLedMatrixOptions {
    */
   const char *panel_type;  /* Corresponding flag: --led-panel-type */
 
-  /** The following are boolean flags, all off by default **/
-
-  /* Allow to use the hardware subsystem to create pulses. This won't do
-   * anything if output enable is not connected to GPIO 18.
-   * Corresponding flag: --led-hardware-pulse
-   */
-  char disable_hardware_pulsing;
-  char show_refresh_rate;     /* Corresponding flag: --led-show-refresh    */
-  char inverse_colors;        /* Corresponding flag: --led-inverse         */
-
   /* Limit refresh rate of LED panel. This will help on a loaded system
    * to keep a constant refresh rate. <= 0 for no limit.
    */
   int limit_refresh_rate_hz;     /* Corresponding flag: --led-limit-refresh */
+
+  /* Sleep instead of busy waiting when limiting refresh rate. This gives
+   * slightly less accurate frame timing, but lets the CPU work on other
+   * processes when waiting and renders single core boards more responsive.
+   */
+  bool disable_busy_waiting;     /* Corresponding flag: --led-busy-waiting */
 };
 
 /**
@@ -189,6 +195,20 @@ struct RGBLedRuntimeOptions {
   // e.g. you want to just create a stream output (see content-streamer.h),
   // set this to false.
   bool do_gpio_init;
+
+  // If drop privileges is enabled, this is the user/group we drop privileges
+  // to. Unless chosen otherwise, the default is "daemon" for user and group.
+  const char *drop_priv_user;
+  const char *drop_priv_group;
+};
+
+/**
+ * 24-bit RGB color.
+ */
+struct Color {
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
 };
 
 /**
@@ -302,6 +322,10 @@ void led_canvas_get_size(const struct LedCanvas *canvas,
 /** Set pixel at (x, y) with color (r,g,b). */
 void led_canvas_set_pixel(struct LedCanvas *canvas, int x, int y,
                           uint8_t r, uint8_t g, uint8_t b);
+
+/** Copies pixels to rectangle at (x, y) with size (width, height). */
+void led_canvas_set_pixels(struct LedCanvas *canvas, int x, int y,
+                           int width, int height, struct Color *colors);
 
 /** Clear screen (black). */
 void led_canvas_clear(struct LedCanvas *canvas);

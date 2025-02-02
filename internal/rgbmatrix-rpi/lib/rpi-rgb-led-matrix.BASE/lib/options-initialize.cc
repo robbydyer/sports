@@ -39,7 +39,9 @@ RuntimeOptions::RuntimeOptions() :
 #endif
   daemon(0),            // Don't become a daemon by default.
   drop_privileges(1),   // Encourage good practice: drop privileges by default.
-  do_gpio_init(true)
+  do_gpio_init(true),
+  drop_priv_user("daemon"),
+  drop_priv_group("daemon")
 {
   // Nothing to see here.
 }
@@ -207,6 +209,12 @@ static bool FlagInit(int &argc, char **&argv,
         continue;
       }
 
+      bool allow_busy_waiting = !mopts->disable_busy_waiting;
+      if (ConsumeBoolFlag("busy-waiting", it, &allow_busy_waiting)) {
+        mopts->disable_busy_waiting = !allow_busy_waiting;
+        continue;
+      }
+
       bool request_help = false;
       if (ConsumeBoolFlag("help", it, &request_help) && request_help) {
         // In that case, we pretend to have failure in parsing, which will
@@ -226,6 +234,15 @@ static bool FlagInit(int &argc, char **&argv,
         ropts->drop_privileges = bool_scratch ? 1 : 0;
         continue;
       }
+      if (ConsumeStringFlag("drop-priv-user", it, end,
+                            &ropts->drop_priv_user, &err)) {
+        continue;
+      }
+      if (ConsumeStringFlag("drop-priv-group", it, end,
+                            &ropts->drop_priv_group, &err)) {
+        continue;
+      }
+
       if (strncmp(*it, OPTION_PREFIX, OPTION_PREFIX_LEN) == 0) {
         fprintf(stderr, "Option %s starts with %s but it is unknown. Typo?\n",
                 *it, OPTION_PREFIX);
@@ -327,7 +344,8 @@ void PrintMatrixFlags(FILE *out, const RGBMatrix::Options &d,
           "\t--led-pwm-dither-bits=<0..2> : Time dithering of lower bits "
           "(Default: 0)\n"
           "\t--led-%shardware-pulse   : %sse hardware pin-pulse generation.\n"
-          "\t--led-panel-type=<name>   : Needed to initialize special panels. Supported: 'FM6126A', 'FM6127'\n",
+          "\t--led-panel-type=<name>   : Needed to initialize special panels. Supported: 'FM6126A', 'FM6127'\n"
+          "\t--led-%sbusy-waiting     : %sse busy waiting when limiting refresh rate.\n",
           d.hardware_mapping,
           d.rows, d.cols, d.chain_length, d.parallel,
           (int) muxers.size(), CreateAvailableMultiplexString(muxers).c_str(),
@@ -339,11 +357,17 @@ void PrintMatrixFlags(FILE *out, const RGBMatrix::Options &d,
           d.inverse_colors ? "no-" : "",    d.inverse_colors ? "off" : "on",
           d.pwm_lsb_nanoseconds,
           !d.disable_hardware_pulsing ? "no-" : "",
-          !d.disable_hardware_pulsing ? "Don't u" : "U");
+          !d.disable_hardware_pulsing ? "Don't u" : "U",
+          !d.disable_busy_waiting ? "no-" : "",
+          !d.disable_busy_waiting ? "Don't u" : "U");
 
-  fprintf(out, "\t--led-slowdown-gpio=<0..4>: "
+  fprintf(out,
+          "\t--led-slowdown-gpio=<%d..4>: "
           "Slowdown GPIO. Needed for faster Pis/slower panels "
-          "(Default: %d (2 on Pi4, 1 other)).\n", r.gpio_slowdown);
+          "(Default: %d (2 on Pi4, 1 other)%s).\n",
+          (LED_MATRIX_ALLOW_BARRIER_DELAY ? -1 : 0), r.gpio_slowdown,
+          LED_MATRIX_ALLOW_BARRIER_DELAY ? "Use -1 for memory barrier approach"
+                                         : "");
   if (r.daemon >= 0) {
     const bool on = (r.daemon > 0);
     fprintf(out,
@@ -357,6 +381,12 @@ void PrintMatrixFlags(FILE *out, const RGBMatrix::Options &d,
             "\t--led-%sdrop-privs       : %srop privileges from 'root' "
             "after initializing the hardware.\n",
             on ? "no-" : "", on ? "Don't d" : "D");
+    fprintf(out, "\t--led-drop-priv-user      : "
+            "Drop privileges to this username or UID (Default: '%s')\n",
+            r.drop_priv_user);
+    fprintf(out, "\t--led-drop-priv-group     : "
+            "Drop privileges to this groupname or GID (Default: '%s')\n",
+            r.drop_priv_group);
   }
 }
 
