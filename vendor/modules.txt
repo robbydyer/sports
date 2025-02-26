@@ -1,5 +1,5 @@
-# cloud.google.com/go/auth v0.14.1
-## explicit; go 1.22
+# cloud.google.com/go/auth v0.15.0
+## explicit; go 1.23
 cloud.google.com/go/auth
 cloud.google.com/go/auth/credentials
 cloud.google.com/go/auth/credentials/internal/externalaccount
@@ -302,7 +302,7 @@ github.com/twitchtv/twirp/protoc-gen-twirp
 ## explicit; go 1.22
 go.opentelemetry.io/auto/sdk
 go.opentelemetry.io/auto/sdk/internal/telemetry
-# go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.58.0
+# go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.59.0
 ## explicit; go 1.22
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp/internal/request
@@ -441,7 +441,7 @@ golang.org/x/tools/internal/gocommand
 golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/imports
 golang.org/x/tools/internal/stdlib
-# google.golang.org/api v0.222.0
+# google.golang.org/api v0.223.0
 ## explicit; go 1.23
 google.golang.org/api/calendar/v3
 google.golang.org/api/googleapi
@@ -459,8 +459,8 @@ google.golang.org/api/transport/http
 google.golang.org/genproto/googleapis/api
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/visibility
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20250212204824-5a70512c5d8b
-## explicit; go 1.22
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20250219182151-9fdb1cabc7b2
+## explicit; go 1.23
 google.golang.org/genproto/googleapis/rpc/code
 google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status
