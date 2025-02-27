@@ -6,6 +6,7 @@ ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd 
 
 source "${ROOT}/script/common"
 BUILDARCH="${BUILDARCH:-all}"
+NOPUSH="${NOPUSH:-}"
 
 dobuild() {
   buildarch="$1"
@@ -34,25 +35,34 @@ dobuild() {
 
   img=$(latestpibuilder ${buildarch})
 
-  if [ "$(docker images -q ${img})" = "" ]; then
+  platform="linux/amd64,linux/arm64/v8"
+  if [ -n "${NOPUSH:-}" ]; then
+    push="--load"
+    platform="linux/arm64/v8"
+  else
+    push="--push"
+    platform="linux/amd64,linux/arm64/v8"
+  fi
+
+  #if [ "$(docker images -q ${img})" = "" ]; then
     echo "==> Building ${img}"
-    docker --config="${DOCKERCONF}" buildx build -t "${img}" \
+    docker --config="${DOCKERCONF}" builder build -t "${img}" \
+      ${push} \
       --builder=build \
       -f Dockerfile.pibuilder \
       --build-arg BASE=${base} \
-      --platform=linux/amd64,linux/arm64/v8 \
-      --push \
+      --platform="${platform}" \
       .
-  fi
+  #fi
 }
 
 # Install qemu emulators
-docker run --privileged --rm tonistiigi/binfmt:qemu-v7.0.0 --install all
+docker run --privileged --rm tonistiigi/binfmt:qemu-v9.2.0 --install all
 
 dockerlogin
 
 set -x
-docker --config="${DOCKERCONF}" buildx create --use --name=build --node=build
+docker --config="${DOCKERCONF}" builder create --use --name=build --node=build
 
 if [ "${BUILDARCH}" = "all" ]; then
   dobuild aarch64

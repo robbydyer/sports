@@ -9,6 +9,12 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "daily"
+    groups:
+      minor:
+        applies-to: "version-updates"
+        update-types:
+          - patch
+          - minor
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -17,3 +23,16 @@ updates:
     directory: "/web"
     schedule:
       interval: "daily"
+    groups:
+      react:
+        applies-to: "version-updates"
+        patterns:
+          - "@react*"
+        update-types:
+          - "minor"
+          - "patch"
+      minor:
+        applies-to: "version-updates"
+        update-types:
+          - patch
+          - minor

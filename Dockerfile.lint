@@ -1,4 +1,4 @@
-# 2023-10-06
+# 2025-02-26
 FROM debian:bullseye-20230202-slim AS builder
 
 # What's the meaning of all this? Well, you apparently can't run the linter
