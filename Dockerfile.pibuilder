@@ -11,17 +11,33 @@ RUN apt-get update --allow-unauthenticated --allow-insecure-repositories && \
     apt-get install --allow-unauthenticated -y debian-archive-keyring && \
     apt-get clean
 
+    #ca-certificates \
 RUN apt-get update && \
     apt-get install -y \
     automake \
     build-essential \
-    ca-certificates \
     curl \
     gcc \
-    g++
+    g++ \
+    unzip
 
-RUN update-ca-certificates -f
-ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV PB_REL="https://github.com/protocolbuffers/protobuf/releases"
+RUN a="$(dpkg --print-architecture)" && \
+    case "${a##*-}" in \
+        arm64|aarch64)  \
+            arch="aarch_64" && \
+            curl -LO "$PB_REL/download/v21.9/protoc-21.9-linux-${arch}.zip" && \
+            unzip protoc-21.9-linux-${arch}.zip -d /usr/local \
+            ;; \
+        amd64) \
+            arch="x86_64" && \
+            curl -LO "$PB_REL/download/v21.9/protoc-21.9-linux-${arch}.zip" && \
+            unzip protoc-21.9-linux-${arch}.zip -d /usr/local \
+            ;; \
+    esac
+
+#RUN update-ca-certificates -f
+#ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 RUN GOIMG= && a="$(dpkg --print-architecture)" && \
     case "${a##*-}" in \
       arm64|aarch64) GOIMG="go${GOVERSION}.linux-arm64.tar.gz";; \
@@ -45,4 +61,5 @@ RUN cd /sportsmatrix_lib/rpi-rgb-led-matrix && \
     make
 
 RUN apt-get remove -y curl && \
-    apt-get autoremove -y && apt-get clean
+    apt-get autoremove -y && apt-get clean && \
+    protoc --help
