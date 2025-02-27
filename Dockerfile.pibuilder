@@ -18,10 +18,7 @@ RUN apt-get update && \
     ca-certificates \
     curl \
     gcc \
-    git \
-    g++ \
-    python3 \
-    rsync
+    g++
 
 RUN update-ca-certificates -f
 ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
@@ -46,3 +43,6 @@ COPY ./internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE /sportsmatrix_lib/rpi-
 
 RUN cd /sportsmatrix_lib/rpi-rgb-led-matrix && \
     make
+
+RUN apt-get remove -y curl && \
+    apt-get autoremove -y && apt-get clean
