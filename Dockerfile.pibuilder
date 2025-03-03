@@ -28,13 +28,13 @@ RUN a="$(dpkg --print-architecture)" && \
             arch="aarch_64" && \
             curl -LO "$PB_REL/download/v21.9/protoc-21.9-linux-${arch}.zip" && \
             unzip protoc-21.9-linux-${arch}.zip -d /usr/local && \
-            protoc --version
+            protoc --version \
             ;; \
         amd64) \
             arch="x86_64" && \
             curl -LO "$PB_REL/download/v21.9/protoc-21.9-linux-${arch}.zip" && \
             unzip protoc-21.9-linux-${arch}.zip -d /usr/local && \
-            protoc --version
+            protoc --version \
             ;; \
     esac
 
