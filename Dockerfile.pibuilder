@@ -27,12 +27,14 @@ RUN a="$(dpkg --print-architecture)" && \
         arm64|aarch64)  \
             arch="aarch_64" && \
             curl -LO "$PB_REL/download/v21.9/protoc-21.9-linux-${arch}.zip" && \
-            unzip protoc-21.9-linux-${arch}.zip -d /usr/local \
+            unzip protoc-21.9-linux-${arch}.zip -d /usr/local && \
+            protoc --version
             ;; \
         amd64) \
             arch="x86_64" && \
             curl -LO "$PB_REL/download/v21.9/protoc-21.9-linux-${arch}.zip" && \
-            unzip protoc-21.9-linux-${arch}.zip -d /usr/local \
+            unzip protoc-21.9-linux-${arch}.zip -d /usr/local && \
+            protoc --version
             ;; \
     esac
 
@@ -61,5 +63,4 @@ RUN cd /sportsmatrix_lib/rpi-rgb-led-matrix && \
     make
 
 RUN apt-get remove -y curl && \
-    apt-get autoremove -y && apt-get clean && \
-    protoc --help
+    apt-get autoremove -y && apt-get clean
