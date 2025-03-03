@@ -1,4 +1,4 @@
-# 2024-01-29 16:16
+# 2025-02-26 16:16
 ARG BASE=multiarch/debian-debootstrap:arm64-bullseye-slim
 
 FROM $BASE
@@ -18,10 +18,25 @@ RUN apt-get update && \
     ca-certificates \
     curl \
     gcc \
-    git \
     g++ \
-    python3 \
-    rsync
+    unzip
+
+ENV PB_REL="https://github.com/protocolbuffers/protobuf/releases"
+RUN a="$(dpkg --print-architecture)" && \
+    case "${a##*-}" in \
+        arm64|aarch64)  \
+            arch="aarch_64" && \
+            curl -LO "$PB_REL/download/v21.9/protoc-21.9-linux-${arch}.zip" && \
+            unzip protoc-21.9-linux-${arch}.zip -d /usr/local && \
+            protoc --version \
+            ;; \
+        amd64) \
+            arch="x86_64" && \
+            curl -LO "$PB_REL/download/v21.9/protoc-21.9-linux-${arch}.zip" && \
+            unzip protoc-21.9-linux-${arch}.zip -d /usr/local && \
+            protoc --version \
+            ;; \
+    esac
 
 RUN update-ca-certificates -f
 ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
@@ -46,3 +61,6 @@ COPY ./internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE /sportsmatrix_lib/rpi-
 
 RUN cd /sportsmatrix_lib/rpi-rgb-led-matrix && \
     make
+
+RUN apt-get remove -y curl && \
+    apt-get autoremove -y && apt-get clean
