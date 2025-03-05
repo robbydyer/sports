@@ -6,6 +6,7 @@ FROM $BASE
 SHELL ["/bin/bash", "--login", "-ce"]
 
 ARG GOVERSION=1.24.1
+ARG PROTOC_VER=30.0
 
 RUN apt-get update --allow-unauthenticated --allow-insecure-repositories && \
     apt-get install --allow-unauthenticated -y debian-archive-keyring && \
@@ -26,13 +27,13 @@ RUN a="$(dpkg --print-architecture)" && \
     case "${a##*-}" in \
         arm64|aarch64)  \
             arch="aarch_64" && \
-            curl -LO "$PB_REL/download/v21.9/protoc-21.9-linux-${arch}.zip" && \
+            curl -LO "$PB_REL/download/v${PROTOC_VER}/protoc-${PROTOC_VER}-linux-${arch}.zip" && \
             unzip protoc-21.9-linux-${arch}.zip -d /usr/local && \
             protoc --version \
             ;; \
         amd64) \
             arch="x86_64" && \
-            curl -LO "$PB_REL/download/v21.9/protoc-21.9-linux-${arch}.zip" && \
+            curl -LO "$PB_REL/download/v${PROTOC_VER}/protoc-${PROTOC_VER}-linux-${arch}.zip" && \
             unzip protoc-21.9-linux-${arch}.zip -d /usr/local && \
             protoc --version \
             ;; \
