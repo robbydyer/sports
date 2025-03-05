@@ -9,6 +9,6 @@ lint_ver="$(curl https://api.github.com/repos/golangci/golangci-lint/releases/la
 echo "Updating Go to ${go_ver}, Linter ${lint_ver}"
 
 gsed -i "s,GOVERSION=.*,GOVERSION=${go_ver},g" Dockerfile.pibuilder
-gsed -i "s,golang:[^\s]* ,golang:${go_ver} ," Dockerfile.protoc
+#gsed -i "s,golang:[^\s]* ,golang:${go_ver} ," Dockerfile.protoc
 gsed -i "s,GO_VERSION=.*,GO_VERSION=\"${go_ver}\",g" script/common
 gsed -i "s,golangci/golangci-lint:.*,golangci/golangci-lint:${lint_ver},g" Dockerfile.lint
