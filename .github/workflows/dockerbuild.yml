@@ -16,7 +16,6 @@ jobs:
         os:
         - trixie
         - bullseye
-        - buster
         - bookworm
         include:
         - arch: aarch64
