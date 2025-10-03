@@ -14,6 +14,7 @@ jobs:
         - armv7l
         - amd64
         os:
+        - trixie
         - bullseye
         - buster
         - bookworm

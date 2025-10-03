@@ -68,7 +68,6 @@ if [ "${BUILDARCH}" = "all" ]; then
   dobuild aarch64
   dobuild armv7l
   dobuild amd64
-  dobuild armv6l
 else
   dobuild "${BUILDARCH}"
 fi
