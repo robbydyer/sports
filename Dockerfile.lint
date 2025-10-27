@@ -10,7 +10,8 @@ RUN apt-get update && \
     build-essential \
     gcc \
     g++ \
-    git
+    git \
+    portaudio19-dev
 
 COPY ./internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE /tmp/rpi-rgb-led-matrix
 
