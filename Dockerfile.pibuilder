@@ -1,5 +1,5 @@
 # 2025-02-26 16:16
-ARG BASE=multiarch/debian-debootstrap:arm64-bullseye-slim
+ARG BASE=multiarch/debian-debootstrap:arm64-trixie-slim
 
 FROM $BASE
 # Replace shell with bash so we can source files

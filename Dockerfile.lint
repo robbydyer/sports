@@ -10,9 +10,7 @@ RUN apt-get update && \
     build-essential \
     gcc \
     g++ \
-    git \
-    libportaudio2 \
-    portaudio19-dev
+    git
 
 COPY ./internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE /tmp/rpi-rgb-led-matrix
 
@@ -20,5 +18,9 @@ RUN cd /tmp/rpi-rgb-led-matrix && \
     make
 
 FROM golangci/golangci-lint:v1.64.6
+
+RUN apt-get update && \
+    apt-get install -y \
+    portaudio19-dev
 
 COPY --from=builder /tmp/rpi-rgb-led-matrix /sportslibs/rpi-rgb-led-matrix
