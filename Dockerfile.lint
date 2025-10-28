@@ -1,5 +1,5 @@
 # 2025-02-26
-FROM debian:bullseye-20230202-slim AS builder
+FROM debian:trixie-20251020 AS builder
 
 # What's the meaning of all this? Well, you apparently can't run the linter
 # without the requried libs for the cgo imports. So here we are, building the C
@@ -11,6 +11,7 @@ RUN apt-get update && \
     gcc \
     g++ \
     git \
+    libportaudio2 \
     portaudio19-dev
 
 COPY ./internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE /tmp/rpi-rgb-led-matrix
