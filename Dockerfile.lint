@@ -1,5 +1,5 @@
 # 2025-02-26
-FROM debian:bullseye-20230202-slim AS builder
+FROM debian:trixie-20251020 AS builder
 
 # What's the meaning of all this? Well, you apparently can't run the linter
 # without the requried libs for the cgo imports. So here we are, building the C
@@ -18,5 +18,9 @@ RUN cd /tmp/rpi-rgb-led-matrix && \
     make
 
 FROM golangci/golangci-lint:v1.64.6
+
+RUN apt-get update && \
+    apt-get install -y \
+    portaudio19-dev
 
 COPY --from=builder /tmp/rpi-rgb-led-matrix /sportslibs/rpi-rgb-led-matrix
