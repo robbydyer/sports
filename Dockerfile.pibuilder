@@ -1,5 +1,5 @@
-# 2025-11-05 15:00
-ARG BASE=multiarch/debian-debootstrap:arm64-trixie-slim
+# 2025-02-26 16:16
+ARG BASE=multiarch/debian-debootstrap:arm64-bullseye-slim
 
 FROM $BASE
 # Replace shell with bash so we can source files
@@ -26,28 +26,28 @@ RUN apt-get update && \
 ENV PB_REL="https://github.com/protocolbuffers/protobuf/releases"
 RUN a="$(dpkg --print-architecture)" && \
     case "${a##*-}" in \
-    arm64|aarch64)  \
-    arch="aarch_64" && \
-    curl -LO "$PB_REL/download/v${PROTOC_VER}/protoc-${PROTOC_VER}-linux-${arch}.zip" && \
-    unzip protoc-${PROTOC_VER}-linux-${arch}.zip -d /usr/local && \
-    protoc --version \
-    ;; \
-    amd64) \
-    arch="x86_64" && \
-    curl -LO "$PB_REL/download/v${PROTOC_VER}/protoc-${PROTOC_VER}-linux-${arch}.zip" && \
-    unzip protoc-${PROTOC_VER}-linux-${arch}.zip -d /usr/local && \
-    protoc --version \
-    ;; \
+        arm64|aarch64)  \
+            arch="aarch_64" && \
+            curl -LO "$PB_REL/download/v${PROTOC_VER}/protoc-${PROTOC_VER}-linux-${arch}.zip" && \
+            unzip protoc-${PROTOC_VER}-linux-${arch}.zip -d /usr/local && \
+            protoc --version \
+            ;; \
+        amd64) \
+            arch="x86_64" && \
+            curl -LO "$PB_REL/download/v${PROTOC_VER}/protoc-${PROTOC_VER}-linux-${arch}.zip" && \
+            unzip protoc-${PROTOC_VER}-linux-${arch}.zip -d /usr/local && \
+            protoc --version \
+            ;; \
     esac
 
 RUN update-ca-certificates -f
 ENV CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 RUN GOIMG= && a="$(dpkg --print-architecture)" && \
     case "${a##*-}" in \
-    arm64|aarch64) GOIMG="go${GOVERSION}.linux-arm64.tar.gz";; \
-    amd64) GOIMG="go${GOVERSION}.linux-amd64.tar.gz";; \
-    armv7l|armv6l|armhf) GOIMG="go${GOVERSION}.linux-armv6l.tar.gz";; \
-    *) echo "unsupported arch ${a}"; exit 1 ;;\
+      arm64|aarch64) GOIMG="go${GOVERSION}.linux-arm64.tar.gz";; \
+      amd64) GOIMG="go${GOVERSION}.linux-amd64.tar.gz";; \
+      armv7l|armv6l|armhf) GOIMG="go${GOVERSION}.linux-armv6l.tar.gz";; \
+      *) echo "unsupported arch ${a}"; exit 1 ;;\
     esac && \
     curl -k -L https://go.dev/dl/${GOIMG} -o /tmp/${GOIMG} && \
     tar -C /usr/local -xzf /tmp/${GOIMG} && \

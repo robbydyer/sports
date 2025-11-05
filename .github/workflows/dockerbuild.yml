@@ -17,7 +17,6 @@ jobs:
         - trixie
         - bullseye
         - bookworm
-        - buster
         include:
         - arch: aarch64
           base: arm64
@@ -31,7 +30,7 @@ jobs:
 
     - name: Set up QEMU
       id: qemu
-      uses: docker/setup-qemu-action@v3.7.0
+      uses: docker/setup-qemu-action@v3.5.0
       with:
         image: tonistiigi/binfmt:latest
         platforms: all
