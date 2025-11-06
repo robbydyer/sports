@@ -20,6 +20,7 @@ RUN apt-get update && \
     curl \
     gcc \
     g++ \
+    pkg-config \
     portaudio19-dev \
     unzip
 
