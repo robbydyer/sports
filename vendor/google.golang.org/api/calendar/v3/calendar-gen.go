@@ -6,7 +6,7 @@
 
 // Package calendar provides access to the Calendar API.
 //
-// For product documentation, see: https://developers.google.com/google-apps/calendar/firstapp
+// For product documentation, see: https://developers.google.com/workspace/calendar/firstapp
 //
 // # Library status
 //
@@ -197,9 +197,6 @@ func NewService(ctx context.Context, opts ...option.ClientOption) (*Service, err
 	s.Events = NewEventsService(s)
 	s.Freebusy = NewFreebusyService(s)
 	s.Settings = NewSettingsService(s)
-	if err != nil {
-		return nil, err
-	}
 	if endpoint != "" {
 		s.BasePath = endpoint
 	}
@@ -215,7 +212,7 @@ func New(client *http.Client) (*Service, error) {
 	if client == nil {
 		return nil, errors.New("client is nil")
 	}
-	return NewService(context.Background(), option.WithHTTPClient(client))
+	return NewService(context.TODO(), option.WithHTTPClient(client))
 }
 
 type Service struct {
