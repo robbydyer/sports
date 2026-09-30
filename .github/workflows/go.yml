@@ -1,58 +1,86 @@
 name: Go
 
 on:
+  workflow_dispatch:
   pull_request:
-    paths:
-    - 'cmd/**'
-    - 'internal/**'
-    - 'vendor/**'
-    - go.mod
-    - go.sum
-    - 'web/**'
-    - 'proto/**'
-    - 'pkg/**'
-  workflow_run:
-    workflows:
-      - "Build Docker Images"
-    types:
-      - completed
+    branches:
+    - master
+  push:
+    branches:
+    - master
 
 jobs:
-  check_docker:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }} || ${{ github.event.workflow_run == null}}
-    steps:
-      - run: echo good
   build:
-    needs: check_docker
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
 
     - name: Set up QEMU
       id: qemu
-      uses: docker/setup-qemu-action@v3
+      uses: docker/setup-qemu-action@v4.4.0
       with:
         image: tonistiigi/binfmt:latest
         platforms: all
 
+    - uses: tj-actions/changed-files@v47
+      id: go-changes
+      with:
+        files: |
+          cmd/**
+          internal/**
+          vendor/**
+          go.mod
+          go.sum
+          proto/**
+
+    - uses: actions/cache/restore@v6
+      if: steps.go-changes.outputs.any_changed == 'true'
+      id: go-cache
+      with:
+        key: gocache-ci-${{ hashFiles('Dockerfile.pibuilder', 'Dockerfile.lint') }}-${{ github.run_id }}
+        restore-keys: |
+          gocache-ci-${{ hashFiles('Dockerfile.pibuilder', 'Dockerfile.lint') }}-
+        path: |
+          .cache
+
     - name: Lint
+      if: steps.go-changes.outputs.any_changed == 'true'
       run: ./script/lint
 
     - name: Test
+      if: steps.go-changes.outputs.any_changed == 'true'
       run: ./script/test
 
+    - uses: tj-actions/changed-files@v47
+      id: web-changes
+      with:
+        files: |
+          web/**
+
     - uses: actions/setup-node@v7
+      if: steps.web-changes.outputs.any_changed == 'true'
       with:
         node-version-file: '.nvmrc'
         cache: 'npm'
         cache-dependency-path: "web/package-lock.json"
 
     - run: npm ci
+      if: steps.web-changes.outputs.any_changed == 'true'
       working-directory: "./web"
 
     - run: npm run build
+      if: steps.web-changes.outputs.any_changed == 'true'
       working-directory: "./web"
 
     - name: Build
-      run: ./script/build
+      if: steps.go-changes.outputs.any_changed == 'true'
+      run: ./script/ci-build
+
+    # Only save from master; caches saved on PR refs aren't visible to other branches
+    - uses: actions/cache/save@v6
+      if: steps.go-changes.outputs.any_changed == 'true' && github.ref == 'refs/heads/master'
+      with:
+        key: gocache-ci-${{ hashFiles('Dockerfile.pibuilder', 'Dockerfile.lint') }}-${{ github.run_id }}
+        path: |
+          .cache
