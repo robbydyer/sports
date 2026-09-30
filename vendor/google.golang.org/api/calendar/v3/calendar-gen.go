@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC.
+// Copyright 2026 Google LLC.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -367,9 +367,12 @@ type AclRule struct {
 	// - "writer" - Provides read and write access to the calendar. Private events
 	// will appear to users with writer access, and event details will be visible.
 	// Provides read access to the calendar's ACLs.
-	// - "owner" - Provides ownership of the calendar. This role has all of the
-	// permissions of the writer role with the additional ability to manipulate
-	// ACLs.
+	// - "owner" - Provides manager access to the calendar. This role has all of
+	// the permissions of the writer role with the additional ability to modify
+	// access levels of other users.
+	// Important: the owner role is different from the calendar's data owner. A
+	// calendar has a single data owner, but can have multiple users with owner
+	// role.
 	Role string `json:"role,omitempty"`
 	// Scope: The extent to which calendar access is granted by this ACL rule.
 	Scope *AclRuleScope `json:"scope,omitempty"`
@@ -426,9 +429,15 @@ func (s AclRuleScope) MarshalJSON() ([]byte, error) {
 }
 
 type Calendar struct {
+	// AutoAcceptInvitations: Whether this calendar automatically accepts
+	// invitations. Only valid for resource calendars.
+	AutoAcceptInvitations bool `json:"autoAcceptInvitations,omitempty"`
 	// ConferenceProperties: Conferencing properties for this calendar, for example
 	// what types of conferences are allowed.
 	ConferenceProperties *ConferenceProperties `json:"conferenceProperties,omitempty"`
+	// DataOwner: The email of the owner of the calendar. Set only for secondary
+	// calendars. Read-only.
+	DataOwner string `json:"dataOwner,omitempty"`
 	// Description: Description of the calendar. Optional.
 	Description string `json:"description,omitempty"`
 	// Etag: ETag of the resource.
@@ -448,15 +457,15 @@ type Calendar struct {
 
 	// ServerResponse contains the HTTP response code and headers from the server.
 	googleapi.ServerResponse `json:"-"`
-	// ForceSendFields is a list of field names (e.g. "ConferenceProperties") to
+	// ForceSendFields is a list of field names (e.g. "AutoAcceptInvitations") to
 	// unconditionally include in API requests. By default, fields with empty or
 	// default values are omitted from API requests. See
 	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
 	// details.
 	ForceSendFields []string `json:"-"`
-	// NullFields is a list of field names (e.g. "ConferenceProperties") to include
-	// in API requests with the JSON null value. By default, fields with empty
-	// values are omitted from API requests. See
+	// NullFields is a list of field names (e.g. "AutoAcceptInvitations") to
+	// include in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. See
 	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
 	NullFields []string `json:"-"`
 }
@@ -510,10 +519,16 @@ type CalendarListEntry struct {
 	// - "writer" - Provides read and write access to the calendar. Private events
 	// will appear to users with writer access, and event details will be visible.
 	//
-	// - "owner" - Provides ownership of the calendar. This role has all of the
-	// permissions of the writer role with the additional ability to see and
-	// manipulate ACLs.
+	// - "owner" - Provides manager access to the calendar. This role has all of
+	// the permissions of the writer role with the additional ability to see and
+	// modify access levels of other users.
+	// Important: the owner role is different from the calendar's data owner. A
+	// calendar has a single data owner, but can have multiple users with owner
+	// role.
 	AccessRole string `json:"accessRole,omitempty"`
+	// AutoAcceptInvitations: Whether this calendar automatically accepts
+	// invitations. Only valid for resource calendars. Read-only.
+	AutoAcceptInvitations bool `json:"autoAcceptInvitations,omitempty"`
 	// BackgroundColor: The main color of the calendar in the hexadecimal format
 	// "#0088aa". This property supersedes the index-based colorId property. To set
 	// or change this property, you need to specify colorRgbFormat=true in the
@@ -527,6 +542,9 @@ type CalendarListEntry struct {
 	// ConferenceProperties: Conferencing properties for this calendar, for example
 	// what types of conferences are allowed.
 	ConferenceProperties *ConferenceProperties `json:"conferenceProperties,omitempty"`
+	// DataOwner: The email of the owner of the calendar. Set only for secondary
+	// calendars. Read-only.
+	DataOwner string `json:"dataOwner,omitempty"`
 	// DefaultReminders: The default reminders that the authenticated user has for
 	// this calendar.
 	DefaultReminders []*EventReminder `json:"defaultReminders,omitempty"`
@@ -1152,7 +1170,10 @@ type Event struct {
 	// Google Meet conference. To create new conference details use the
 	// createRequest field. To persist your changes, remember to set the
 	// conferenceDataVersion request parameter to 1 for all event modification
-	// requests.
+	// requests. Warning: Reusing Google Meet conference data across different
+	// events can cause access issues and expose meeting details to unintended
+	// users. To help ensure meeting privacy, always generate a unique conference
+	// for each event by using the createRequest field.
 	ConferenceData *ConferenceData `json:"conferenceData,omitempty"`
 	// Created: Creation time of the event (as a RFC3339 timestamp). Read-only.
 	Created string `json:"created,omitempty"`
@@ -1736,6 +1757,9 @@ func (s EventFocusTimeProperties) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
+type EventLabel struct {
+}
+
 type EventOutOfOfficeProperties struct {
 	// AutoDeclineMode: Whether to decline meeting invitations which overlap Out of
 	// office events. Valid values are declineNone, meaning that no meeting
@@ -1897,9 +1921,12 @@ type Events struct {
 	// - "writer" - The user has read and write access to the calendar. Private
 	// events will appear to users with writer access, and event details will be
 	// visible.
-	// - "owner" - The user has ownership of the calendar. This role has all of the
-	// permissions of the writer role with the additional ability to see and
-	// manipulate ACLs.
+	// - "owner" - The user has manager access to the calendar. This role has all
+	// of the permissions of the writer role with the additional ability to see and
+	// modify access levels of other users.
+	// Important: the owner role is different from the calendar's data owner. A
+	// calendar has a single data owner, but can have multiple users with owner
+	// role.
 	AccessRole string `json:"accessRole,omitempty"`
 	// DefaultReminders: The default reminders on the calendar for the
 	// authenticated user. These reminders apply to all events on this calendar
@@ -2081,6 +2108,9 @@ type FreeBusyResponse struct {
 func (s FreeBusyResponse) MarshalJSON() ([]byte, error) {
 	type NoMethod FreeBusyResponse
 	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
+}
+
+type LabelProperties struct {
 }
 
 type Setting struct {
@@ -4178,6 +4208,16 @@ type CalendarsInsertCall struct {
 }
 
 // Insert: Creates a secondary calendar.
+// The authenticated user for the request is made the data owner of the new
+// calendar.
+//
+// Note: We recommend to authenticate as the intended data owner of the
+// calendar. You can use domain-wide delegation of authority to allow
+// applications to act on behalf of a specific user. Don't use a service
+// account for authentication. If you use a service account for authentication,
+// the service account is the data owner, which can lead to unexpected
+// behavior. For example, if a service account is the data owner, data
+// ownership cannot be transferred.
 func (r *CalendarsService) Insert(calendar *Calendar) *CalendarsInsertCall {
 	c := &CalendarsInsertCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.calendar = calendar

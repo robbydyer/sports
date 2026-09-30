@@ -6,6 +6,8 @@ Optionally applies settings from the grpc-service configuration.
 
 load("@rules_proto//proto:defs.bzl", "ProtoInfo")
 
+_PROTO_TOOLCHAIN_TYPE = "@com_google_protobuf//bazel/private:proto_toolchain_type"
+
 # TODO(yannic): Replace with |proto_common.direct_source_infos| when
 # https://github.com/bazelbuild/rules_proto/pull/22 lands.
 def _direct_source_infos(proto_info, provided_sources = []):
@@ -74,9 +76,14 @@ def _run_proto_gen_openapi(
         generate_unbound_methods,
         visibility_restriction_selectors,
         use_allof_for_refs,
+        omit_array_item_type_when_ref_sibling,
         disable_default_responses,
         enable_rpc_deprecation,
-        expand_slashed_path_patterns):
+        enable_field_deprecation,
+        expand_slashed_path_patterns,
+        preserve_rpc_order,
+        generate_x_go_type,
+        ignore_go_package_option):
     args = actions.args()
 
     args.add("--plugin", "protoc-gen-openapiv2=%s" % protoc_gen_openapiv2.path)
@@ -147,14 +154,27 @@ def _run_proto_gen_openapi(
     if use_allof_for_refs:
         args.add("--openapiv2_opt", "use_allof_for_refs=true")
 
+    if omit_array_item_type_when_ref_sibling:
+        args.add("--openapiv2_opt", "omit_array_item_type_when_ref_sibling=true")
+
     if disable_default_responses:
         args.add("--openapiv2_opt", "disable_default_responses=true")
 
     if enable_rpc_deprecation:
         args.add("--openapiv2_opt", "enable_rpc_deprecation=true")
 
+    if enable_field_deprecation:
+        args.add("--openapiv2_opt", "enable_field_deprecation=true")
+
     if expand_slashed_path_patterns:
         args.add("--openapiv2_opt", "expand_slashed_path_patterns=true")
+
+    if preserve_rpc_order:
+        args.add("--openapiv2_opt", "preserve_rpc_order=true")
+    if generate_x_go_type:
+        args.add("--openapiv2_opt", "generate_x_go_type=true")
+    if ignore_go_package_option:
+        args.add("--openapiv2_opt", "ignore_go_package_option=true")
 
     args.add("--openapiv2_opt", "repeated_path_param_separator=%s" % repeated_path_param_separator)
 
@@ -237,7 +257,7 @@ def _proto_gen_openapi_impl(ctx):
                         direct = ctx.files._well_known_protos,
                         transitive = [proto.transitive_sources],
                     ),
-                    protoc = ctx.executable._protoc,
+                    protoc = ctx.toolchains[_PROTO_TOOLCHAIN_TYPE].proto.proto_compiler,
                     protoc_gen_openapiv2 = ctx.executable._protoc_gen_openapi,
                     single_output = ctx.attr.single_output,
                     allow_delete_body = ctx.attr.allow_delete_body,
@@ -262,9 +282,14 @@ def _proto_gen_openapi_impl(ctx):
                     generate_unbound_methods = ctx.attr.generate_unbound_methods,
                     visibility_restriction_selectors = ctx.attr.visibility_restriction_selectors,
                     use_allof_for_refs = ctx.attr.use_allof_for_refs,
+                    omit_array_item_type_when_ref_sibling = ctx.attr.omit_array_item_type_when_ref_sibling,
                     disable_default_responses = ctx.attr.disable_default_responses,
                     enable_rpc_deprecation = ctx.attr.enable_rpc_deprecation,
+                    enable_field_deprecation = ctx.attr.enable_field_deprecation,
                     expand_slashed_path_patterns = ctx.attr.expand_slashed_path_patterns,
+                    preserve_rpc_order = ctx.attr.preserve_rpc_order,
+                    generate_x_go_type = ctx.attr.generate_x_go_type,
+                    ignore_go_package_option = ctx.attr.ignore_go_package_option,
                 ),
             ),
         ),
@@ -413,6 +438,12 @@ protoc_gen_openapiv2 = rule(
             doc = "if set, will use allOf as container for $ref to preserve" +
                   " same-level properties.",
         ),
+        "omit_array_item_type_when_ref_sibling": attr.bool(
+            default = False,
+            mandatory = False,
+            doc = "if set, will omit 'type: object' in array items when $ref is present" +
+                  " to avoid strict no-$ref-siblings rule violations.",
+        ),
         "disable_default_responses": attr.bool(
             default = False,
             mandatory = False,
@@ -425,6 +456,11 @@ protoc_gen_openapiv2 = rule(
             mandatory = False,
             doc = "whether to process grpc method's deprecated option.",
         ),
+        "enable_field_deprecation": attr.bool(
+            default = False,
+            mandatory = False,
+            doc = "whether to process proto field's deprecated option.",
+        ),
         "expand_slashed_path_patterns": attr.bool(
             default = False,
             mandatory = False,
@@ -432,10 +468,30 @@ protoc_gen_openapiv2 = rule(
                   " It also creates a new path parameter for each wildcard in " +
                   " the path pattern.",
         ),
-        "_protoc": attr.label(
-            default = "@com_google_protobuf//:protoc",
-            executable = True,
-            cfg = "exec",
+        "preserve_rpc_order": attr.bool(
+            default = False,
+            mandatory = False,
+            doc = "if set, ensures the order of paths emitted in OpenAPI files" +
+                  " mirrors the order of RPC methods found in proto files." +
+                  " If false, emitted paths will be ordered alphabetically.",
+        ),
+        "use_proto3_field_semantics": attr.bool(
+            default = False,
+            mandatory = False,
+            doc = "if set, uses proto3 field semantics for the OpenAPI schema." +
+                  "  This means that fields are required by default.",
+        ),
+        "generate_x_go_type": attr.bool(
+            default = False,
+            mandatory = False,
+            doc = "Generate x-go-type extension using the go_package option from proto files",
+        ),
+        "ignore_go_package_option": attr.bool(
+            default = False,
+            mandatory = False,
+            doc = "if set, tolerates proto files that don't declare a go_package option by" +
+                  " synthesizing a placeholder import path instead of erroring. See the" +
+                  " ignore_go_package_option flag in protoc-gen-openapiv2 for details.",
         ),
         "_well_known_protos": attr.label(
             default = "@com_google_protobuf//:well_known_type_protos",
@@ -447,5 +503,8 @@ protoc_gen_openapiv2 = rule(
             cfg = "exec",
         ),
     },
+    toolchains = [
+        _PROTO_TOOLCHAIN_TYPE,
+    ],
     implementation = _proto_gen_openapi_impl,
 )

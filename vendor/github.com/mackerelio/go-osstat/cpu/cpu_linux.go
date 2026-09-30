@@ -1,5 +1,4 @@
 //go:build linux
-// +build linux
 
 package cpu
 
@@ -20,7 +19,7 @@ func Get() (*Stats, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer file.Close() // nolint
 	return collectCPUStats(file)
 }
 
