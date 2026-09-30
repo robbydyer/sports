@@ -26,7 +26,19 @@ latestpibuilder() {
     *)
     ;;
   esac
-  echo "robbydyer/pibuilder-${arch}-${buildos}:$(getsha "${ROOT}/Dockerfile.pibuilder")"
+
+  tag="$(getsha "${ROOT}/Dockerfile.pibuilder")"
+
+  case "${buildos}" in
+    buster)
+      # We stopped building new buster builder images
+      tag="0546978024385837e6f1df21e38f64615c65e25362e003feb4f91a9e2c16f4ee"
+      ;;
+      *)
+      ;;
+  esac
+
+  echo "robbydyer/pibuilder-${arch}-${buildos}:${tag}"
 }
 
 latestlinter() {
