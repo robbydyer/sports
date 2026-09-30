@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": ">=16.3.3",
     "@testing-library/user-event": "^14.6.7",
     "ansi-html": "npm:ansi-html-community@^0.0.8",
