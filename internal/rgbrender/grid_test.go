@@ -82,7 +82,7 @@ func TestGrid(t *testing.T) {
 }
 
 func checkColors(t *testing.T, canvas board.Canvas, clr color.Color) {
-	for x := 0; x < canvas.Bounds().Dx(); x++ {
+	for x := range canvas.Bounds().Dx() {
 		for y := 0; y < canvas.Bounds().Dy(); y++ {
 			if y == 50 {
 				y += 2

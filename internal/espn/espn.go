@@ -259,11 +259,10 @@ func pullTeams(ctx context.Context, sport string, league string) ([]byte, error)
 
 	uri.RawQuery = v.Encode()
 
-	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
 
 	client := http.DefaultClient
 

@@ -27,6 +27,7 @@ linters:
     - godot
     - godox
     - gomoddirectives
+    - gomodguard
     - gosec
     - gosmopolitan
     - inamedparam

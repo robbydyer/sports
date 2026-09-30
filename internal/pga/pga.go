@@ -133,11 +133,10 @@ func (p *PGA) updatePlayers(ctx context.Context) ([]*Player, error) {
 		p.lastUpdate = time.Now()
 	}()
 
-	req, err := http.NewRequest(http.MethodGet, leaderboardURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, leaderboardURL, nil)
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
 
 	client := http.DefaultClient
 

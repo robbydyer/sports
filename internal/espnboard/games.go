@@ -289,13 +289,11 @@ func (g *Game) GetUpdate(ctx context.Context) (sportboard.Game, error) {
 
 	uri.RawQuery = v.Encode()
 
-	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 	client := http.DefaultClient
-
-	req = req.WithContext(ctx)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -429,13 +427,11 @@ func (e *ESPNBoard) GetGames(ctx context.Context, dateStr string) ([]*Game, erro
 		zap.String("uri", uri.String()),
 	)
 
-	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 	client := http.DefaultClient
-
-	req = req.WithContext(ctx)
 
 	resp, err := client.Do(req)
 	if err != nil {

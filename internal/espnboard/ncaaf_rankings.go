@@ -79,13 +79,11 @@ func (n *ncaaf) setRankings(ctx context.Context, e *ESPNBoard, season string, te
 		zap.String("url", uri.String()),
 	)
 
-	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return err
 	}
 	client := http.DefaultClient
-
-	req = req.WithContext(ctx)
 
 	resp, err := client.Do(req)
 	if err != nil {

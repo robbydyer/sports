@@ -98,12 +98,10 @@ func GetTeams(ctx context.Context) ([]*Team, error) {
 
 	uri.RawQuery = v.Encode()
 
-	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-
-	req = req.WithContext(ctx)
 
 	client := http.DefaultClient
 	resp, err := client.Do(req)
@@ -161,12 +159,10 @@ func (t *Team) setRoster(ctx context.Context) error {
 
 	uri.RawQuery = v.Encode()
 
-	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return err
 	}
-
-	req = req.WithContext(ctx)
 
 	client := http.DefaultClient
 

@@ -200,11 +200,10 @@ func (p *Player) setStats(ctx context.Context) error {
 
 	uri.RawQuery = v.Encode()
 
-	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return err
 	}
-	req = req.WithContext(ctx)
 
 	client := http.DefaultClient
 

@@ -168,12 +168,10 @@ func (n *NHL) getTeamAPIData(ctx context.Context) ([]byte, error) {
 		zap.String("league", n.LeagueShortName()),
 		zap.String("url", uri),
 	)
-	req, err := http.NewRequest(http.MethodGet, uri, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
 	if err != nil {
 		return nil, err
 	}
-
-	req = req.WithContext(ctx)
 
 	client := http.DefaultClient
 	resp, err := client.Do(req)

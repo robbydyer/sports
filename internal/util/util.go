@@ -243,13 +243,11 @@ func AddTodays(today time.Time, previousDays int, advanceDays int) []time.Time {
 
 // PullPng GETs a png and returns it decoded as an image.Image
 func PullPng(ctx context.Context, url string) (image.Image, error) {
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
 	client := http.DefaultClient
-
-	req = req.WithContext(ctx)
 
 	resp, err := client.Do(req)
 	if err != nil {

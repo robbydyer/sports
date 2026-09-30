@@ -92,11 +92,10 @@ func (h *Headlines) GetText(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
 
 	client := http.DefaultClient
 

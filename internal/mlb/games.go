@@ -221,11 +221,10 @@ func (g *Game) GetOdds() (string, string, error) {
 func GetLiveGame(ctx context.Context, link string) (sportboard.Game, error) {
 	uri := fmt.Sprintf("%s/%s", linkBase, link)
 
-	req, err := http.NewRequest(http.MethodGet, uri, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
 
 	client := http.DefaultClient
 
@@ -267,13 +266,11 @@ func getGames(ctx context.Context, dateStr string) ([]*Game, error) {
 
 	uri.RawQuery = v.Encode()
 
-	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 	client := http.DefaultClient
-
-	req = req.WithContext(ctx)
 
 	resp, err := client.Do(req)
 	if err != nil {

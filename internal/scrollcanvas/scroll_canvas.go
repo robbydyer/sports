@@ -202,7 +202,7 @@ func (c *ScrollCanvas) SetScrollSpeed(d time.Duration) {
 				zap.Duration("speed", c.interval.Load()),
 			)
 			// Clear the buffer
-			for i := 0; i < cap(c.sendScrollSpeedChan); i++ {
+			for i := range cap(c.sendScrollSpeedChan) {
 				select {
 				case <-c.sendScrollSpeedChan:
 					c.log.Info("cleared canvas speed channel buffer",
