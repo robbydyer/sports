@@ -13,6 +13,7 @@ import (
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/pluginpb"
 )
@@ -49,6 +50,12 @@ type Registry struct {
 	// allowMerge generation one OpenAPI file out of multiple protos
 	allowMerge bool
 
+	// ignoreGoPackageOption, when set, causes Load to synthesize a placeholder
+	// go_package option for any proto file that doesn't declare one, instead of
+	// erroring. Safe only for generators, like protoc-gen-openapiv2, that never
+	// emit Go source and don't depend on the Go import path's actual value.
+	ignoreGoPackageOption bool
+
 	// mergeFileName target OpenAPI file name after merge
 	mergeFileName string
 
@@ -63,6 +70,9 @@ type Registry struct {
 	// otherwise the original proto name is used. It's helpful for synchronizing the OpenAPI definition
 	// with gRPC-Gateway response, if it uses json tags for marshaling.
 	useJSONNamesForFields bool
+
+	// useProto3FieldSemantics if true proto3 field semantics are used for generating fields in OpenAPI definitions.
+	useProto3FieldSemantics bool
 
 	// openAPINamingStrategy is the naming strategy to use for assigning OpenAPI field and parameter names. This can be one of the following:
 	// - `legacy`: use the legacy naming strategy from protoc-gen-swagger, that generates unique but not necessarily
@@ -154,6 +164,10 @@ type Registry struct {
 	// properties
 	useAllOfForRefs bool
 
+	// omitArrayItemTypeWhenRefSibling, if set, will omit 'type: object' in array items when $ref is present
+	// to avoid no-$ref-siblings violations in OpenAPI v2
+	omitArrayItemTypeWhenRefSibling bool
+
 	// allowPatchFeature determines whether to use PATCH feature involving update masks (using google.protobuf.FieldMask).
 	allowPatchFeature bool
 
@@ -163,6 +177,9 @@ type Registry struct {
 
 	// enableRpcDeprecation whether to process grpc method's deprecated option
 	enableRpcDeprecation bool
+
+	// enableFieldDeprecation whether to process proto field's deprecated option
+	enableFieldDeprecation bool
 
 	// expandSlashedPathPatterns, if true, for a path parameter carrying a sub-path, described via parameter pattern (i.e.
 	// the pattern contains forward slashes), this will expand the _pattern_ into the URI and will _replace_ the parameter
@@ -175,6 +192,9 @@ type Registry struct {
 	// This leads to more compliant and readable OpenAPI suitable for documentation, but may complicate client
 	// implementation if you want to pass the original "name" parameter.
 	expandSlashedPathPatterns bool
+
+	// generateXGoType is a global generator option for generating x-go-type annotations
+	generateXGoType bool
 }
 
 type repeatedFieldSeparator struct {
@@ -216,6 +236,9 @@ func NewRegistry() *Registry {
 
 // Load loads definitions of services, methods, messages, enumerations and fields from "req".
 func (r *Registry) Load(req *pluginpb.CodeGeneratorRequest) error {
+	if r.ignoreGoPackageOption {
+		fillGoPackageOptionIfMissing(req)
+	}
 	gen, err := protogen.Options{}.New(req)
 	if err != nil {
 		return err
@@ -225,6 +248,36 @@ func (r *Registry) Load(req *pluginpb.CodeGeneratorRequest) error {
 	// The support for features must be set on the pluginpb.CodeGeneratorResponse.
 	codegenerator.SetSupportedFeaturesOnPluginGen(gen)
 	return r.load(gen)
+}
+
+// fillGoPackageOptionIfMissing synthesizes a placeholder go_package option for
+// any proto file in req that doesn't declare one, so protogen.Options.New does
+// not error with "unable to determine Go import path". The synthesized path
+// always contains both a "." and a "/" ("generated.invalid/..."), satisfying
+// protogen's own import-path validation, and uses the RFC 2606 reserved
+// ".invalid" TLD convention to make clear it is a placeholder, never a real Go
+// module path.
+//
+// This never overrides an explicit "M<file>=<path>" command-line parameter:
+// protogen.Options.New parses M-flags into its own importPaths map before
+// falling back to each file's go_package option, and only uses go_package
+// when no M-flag already supplied a path for that file — so an M-flag the
+// caller supplies always takes precedence over whatever is synthesized here,
+// regardless of order.
+func fillGoPackageOptionIfMissing(req *pluginpb.CodeGeneratorRequest) {
+	for _, fdesc := range req.GetProtoFile() {
+		if fdesc.GetOptions().GetGoPackage() != "" {
+			continue
+		}
+		pkgPath := strings.ReplaceAll(fdesc.GetPackage(), ".", "/")
+		if pkgPath == "" {
+			pkgPath = strings.TrimSuffix(strings.ReplaceAll(fdesc.GetName(), "/", "_"), ".proto")
+		}
+		if fdesc.Options == nil {
+			fdesc.Options = &descriptorpb.FileOptions{}
+		}
+		fdesc.Options.GoPackage = proto.String("generated.invalid/" + pkgPath)
+	}
 }
 
 func (r *Registry) LoadFromPlugin(gen *protogen.Plugin) error {
@@ -399,6 +452,14 @@ func (r *Registry) LookupFile(name string) (*File, error) {
 	return f, nil
 }
 
+func (r *Registry) GetUseProto3FieldSemantics() bool {
+	return r.useProto3FieldSemantics
+}
+
+func (r *Registry) SetUseProto3FieldSemantics(useProto3FieldSemantics bool) {
+	r.useProto3FieldSemantics = useProto3FieldSemantics
+}
+
 // LookupExternalHTTPRules looks up external http rules by fully qualified service method name
 func (r *Registry) LookupExternalHTTPRules(qualifiedMethodName string) []*annotations.HttpRule {
 	return r.externalHTTPRules[qualifiedMethodName]
@@ -507,6 +568,16 @@ func (r *Registry) SetAllowDeleteBody(allow bool) {
 // SetAllowMerge controls whether generation one OpenAPI file out of multiple protos
 func (r *Registry) SetAllowMerge(allow bool) {
 	r.allowMerge = allow
+}
+
+// SetIgnoreGoPackageOption controls whether Load tolerates proto files that
+// don't declare a go_package option, by synthesizing a placeholder import
+// path instead of erroring. Intended for protoc-gen-openapiv2, which never
+// emits Go source and has no real use for the Go import path; it must not be
+// enabled for protoc-gen-grpc-gateway, which does emit a Go library and
+// genuinely needs a correct go_package.
+func (r *Registry) SetIgnoreGoPackageOption(ignore bool) {
+	r.ignoreGoPackageOption = ignore
 }
 
 // IsAllowMerge whether generation one OpenAPI file out of multiple protos
@@ -871,6 +942,16 @@ func (r *Registry) GetUseAllOfForRefs() bool {
 	return r.useAllOfForRefs
 }
 
+// SetOmitArrayItemTypeWhenRefSibling sets omitArrayItemTypeWhenRefSibling
+func (r *Registry) SetOmitArrayItemTypeWhenRefSibling(omit bool) {
+	r.omitArrayItemTypeWhenRefSibling = omit
+}
+
+// GetOmitArrayItemTypeWhenRefSibling returns omitArrayItemTypeWhenRefSibling
+func (r *Registry) GetOmitArrayItemTypeWhenRefSibling() bool {
+	return r.omitArrayItemTypeWhenRefSibling
+}
+
 // SetAllowPatchFeature sets allowPatchFeature
 func (r *Registry) SetAllowPatchFeature(allow bool) {
 	r.allowPatchFeature = allow
@@ -901,10 +982,28 @@ func (r *Registry) GetEnableRpcDeprecation() bool {
 	return r.enableRpcDeprecation
 }
 
+// SetEnableFieldDeprecation sets enableFieldDeprecation
+func (r *Registry) SetEnableFieldDeprecation(enable bool) {
+	r.enableFieldDeprecation = enable
+}
+
+// GetEnableFieldDeprecation returns enableFieldDeprecation
+func (r *Registry) GetEnableFieldDeprecation() bool {
+	return r.enableFieldDeprecation
+}
+
 func (r *Registry) SetExpandSlashedPathPatterns(expandSlashedPathPatterns bool) {
 	r.expandSlashedPathPatterns = expandSlashedPathPatterns
 }
 
 func (r *Registry) GetExpandSlashedPathPatterns() bool {
 	return r.expandSlashedPathPatterns
+}
+
+func (r *Registry) SetGenerateXGoType(generateXGoType bool) {
+	r.generateXGoType = generateXGoType
+}
+
+func (r *Registry) GetGenerateXGoType() bool {
+	return r.generateXGoType
 }
