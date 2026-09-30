@@ -74,6 +74,7 @@ func (m *MLB) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config
 	for _, d := range *m.defaultLogoConf {
 		if d.Abbrev == logoKey {
 			l = logo.New(logoKey, logoGetter, logoCacheDir, bounds, d)
+
 			return l, nil
 		}
 	}
@@ -101,6 +102,7 @@ func (m *MLB) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config
 	for _, d := range *m.defaultLogoConf {
 		if d.Abbrev == logoKey {
 			l = logo.New(logoKey, logoGetter, logoCacheDir, bounds, d)
+
 			return l, nil
 		}
 	}
@@ -113,6 +115,7 @@ func sportsAPIToESPN(abbrev string) string {
 	case "CWS":
 		return "CHW"
 	}
+
 	return abbrev
 }
 

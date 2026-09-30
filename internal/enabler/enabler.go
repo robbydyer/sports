@@ -30,8 +30,10 @@ func (e *Enabler) Store(set bool) bool {
 		if e.stateChangeCallback != nil {
 			e.stateChangeCallback()
 		}
+
 		return true
 	}
+
 	return false
 }
 

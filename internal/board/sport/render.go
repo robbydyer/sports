@@ -2,10 +2,12 @@ package sportboard
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
+	"strconv"
 	"strings"
 	"time"
 
@@ -35,6 +37,7 @@ func (s *SportBoard) homeSide() side {
 	if s.api.HomeSideSwap() {
 		return left
 	}
+
 	return right
 }
 
@@ -44,6 +47,7 @@ func (s *SportBoard) renderLoading(ctx context.Context, canvas board.Canvas) {
 		s.log.Error("failed to get writer for loading screen",
 			zap.Error(err),
 		)
+
 		return
 	}
 
@@ -118,7 +122,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 
 	select {
 	case <-ctx.Done():
-		return fmt.Errorf("context canceled")
+		return errors.New("context canceled")
 	default:
 	}
 
@@ -145,6 +149,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 				if err != nil {
 					return nil, nil, err
 				}
+
 				return writer, []string{quarter, clock}, nil
 			},
 			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
@@ -167,6 +172,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 				if err != nil {
 					return nil, nil, err
 				}
+
 				return writer, []string{}, nil
 			},
 			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
@@ -176,6 +182,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 				}
 				if s.config.HideFavoriteScore.Load() && isFavorite {
 					s.log.Warn("hiding score for favorite team")
+
 					return nil
 				}
 				a, err := liveGame.AwayTeam()
@@ -197,9 +204,9 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 				var clrs []color.Color
 				if s.homeSide() == left {
 					chars = []string{
-						fmt.Sprintf("%d", hScore),
+						strconv.Itoa(hScore),
 						"-",
-						fmt.Sprintf("%d", aScore),
+						strconv.Itoa(aScore),
 					}
 					if prev.home.hasScored(hScore) {
 						clrs = append(clrs, red)
@@ -216,9 +223,9 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 					}
 				} else {
 					chars = []string{
-						fmt.Sprintf("%d", aScore),
+						strconv.Itoa(aScore),
 						"-",
-						fmt.Sprintf("%d", hScore),
+						strconv.Itoa(hScore),
 					}
 					if prev.away.hasScored(aScore) {
 						clrs = append(clrs, red)
@@ -250,6 +257,7 @@ func (s *SportBoard) renderLiveGame(ctx context.Context, canvas board.Canvas, li
 					clrCodes,
 				); err != nil {
 					s.log.Error("failed to write multicolored str", zap.Error(err))
+
 					return err
 				}
 
@@ -336,6 +344,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 						zap.String("day", dateStr),
 					)
 				}
+
 				return timeWriter, []string{gameTimeStr, dateStr}, nil
 			},
 			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
@@ -357,6 +366,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 				if err != nil {
 					return nil, nil, err
 				}
+
 				return scoreWriter, []string{"VS"}, nil
 			},
 			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
@@ -374,7 +384,7 @@ func (s *SportBoard) renderUpcomingGame(ctx context.Context, canvas board.Canvas
 
 	select {
 	case <-ctx.Done():
-		return fmt.Errorf("context canceled")
+		return errors.New("context canceled")
 	default:
 	}
 
@@ -424,6 +434,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 				if err != nil {
 					return nil, nil, err
 				}
+
 				return writer, []string{"FINAL"}, nil
 			},
 			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
@@ -461,6 +472,7 @@ func (s *SportBoard) renderCompleteGame(ctx context.Context, canvas board.Canvas
 				if err != nil {
 					return nil, nil, err
 				}
+
 				return writer, score, nil
 			},
 			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
@@ -487,10 +499,12 @@ func counterLayer(counter image.Image) *rgbrender.Layer {
 	if counter == nil {
 		return nil
 	}
+
 	return rgbrender.NewLayer(
 		nil,
 		func(canvas board.Canvas, img image.Image) error {
 			draw.Draw(canvas, counter.Bounds(), counter, image.Point{}, draw.Over)
+
 			return nil
 		},
 	)
@@ -536,6 +550,7 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 						[]string{leftTeam.GetAbbreviation()},
 						color.White,
 					)
+
 					return nil
 				}
 				pt := image.Pt(img.Bounds().Min.X, img.Bounds().Min.Y)
@@ -553,6 +568,7 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 					zap.Int("img max Y", img.Bounds().Max.Y),
 				)
 				draw.Draw(canvas, img.Bounds(), img, pt, draw.Over)
+
 				return nil
 			},
 		),
@@ -581,10 +597,12 @@ func (s *SportBoard) logoLayers(liveGame Game, bounds image.Rectangle) ([]*rgbre
 						[]string{rightTeam.GetAbbreviation()},
 						color.White,
 					)
+
 					return nil
 				}
 				pt := image.Pt(img.Bounds().Min.X, img.Bounds().Min.Y)
 				draw.Draw(canvas, img.Bounds(), img, pt, draw.Over)
+
 				return nil
 			},
 		),
@@ -620,10 +638,12 @@ func (s *SportBoard) gradientLayer(bounds image.Rectangle, scoreLen int) []*rgbr
 		zap.Int("width", width),
 		zap.Int("fill width", int((float64(gradientBounds.Dx())*fillPct))),
 	)
+
 	return []*rgbrender.Layer{
 		rgbrender.NewLayer(
 			func(ctx context.Context) (image.Image, error) {
 				gradient := rgbrender.GradientXRectangle(gradientBounds, fillPct, color.Black, s.log)
+
 				return gradient, nil
 			},
 			func(canvas board.Canvas, img image.Image) error {
@@ -666,6 +686,7 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 
 	leftBounds := bounds
 	rightBounds := bounds
+
 	return []*rgbrender.TextLayer{
 		rgbrender.NewTextLayer(
 			func(ctx context.Context) (*rgbrender.TextWriter, []string, error) {
@@ -706,7 +727,7 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 			},
 			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
 				if len(text) != 2 {
-					return fmt.Errorf("invalid rank/record input")
+					return errors.New("invalid rank/record input")
 				}
 				rank := text[0]
 				record := text[1]
@@ -732,6 +753,7 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 						color.Black,
 					)
 				}
+
 				return nil
 			},
 		),
@@ -774,7 +796,7 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 			},
 			func(canvas board.Canvas, writer *rgbrender.TextWriter, text []string) error {
 				if len(text) != 2 {
-					return fmt.Errorf("invalid rank/record input")
+					return errors.New("invalid rank/record input")
 				}
 				rank := text[0]
 				record := text[1]
@@ -800,6 +822,7 @@ func (s *SportBoard) teamInfoLayers(canvas draw.Image, liveGame Game, bounds ima
 						color.Black,
 					)
 				}
+
 				return nil
 			},
 		),
@@ -888,7 +911,7 @@ func (s *SportBoard) renderLeagueLogo(ctx context.Context, canvas board.Canvas) 
 	}
 
 	if img == nil {
-		return fmt.Errorf("failed to get league logo thumbnail")
+		return errors.New("failed to get league logo thumbnail")
 	}
 
 	draw.Draw(canvas, zeroed, img, image.Point{}, draw.Over)

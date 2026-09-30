@@ -2,6 +2,7 @@ package rgbrender
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"sort"
@@ -73,6 +74,7 @@ func NewLayerDrawer(timeout time.Duration, log *zap.Logger) (*LayerDrawer, error
 			return nil, err
 		}
 	}
+
 	return &LayerDrawer{
 		drawTimeout:     timeout,
 		layerPriorities: make(map[int]struct{}),
@@ -201,7 +203,7 @@ func (l *LayerDrawer) Prepare(ctx context.Context) error {
 		return context.Canceled
 	case <-textDone:
 	case <-time.After(l.drawTimeout):
-		return fmt.Errorf("timed out LayerDrawer")
+		return errors.New("timed out LayerDrawer")
 	}
 
 	for _, layer := range l.layers {
@@ -231,7 +233,7 @@ func (l *LayerDrawer) Prepare(ctx context.Context) error {
 		return context.Canceled
 	case <-prepDone:
 	case <-time.After(l.drawTimeout):
-		return fmt.Errorf("timed out LayerDrawer")
+		return errors.New("timed out LayerDrawer")
 	}
 
 ERR:
@@ -241,6 +243,7 @@ ERR:
 			if err != nil {
 				return err
 			}
+
 			continue ERR
 		default:
 			break ERR
@@ -275,7 +278,7 @@ func (l *LayerDrawer) Draw(ctx context.Context, canvas board.Canvas) error {
 				continue LAYER
 			}
 			if layer.draw == nil {
-				return fmt.Errorf("draw func not defined for layer")
+				return errors.New("draw func not defined for layer")
 			}
 			l.log.Debug("drawing layer",
 				zap.Int("priority", priority),
@@ -294,7 +297,7 @@ func (l *LayerDrawer) Draw(ctx context.Context, canvas board.Canvas) error {
 				continue TEXT
 			}
 			if layer.write == nil {
-				return fmt.Errorf("draw func not defined for layer")
+				return errors.New("draw func not defined for layer")
 			}
 			l.log.Debug("drawing text layer", zap.Int("priority", priority))
 			wg.Add(1)
@@ -318,7 +321,7 @@ func (l *LayerDrawer) Draw(ctx context.Context, canvas board.Canvas) error {
 			return context.Canceled
 		case <-drawDone:
 		case <-time.After(l.drawTimeout):
-			return fmt.Errorf("timed out LayerDrawer")
+			return errors.New("timed out LayerDrawer")
 		}
 
 	ERR:
@@ -328,6 +331,7 @@ func (l *LayerDrawer) Draw(ctx context.Context, canvas board.Canvas) error {
 				if err != nil {
 					return err
 				}
+
 				continue ERR
 			default:
 				break ERR

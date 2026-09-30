@@ -3,7 +3,7 @@ package pga
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"net/http"
 	"regexp"
@@ -109,6 +109,7 @@ func (p *PGA) ListPlayers(ctx context.Context, teamAbbreviation string) ([]statb
 	for _, player := range p.players {
 		players = append(players, player)
 	}
+
 	return players, nil
 }
 
@@ -132,7 +133,7 @@ func (p *PGA) updatePlayers(ctx context.Context) ([]*Player, error) {
 		p.lastUpdate = time.Now()
 	}()
 
-	req, err := http.NewRequest("GET", leaderboardURL, nil)
+	req, err := http.NewRequest(http.MethodGet, leaderboardURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +159,7 @@ func (p *PGA) updatePlayers(ctx context.Context) ([]*Player, error) {
 	}
 
 	if len(dat.Events) < 1 || len(dat.Events[0].Competitions) < 1 {
-		return nil, fmt.Errorf("could not find players")
+		return nil, errors.New("could not find players")
 	}
 
 	comp := dat.Events[0].Competitions[0]
@@ -168,10 +169,11 @@ func (p *PGA) updatePlayers(ctx context.Context) ([]*Player, error) {
 
 	if strings.Contains(comp.DataFormat, "RAW") && comp.RawData != "" {
 		players := p.parseRaw(comp.RawData)
+
 		return players, nil
 	}
 
-	return nil, fmt.Errorf("could not find players")
+	return nil, errors.New("could not find players")
 }
 
 func (p *PGA) parseRaw(data string) []*Player {
@@ -186,6 +188,7 @@ func (p *PGA) parseRaw(data string) []*Player {
 
 		if len(matches) < 5 {
 			p.log.Debug("not enough matches for PGA raw", zap.ByteStrings("matches", matches))
+
 			continue
 		}
 		pos := string(matches[1])

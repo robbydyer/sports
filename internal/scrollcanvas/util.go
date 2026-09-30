@@ -7,6 +7,7 @@ import (
 
 func isBlack(c color.Color) bool {
 	r, g, b, _ := c.RGBA()
+
 	return r == 0 && b == 0 && g == 0
 }
 

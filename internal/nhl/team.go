@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"go.uber.org/zap"
@@ -56,7 +57,7 @@ type teams struct {
 
 // GetID ...
 func (t *Team) GetID() string {
-	return fmt.Sprintf("%d", t.ID)
+	return strconv.Itoa(t.ID)
 }
 
 // GetName ...
@@ -79,6 +80,7 @@ func (t *Team) ConferenceName() string {
 	if t.Division != nil {
 		return t.Division.Abbreviation
 	}
+
 	return ""
 }
 
@@ -145,6 +147,7 @@ OUTER:
 		for _, div := range d.Divisions {
 			if div.ID == team.DivisionData.ID {
 				team.Division = div
+
 				continue OUTER
 			}
 		}
@@ -156,7 +159,7 @@ OUTER:
 func (n *NHL) getTeamAPIData(ctx context.Context) ([]byte, error) {
 	season := ""
 	d := util.Today(time.Now())
-	season = fmt.Sprintf("season=%s", GetSeason(d))
+	season = "season=" + GetSeason(d)
 	n.log.Debug("nhl today season",
 		zap.String("util.Today", d.String()),
 	)
@@ -165,7 +168,7 @@ func (n *NHL) getTeamAPIData(ctx context.Context) ([]byte, error) {
 		zap.String("league", n.LeagueShortName()),
 		zap.String("url", uri),
 	)
-	req, err := http.NewRequest("GET", uri, nil)
+	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
 		return nil, err
 	}

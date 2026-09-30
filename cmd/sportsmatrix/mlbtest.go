@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"embed"
-	"fmt"
+	"errors"
 	"image"
 	"path/filepath"
 	"strings"
@@ -121,8 +121,9 @@ func (c *mlbCmd) run(cmd *cobra.Command, args []string) error {
 		logger.Info("render detailed live view")
 		mlbGame, ok := game.(*espnboard.Game)
 		if !ok {
-			return fmt.Errorf("unsupported sport for detailed renderer")
+			return errors.New("unsupported sport for detailed renderer")
 		}
+
 		return m.RenderLive(ctx, canvas, mlbGame, hLogo, aLogo)
 	}
 

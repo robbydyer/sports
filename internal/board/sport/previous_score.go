@@ -57,6 +57,7 @@ func (t *previousTeam) hasScored(current int) bool {
 	if !t.init.Load() {
 		t.previous.Store(int32(current))
 		t.init.Store(true)
+
 		return false
 	}
 
@@ -64,11 +65,13 @@ func (t *previousTeam) hasScored(current int) bool {
 	if c != t.previous.Load() {
 		t.previous.Store(c)
 		t.repeats.Store(0)
+
 		return true
 	}
 
 	if t.repeats.Load() < t.maxRepeats {
 		t.repeats.Inc()
+
 		return true
 	}
 

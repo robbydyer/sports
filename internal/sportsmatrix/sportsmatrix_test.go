@@ -47,6 +47,7 @@ func (b *TestBoard) Render(ctx context.Context, canvases board.Canvas) error {
 		require.Nil(b.tester, nil, "Blank Board render in test")
 		b.hasRendered.Store(true)
 	}
+
 	return nil
 }
 
@@ -126,6 +127,7 @@ func TestSportsMatrix(t *testing.T) {
 			case <-ticker.C:
 				if b.HasRendered() {
 					cancel()
+
 					return
 				}
 			}
@@ -215,7 +217,7 @@ func TestScreenSwitch(t *testing.T) {
 	switchOnCtx, swOnCancel := context.WithTimeout(ctx, 5*time.Second)
 	defer swOnCancel()
 
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

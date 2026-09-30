@@ -3,6 +3,7 @@ package espnboard
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"image/color"
 	"io"
@@ -92,6 +93,7 @@ type status struct {
 // GetID ...
 func (g *Game) GetID() int {
 	id, _ := strconv.Atoi(g.ID)
+
 	return id
 }
 
@@ -168,20 +170,21 @@ func (g *Game) HomeColor() (*color.RGBA, *color.RGBA, error) {
 		if err != nil {
 			return nil, nil, err
 		}
+
 		return &color.RGBA{
-				R: r,
-				G: gr,
-				B: b,
-				A: 255,
-			}, &color.RGBA{
-				R: r2,
-				B: b2,
-				G: g2,
-				A: 255,
-			}, nil
+			R: r,
+			G: gr,
+			B: b,
+			A: 255,
+		}, &color.RGBA{
+			R: r2,
+			B: b2,
+			G: g2,
+			A: 255,
+		}, nil
 	}
 
-	return nil, nil, fmt.Errorf("failed to get home team color")
+	return nil, nil, errors.New("failed to get home team color")
 }
 
 func (g *Game) AwayColor() (*color.RGBA, *color.RGBA, error) {
@@ -194,20 +197,21 @@ func (g *Game) AwayColor() (*color.RGBA, *color.RGBA, error) {
 		if err != nil {
 			return nil, nil, err
 		}
+
 		return &color.RGBA{
-				R: r,
-				G: gr,
-				B: b,
-				A: 255,
-			}, &color.RGBA{
-				R: r2,
-				G: g2,
-				B: b2,
-				A: 255,
-			}, nil
+			R: r,
+			G: gr,
+			B: b,
+			A: 255,
+		}, &color.RGBA{
+			R: r2,
+			G: g2,
+			B: b2,
+			A: 255,
+		}, nil
 	}
 
-	return nil, nil, fmt.Errorf("failed to get home team color")
+	return nil, nil, errors.New("failed to get home team color")
 }
 
 // GetQuarter ...
@@ -220,6 +224,7 @@ func (g *Game) GetQuarter() (string, error) {
 			}
 		}
 	}
+
 	return strconv.Itoa(g.status.Period), nil
 }
 
@@ -233,6 +238,7 @@ func (g *Game) GetClock() (string, error) {
 			}
 		}
 	}
+
 	return g.status.DisplayClock, nil
 }
 
@@ -240,7 +246,7 @@ func (g *Game) getMockUpdate() (sportboard.Game, error) {
 	var event *event
 
 	if g.espnBoard == nil {
-		return nil, fmt.Errorf("no mock data present")
+		return nil, errors.New("no mock data present")
 	}
 	mockDat, ok := g.espnBoard.mockLiveGames[g.ID]
 	if !ok {
@@ -283,7 +289,7 @@ func (g *Game) GetUpdate(ctx context.Context) (sportboard.Game, error) {
 
 	uri.RawQuery = v.Encode()
 
-	req, err := http.NewRequest("GET", uri.String(), nil)
+	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -344,7 +350,7 @@ func (g *Game) GetOdds() (string, string, error) {
 func extractOverUnder(details string) (string, string, error) {
 	match := overUnderRegex.FindStringSubmatch(details)
 	if len(match) < 3 {
-		return "", "", fmt.Errorf("no match found")
+		return "", "", errors.New("no match found")
 	}
 
 	return match[1], match[2], nil
@@ -352,7 +358,7 @@ func extractOverUnder(details string) (string, string, error) {
 
 func (e *ESPNBoard) getMockGames() ([]*Game, error) {
 	if e.mockSchedule == nil {
-		return nil, fmt.Errorf("missing mock schedule data")
+		return nil, errors.New("missing mock schedule data")
 	}
 	var schedule *schedule
 
@@ -396,7 +402,8 @@ func (e *ESPNBoard) GetGames(ctx context.Context, dateStr string) ([]*Game, erro
 				zap.String("date", dateStr),
 				zap.String("league", e.League()),
 			)
-			return nil, fmt.Errorf("called scoreboard API too quickly")
+
+			return nil, errors.New("called scoreboard API too quickly")
 		}
 	}
 
@@ -422,7 +429,7 @@ func (e *ESPNBoard) GetGames(ctx context.Context, dateStr string) ([]*Game, erro
 		zap.String("uri", uri.String()),
 	)
 
-	req, err := http.NewRequest("GET", uri.String(), nil)
+	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}

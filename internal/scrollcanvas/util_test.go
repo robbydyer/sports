@@ -34,8 +34,6 @@ func TestFirstNonBlankY(t *testing.T) {
 
 	t.Parallel()
 	for _, test := range tests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			img := image.NewRGBA(image.Rect(0, 0, 11, 11))
@@ -72,8 +70,6 @@ func TestFirstNonBlankX(t *testing.T) {
 
 	t.Parallel()
 	for _, test := range tests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			img := image.NewRGBA(image.Rect(0, 0, 11, 11))
@@ -110,8 +106,6 @@ func TestLastNonBlankY(t *testing.T) {
 
 	t.Parallel()
 	for _, test := range tests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			img := image.NewRGBA(image.Rect(0, 0, 10, 10))
@@ -153,8 +147,6 @@ func TestLastNonBlankX(t *testing.T) {
 
 	t.Parallel()
 	for _, test := range tests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			img := image.NewRGBA(image.Rect(0, 0, 10, 10))

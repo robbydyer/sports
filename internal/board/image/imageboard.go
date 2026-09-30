@@ -2,6 +2,7 @@ package imageboard
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"image/draw"
@@ -194,11 +195,12 @@ func (i *ImageBoard) Render(ctx context.Context, canvas board.Canvas) error {
 func (i *ImageBoard) render(ctx context.Context, canvas board.Canvas) error {
 	if !i.Enabler().Enabled() {
 		i.log.Warn("ImageBoard is disabled, not rendering")
+
 		return nil
 	}
 
 	if len(i.config.Directories) < 1 && len(i.config.DirectoryList) < 1 {
-		return fmt.Errorf("image board has no directories configured")
+		return errors.New("image board has no directories configured")
 	}
 
 	if i.config.UseDiskCache.Load() {
@@ -353,6 +355,7 @@ func (i *ImageBoard) renderImages(ctx context.Context, canvas board.Canvas, imag
 		img, err := i.getSizedImage(im.path, zereodCanvas, preloader[im.path])
 		if err != nil {
 			i.log.Error("failed to prepare image", zap.Error(err), zap.String("path", im.path))
+
 			return
 		}
 		im.img = img
@@ -367,6 +370,7 @@ func (i *ImageBoard) renderImages(ctx context.Context, canvas board.Canvas, imag
 		img, err := i.getSizedGIF(preloadCtx, im.path, canvas.Bounds())
 		if err != nil {
 			i.log.Error("failed to prepare image", zap.Error(err), zap.String("path", im.path))
+
 			return
 		}
 		im.gif = img
@@ -386,6 +390,7 @@ IMAGES:
 		p := thisImg.path
 		if !i.enabler.Enabled() {
 			i.log.Warn("ImageBoard is disabled, not rendering")
+
 			return nil
 		}
 
@@ -408,6 +413,7 @@ IMAGES:
 				zap.String("this", p),
 				zap.String("jump", jump),
 			)
+
 			continue IMAGES
 		} else if jump != "" {
 			i.log.Info("jumping to image",
@@ -489,6 +495,7 @@ func (i *ImageBoard) cachedFile(baseName string, bounds image.Rectangle) string 
 		suffix = "gif"
 	}
 	n := fmt.Sprintf("%s_%dx%d.%s", strings.Join(parts[0:len(parts)-1], "."), bounds.Dx(), bounds.Dy(), suffix)
+
 	return filepath.Join(diskCacheDir, n)
 }
 
@@ -523,6 +530,7 @@ func (i *ImageBoard) getSizedImage(path string, bounds image.Rectangle, preloade
 				zap.Int("X", bounds.Dx()),
 				zap.Int("Y", bounds.Dy()),
 			)
+
 			return p, nil
 		}
 	}
@@ -544,6 +552,7 @@ func (i *ImageBoard) getSizedImage(path string, bounds image.Rectangle, preloade
 			if i.config.UseMemCache.Load() {
 				i.imageCache[key] = img
 			}
+
 			return img, nil
 		}
 	}
@@ -601,6 +610,7 @@ func (i *ImageBoard) getSizedGIF(ctx context.Context, path string, bounds image.
 				zap.Int("X", bounds.Dx()),
 				zap.Int("Y", bounds.Dy()),
 			)
+
 			return p, nil
 		}
 	}

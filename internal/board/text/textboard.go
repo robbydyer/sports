@@ -2,6 +2,7 @@ package textboard
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -146,9 +147,9 @@ func New(api API, config *Config, log *zap.Logger, opts ...OptionFunc) (*TextBoa
 
 	prfx := s.api.HTTPPathPrefix()
 	if !strings.HasPrefix(prfx, "/") {
-		prfx = fmt.Sprintf("/%s", prfx)
+		prfx = "/" + prfx
 	}
-	prfx = fmt.Sprintf("/headlines%s", prfx)
+	prfx = "/headlines" + prfx
 
 	svr := &Server{
 		board: s,
@@ -190,10 +191,12 @@ func (s *TextBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc
 			return
 		case <-s.cancelBoard:
 			cancel()
+
 			return
 		case <-ticker.C:
 			if !s.Enabler().Enabled() {
 				cancel()
+
 				return
 			}
 		}
@@ -212,6 +215,7 @@ func (s *TextBoard) Render(ctx context.Context, canvas board.Canvas) error {
 				s.config.scrollDelay = scr.GetScrollSpeed()
 			}
 		}()
+
 		return c.Render(ctx)
 	}
 
@@ -275,7 +279,7 @@ func (s *TextBoard) render(ctx context.Context, canvas board.Canvas) (board.Canv
 	var scrollCanvas *scrcnvs.ScrollCanvas
 	base, ok := canvas.(*scrcnvs.ScrollCanvas)
 	if !ok {
-		return nil, fmt.Errorf("wat")
+		return nil, errors.New("wat")
 	}
 
 	scrollCanvas, err = scrcnvs.NewScrollCanvas(base.Matrix, s.log,
@@ -329,6 +333,7 @@ TEXT:
 			s.log.Error("failed to render text",
 				zap.Error(err),
 			)
+
 			continue TEXT
 		}
 
@@ -340,6 +345,7 @@ TEXT:
 				zap.Int("max", *s.config.Max),
 				zap.Int("num shown", num),
 			)
+
 			break TEXT
 		}
 	}
@@ -361,6 +367,7 @@ func (s *TextBoard) ScrollMode() bool {
 func WithHalfSizeLogo() OptionFunc {
 	return func(s *TextBoard) error {
 		s.config.halfSizeLogo = true
+
 		return nil
 	}
 }

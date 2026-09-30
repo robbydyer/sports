@@ -247,6 +247,7 @@ func (s *SysBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			w.Header().Set("Content-Type", "text/plain")
 			if s.Enabler().Enabled() {
 				_, _ = w.Write([]byte("true"))
+
 				return
 			}
 			_, _ = w.Write([]byte("false"))

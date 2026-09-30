@@ -148,7 +148,7 @@ func (c *ConsoleMatrix) render(leds []uint32) error {
 	row := ""
 	for index, clrint := range leds {
 		clr := uint32ToColorGo(clrint)
-		if (index)%c.width == 0 {
+		if index%c.width == 0 {
 			// This is a new row
 			row += "|"
 			rendered = append(rendered, row)
@@ -156,6 +156,7 @@ func (c *ConsoleMatrix) render(leds []uint32) error {
 		}
 		if clr == nil {
 			row += "  "
+
 			continue
 		}
 

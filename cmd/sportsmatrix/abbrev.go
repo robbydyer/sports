@@ -165,6 +165,7 @@ TEAM:
 	fmt.Printf("%s Conferences/Divisions\n", e.League())
 	if len(confs) < 1 {
 		fmt.Printf("  Conferences currently unsupported\n\n")
+
 		return nil
 	}
 

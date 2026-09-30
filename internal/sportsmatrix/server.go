@@ -31,6 +31,7 @@ func (s *Server) ScreenOn(ctx context.Context, req *emptypb.Empty) (*emptypb.Emp
 	if err := s.sm.ScreenOn(ctx); err != nil {
 		return &emptypb.Empty{}, twirp.NewError(twirp.Internal, "failed to turn screen on")
 	}
+
 	return &emptypb.Empty{}, nil
 }
 
@@ -39,6 +40,7 @@ func (s *Server) ScreenOff(ctx context.Context, req *emptypb.Empty) (*emptypb.Em
 	if err := s.sm.ScreenOff(ctx); err != nil {
 		return &emptypb.Empty{}, twirp.NewError(twirp.Internal, "failed to turn screen off")
 	}
+
 	return &emptypb.Empty{}, nil
 }
 
@@ -120,6 +122,7 @@ func (s *Server) NextBoard(ctx context.Context, req *emptypb.Empty) (*emptypb.Em
 	s.sm.Lock()
 	defer s.sm.Unlock()
 	s.sm.currentBoardCancel()
+
 	return &emptypb.Empty{}, nil
 }
 

@@ -2,6 +2,7 @@ package gcal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"os"
@@ -65,6 +66,7 @@ func (g *Gcal) connect(ctx context.Context) error {
 		var err error
 		g.log.Info("using google ADC for calendar auth")
 		g.service, err = calendar.NewService(ctx, option.WithScopes(calendar.CalendarScope))
+
 		return fmt.Errorf("failed to auth to calendar with ADC: %w", err)
 	}
 
@@ -145,6 +147,7 @@ func (g *Gcal) DailyEvents(ctx context.Context, date time.Time) ([]*calendarboar
 				g.log.Error("failed to get event start time",
 					zap.Error(err),
 				)
+
 				continue CALEVENTS
 			}
 			if t.Format("2006-01-02") != date.Format("2006-01-02") {
@@ -152,6 +155,7 @@ func (g *Gcal) DailyEvents(ctx context.Context, date time.Time) ([]*calendarboar
 					zap.String("date", date.Format("2006-01-02")),
 					zap.String("event date", t.Format("2006-01-02")),
 				)
+
 				continue CALEVENTS
 			}
 			events = append(events, &calendarboard.Event{
@@ -193,6 +197,7 @@ func (g *Gcal) GetCalendarIDs(ctx context.Context) ([]string, error) {
 func WithCalendarIDs(ids []string) OptionFunc {
 	return func(g *Gcal) error {
 		g.calendarIDs = ids
+
 		return nil
 	}
 }
@@ -200,23 +205,26 @@ func WithCalendarIDs(ids []string) OptionFunc {
 func WithRefreshInterval(interval time.Duration) OptionFunc {
 	return func(g *Gcal) error {
 		g.refresh = interval
+
 		return nil
 	}
 }
 
 func dateMin(date time.Time) string {
 	date = date.Add(-24 * time.Hour)
+
 	return date.Format(time.RFC3339)
 }
 
 func dateMax(date time.Time) string {
 	date = date.Add(24 * time.Hour)
+
 	return date.Format(time.RFC3339)
 }
 
 func getStartTime(e *calendar.Event) (time.Time, error) {
 	if e.Start == nil && e.OriginalStartTime == nil {
-		return time.Time{}, fmt.Errorf("no event start time defined")
+		return time.Time{}, errors.New("no event start time defined")
 	}
 
 	// Prioritize original start time for recurring events
@@ -235,5 +243,5 @@ func getStartFromEventDateTime(e *calendar.EventDateTime) (time.Time, error) {
 		return time.Parse("2006-01-02", e.Date)
 	}
 
-	return time.Time{}, fmt.Errorf("failed to parse eventdatetime")
+	return time.Time{}, errors.New("failed to parse eventdatetime")
 }

@@ -42,9 +42,9 @@ func (s *SportBoard) RenderGameCounter(canvas board.Canvas, numGames int, active
 	for i := 0; i < totalWidth; i += spacing + 1 {
 		xPix := aligned.Min.X + i
 		if i == realActive || (i == 0 && activeIndex == 0) {
-			for x := 0; x < pixSize; x++ {
+			for range pixSize {
 				firstY := yPix
-				for y := 0; y < pixSize; y++ {
+				for range pixSize {
 					img.Set(xPix, yPix, red)
 					yPix--
 				}
@@ -53,11 +53,12 @@ func (s *SportBoard) RenderGameCounter(canvas board.Canvas, numGames int, active
 				i++
 			}
 			i--
+
 			continue
 		}
-		for x := 0; x < pixSize; x++ {
+		for range pixSize {
 			firstY := yPix
-			for y := 0; y < pixSize; y++ {
+			for range pixSize {
 				img.Set(xPix, yPix, color.White)
 				yPix--
 			}

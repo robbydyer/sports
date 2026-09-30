@@ -2,7 +2,7 @@ package rgbrender
 
 import (
 	"embed"
-	"fmt"
+	"errors"
 	"image"
 	"image/color"
 	"image/draw"
@@ -96,8 +96,9 @@ func GetFont(name string) (*truetype.Font, error) {
 
 func (t *TextWriter) getDrawer(canvas draw.Image, clr color.Color) (*font.Drawer, error) {
 	if t.font == nil {
-		return nil, fmt.Errorf("font is not set")
+		return nil, errors.New("font is not set")
 	}
+
 	return &font.Drawer{
 		Dst: canvas,
 		Src: image.NewUniform(clr),
@@ -195,7 +196,7 @@ func (t *TextWriter) MaxChars(canvas draw.Image, pixWidth int) (int, error) {
 			return 0, err
 		}
 		if len(l) < 1 {
-			return 0, fmt.Errorf("unexpected MeaureStrings return")
+			return 0, errors.New("unexpected MeaureStrings return")
 		}
 		if l[0] > pixWidth {
 			return num, nil
@@ -361,7 +362,7 @@ func (t *TextWriter) maxWidth(clrChars *ColorChar, drawer *font.Drawer) fixed.In
 func (c *ColorChar) validate() error {
 	for _, line := range c.Lines {
 		if len(line.Chars) != len(line.Clrs) {
-			return fmt.Errorf("number of chars and colors must match")
+			return errors.New("number of chars and colors must match")
 		}
 	}
 

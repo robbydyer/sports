@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"image/draw"
 	"math"
+	"strconv"
 
 	"go.uber.org/zap"
 
@@ -68,6 +69,7 @@ func (s *SportBoard) getTimeWriter(canvasBounds image.Rectangle) (*rgbrender.Tex
 	w, ok := s.timeWriters[k]
 	if ok {
 		s.log.Debug("using cached time writer")
+
 		return w, nil
 	}
 
@@ -114,6 +116,7 @@ func (s *SportBoard) getScoreWriter(canvasBounds image.Rectangle) (*rgbrender.Te
 	w, ok := s.scoreWriters[k]
 	if ok {
 		s.log.Debug("using cached score writer")
+
 		return w, nil
 	}
 
@@ -153,6 +156,7 @@ func (s *SportBoard) getScoreWriter(canvasBounds image.Rectangle) (*rgbrender.Te
 	s.Lock()
 	defer s.Unlock()
 	s.scoreWriters[k] = scoreWriter
+
 	return scoreWriter, nil
 }
 
@@ -189,12 +193,14 @@ func (s *SportBoard) textAreaWidth(bounds image.Rectangle) int {
 		if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
 			return 10
 		}
+
 		return int(math.Floor(float64(bounds.Dx()) / 5.0))
 	}
 
 	if bounds.Dx() >= 64 && bounds.Dy() <= 64 {
 		return 16
 	}
+
 	return bounds.Dx() / 4
 }
 
@@ -235,6 +241,7 @@ func scoreStr(g Game, homeSide side) (string, error) {
 	if homeSide == left {
 		return fmt.Sprintf("%d-%d", h.Score(), a.Score()), nil
 	}
+
 	return fmt.Sprintf("%d-%d", a.Score(), h.Score()), nil
 }
 
@@ -243,7 +250,8 @@ func (s *SportBoard) season() string {
 	if len(todays) < 1 {
 		return ""
 	}
-	return fmt.Sprintf("%d", todays[0].Year())
+
+	return strconv.Itoa(todays[0].Year())
 }
 
 func rankShift(bounds image.Rectangle) int {

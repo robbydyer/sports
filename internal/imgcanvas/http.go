@@ -42,6 +42,7 @@ func (i *ImgCanvas) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				if _, err := w.Write(loading); err != nil {
 					i.log.Error("failed to copy loading.gif", zap.Error(err))
 				}
+
 				return
 			}
 
@@ -51,6 +52,7 @@ func (i *ImgCanvas) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			defer i.Unlock()
 			if _, err := w.Write(i.lastPng); err != nil {
 				i.log.Error("failed to copy png for /api/imgcanvas/board", zap.Error(err))
+
 				return
 			}
 			i.log.Debug("web board image sent")

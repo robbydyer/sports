@@ -1,58 +1,110 @@
+version: "2"
 run:
-  # Until https://github.com/golangci/golangci-lint/issues/2649
-  go: 1.20
-  tests: true
   modules-download-mode: vendor
-  timeout: 5m
+  tests: true
 linters:
-  disable-all: true
-  enable:
-  - asciicheck
-  - bodyclose
-  - durationcheck
-  - errcheck
-  - errorlint
-  - exportloopref
-  - importas
-  - ineffassign
-  - gofumpt
-  - goimports
-  - gosimple
-  - govet
-  - misspell
-  - nakedret
-  - nilerr
-  - noctx
-  - nonamedreturns
-  - nosprintfhostport
-  - paralleltest
-  - predeclared
-  - promlinter
-  - revive
-  - sqlclosecheck
-  - staticcheck
-  - tparallel
-  - unconvert
-  - unused
-  - unparam
-  - whitespace
-linters-settings:
-  govet:
-    enable-all: true
-    disable:
-      - fieldalignment
-  goimports:
-    local-prefixes: github.com/robbydyer/sports
-  revive:
+  default: all
+  disable:
+    - containedctx
+    - contextcheck
+    - cyclop
+    - depguard
+    - dupl
+    - err113
+    - errchkjson
+    - errname
+    - exhaustive
+    - exhaustruct
+    - fatcontext
+    - forbidigo
+    - forcetypeassert
+    - funlen
+    - gochecknoglobals
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - godox
+    - gomoddirectives
+    - gosec
+    - gosmopolitan
+    - inamedparam
+    - interfacebloat
+    - ireturn
+    - lll
+    - maintidx
+    - mnd
+    - musttag
+    - nestif
+    - nilnil
+    - nolintlint
+    - prealloc
+    - protogetter
+    - tagliatelle
+    - testifylint
+    - testpackage
+    - thelper
+    - varnamelen
+    - wastedassign
+    - wrapcheck
+    - wsl
+    # Linters added after the v1 config was written. Disabled to keep the
+    # same rule set as before the golangci-lint v2 upgrade.
+    - embeddedstructfieldcheck
+    - exhaustruct_v5
+    - funcorder
+    - godoclint
+    - iotamixing
+    - modernize
+    - noinlineerr
+    - wsl_v5
+  settings:
+    staticcheck:
+      # stylecheck was disabled in v1, and is merged into staticcheck in v2.
+      # Quickfix suggestions were not part of v1 either.
+      checks:
+        - all
+        - -ST*
+        - -QF*
+    govet:
+      disable:
+        - fieldalignment
+      enable-all: true
+    revive:
+      rules:
+        - name: exported
+          disabled: true
+  exclusions:
+    generated: lax
     rules:
-    - name: exported
-      disabled: true
-issues:
-  exclude-use-default: false
-  exclude-dirs:
-  - vendor
-  - internal/rgbmatrix-rpi
-  - internal/proto
-  exclude:
-  - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv). is not checked
-  - 'shadow: declaration of "err" shadows declaration at line (\d+)'
+      - path: (.+)\.go$
+        text: Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv). is not checked
+      - path: (.+)\.go$
+        text: 'shadow: declaration of "err" shadows declaration at line (\d+)'
+    paths:
+      - vendor
+      - internal/rgbmatrix-rpi
+      - internal/proto
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/robbydyer
+        - github.com/robbydyer/sports-premium
+  exclusions:
+    generated: lax
+    paths:
+      - vendor
+      - internal/rgbmatrix-rpi
+      - internal/proto
+      - third_party$
+      - builtin$
+      - examples$

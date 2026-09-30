@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"image"
 	"image/png"
@@ -148,7 +149,7 @@ func (e *ESPN) GetLogo(ctx context.Context, sport string, league string, teamAbb
 	defer l.Unlock()
 
 	if err := ensureCacheDir(); err != nil {
-		return nil, fmt.Errorf("failed to ensure logo cache dir exists")
+		return nil, errors.New("failed to ensure logo cache dir exists")
 	}
 
 	cacheFile := filepath.Join(cacheDir, fmt.Sprintf("%s_%s_%s.png", sport, league, teamAbbreviation))
@@ -167,6 +168,7 @@ func (e *ESPN) GetLogo(ctx context.Context, sport string, league string, teamAbb
 		if err != nil {
 			return nil, fmt.Errorf("failed to open logo cache file: %w", err)
 		}
+
 		return png.Decode(r)
 	}
 
@@ -195,11 +197,14 @@ OUTER:
 			if logoURLSearch != "" {
 				if strings.Contains(logo.Href, logoURLSearch) {
 					foundStr = true
+
 					break
 				}
+
 				continue
 			} else {
 				foundStr = true
+
 				break
 			}
 		}
@@ -239,11 +244,12 @@ func ensureCacheDir() error {
 			return os.MkdirAll(cacheDir, 0o755)
 		}
 	}
+
 	return nil
 }
 
 func pullTeams(ctx context.Context, sport string, league string) ([]byte, error) {
-	uri, err := url.Parse(fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s", teamEndpoint(sport, league)))
+	uri, err := url.Parse("http://site.api.espn.com/apis/site/v2/sports/" + teamEndpoint(sport, league))
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +259,7 @@ func pullTeams(ctx context.Context, sport string, league string) ([]byte, error)
 
 	uri.RawQuery = v.Encode()
 
-	req, err := http.NewRequest("GET", uri.String(), nil)
+	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, err
 	}

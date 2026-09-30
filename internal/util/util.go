@@ -243,7 +243,7 @@ func AddTodays(today time.Time, previousDays int, advanceDays int) []time.Time {
 
 // PullPng GETs a png and returns it decoded as an image.Image
 func PullPng(ctx context.Context, url string) (image.Image, error) {
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -271,6 +271,7 @@ func FileExists(fileName string) (bool, error) {
 		if os.IsNotExist(err) {
 			return false, nil
 		}
+
 		return false, err
 	}
 

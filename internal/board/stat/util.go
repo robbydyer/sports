@@ -26,6 +26,7 @@ func (s *StatBoard) getWriter(bounds image.Rectangle) (*rgbrender.TextWriter, er
 	w, ok := s.writers[k]
 	if ok {
 		s.log.Debug("using cached writer")
+
 		return w, nil
 	}
 
@@ -53,6 +54,7 @@ func getReadableFontSize(bounds image.Rectangle) float64 {
 	if bounds.Dy() > 128 && bounds.Dx() > 128 {
 		return 0.08 * float64(bounds.Dy())
 	}
+
 	return 8.0
 }
 

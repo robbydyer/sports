@@ -36,7 +36,7 @@ func filenameCompare(a string, b string) bool {
 		maxPath = len(bPaths)
 	}
 
-	for x := 0; x < maxPath; x++ {
+	for x := range maxPath {
 		if len(aPaths) < x+1 || len(bPaths) < x+1 {
 			return true
 		}

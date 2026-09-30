@@ -160,6 +160,7 @@ func (c *Clock) currentTimeStr() string {
 		if h < 10 {
 			hz = "0"
 		}
+
 		return fmt.Sprintf("%s%d:%s%d", hz, h, z, m)
 	}
 
@@ -234,6 +235,7 @@ func (c *Clock) render(ctx context.Context, canvas board.Canvas) error {
 				color.White,
 			); err != nil {
 				c.log.Error("failed to write clock", zap.Error(err))
+
 				return
 			}
 
@@ -283,6 +285,7 @@ func (c *Clock) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 			w.Header().Set("Content-Type", "text/plain")
 			if c.Enabler().Enabled() {
 				_, _ = w.Write([]byte("true"))
+
 				return
 			}
 			_, _ = w.Write([]byte("false"))

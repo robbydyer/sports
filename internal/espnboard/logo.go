@@ -2,6 +2,7 @@ package espnboard
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"image/png"
@@ -56,7 +57,7 @@ func (e *ESPNBoard) GetLogo(ctx context.Context, logoKey string, logoConf *logo.
 	// A logoKey should be LEAGUE_TEAM_HOME|AWAY_XxY, ie. ncaam_1234_HOME_64x32
 	p := strings.Split(logoKey, "_")
 	if len(p) < 4 {
-		return nil, fmt.Errorf("invalid logo key")
+		return nil, errors.New("invalid logo key")
 	}
 
 	teamID := p[1]
@@ -194,6 +195,7 @@ func (e *ESPNBoard) GetLogoSource(ctx context.Context, teamID string, logoURLSea
 		if err != nil {
 			return nil, fmt.Errorf("failed to open logo cache file: %w", err)
 		}
+
 		return png.Decode(r)
 	}
 
@@ -237,11 +239,14 @@ OUTER:
 			if logoURLSearch != "" {
 				if strings.Contains(logo.Href, logoURLSearch) {
 					foundStr = true
+
 					break
 				}
+
 				continue
 			} else {
 				foundStr = true
+
 				break
 			}
 		}

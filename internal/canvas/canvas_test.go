@@ -105,6 +105,7 @@ func (m *MatrixMock) At(x int, y int) color.Color {
 	if m.colors[pos] == nil {
 		return color.Black
 	}
+
 	return m.colors[pos]
 }
 

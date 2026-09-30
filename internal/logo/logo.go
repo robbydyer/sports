@@ -2,6 +2,7 @@ package logo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"image/draw"
@@ -76,7 +77,7 @@ func (l *Logo) ensureLogger() {
 
 // ThumbnailFilename returns the filname for the resized thumbnail to use
 func (l *Logo) ThumbnailFilename(size image.Rectangle) string {
-	return filepath.Join(l.targetDirectory, fmt.Sprintf("%s.tiff", l.key))
+	return filepath.Join(l.targetDirectory, l.key+".tiff")
 }
 
 // GetThumbnail returns the resized image
@@ -98,7 +99,7 @@ func (l *Logo) GetThumbnail(ctx context.Context, size image.Rectangle) (image.Im
 			}
 
 			if l.sourceLogoGetter == nil {
-				return nil, fmt.Errorf("sourceLogoGetter was nil")
+				return nil, errors.New("sourceLogoGetter was nil")
 			}
 
 			src, err := l.sourceLogoGetter(ctx)

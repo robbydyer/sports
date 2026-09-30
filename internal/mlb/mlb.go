@@ -2,7 +2,9 @@ package mlb
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -123,7 +125,7 @@ func (m *MLB) GetScheduledGames(ctx context.Context, dates []time.Time) ([]sport
 
 		games, ok = m.games[dateStr]
 		if !ok {
-			return nil, fmt.Errorf("failed to update games")
+			return nil, errors.New("failed to update games")
 		}
 
 		for _, g := range games {
@@ -173,6 +175,7 @@ func (m *MLB) GetWatchTeams(teams []string, season string) []string {
 			for _, t := range m.teams {
 				ids = append(ids, t.GetID())
 			}
+
 			return ids
 		}
 
@@ -180,6 +183,7 @@ func (m *MLB) GetWatchTeams(teams []string, season string) []string {
 		for _, team := range m.teams {
 			if team.Division != nil && team.Division.Abbreviation == t {
 				watch[team.GetID()] = struct{}{}
+
 				continue INNER
 			}
 			if team.GetAbbreviation() == t {
@@ -239,5 +243,5 @@ func (m *MLB) HomeSideSwap() bool {
 
 // GetSeason gets the season identifier based on a date, i.e. 2020
 func GetSeason(day time.Time) string {
-	return fmt.Sprint(day.Year())
+	return strconv.Itoa(day.Year())
 }

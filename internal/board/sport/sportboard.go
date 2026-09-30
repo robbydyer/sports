@@ -2,6 +2,7 @@ package sportboard
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -262,6 +263,7 @@ func New(ctx context.Context, api API, bounds image.Rectangle, today *time.Time,
 				if today != nil {
 					return util.AddTodays(util.Today(*today), s.config.PreviousDays, s.config.AdvanceDays)
 				}
+
 				return util.AddTodays(util.Today(time.Now()), s.config.PreviousDays, s.config.AdvanceDays)
 			}
 		}
@@ -270,6 +272,7 @@ func New(ctx context.Context, api API, bounds image.Rectangle, today *time.Time,
 				if today != nil {
 					return util.NCAAFToday(util.Today(*today))
 				}
+
 				return util.NCAAFToday(util.Today(time.Now()))
 			}
 			s.config.TodayFunc = f
@@ -279,6 +282,7 @@ func New(ctx context.Context, api API, bounds image.Rectangle, today *time.Time,
 				if today != nil {
 					return util.NFLToday(util.Today(*today))
 				}
+
 				return util.NFLToday(util.Today(time.Now()))
 			}
 			s.config.TodayFunc = f
@@ -294,7 +298,7 @@ func New(ctx context.Context, api API, bounds image.Rectangle, today *time.Time,
 	}
 	prfx := s.api.HTTPPathPrefix()
 	if !strings.HasPrefix(prfx, "/") {
-		prfx = fmt.Sprintf("/%s", prfx)
+		prfx = "/" + prfx
 	}
 	s.rpcServer = pb.NewSportServer(svr,
 		twirp.WithServerPathPrefix(prfx),
@@ -365,6 +369,7 @@ func (s *SportBoard) Name() string {
 	if l := s.api.League(); l != "" {
 		return l
 	}
+
 	return "SportBoard"
 }
 
@@ -444,6 +449,7 @@ func (s *SportBoard) Render(ctx context.Context, canvas board.Canvas) error {
 func (s *SportBoard) render(ctx context.Context, canvas board.Canvas) error {
 	if !s.Enabler().Enabled() {
 		s.log.Warn("skipping disabled board", zap.String("board", s.api.League()))
+
 		return nil
 	}
 
@@ -462,6 +468,7 @@ func (s *SportBoard) render(ctx context.Context, canvas board.Canvas) error {
 			zap.String("league", s.api.League()),
 			zap.Error(err),
 		)
+
 		return err
 	}
 
@@ -474,6 +481,7 @@ func (s *SportBoard) render(ctx context.Context, canvas board.Canvas) error {
 		if len(todays) > 0 {
 			today = todays[0].String()
 		}
+
 		return fmt.Errorf("no games scheduled for %s on %s", s.api.League(), today)
 	}
 
@@ -499,11 +507,13 @@ OUTER:
 		home, err := game.HomeTeam()
 		if err != nil {
 			s.log.Error("failed to get home team", zap.Error(err))
+
 			continue OUTER
 		}
 		away, err := game.AwayTeam()
 		if err != nil {
 			s.log.Error("failed to get away team", zap.Error(err))
+
 			continue OUTER
 		}
 		s.log.Debug("checking teams for watching",
@@ -519,6 +529,7 @@ OUTER:
 					s.log.Error("failed to determine if game is live",
 						zap.Error(err),
 					)
+
 					continue OUTER
 				}
 
@@ -529,6 +540,7 @@ OUTER:
 					_ = s.api.TeamRecord(s.renderCtx, home, s.season())
 					_ = s.api.TeamRecord(s.renderCtx, away, s.season())
 				}
+
 				continue OUTER
 			}
 		}
@@ -569,6 +581,7 @@ OUTER:
 			zap.Int("cell height", height),
 		)
 		loadCancel()
+
 		return s.renderGrid(s.renderCtx, canvas, games, w, h)
 	}
 
@@ -577,10 +590,12 @@ OUTER:
 		s.log.Debug("no scheduled games, not rendering", zap.String("league", s.api.League()))
 		if !s.config.ShowNoScheduledLogo.Load() {
 			loadCancel()
+
 			return fmt.Errorf("no schedule games for %s", s.api.League())
 		}
 
 		loadCancel()
+
 		return s.renderNoScheduled(s.renderCtx, canvas)
 	}
 
@@ -619,6 +634,7 @@ GAMES:
 
 		if !s.Enabler().Enabled() {
 			s.log.Warn("skipping disabled board", zap.String("board", s.api.League()))
+
 			return nil
 		}
 
@@ -652,11 +668,13 @@ GAMES:
 		cachedGame, ok := s.cachedLiveGames[game.GetID()]
 		if !ok {
 			s.log.Warn("live game data not ready in time, UNDEFINED", zap.Int("game ID", game.GetID()))
+
 			continue GAMES
 		}
 
 		if cachedGame == nil {
 			s.log.Warn("live game data not ready in time, NIL", zap.Int("game ID", game.GetID()))
+
 			continue GAMES
 		}
 
@@ -681,11 +699,13 @@ GAMES:
 		for {
 			if err := s.renderGame(s.renderCtx, canvas, cachedGame, counter); err != nil {
 				s.log.Error("failed to render sportboard game", zap.Error(err))
+
 				continue GAMES
 			}
 
 			if err := canvas.Render(s.renderCtx); err != nil {
 				s.log.Error("failed to render", zap.Error(err))
+
 				continue GAMES
 			}
 
@@ -708,6 +728,7 @@ GAMES:
 				s.log.Error("failed to update live game during sticky",
 					zap.Error(err),
 				)
+
 				break FAV
 			}
 		}
@@ -829,16 +850,19 @@ func (s *SportBoard) doGrid(ctx context.Context, grid *rgbrender.Grid, canvas bo
 			liveGame, err := s.getCachedGame(game.GetID())
 			if err != nil {
 				s.log.Error("failed to get cached game", zap.Error(err))
+
 				return
 			}
 			cell, err := grid.Cell(index)
 			if err != nil {
 				s.log.Error("invalid cell index", zap.Int("index", index))
+
 				return
 			}
 
 			if err := s.renderGame(ctx, cell.Canvas, liveGame, nil); err != nil {
 				s.log.Error("failed to render game in grid", zap.Error(err))
+
 				return
 			}
 		}(game, index)
@@ -974,7 +998,7 @@ func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload cha
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("context canceled")
+			return errors.New("context canceled")
 		default:
 		}
 
@@ -988,15 +1012,17 @@ func (s *SportBoard) preloadLiveGame(ctx context.Context, game Game, preload cha
 			s.log.Error("api call to get live game failed", zap.Int("attempt", tries), zap.Error(err))
 			select {
 			case <-ctx.Done():
-				return fmt.Errorf("context canceled")
+				return errors.New("context canceled")
 			case <-time.After(10 * time.Second):
 			}
+
 			continue
 		}
 
 		s.setCachedGame(game.GetID(), g)
 
 		s.log.Debug("successfully set preloader data", zap.Int("game ID", game.GetID()))
+
 		return nil
 	}
 }
@@ -1023,6 +1049,7 @@ func (s *SportBoard) getStickyDelay() *time.Duration {
 func WithDetailedLiveRenderer(d DetailedLiveRender) OptionFunc {
 	return func(s *SportBoard) error {
 		s.detailedLiveRenderer = d
+
 		return nil
 	}
 }
@@ -1030,6 +1057,7 @@ func WithDetailedLiveRenderer(d DetailedLiveRender) OptionFunc {
 func WithLeagueLogoGetter(g logo.SourceGetter) OptionFunc {
 	return func(s *SportBoard) error {
 		s.leagueLogoGetter = g
+
 		return nil
 	}
 }

@@ -95,5 +95,6 @@ func (a *API) logoSourceGetter(ctx context.Context) (image.Image, error) {
 	}
 
 	reader := bytes.NewReader(b)
+
 	return imaging.Decode(reader)
 }

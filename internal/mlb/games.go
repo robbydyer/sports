@@ -3,6 +3,7 @@ package mlb
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -89,6 +90,7 @@ func (g *Game) IsLive() (bool, error) {
 	if g.LiveData != nil && g.LiveData.Linescore != nil && g.LiveData.Linescore.CurrentInning > 0 {
 		return true, nil
 	}
+
 	return false, nil
 }
 
@@ -100,6 +102,7 @@ func (g *Game) IsComplete() (bool, error) {
 			strings.ToLower(g.GameData.Status.StatusCode) == "f") {
 		return true, nil
 	}
+
 	return false, nil
 }
 
@@ -131,10 +134,11 @@ func (g *Game) HomeTeam() (sportboard.Team, error) {
 		}
 
 		g.GameData.Teams.Home.Runs = runs
+
 		return g.GameData.Teams.Home, nil
 	}
 
-	return nil, fmt.Errorf("could not locate home team in Game")
+	return nil, errors.New("could not locate home team in Game")
 }
 
 // AwayTeam ...
@@ -158,7 +162,7 @@ func (g *Game) AwayTeam() (sportboard.Team, error) {
 		return g.GameData.Teams.Away, nil
 	}
 
-	return nil, fmt.Errorf("could not locate home team in Game")
+	return nil, errors.New("could not locate home team in Game")
 }
 
 // GetQuarter returns the inning
@@ -167,7 +171,7 @@ func (g *Game) GetQuarter() (string, error) {
 		return g.LiveData.Linescore.CurrentInningOrdinal, nil
 	}
 
-	return "", fmt.Errorf("could not determine inning")
+	return "", errors.New("could not determine inning")
 }
 
 // GetClock represent bottom or top of inning
@@ -176,8 +180,10 @@ func (g *Game) GetClock() (string, error) {
 		if strings.Contains(strings.ToLower(g.LiveData.Linescore.InningState), "bot") {
 			return "BOT", nil
 		}
+
 		return "TOP", nil
 	}
+
 	return "", nil
 }
 
@@ -208,14 +214,14 @@ func (g *Game) GetStartTime(ctx context.Context) (time.Time, error) {
 
 // GetOdds ...
 func (g *Game) GetOdds() (string, string, error) {
-	return "", "", fmt.Errorf("not implemented")
+	return "", "", errors.New("not implemented")
 }
 
 // GetLiveGame ...
 func GetLiveGame(ctx context.Context, link string) (sportboard.Game, error) {
 	uri := fmt.Sprintf("%s/%s", linkBase, link)
 
-	req, err := http.NewRequest("GET", uri, nil)
+	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -251,7 +257,7 @@ func GetLiveGame(ctx context.Context, link string) (sportboard.Game, error) {
 }
 
 func getGames(ctx context.Context, dateStr string) ([]*Game, error) {
-	uri, err := url.Parse(fmt.Sprintf("%s/v1/schedule", baseURL))
+	uri, err := url.Parse(baseURL + "/v1/schedule")
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +267,7 @@ func getGames(ctx context.Context, dateStr string) ([]*Game, error) {
 
 	uri.RawQuery = v.Encode()
 
-	req, err := http.NewRequest("GET", uri.String(), nil)
+	req, err := http.NewRequest(http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, err
 	}

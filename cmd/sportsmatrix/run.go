@@ -119,6 +119,7 @@ func (s *runCmd) run(cmd *cobra.Command, args []string) error {
 		logger.Error("Matrix returned an error",
 			zap.Error(err),
 		)
+
 		return err
 	}
 

@@ -2,6 +2,7 @@ package espnboard
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -18,7 +19,7 @@ func (g *Game) GetRunners(ctx context.Context) (*mlblive.Runners, error) {
 		}, nil
 	}
 
-	return nil, fmt.Errorf("could not get runner info")
+	return nil, errors.New("could not get runner info")
 }
 
 func (g *Game) GetCount(ctx context.Context) (string, error) {
@@ -26,7 +27,7 @@ func (g *Game) GetCount(ctx context.Context) (string, error) {
 		return fmt.Sprintf("%d-%d", g.Situation.Balls, g.Situation.Strikes), nil
 	}
 
-	return "", fmt.Errorf("could not get count")
+	return "", errors.New("could not get count")
 }
 
 func (g *Game) GetInningState(ctx context.Context) (*mlblive.InningState, error) {
@@ -58,7 +59,7 @@ func (g *Game) GetHomeScore(ctx context.Context) (int, error) {
 		return strconv.Atoi(g.Home.Points)
 	}
 
-	return 0, fmt.Errorf("could not get home team score")
+	return 0, errors.New("could not get home team score")
 }
 
 func (g *Game) GetAwayScore(ctx context.Context) (int, error) {
@@ -66,5 +67,5 @@ func (g *Game) GetAwayScore(ctx context.Context) (int, error) {
 		return strconv.Atoi(g.Away.Points)
 	}
 
-	return 0, fmt.Errorf("could not get away team score")
+	return 0, errors.New("could not get away team score")
 }

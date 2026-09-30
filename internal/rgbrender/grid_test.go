@@ -37,8 +37,6 @@ func TestGridLayout(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, test := range tests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			canvas := board.NewBlankCanvas(100, 100, log)

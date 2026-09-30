@@ -239,6 +239,7 @@ func DrawDiamond(canvas draw.Image, start image.Point, width int, height int, ou
 // ZeroedBounds returns an image.Rectangle with square padding stripped off
 func ZeroedBounds(bounds image.Rectangle) image.Rectangle {
 	bounds = ZeroedXBounds(bounds)
+
 	return ZeroedYBounds(bounds)
 }
 

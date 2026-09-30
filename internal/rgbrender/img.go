@@ -2,6 +2,7 @@ package rgbrender
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"image/color/palette"
@@ -55,8 +56,9 @@ func ResizeGIF(ctx context.Context, g *gif.GIF, bounds image.Rectangle, zoom flo
 // SavePng ...
 func SavePng(img image.Image, fileName string) error {
 	if img == nil {
-		return fmt.Errorf("cannot save nil image.Image as PNG")
+		return errors.New("cannot save nil image.Image as PNG")
 	}
+
 	return imaging.Save(img, fileName, imaging.PNGCompressionLevel(png.NoCompression))
 }
 
@@ -97,6 +99,7 @@ func DrawImageAligned(canvas draw.Image, bounds image.Rectangle, img *image.RGBA
 // DrawImage draws an image
 func DrawImage(canvas draw.Image, bounds image.Rectangle, img image.Image) error {
 	draw.Draw(canvas, bounds, img, img.Bounds().Min, draw.Over)
+
 	return nil
 }
 
@@ -118,7 +121,7 @@ func PlayImages(ctx context.Context, canvas board.Canvas, images []image.Image, 
 		}
 
 		if canvas == nil {
-			return fmt.Errorf("nil canvas passed to PlayImages")
+			return errors.New("nil canvas passed to PlayImages")
 		}
 
 		draw.Draw(canvas, center, images[i], image.Point{}, draw.Over)
@@ -133,6 +136,7 @@ func PlayImages(ctx context.Context, canvas board.Canvas, images []image.Image, 
 		if i >= l {
 			if loop == 0 {
 				i = 0
+
 				continue
 			}
 
