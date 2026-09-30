@@ -2,7 +2,7 @@ package scrollcanvas
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"image"
 	"image/color"
 	"image/draw"
@@ -194,6 +194,7 @@ func (c *ScrollCanvas) SetScrollSpeed(d time.Duration) {
 				zap.String("name", c.name),
 				zap.Duration("speed", c.interval.Load()),
 			)
+
 			return
 		default:
 			c.log.Info("failed to send scroll canvas sending new speed to channel",
@@ -201,7 +202,7 @@ func (c *ScrollCanvas) SetScrollSpeed(d time.Duration) {
 				zap.Duration("speed", c.interval.Load()),
 			)
 			// Clear the buffer
-			for i := 0; i < cap(c.sendScrollSpeedChan); i++ {
+			for i := range cap(c.sendScrollSpeedChan) {
 				select {
 				case <-c.sendScrollSpeedChan:
 					c.log.Info("cleared canvas speed channel buffer",
@@ -263,17 +264,19 @@ func (c *ScrollCanvas) Clear() error {
 		c.SetPadding(c.pad)
 	}
 	draw.Draw(c.actual, c.actual.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Over)
-	for x := 0; x < c.w-1; x++ {
-		for y := 0; y < c.h-1; y++ {
+	for x := range c.w - 1 {
+		for y := range c.h - 1 {
 			c.Matrix.Set(x, y, color.Black)
 		}
 	}
+
 	return c.Matrix.Render()
 }
 
 // Close clears the matrix and close the matrix
 func (c *ScrollCanvas) Close() error {
 	_ = c.Clear()
+
 	return c.Matrix.Close()
 }
 
@@ -309,7 +312,7 @@ func (c *ScrollCanvas) Render(ctx context.Context) error {
 			return err
 		}
 	default:
-		return fmt.Errorf("unsupported scroll direction")
+		return errors.New("unsupported scroll direction")
 	}
 
 	return nil
@@ -332,6 +335,7 @@ func (c *ScrollCanvas) Bounds() image.Rectangle {
 	if c.actual == nil {
 		return c.getBounds()
 	}
+
 	return c.actual.Bounds()
 }
 
@@ -340,6 +344,7 @@ func (c *ScrollCanvas) At(x int, y int) color.Color {
 	if c.actual == nil {
 		c.SetPadding(c.pad)
 	}
+
 	return c.actual.At(x, y)
 }
 
@@ -388,6 +393,7 @@ func (c *ScrollCanvas) topToBottom(ctx context.Context) error {
 	c.Matrix.ReversePreLoad()
 
 	c.sendScrollSpeedChan = make(chan time.Duration, 1)
+
 	return c.Matrix.Play(ctx, c.GetScrollSpeed(), c.sendScrollSpeedChan)
 }
 
@@ -397,6 +403,7 @@ func (c *ScrollCanvas) bottomToTop(ctx context.Context) error {
 	}
 
 	c.sendScrollSpeedChan = make(chan time.Duration, 1)
+
 	return c.Matrix.Play(ctx, c.GetScrollSpeed(), c.sendScrollSpeedChan)
 }
 
@@ -438,6 +445,7 @@ OUTER:
 				Index:  mySceneIndex,
 				Points: loader,
 			})
+
 			return nil
 		})
 		sceneIndex++
@@ -456,6 +464,7 @@ func (c *ScrollCanvas) getActualPixel(virtualX int, virtualY int) color.Color {
 	for _, sub := range c.subCanvases {
 		if virtualX >= sub.virtualStartX && virtualX <= sub.virtualEndX {
 			actualX := (virtualX - sub.virtualStartX) + sub.actualStartX
+
 			return sub.img.At(actualX, virtualY)
 		}
 	}
@@ -558,6 +567,7 @@ func (c *ScrollCanvas) rightToLeft(ctx context.Context) error {
 	}
 
 	c.sendScrollSpeedChan = make(chan time.Duration, 1)
+
 	return c.Matrix.Play(ctx, c.GetScrollSpeed(), c.sendScrollSpeedChan)
 }
 
@@ -570,6 +580,7 @@ func (c *ScrollCanvas) leftToRight(ctx context.Context) error {
 	c.Matrix.ReversePreLoad()
 
 	c.sendScrollSpeedChan = make(chan time.Duration, 1)
+
 	return c.Matrix.Play(ctx, c.GetScrollSpeed(), c.sendScrollSpeedChan)
 }
 
@@ -578,12 +589,12 @@ func (c *ScrollCanvas) horizontalPrep(ctx context.Context) error {
 		c.PrepareSubCanvases()
 	}
 	if len(c.subCanvases) < 1 {
-		return fmt.Errorf("not enough subcanvases to merge")
+		return errors.New("not enough subcanvases to merge")
 	}
 
 	lastSub := c.subCanvases[len(c.subCanvases)-1]
 	if lastSub == nil {
-		return fmt.Errorf("last subcanvas was nil during horizontalPrep")
+		return errors.New("last subcanvas was nil during horizontalPrep")
 	}
 
 	finish := lastSub.virtualEndX
@@ -615,8 +626,8 @@ func (c *ScrollCanvas) horizontalPrep(ctx context.Context) error {
 			loader := make([]matrix.MatrixPoint, c.w*c.h)
 
 			index := 0
-			for x := 0; x < c.w; x++ {
-				for y := 0; y < c.h; y++ {
+			for x := range c.w {
+				for y := range c.h {
 					thisVirtualX := x + myVirtualX
 
 					loader[index] = matrix.MatrixPoint{
@@ -631,6 +642,7 @@ func (c *ScrollCanvas) horizontalPrep(ctx context.Context) error {
 				Index:  mySceneIndex,
 				Points: loader,
 			})
+
 			return nil
 		})
 		sceneIndex++
@@ -662,6 +674,7 @@ func (c *ScrollCanvas) MatchScroll(ctx context.Context, match *ScrollCanvas) {
 func WithScrollSpeed(d time.Duration) ScrollCanvasOption {
 	return func(c *ScrollCanvas) error {
 		c.interval.Store(d)
+
 		return nil
 	}
 }
@@ -670,6 +683,7 @@ func WithScrollSpeed(d time.Duration) ScrollCanvasOption {
 func WithScrollDirection(direct ScrollDirection) ScrollCanvasOption {
 	return func(c *ScrollCanvas) error {
 		c.SetScrollDirection(direct)
+
 		return nil
 	}
 }
@@ -678,6 +692,7 @@ func WithScrollDirection(direct ScrollDirection) ScrollCanvasOption {
 func WithMergePadding(pad int) ScrollCanvasOption {
 	return func(c *ScrollCanvas) error {
 		c.mergePad = pad
+
 		return nil
 	}
 }
@@ -685,6 +700,7 @@ func WithMergePadding(pad int) ScrollCanvasOption {
 func WithPreloadThreads(t int) ScrollCanvasOption {
 	return func(c *ScrollCanvas) error {
 		c.preloadThreads = t
+
 		return nil
 	}
 }
@@ -692,6 +708,7 @@ func WithPreloadThreads(t int) ScrollCanvasOption {
 func WithName(name string) ScrollCanvasOption {
 	return func(c *ScrollCanvas) error {
 		c.name = name
+
 		return nil
 	}
 }

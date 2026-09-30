@@ -25,6 +25,7 @@ type Canvas struct {
 // a new WS281x matrix using the given config
 func NewCanvas(m matrix.Matrix) *Canvas {
 	w, h := m.Geometry()
+
 	return &Canvas{
 		w:       w,
 		h:       h,
@@ -87,12 +88,14 @@ func (c *Canvas) GetWidth() int {
 // Clear set all the leds on the matrix with color.Black
 func (c *Canvas) Clear() error {
 	draw.Draw(c, c.Bounds(), &image.Uniform{color.Black}, image.Point{}, draw.Src)
+
 	return c.m.Render()
 }
 
 // Close clears the matrix and close the matrix
 func (c *Canvas) Close() error {
 	_ = c.Clear()
+
 	return c.m.Close()
 }
 
@@ -114,8 +117,10 @@ func (c *Canvas) Disable() bool {
 func (c *Canvas) Store(s bool) bool {
 	if c.enabled.CompareAndSwap(!s, s) {
 		c.stateChangeCallback()
+
 		return true
 	}
+
 	return false
 }
 

@@ -24,8 +24,10 @@ func GetLogo(fileName string, bounds image.Rectangle) (*logo.Logo, error) {
 		}
 
 		reader := bytes.NewReader(b)
+
 		return imaging.Decode(reader)
 	}
+
 	return logo.New(
 		fileName,
 		getter,

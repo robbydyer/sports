@@ -2,6 +2,7 @@ package nhl
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"strings"
@@ -68,6 +69,7 @@ func (n *NHL) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config
 	for _, d := range *n.defaultLogoConf {
 		if d.Abbrev == logoKey {
 			l = logo.New(logoKey, logoGetter, logoCacheDir, bounds, d)
+
 			return l, nil
 		}
 	}
@@ -88,11 +90,12 @@ func (n *NHL) GetLogo(ctx context.Context, logoKey string, logoConf *logo.Config
 	for _, d := range *n.defaultLogoConf {
 		if d.Abbrev == logoKey {
 			l = logo.New(logoKey, logoGetter, logoCacheDir, bounds, d)
+
 			return l, nil
 		}
 	}
 
-	return nil, fmt.Errorf("failed to prepare logo")
+	return nil, errors.New("failed to prepare logo")
 }
 
 func sportsAPIToESPN(sportsAPIAbbreviation string) string {

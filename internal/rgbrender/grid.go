@@ -1,6 +1,7 @@
 package rgbrender
 
 import (
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -101,14 +102,14 @@ func NewGrid(canvas board.Canvas, numCols int, numRows int, log *zap.Logger, opt
 
 func (g *Grid) generateCells() error {
 	if len(g.cellX) != g.cols {
-		return fmt.Errorf("invalid number of cell width settings")
+		return errors.New("invalid number of cell width settings")
 	}
 	if len(g.cellY) != g.rows {
-		return fmt.Errorf("invalid number of cell height settings")
+		return errors.New("invalid number of cell height settings")
 	}
 	cellIndex := 0
-	for r := 0; r < g.rows; r++ {
-		for c := 0; c < g.cols; c++ {
+	for r := range g.rows {
+		for c := range g.cols {
 			halfPad := g.padding / 2
 			realStartX := 0
 			if c > 0 {
@@ -149,7 +150,7 @@ func (g *Grid) generateCells() error {
 
 			newC := board.NewBlankCanvas(g.cellX[c], g.cellY[r], g.log)
 			if newC == nil {
-				return fmt.Errorf("cell canvas was nil")
+				return errors.New("cell canvas was nil")
 			}
 			g.log.Debug("new cell",
 				zap.Int("index", cellIndex),
@@ -184,6 +185,7 @@ func (g *Grid) NumCols() int {
 // Clear removes cells and regenerates them
 func (g *Grid) Clear() error {
 	g.cells = make([]*Cell, g.cols*g.rows)
+
 	return g.generateCells()
 }
 
@@ -197,6 +199,7 @@ func (g *Grid) Cell(index int) (*Cell, error) {
 	if index > len(g.cells)-1 {
 		return nil, fmt.Errorf("no cell at index %d, max of %d", index, len(g.cells)-1)
 	}
+
 	return g.cells[index], nil
 }
 
@@ -236,6 +239,7 @@ func (g *Grid) DrawToBase(base board.Canvas) error {
 	for _, cell := range g.cells {
 		draw.Draw(base, cell.Bounds, cell.Canvas, image.Point{}, draw.Over)
 	}
+
 	return nil
 }
 
@@ -243,6 +247,7 @@ func (g *Grid) DrawToBase(base board.Canvas) error {
 func WithPadding(pad float64) GridOption {
 	return func(g *Grid) error {
 		g.padRatio = pad
+
 		return nil
 	}
 }
@@ -251,17 +256,17 @@ func WithPadding(pad float64) GridOption {
 func WithUniformCells() GridOption {
 	return func(g *Grid) error {
 		if g.baseCanvas == nil {
-			return fmt.Errorf("base canvas not set")
+			return errors.New("base canvas not set")
 		}
 		g.log.Debug("uniform grid")
 		cellX := g.baseCanvas.Bounds().Dx() / g.cols
 		cellY := g.baseCanvas.Bounds().Dy() / g.rows
 
-		for i := 0; i < g.cols; i++ {
+		for i := range g.cols {
 			g.cellX[i] = cellX
 		}
 
-		for i := 0; i < g.rows; i++ {
+		for i := range g.rows {
 			g.cellY[i] = cellY
 		}
 
@@ -276,7 +281,7 @@ func WithUniformCells() GridOption {
 func WithUniformRows() GridOption {
 	return func(g *Grid) error {
 		if g.baseCanvas == nil {
-			return fmt.Errorf("base canvas not set")
+			return errors.New("base canvas not set")
 		}
 		g.log.Debug("uniform grid rows")
 		pad := 0
@@ -285,7 +290,7 @@ func WithUniformRows() GridOption {
 		}
 		cellY := (g.baseCanvas.Bounds().Dy() - pad) / g.rows
 
-		for i := 0; i < g.rows; i++ {
+		for i := range g.rows {
 			g.cellY[i] = cellY
 		}
 
@@ -299,12 +304,12 @@ func WithUniformRows() GridOption {
 func WithUniformCols() GridOption {
 	return func(g *Grid) error {
 		if g.baseCanvas == nil {
-			return fmt.Errorf("base canvas not set")
+			return errors.New("base canvas not set")
 		}
 		g.log.Debug("uniform grid cols")
 		cellX := g.baseCanvas.Bounds().Dx() / g.cols
 
-		for i := 0; i < g.cols; i++ {
+		for i := range g.cols {
 			g.cellX[i] = cellX
 		}
 
@@ -319,10 +324,10 @@ func WithCellRatios(colRatios []float64, rowRatios []float64) GridOption {
 	return func(g *Grid) error {
 		g.log.Debug("grid with col/row ratios")
 		if len(colRatios) != g.cols {
-			return fmt.Errorf("invalid number of col ratios, must match number of cols")
+			return errors.New("invalid number of col ratios, must match number of cols")
 		}
 		if len(rowRatios) != g.rows {
-			return fmt.Errorf("invalid number of row ratios, must match number of rows")
+			return errors.New("invalid number of row ratios, must match number of rows")
 		}
 
 		bounds := ZeroedBounds(g.baseCanvas.Bounds())
@@ -357,7 +362,7 @@ func WithCellRowRatios(rowRatios []float64) GridOption {
 	return func(g *Grid) error {
 		g.log.Debug("grid with col/row ratios")
 		if len(rowRatios) != g.rows {
-			return fmt.Errorf("invalid number of row ratios, must match number of rows")
+			return errors.New("invalid number of row ratios, must match number of rows")
 		}
 
 		for i, r := range rowRatios {
@@ -380,7 +385,7 @@ func WithCellColRatios(colRatios []float64) GridOption {
 	return func(g *Grid) error {
 		g.log.Debug("grid with col/row ratios")
 		if len(colRatios) != g.cols {
-			return fmt.Errorf("invalid number of col ratios, must match number of cols")
+			return errors.New("invalid number of col ratios, must match number of cols")
 		}
 
 		bounds := ZeroedBounds(g.baseCanvas.Bounds())

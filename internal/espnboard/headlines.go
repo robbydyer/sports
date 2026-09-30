@@ -60,6 +60,7 @@ func (h *Headlines) GetLogo(ctx context.Context) (image.Image, error) {
 		h.log.Debug("using cached logo for headlines",
 			zap.String("league", h.leaguer.League()),
 		)
+
 		return h.logo, nil
 	}
 	assetfile := fmt.Sprintf("assets/league_logos/%s.png", strings.ToLower(h.leaguer.HTTPPathPrefix()))
@@ -86,16 +87,15 @@ func (h *Headlines) GetText(ctx context.Context) ([]string, error) {
 		return h.lastHeadlines, nil
 	}
 
-	uri, err := url.Parse(fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s", path))
+	uri, err := url.Parse("http://site.api.espn.com/apis/site/v2/sports/" + path)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("GET", uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
 
 	client := http.DefaultClient
 

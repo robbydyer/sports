@@ -9,6 +9,7 @@ func colorToUint32(c color.Color) uint32 {
 
 	// A color's RGBA method returns values in the range [0, 65535]
 	red, green, blue, _ := c.RGBA()
+
 	return (red>>8)<<16 | (green>>8)<<8 | blue>>8
 }
 

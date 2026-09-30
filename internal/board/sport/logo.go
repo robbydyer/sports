@@ -55,8 +55,10 @@ func (s *SportBoard) getLogoDrawCache(logoKey string) (image.Image, error) {
 				zap.String("key", logoKey),
 			)
 			delete(s.logoDrawCache, logoKey)
+
 			return nil, fmt.Errorf("no cache for %s", logoKey)
 		}
+
 		return l, nil
 	}
 
@@ -97,8 +99,10 @@ func (s *SportBoard) getLogoCache(logoKey string) (*logo.Logo, error) {
 				zap.String("key", logoKey),
 			)
 			delete(s.logos, logoKey)
+
 			return nil, fmt.Errorf("no cache for %s", logoKey)
 		}
+
 		return l, nil
 	}
 
@@ -106,6 +110,7 @@ func (s *SportBoard) getLogoCache(logoKey string) (*logo.Logo, error) {
 		zap.String("league", s.api.League()),
 		zap.String("key", logoKey),
 	)
+
 	return nil, fmt.Errorf("no cache for %s", logoKey)
 }
 
@@ -122,6 +127,7 @@ func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rect
 	i, err := s.getLogoDrawCache(logoKey)
 	if err == nil && i != nil {
 		s.log.Debug("drawing logo with drawCache", zap.String("logo key", logoKey))
+
 		return i, nil
 	}
 
@@ -138,6 +144,7 @@ func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rect
 		l, err = s.api.GetLogo(ctx, logoKey, logoConf, bounds)
 		if err != nil {
 			s.log.Error("failed to get left logo", zap.Error(err))
+
 			return nil, fmt.Errorf("failed to get left logo: %w", err)
 		}
 		l.SetLogger(s.log)
@@ -151,6 +158,7 @@ func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rect
 			zap.String("league", s.api.League()),
 			zap.String("key", logoKey),
 		)
+
 		return nil, fmt.Errorf("logo %s was nil", logoKey)
 	}
 
@@ -185,11 +193,13 @@ func (s *SportBoard) RenderLeftLogo(ctx context.Context, canvasBounds image.Rect
 	renderedLogo, renderErr = l.RenderRightAlignedWithEnd(ctx, bounds, logoEndX)
 	if renderErr != nil {
 		s.log.Error("failed to render left logo", zap.Error(renderErr))
+
 		return nil, fmt.Errorf("failed to render left logo: %w", renderErr)
 	}
 	if setCache {
 		s.setLogoDrawCache(logoKey, renderedLogo)
 	}
+
 	return renderedLogo, nil
 }
 
@@ -206,6 +216,7 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 	i, err := s.getLogoDrawCache(logoKey)
 	if err == nil && i != nil {
 		s.log.Debug("drawing logo with drawCache", zap.String("logo key", logoKey))
+
 		return i, nil
 	}
 
@@ -222,6 +233,7 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 		l, err = s.api.GetLogo(ctx, logoKey, logoConf, bounds)
 		if err != nil {
 			s.log.Error("failed to get right logo", zap.Error(err))
+
 			return nil, fmt.Errorf("failed to get right logo: %w", err)
 		}
 		l.SetLogger(s.log)
@@ -233,6 +245,7 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 			zap.String("league", s.api.League()),
 			zap.String("key", logoKey),
 		)
+
 		return nil, fmt.Errorf("logo %s was nil", logoKey)
 	}
 
@@ -272,10 +285,12 @@ func (s *SportBoard) RenderRightLogo(ctx context.Context, canvasBounds image.Rec
 	renderedLogo, renderErr = l.RenderLeftAlignedWithStart(ctx, bounds, startX)
 	if renderErr != nil {
 		s.log.Error("failed to render right logo", zap.Error(renderErr))
+
 		return nil, fmt.Errorf("failed to render right logo: %w", err)
 	}
 	if setCache {
 		s.setLogoDrawCache(logoKey, renderedLogo)
 	}
+
 	return renderedLogo, nil
 }

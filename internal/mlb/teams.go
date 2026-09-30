@@ -52,7 +52,7 @@ type division struct {
 
 // GetID ...
 func (t *Team) GetID() string {
-	return fmt.Sprintf("%d", t.ID)
+	return strconv.Itoa(t.ID)
 }
 
 // GetName ...
@@ -75,6 +75,7 @@ func (t *Team) ConferenceName() string {
 	if t.Division != nil {
 		return t.Division.Abbreviation
 	}
+
 	return ""
 }
 
@@ -85,7 +86,7 @@ func (t *Team) Score() int {
 
 // GetTeams ...
 func GetTeams(ctx context.Context) ([]*Team, error) {
-	uri, err := url.Parse(fmt.Sprintf("%s/v1/teams", baseURL))
+	uri, err := url.Parse(baseURL + "/v1/teams")
 	if err != nil {
 		return nil, err
 	}
@@ -97,12 +98,10 @@ func GetTeams(ctx context.Context) ([]*Team, error) {
 
 	uri.RawQuery = v.Encode()
 
-	req, err := http.NewRequest("GET", uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-
-	req = req.WithContext(ctx)
 
 	client := http.DefaultClient
 	resp, err := client.Do(req)
@@ -133,6 +132,7 @@ OUTER:
 		for _, div := range d.Divisions {
 			if div.ID == team.DivisionData.ID {
 				team.Division = div
+
 				continue OUTER
 			}
 		}
@@ -159,12 +159,10 @@ func (t *Team) setRoster(ctx context.Context) error {
 
 	uri.RawQuery = v.Encode()
 
-	req, err := http.NewRequest("GET", uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return err
 	}
-
-	req = req.WithContext(ctx)
 
 	client := http.DefaultClient
 

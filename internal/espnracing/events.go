@@ -102,11 +102,10 @@ func (a *API) scheduledEventsFromAPI(ctx context.Context) (*Scoreboard, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("GET", uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
 
 	client := http.DefaultClient
 

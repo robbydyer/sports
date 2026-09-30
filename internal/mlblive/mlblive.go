@@ -2,10 +2,10 @@ package mlblive
 
 import (
 	"context"
-	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
+	"strconv"
 	"strings"
 
 	"go.uber.org/zap"
@@ -53,6 +53,7 @@ func getCanvasWidth(width int, height int) int {
 	if width/height == 2 {
 		return width
 	}
+
 	return height * 2
 }
 
@@ -64,10 +65,10 @@ func (m *MlbLive) RenderLive(ctx context.Context, canvas board.Canvas, game Game
 
 	quarterW := canvasWidth / 4
 
-	awayLogoBounds := image.Rect(midX-(canvasWidth/2), zeroed.Min.Y, midX-(quarterW), zeroed.Max.Y/2)
+	awayLogoBounds := image.Rect(midX-(canvasWidth/2), zeroed.Min.Y, midX-quarterW, zeroed.Max.Y/2)
 	awayScoreBounds := image.Rect(awayLogoBounds.Max.X, zeroed.Min.Y+1, midX, (zeroed.Max.Y / 2))
 
-	homeLogoBounds := image.Rect(midX-(canvasWidth/2), zeroed.Max.Y/2, midX-(quarterW), zeroed.Max.Y)
+	homeLogoBounds := image.Rect(midX-(canvasWidth/2), zeroed.Max.Y/2, midX-quarterW, zeroed.Max.Y)
 	homeScoreBounds := image.Rect(homeLogoBounds.Max.X, (zeroed.Max.Y / 2), midX, zeroed.Max.Y-1)
 
 	runnerBounds := image.Rect(midX, zeroed.Min.Y, midX+(canvasWidth/2), (zeroed.Max.Y/4)*3)
@@ -325,7 +326,7 @@ func (m *MlbLive) writeScore(canvas draw.Image, bounds image.Rectangle, writer *
 	for x := 0; x < len(clrs); x++ {
 		clrs[x] = teamClr
 	}
-	scrClrs := make([]color.Color, len(fmt.Sprintf("%d", score)))
+	scrClrs := make([]color.Color, len(strconv.Itoa(score)))
 	for x := 0; x < len(scrClrs); x++ {
 		scrClrs[x] = color.White
 	}
@@ -340,7 +341,7 @@ func (m *MlbLive) writeScore(canvas draw.Image, bounds image.Rectangle, writer *
 					Clrs:  clrs,
 				},
 				{
-					Chars: strings.Split(fmt.Sprintf("%d", score), ""),
+					Chars: strings.Split(strconv.Itoa(score), ""),
 					Clrs:  scrClrs,
 				},
 			},

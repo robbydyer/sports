@@ -28,8 +28,6 @@ func TestPreviousScore(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -46,10 +44,11 @@ func TestPreviousScore(t *testing.T) {
 			require.True(t, team.hasScored(2))
 
 			count := int32(0)
-			for i := 0; i < int(test.max)+1; i++ {
+			for i := range int(test.max) + 1 {
 				if i < int(test.max) {
 					require.True(t, team.hasScored(2))
 					count++
+
 					continue
 				}
 				require.False(t, team.hasScored(2))

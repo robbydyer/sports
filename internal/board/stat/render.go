@@ -21,10 +21,12 @@ func (s *StatBoard) enablerCancel(ctx context.Context, cancel context.CancelFunc
 			return
 		case <-s.cancelBoard:
 			cancel()
+
 			return
 		case <-ticker.C:
 			if !s.Enabler().Enabled() {
 				cancel()
+
 				return
 			}
 		}
@@ -111,6 +113,7 @@ func (s *StatBoard) render(ctx context.Context, canvas board.Canvas) error {
 		player, err := s.api.FindPlayer(ctx, fName, lName)
 		if err != nil {
 			s.log.Error("failed to get player", zap.String("first", fName), zap.String("last", lName))
+
 			continue
 		}
 		cat := player.GetCategory()
@@ -235,6 +238,7 @@ func (s *StatBoard) doRender(ctx context.Context, canvas board.Canvas, players [
 		s.log.Debug("drawing grid to base canvas")
 		if err := grid.DrawToBase(canvas); err != nil {
 			s.log.Error("failed to draw grid", zap.Error(err))
+
 			return err
 		}
 
@@ -242,6 +246,7 @@ func (s *StatBoard) doRender(ctx context.Context, canvas board.Canvas, players [
 
 		if err := canvas.Render(ctx); err != nil {
 			s.log.Error("failed to render canvas", zap.Error(err))
+
 			return err
 		}
 
@@ -257,6 +262,7 @@ func (s *StatBoard) doRender(ctx context.Context, canvas board.Canvas, players [
 
 		if err := grid.Clear(); err != nil {
 			s.log.Error("failed to clear grid", zap.Error(err))
+
 			return err
 		}
 
@@ -292,6 +298,7 @@ func (s *StatBoard) renderTitleRow(ctx context.Context, row []*rgbrender.Cell, w
 			); err != nil {
 				return err
 			}
+
 			continue
 		}
 
@@ -337,6 +344,7 @@ func (s *StatBoard) renderPlayer(ctx context.Context, player Player, row []*rgbr
 			); err != nil {
 				return err
 			}
+
 			continue
 		}
 		if index == 0 || (index == 1 && s.withPrefixCol) {
@@ -351,6 +359,7 @@ func (s *StatBoard) renderPlayer(ctx context.Context, player Player, row []*rgbr
 			); err != nil {
 				return err
 			}
+
 			continue
 		}
 		stat := player.GetStat(stats[index-adder])

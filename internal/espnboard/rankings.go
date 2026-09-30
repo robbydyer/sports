@@ -48,14 +48,12 @@ func (t *Team) setDetails(ctx context.Context, season string, apiPath string, lo
 		uri.RawQuery = v.Encode()
 	}
 
-	req, err := http.NewRequest("GET", uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return err
 	}
 
 	client := http.DefaultClient
-
-	req = req.WithContext(ctx)
 
 	log.Info("fetching team data", zap.String("team", t.Abbreviation))
 	resp, err := client.Do(req)
@@ -86,6 +84,7 @@ func (t *Team) setDetails(ctx context.Context, season string, apiPath string, lo
 
 		log.Debug("setting team record", zap.String("team", t.Abbreviation), zap.String("record", i.Summary))
 		t.record = i.Summary
+
 		return nil
 	}
 	log.Error("did not find record for team", zap.String("team", t.Abbreviation))

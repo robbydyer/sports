@@ -2,7 +2,6 @@ package calendarboard
 
 import (
 	"context"
-	"fmt"
 	"image"
 	"net/http"
 	"strings"
@@ -121,7 +120,7 @@ func New(api API, logger *zap.Logger, config *Config) (*CalendarBoard, error) {
 	}
 	prfx := s.api.HTTPPathPrefix()
 	if !strings.HasPrefix(prfx, "/") {
-		prfx = fmt.Sprintf("/%s", prfx)
+		prfx = "/" + prfx
 	}
 	s.rpcServer = pb.NewBasicBoardServer(svr,
 		twirp.WithServerPathPrefix(prfx),

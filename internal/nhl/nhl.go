@@ -89,6 +89,7 @@ func (n *NHL) GetWatchTeams(teams []string, season string) []string {
 			n.log.Error("failed to update nhl teams",
 				zap.Error(err),
 			)
+
 			return []string{}
 		}
 	}
@@ -100,6 +101,7 @@ func (n *NHL) GetWatchTeams(teams []string, season string) []string {
 			for _, t := range n.teams {
 				ids = append(ids, t.GetID())
 			}
+
 			return ids
 		}
 
@@ -107,6 +109,7 @@ func (n *NHL) GetWatchTeams(teams []string, season string) []string {
 		for _, team := range n.teams {
 			if team.Division != nil && team.Division.Abbreviation == t {
 				watch[team.GetID()] = struct{}{}
+
 				continue INNER
 			}
 			if team.GetAbbreviation() == t {

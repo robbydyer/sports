@@ -67,6 +67,7 @@ EVENTS:
 			s.log.Error("failed to render calendar event",
 				zap.Error(err),
 			)
+
 			continue EVENTS
 		}
 
@@ -76,6 +77,7 @@ EVENTS:
 			s.log.Error("failed to render calendar board",
 				zap.Error(err),
 			)
+
 			continue EVENTS
 		}
 

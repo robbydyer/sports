@@ -58,6 +58,7 @@ func (c *ncaamCmd) run(cmd *cobra.Command, args []string) error {
 		live, err := g.GetUpdate(ctx)
 		if err != nil {
 			fmt.Printf("could not get %d\n", g.GetID())
+
 			continue
 		}
 		h, err := live.HomeTeam()

@@ -64,6 +64,7 @@ func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				w.Header().Set("Content-Type", "text/plain")
 				if i.config.UseDiskCache.Load() {
 					_, _ = w.Write([]byte("true"))
+
 					return
 				}
 				_, _ = w.Write([]byte("false"))
@@ -90,6 +91,7 @@ func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				w.Header().Set("Content-Type", "text/plain")
 				if i.config.UseMemCache.Load() {
 					_, _ = w.Write([]byte("true"))
+
 					return
 				}
 				_, _ = w.Write([]byte("false"))
@@ -101,6 +103,7 @@ func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				w.Header().Set("Content-Type", "text/plain")
 				if i.Enabler().Enabled() {
 					_, _ = w.Write([]byte("true"))
+
 					return
 				}
 				_, _ = w.Write([]byte("false"))
@@ -125,6 +128,7 @@ func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 						zap.Error(err),
 					)
 					http.Error(w, "failed to process /api/img/jump request", http.StatusBadRequest)
+
 					return
 				}
 				select {
@@ -132,6 +136,7 @@ func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				case <-time.After(5 * time.Second):
 					i.log.Error("timed out waiting to jump image")
 					http.Error(w, "timed out waiting to jump iamge", http.StatusRequestTimeout)
+
 					return
 				}
 
@@ -145,6 +150,7 @@ func (i *ImageBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 							zap.String("file name", j.Name),
 						)
 						http.Error(w, "failed to jump to image board", http.StatusInternalServerError)
+
 						return
 					}
 				}

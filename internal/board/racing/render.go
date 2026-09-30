@@ -72,6 +72,7 @@ EVENTS:
 			s.log.Error("failed to render racing event",
 				zap.Error(err),
 			)
+
 			continue EVENTS
 		}
 
@@ -81,6 +82,7 @@ EVENTS:
 			s.log.Error("failed to render racing board",
 				zap.Error(err),
 			)
+
 			continue EVENTS
 		}
 

@@ -76,6 +76,7 @@ func (s *Server) Jump(ctx context.Context, req *pb.JumpReq) (*emptypb.Empty, err
 				zap.Error(err),
 				zap.String("file name", req.Name),
 			)
+
 			return &emptypb.Empty{}, twirp.InternalError("failed to jump to image board")
 		}
 	}

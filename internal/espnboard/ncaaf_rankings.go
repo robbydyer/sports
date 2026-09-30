@@ -38,7 +38,6 @@ func (n *ncaaf) setRecords(ctx context.Context, e *ESPNBoard, season string, tea
 	wg, _ := errgroup.WithContext(ctx)
 	wg.SetLimit(10)
 	for _, t := range teams {
-		t := t
 		wg.Go(func() error {
 			if err := t.setDetails(ctx, season, n.APIPath(), e.log); err != nil {
 				e.log.Error("failed to set team details",
@@ -80,13 +79,11 @@ func (n *ncaaf) setRankings(ctx context.Context, e *ESPNBoard, season string, te
 		zap.String("url", uri.String()),
 	)
 
-	req, err := http.NewRequest("GET", uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return err
 	}
 	client := http.DefaultClient
-
-	req = req.WithContext(ctx)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -121,6 +118,7 @@ RANK:
 				t.rank = rank.Current
 				t.record = rank.Record
 				t.Unlock()
+
 				continue RANK
 			}
 		}
@@ -148,6 +146,7 @@ func (n *ncaaf) getRanks(data *ncaafRankingsData) []*ncaafRanks {
 			if ranking.Type != preferedPolls[prefIndex] || ranking.Season.Year != thisYear {
 				continue INNER
 			}
+
 			return ranking.Ranks
 		}
 		prefIndex++
@@ -164,5 +163,6 @@ func (n *ncaaf) latestRankingsYear(data *ncaafRankingsData) int {
 	if year == 0 {
 		return time.Now().Year()
 	}
+
 	return year
 }

@@ -2,7 +2,7 @@ package rgbrender
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"image"
 	"image/color"
 	"testing"
@@ -63,8 +63,6 @@ func TestSetForegroundPriority(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			l, err := NewLayerDrawer(1*time.Second, nil)
@@ -142,8 +140,6 @@ func TestPriorities(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			l, err := NewLayerDrawer(1*time.Second, nil)
@@ -173,9 +169,11 @@ func TestRender(t *testing.T) {
 			defer func() { renderedLayers = append(renderedLayers, "layer") }()
 			if img == i {
 				layer1 = true
+
 				return nil
 			}
-			return fmt.Errorf("wrong image")
+
+			return errors.New("wrong image")
 		},
 	))
 
@@ -192,6 +190,7 @@ func TestRender(t *testing.T) {
 			require.NotNil(t, writer)
 			require.Equal(t, []string{"hello"}, text)
 			layer2 = true
+
 			return nil
 		},
 	))
@@ -210,7 +209,7 @@ func TestBadPrepare(t *testing.T) {
 
 	layers.AddLayer(BackgroundPriority, NewLayer(
 		func(ctx context.Context) (image.Image, error) {
-			return nil, fmt.Errorf("prep failed")
+			return nil, errors.New("prep failed")
 		},
 		nil,
 	))
@@ -230,7 +229,7 @@ func TestBadRender(t *testing.T) {
 			return image.NewUniform(color.White), nil
 		},
 		func(canvas board.Canvas, i image.Image) error {
-			return fmt.Errorf("render failed")
+			return errors.New("render failed")
 		},
 	))
 

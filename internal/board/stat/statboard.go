@@ -2,7 +2,6 @@ package statboard
 
 import (
 	"context"
-	"fmt"
 	"image/color"
 	"image/draw"
 	"sort"
@@ -172,9 +171,9 @@ func New(ctx context.Context, api API, config *Config, logger *zap.Logger, opts 
 	}
 	prfx := s.api.HTTPPathPrefix()
 	if !strings.HasPrefix(prfx, "/") {
-		prfx = fmt.Sprintf("/%s", prfx)
+		prfx = "/" + prfx
 	}
-	prfx = fmt.Sprintf("/stat%s", prfx)
+	prfx = "/stat" + prfx
 
 	s.rpcServer = pb.NewBasicBoardServer(svr,
 		twirp.WithServerPathPrefix(prfx),
@@ -209,7 +208,7 @@ func (s *StatBoard) InBetween() bool {
 
 // Name ...
 func (s *StatBoard) Name() string {
-	return fmt.Sprintf("StatBoard: %s", s.api.LeagueShortName())
+	return "StatBoard: " + s.api.LeagueShortName()
 }
 
 // Clear ...
@@ -226,6 +225,7 @@ func (s *StatBoard) Close() error {
 func WithSorter(sorter Sorter) OptionFunc {
 	return func(s *StatBoard) error {
 		s.sorter = sorter
+
 		return nil
 	}
 }
@@ -234,6 +234,7 @@ func WithSorter(sorter Sorter) OptionFunc {
 func WithTitleRow(with bool) OptionFunc {
 	return func(s *StatBoard) error {
 		s.withTitleRow = with
+
 		return nil
 	}
 }
@@ -242,6 +243,7 @@ func WithTitleRow(with bool) OptionFunc {
 func WithPrefixCol(with bool) OptionFunc {
 	return func(s *StatBoard) error {
 		s.withPrefixCol = with
+
 		return nil
 	}
 }

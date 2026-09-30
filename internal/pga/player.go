@@ -2,7 +2,6 @@ package pga
 
 import (
 	"context"
-	"fmt"
 	"image/color"
 	"sort"
 	"strconv"
@@ -53,8 +52,10 @@ func SortByScore(players []statboard.Player) []statboard.Player {
 		if ierr != nil || jerr != nil {
 			return posI < posJ
 		}
+
 		return pI < pJ
 	})
+
 	return players
 }
 
@@ -68,6 +69,7 @@ func (p *Player) FirstName() string {
 	if len(parts) < 1 {
 		return ""
 	}
+
 	return parts[0]
 }
 
@@ -81,6 +83,7 @@ func (p *Player) LastName() string {
 	if len(parts) < 1 {
 		return ""
 	}
+
 	return strings.Join(parts[1:], " ")
 }
 
@@ -95,9 +98,10 @@ func (p *Player) GetStat(stat string) string {
 		if time.Until(t) < 0 {
 			return ""
 		}
+
 		return t.Local().Format("03:04PM")
 	case "hole":
-		return fmt.Sprint(p.Status.Thru)
+		return strconv.Itoa(p.Status.Thru)
 	case "score":
 		if p.Statistics != nil {
 			for _, stat := range p.Statistics {
@@ -106,11 +110,12 @@ func (p *Player) GetStat(stat string) string {
 				}
 			}
 		}
+
 		return p.Score.DisplayValue
 	case "position":
 		return strings.TrimLeft(p.Status.Position.DisplayName, "T")
 	case "sort":
-		return fmt.Sprint(p.SortOrder)
+		return strconv.Itoa(p.SortOrder)
 	}
 
 	return ""
@@ -136,8 +141,10 @@ func (p *Player) StatColor(stat string) color.Color {
 		if i < 0 {
 			return color.RGBA{255, 0, 0, 255}
 		}
+
 		return color.RGBA{0, 255, 0, 255}
 	}
+
 	return color.White
 }
 

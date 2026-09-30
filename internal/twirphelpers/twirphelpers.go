@@ -15,6 +15,7 @@ func GetDefaultHooks(board board.Board, logger *zap.Logger) *twirp.ServerHooks {
 	if board != nil {
 		boardName = board.Name()
 	}
+
 	return &twirp.ServerHooks{
 		RequestRouted: func(ctx context.Context) (context.Context, error) {
 			method, _ := twirp.MethodName(ctx)

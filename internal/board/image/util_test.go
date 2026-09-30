@@ -59,8 +59,6 @@ func TestFilenameCompare(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			require.Equal(t, test.expected, filenameCompare(test.a, test.b))
@@ -93,8 +91,6 @@ func TestReverseStrs(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			require.Equal(t, test.expected, reverseStrs(test.in))

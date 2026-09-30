@@ -105,6 +105,7 @@ func (i *ImgCanvas) disableWatcher() {
 // Clear sets the canvas to all black
 func (i *ImgCanvas) Clear() error {
 	i.blackOut()
+
 	return i.Render(context.Background())
 }
 
@@ -151,6 +152,7 @@ func (i *ImgCanvas) At(x, y int) color.Color {
 	if pos > len(i.pixels)-1 || pos < 0 {
 		return color.Black
 	}
+
 	return uint32ToColor(i.pixels[pos])
 }
 
@@ -205,5 +207,6 @@ func colorToUint32(c color.Color) uint32 {
 
 	// A color's RGBA method returns values in the range [0, 65535]
 	red, green, blue, _ := c.RGBA()
+
 	return (red>>8)<<16 | (green>>8)<<8 | blue>>8
 }

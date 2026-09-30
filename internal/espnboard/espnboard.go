@@ -2,6 +2,7 @@ package espnboard
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -64,12 +65,13 @@ type ESPNBoard struct {
 }
 
 func (e *ESPNBoard) logoCacheDir() (string, error) {
-	cacheDir := fmt.Sprintf("/tmp/sportsmatrix_logos/%s", e.leaguer.APIPath())
+	cacheDir := "/tmp/sportsmatrix_logos/" + e.leaguer.APIPath()
 	if _, err := os.Stat(cacheDir); err != nil {
 		if os.IsNotExist(err) {
 			return cacheDir, os.MkdirAll(cacheDir, 0o755)
 		}
 	}
+
 	return cacheDir, nil
 }
 
@@ -184,6 +186,7 @@ DATES:
 				zap.String("date", t),
 				zap.String("league", e.League()),
 			)
+
 			continue DATES
 		}
 
@@ -199,7 +202,7 @@ DATES:
 
 		games, ok = e.games[t]
 		if !ok {
-			return nil, fmt.Errorf("failed to update games")
+			return nil, errors.New("failed to update games")
 		}
 
 		if len(games) < 1 {
@@ -246,6 +249,7 @@ func (e *ESPNBoard) GetWatchTeams(teams []string, season string) []string {
 	}
 	if len(teams) == 0 {
 		e.log.Info("setting ESPNBoard watch teams to ALL teams")
+
 		return e.allTeamIDs
 	}
 
@@ -267,6 +271,7 @@ OUTER:
 	for _, t := range teams {
 		if t == "ALL" {
 			e.log.Info("setting ESPNBoard watch teams to ALL teams")
+
 			return e.allTeamIDs
 		}
 		if strings.HasPrefix(t, "TOP") {
@@ -283,6 +288,7 @@ OUTER:
 			for _, a := range e.teamsInRank(top, season) {
 				watch[a.GetID()] = struct{}{}
 			}
+
 			continue OUTER
 		}
 		for _, team := range e.teams {
@@ -315,6 +321,7 @@ func (e *ESPNBoard) TeamsInConference(conference string) []*Team {
 				zap.Error(err),
 				zap.String("league", e.League()),
 			)
+
 			return nil
 		}
 	}
@@ -323,6 +330,7 @@ func (e *ESPNBoard) TeamsInConference(conference string) []*Team {
 	for c := range e.conferenceNames {
 		if strings.Contains(strings.ToLower(c), conference) {
 			found = true
+
 			break
 		}
 	}
@@ -354,6 +362,7 @@ func (e *ESPNBoard) teamsInRank(top int, season string) []*Team {
 				zap.Error(err),
 				zap.String("league", e.League()),
 			)
+
 			return nil
 		}
 	}
@@ -417,6 +426,7 @@ func (e *ESPNBoard) TeamRank(ctx context.Context, team sportboard.Team, season s
 				zap.Error(err),
 				zap.String("league", e.League()),
 			)
+
 			return ""
 		}
 	}
@@ -424,6 +434,7 @@ func (e *ESPNBoard) TeamRank(ctx context.Context, team sportboard.Team, season s
 	for _, t := range e.teams {
 		if t.ID == team.GetID() {
 			realTeam = t
+
 			break
 		}
 	}
@@ -455,6 +466,7 @@ func (e *ESPNBoard) TeamRecord(ctx context.Context, team sportboard.Team, season
 				zap.Error(err),
 				zap.String("league", e.League()),
 			)
+
 			return ""
 		}
 	}
@@ -462,6 +474,7 @@ func (e *ESPNBoard) TeamRecord(ctx context.Context, team sportboard.Team, season
 	for _, t := range e.teams {
 		if t.ID == team.GetID() {
 			realTeam = t
+
 			break
 		}
 	}
@@ -485,6 +498,7 @@ func WithMockData(mockSchedule []byte, mockLiveGames map[string][]byte) Option {
 	return func(e *ESPNBoard) error {
 		e.mockSchedule = mockSchedule
 		e.mockLiveGames = mockLiveGames
+
 		return nil
 	}
 }

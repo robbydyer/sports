@@ -1,0 +1,51 @@
+#!/bin/bash
+set -euo pipefail
+set -x
+
+ROOT="$(dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ))"
+cd "${ROOT}"
+source script/common
+IN_DOCKER="${IN_DOCKER:-no}"
+VERSION="${VERSION:-testbuild}"
+VERSION="${VERSION/v/}"
+DEB_BUILD="${DEB_BUILD:-no}"
+BUILDARCH="${BUILDARCH:-$(uname -m)}"
+BUILDOS="${BUILDOS:-bullseye}"
+
+img=$(latestpibuilder ${BUILDARCH} ${BUILDOS})
+
+if [ "${IN_DOCKER}" = "no" ]; then
+  if [ ! -d "${ROOT}/internal/sportsmatrix/assets" ]; then
+    mkdir -p "${ROOT}/internal/sportsmatrix/assets"
+    cp -r "${ROOT}/web/build" "${ROOT}/internal/sportsmatrix/assets/web"
+  fi
+
+  docker run -t --rm \
+    -e IN_DOCKER=yes \
+    -e BUILDARCH="${BUILDARCH}" \
+    -e VERSION="${VERSION}" \
+    -e DEB_BUILD="${DEB_BUILD}" \
+    -e BUILDOS="${BUILDOS}" \
+    -e GITHUB_ACTION="${GITHUB_ACTION:-}" \
+    -v "${ROOT}":"${ROOT}" \
+    -w "${ROOT}" \
+    ${img} \
+    "${ROOT}/script/$(basename $0)"
+
+  exit
+fi
+
+# Everything below is inside docker
+export CGO_ENABLED=1
+export GOCACHE="${ROOT}/.cache"
+
+mv /sportsmatrix_lib/rpi-rgb-led-matrix "${ROOT}/internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix"
+
+mkdir -p "${ROOT}/internal/sportsmatrix/assets/web"
+# Put some dummy assets here
+trap "rm -rf ${ROOT}/internal/sportsmatrix/assets/web/foo" EXIT
+touch "${ROOT}/internal/sportsmatrix/assets/web/foo"
+
+go build -o "${ROOT}/releases/sportsmatrix.${BUILDARCH}.${BUILDOS}" -buildvcs=false -ldflags="-X github.com/robbydyer/sports-premium/internal/version.Version=${VERSION}" ./cmd/sportsmatrix
+
+echo "=> DONE created ${ROOT}/releases/sportsmatrix.${BUILDARCH}.${BUILDOS}"

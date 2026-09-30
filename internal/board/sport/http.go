@@ -35,6 +35,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				w.Header().Set("Content-Type", "text/plain")
 				if s.config.HideFavoriteScore.Load() {
 					_, _ = w.Write([]byte("true"))
+
 					return
 				}
 				_, _ = w.Write([]byte("false"))
@@ -60,6 +61,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				w.Header().Set("Content-Type", "text/plain")
 				if s.config.FavoriteSticky.Load() {
 					_, _ = w.Write([]byte("true"))
+
 					return
 				}
 				_, _ = w.Write([]byte("false"))
@@ -86,6 +88,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				w.Header().Set("Content-Type", "text/plain")
 				if s.Enabler().Enabled() {
 					_, _ = w.Write([]byte("true"))
+
 					return
 				}
 				_, _ = w.Write([]byte("false"))
@@ -124,6 +127,7 @@ func (s *SportBoard) GetHTTPHandlers() ([]*board.HTTPHandler, error) {
 				w.Header().Set("Content-Type", "text/plain")
 				if s.config.ShowRecord.Load() {
 					_, _ = w.Write([]byte("true"))
+
 					return
 				}
 				_, _ = w.Write([]byte("false"))

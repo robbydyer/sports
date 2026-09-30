@@ -489,8 +489,6 @@ func TestAlignPosition(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			actual, err := AlignPosition(test.align, test.bounds, test.sizeX, test.sizeY)
@@ -576,8 +574,6 @@ func TestZoomImageSize(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			actualX, actualY := ZoomImageSize(test.img, test.zoom)
@@ -627,7 +623,6 @@ func TestZeroedBounds(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

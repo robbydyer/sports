@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"os"
@@ -122,7 +123,7 @@ func newRootCmd(args *rootArgs) *cobra.Command {
 
 			if today := viper.GetString("date-str"); today != "" {
 				var err error
-				t, err := time.Parse("2006-01-02T15:04:05", fmt.Sprintf("%sT12:00:00", today))
+				t, err := time.Parse("2006-01-02T15:04:05", today+"T12:00:00")
 				if err != nil {
 					return fmt.Errorf("failed to parse date-str: %w", err)
 				}
@@ -171,6 +172,7 @@ func (r *rootArgs) setConfig(filename string) error {
 	}
 
 	r.config = c
+
 	return nil
 }
 
@@ -509,6 +511,7 @@ func (r *rootArgs) getTestMatrix(logger *zap.Logger) matrix.Matrix {
 		zap.Int("Cols", r.config.SportsMatrixConfig.HardwareConfig.Cols),
 		zap.Int("Rows", r.config.SportsMatrixConfig.HardwareConfig.Rows),
 	)
+
 	return matrix.NewConsoleMatrix(r.config.SportsMatrixConfig.HardwareConfig.Cols, r.config.SportsMatrixConfig.HardwareConfig.Rows, os.Stdout, logger)
 }
 
@@ -596,8 +599,9 @@ func (r *rootArgs) getBoards(ctx context.Context, logger *zap.Logger) ([]board.B
 					func(ctx context.Context, canvas board.Canvas, game sportboard.Game, hLogo *logo.Logo, aLogo *logo.Logo) error {
 						mlbGame, ok := game.(*espnboard.Game)
 						if !ok {
-							return fmt.Errorf("unsupported sport for detailed renderer")
+							return errors.New("unsupported sport for detailed renderer")
 						}
+
 						return m.RenderLive(ctx, canvas, mlbGame, hLogo, aLogo)
 					},
 				),

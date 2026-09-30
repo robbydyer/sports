@@ -78,6 +78,7 @@ func (s *SportsMatrix) startHTTP() chan error {
 		handlers, err := b.GetHTTPHandlers()
 		if err != nil {
 			errChan <- err
+
 			return errChan
 		}
 		for _, h := range handlers {
@@ -101,6 +102,7 @@ func (s *SportsMatrix) startHTTP() chan error {
 		handlers, err := c.GetHTTPHandlers()
 		if err != nil {
 			errChan <- err
+
 			return errChan
 		}
 		for _, h := range handlers {
@@ -113,6 +115,7 @@ func (s *SportsMatrix) startHTTP() chan error {
 	for _, e := range s.httpEndpoints {
 		if _, exists := dupe[e]; exists {
 			errChan <- fmt.Errorf("duplicate HTTP endpoint '%s'", e)
+
 			return errChan
 		}
 		dupe[e] = struct{}{}
@@ -147,6 +150,7 @@ func (s *SportsMatrix) startHTTP() chan error {
 		if err != nil {
 			s.log.Error("failed to get sub filesystem", zap.Error(err))
 			errChan <- err
+
 			return errChan
 		}
 		s.log.Info("serving web UI", zap.Int("port", s.cfg.HTTPListenPort))
@@ -202,6 +206,7 @@ func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
 				w.Header().Set("Content-Type", "text/plain")
 				if s.screenIsOn.Load() {
 					_, _ = w.Write([]byte("true"))
+
 					return
 				}
 				_, _ = w.Write([]byte("false"))
@@ -229,6 +234,7 @@ func (s *SportsMatrix) httpHandlers() []*board.HTTPHandler {
 				w.Header().Set("Content-Type", "text/plain")
 				if s.webBoardIsOn.Load() {
 					_, _ = w.Write([]byte("true"))
+
 					return
 				}
 				_, _ = w.Write([]byte("false"))

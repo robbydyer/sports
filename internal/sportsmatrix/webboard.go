@@ -39,7 +39,7 @@ func (s *SportsMatrix) launchWebBoard(ctx context.Context) error {
 	}
 
 	cmd.Env = append(cmd.Env, "DISPLAY=:0")
-	cmd.Env = append(cmd.Env, fmt.Sprintf("HOME=%s", u.HomeDir))
+	cmd.Env = append(cmd.Env, "HOME="+u.HomeDir)
 	cmd.Env = append(cmd.Env, fmt.Sprintf("XAUTHORITY=%s/.Xauthority", u.HomeDir))
 
 	cmd.SysProcAttr = &syscall.SysProcAttr{
@@ -60,6 +60,7 @@ func (s *SportsMatrix) launchWebBoard(ctx context.Context) error {
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		s.log.Error("exec error", zap.ByteString("error", out))
+
 		return err
 	}
 

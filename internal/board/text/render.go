@@ -2,6 +2,7 @@ package textboard
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -66,7 +67,7 @@ func (s *TextBoard) doRender(canvas board.Canvas, text string) error {
 		return err
 	}
 	if len(lengths) < 1 {
-		return fmt.Errorf("failed to measure text")
+		return errors.New("failed to measure text")
 	}
 	bounds := image.Rect(zeroed.Min.X, zeroed.Min.Y, zeroed.Min.X+lengths[0], zeroed.Max.Y)
 

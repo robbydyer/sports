@@ -3,6 +3,7 @@ package mlb
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"image/color"
 	"io"
@@ -100,6 +101,7 @@ func (m *MLB) FindPlayer(ctx context.Context, first string, last string) (statbo
 						return nil, err
 					}
 				}
+
 				return p, nil
 			}
 		}
@@ -131,6 +133,7 @@ func (m *MLB) ListPlayers(ctx context.Context, teamAbbreviation string) ([]statb
 				)
 				if err := p.setStats(ctx); err != nil {
 					m.log.Error("could not find stats for player", zap.Error(err))
+
 					continue INNER
 				}
 			}
@@ -162,12 +165,13 @@ func (m *MLB) GetPlayer(ctx context.Context, id string) (statboard.Player, error
 						return nil, err
 					}
 				}
+
 				return player, nil
 			}
 		}
 	}
 
-	return nil, fmt.Errorf("could not find player")
+	return nil, errors.New("could not find player")
 }
 
 // UpdateStats ...
@@ -198,11 +202,10 @@ func (p *Player) setStats(ctx context.Context) error {
 
 	uri.RawQuery = v.Encode()
 
-	req, err := http.NewRequest("GET", uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return err
 	}
-	req = req.WithContext(ctx)
 
 	client := http.DefaultClient
 
@@ -234,6 +237,7 @@ func (p *Player) setStats(ctx context.Context) error {
 			}
 			for _, s := range all.Splits {
 				p.Stats = s.Stat
+
 				return nil
 			}
 		}
@@ -252,6 +256,7 @@ func (m *MLB) AvailableStats(ctx context.Context, category string) ([]string, er
 			"era",
 		}, nil
 	}
+
 	return []string{
 		"avg",
 		"homeRuns",
@@ -265,6 +270,7 @@ func (p *Player) Position() string {
 	if p.PlayerPosition == nil {
 		return ""
 	}
+
 	return p.PlayerPosition.Abbreviation
 }
 
@@ -277,19 +283,19 @@ func (p *Player) GetStat(stat string) string {
 	case "avg":
 		return p.Stats.Average
 	case "homeruns":
-		return fmt.Sprint(p.Stats.HomeRuns)
+		return strconv.Itoa(p.Stats.HomeRuns)
 	case "rbi":
-		return fmt.Sprint(p.Stats.RBI)
+		return strconv.Itoa(p.Stats.RBI)
 	case "ops":
 		return p.Stats.OPS
 	case "era":
 		return p.Stats.ERA
 	case "wins":
-		return fmt.Sprint(p.Stats.Wins)
+		return strconv.Itoa(p.Stats.Wins)
 	case "losses":
-		return fmt.Sprint(p.Stats.Losses)
+		return strconv.Itoa(p.Stats.Losses)
 	case "saves":
-		return fmt.Sprint(p.Stats.Saves)
+		return strconv.Itoa(p.Stats.Saves)
 	}
 
 	return "?"
@@ -326,6 +332,7 @@ func (p *Player) LastName() string {
 	if len(parts) > 0 {
 		return strings.Join(parts[1:], " ")
 	}
+
 	return p.Person.FullName
 }
 

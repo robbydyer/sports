@@ -3,6 +3,7 @@ package nhl
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"image/color"
 	"io"
@@ -101,6 +102,7 @@ func (n *NHL) FindPlayer(ctx context.Context, first string, last string) (statbo
 						return nil, err
 					}
 				}
+
 				return p, nil
 			}
 		}
@@ -128,6 +130,7 @@ func (n *NHL) ListPlayers(ctx context.Context, teamAbbreviation string) ([]statb
 			if p.Stats == nil {
 				if err := p.setStats(ctx); err != nil {
 					n.log.Error("could not find stats for player", zap.Error(err))
+
 					continue INNER
 				}
 			}
@@ -160,12 +163,13 @@ func (n *NHL) GetPlayer(ctx context.Context, id string) (statboard.Player, error
 						return nil, err
 					}
 				}
+
 				return player, nil
 			}
 		}
 	}
 
-	return nil, fmt.Errorf("could not find player")
+	return nil, errors.New("could not find player")
 }
 
 // UpdateStats ...
@@ -196,11 +200,10 @@ func (p *Player) setStats(ctx context.Context) error {
 
 	uri.RawQuery = v.Encode()
 
-	req, err := http.NewRequest("GET", uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return err
 	}
-	req = req.WithContext(ctx)
 
 	client := http.DefaultClient
 
@@ -224,6 +227,7 @@ func (p *Player) setStats(ctx context.Context) error {
 	for _, all := range pStat.Stats {
 		for _, s := range all.Splits {
 			p.Stats = s.Stat
+
 			return nil
 		}
 	}
@@ -241,6 +245,7 @@ func (n *NHL) AvailableStats(ctx context.Context, category string) ([]string, er
 			"shutouts",
 		}, nil
 	}
+
 	return []string{
 		"goals",
 		"assists",
@@ -257,6 +262,7 @@ func (p *Player) Position() string {
 	if p.PlayerPosition == nil {
 		return ""
 	}
+
 	return p.PlayerPosition.Abbreviation
 }
 
@@ -267,19 +273,19 @@ func (p *Player) GetStat(stat string) string {
 	}
 	switch strings.ToLower(stat) {
 	case "assists":
-		return fmt.Sprint(p.Stats.Assists)
+		return strconv.Itoa(p.Stats.Assists)
 	case "goals":
-		return fmt.Sprint(p.Stats.Goals)
+		return strconv.Itoa(p.Stats.Goals)
 	case "shots":
-		return fmt.Sprint(p.Stats.Shots)
+		return strconv.Itoa(p.Stats.Shots)
 	case "games":
-		return fmt.Sprint(p.Stats.Games)
+		return strconv.Itoa(p.Stats.Games)
 	case "hits":
-		return fmt.Sprint(p.Stats.Hits)
+		return strconv.Itoa(p.Stats.Hits)
 	case "plusminus":
-		return fmt.Sprint(p.Stats.PlusMinus)
+		return strconv.Itoa(p.Stats.PlusMinus)
 	case "pim":
-		return fmt.Sprint(p.Stats.Pim)
+		return strconv.Itoa(p.Stats.Pim)
 	case "record":
 		return fmt.Sprintf("%d-%d", p.Stats.Wins, p.Stats.Losses)
 	case "savepercentage":
@@ -287,7 +293,7 @@ func (p *Player) GetStat(stat string) string {
 	case "goalagainstaverage":
 		return fmt.Sprint(p.Stats.GoalAgainstAverage)
 	case "shutouts":
-		return fmt.Sprint(p.Stats.Shutouts)
+		return strconv.Itoa(p.Stats.Shutouts)
 	}
 
 	return "?"
@@ -329,5 +335,6 @@ func (p *Player) LastName() string {
 	if len(parts) > 0 {
 		return strings.Join(parts[1:], " ")
 	}
+
 	return p.Person.FullName
 }

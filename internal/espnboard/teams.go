@@ -98,6 +98,7 @@ func (e *ESPNBoard) getTeams(ctx context.Context) ([]*Team, error) {
 			zap.Int("num teams", len(e.teams)),
 			zap.String("league", e.leaguer.League()),
 		)
+
 		return e.teams, nil
 	}
 
@@ -135,8 +136,8 @@ func (e *ESPNBoard) teamsFromAPI(ctx context.Context) ([]*Team, error) {
 
 func (e *ESPNBoard) teamsFromAssests() ([]*Team, error) {
 	assetFiles := []string{
-		fmt.Sprintf("%s_groups.json", e.leaguer.HTTPPathPrefix()),
-		fmt.Sprintf("%s_teams.json", e.leaguer.HTTPPathPrefix()),
+		e.leaguer.HTTPPathPrefix() + "_groups.json",
+		e.leaguer.HTTPPathPrefix() + "_teams.json",
 	}
 
 	teams := []*Team{}
@@ -156,6 +157,7 @@ func (e *ESPNBoard) teamsFromAssests() ([]*Team, error) {
 		}
 		if len(t) > 0 {
 			teams = append(teams, t...)
+
 			return teams, nil
 		}
 	}
@@ -240,7 +242,7 @@ func (t *Team) Score() int {
 }
 
 func pullTeams(ctx context.Context, endpoint string) ([]byte, error) {
-	uri, err := url.Parse(fmt.Sprintf("http://site.api.espn.com/apis/site/v2/sports/%s", endpoint))
+	uri, err := url.Parse("http://site.api.espn.com/apis/site/v2/sports/" + endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -250,11 +252,10 @@ func pullTeams(ctx context.Context, endpoint string) ([]byte, error) {
 
 	uri.RawQuery = v.Encode()
 
-	req, err := http.NewRequest("GET", uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(ctx)
 
 	client := http.DefaultClient
 

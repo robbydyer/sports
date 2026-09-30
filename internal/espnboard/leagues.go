@@ -110,7 +110,7 @@ func (n *ncaam) HTTPPathPrefix() string {
 }
 
 func (n *ncaam) HeadlinePath() string {
-	return fmt.Sprintf("%s/news", n.APIPath())
+	return n.APIPath() + "/news"
 }
 
 func (n *ncaam) HomeSideSwap() bool {
@@ -145,7 +145,7 @@ func (n *nba) HTTPPathPrefix() string {
 }
 
 func (n *nba) HeadlinePath() string {
-	return fmt.Sprintf("%s/news", n.APIPath())
+	return n.APIPath() + "/news"
 }
 
 func (n *nba) HomeSideSwap() bool {
@@ -179,7 +179,7 @@ func (n *mls) HTTPPathPrefix() string {
 }
 
 func (n *mls) HeadlinePath() string {
-	return fmt.Sprintf("%s/news", n.APIPath())
+	return n.APIPath() + "/news"
 }
 
 func (n *mls) HomeSideSwap() bool {
@@ -216,7 +216,7 @@ func (n *nhl) HTTPPathPrefix() string {
 }
 
 func (n *nhl) HeadlinePath() string {
-	return fmt.Sprintf("%s/news", n.APIPath())
+	return n.APIPath() + "/news"
 }
 
 func (n *nhl) HomeSideSwap() bool {
@@ -253,7 +253,7 @@ func (n *mlb) HTTPPathPrefix() string {
 }
 
 func (n *mlb) HeadlinePath() string {
-	return fmt.Sprintf("%s/news", n.APIPath())
+	return n.APIPath() + "/news"
 }
 
 func (n *mlb) HomeSideSwap() bool {
@@ -292,7 +292,7 @@ func (n *ncaaf) HTTPPathPrefix() string {
 }
 
 func (n *ncaaf) HeadlinePath() string {
-	return fmt.Sprintf("%s/news", n.APIPath())
+	return n.APIPath() + "/news"
 }
 
 func (n *ncaaf) HomeSideSwap() bool {
@@ -302,6 +302,7 @@ func (n *ncaaf) HomeSideSwap() bool {
 // NewNCAAF ...
 func NewNCAAF(ctx context.Context, logger *zap.Logger) (*ESPNBoard, error) {
 	n := &ncaaf{}
+
 	return New(ctx, n, logger, n.setRankings, n.setRecords)
 }
 
@@ -334,7 +335,7 @@ func (n *epl) HTTPPathPrefix() string {
 }
 
 func (n *epl) HeadlinePath() string {
-	return fmt.Sprintf("%s/news", n.APIPath())
+	return n.APIPath() + "/news"
 }
 
 func (n *epl) HomeSideSwap() bool {
@@ -370,7 +371,7 @@ func (n *dfl) HTTPPathPrefix() string {
 }
 
 func (n *dfl) HeadlinePath() string {
-	return fmt.Sprintf("%s/news", n.APIPath())
+	return n.APIPath() + "/news"
 }
 
 func (n *dfl) HomeSideSwap() bool {
@@ -406,7 +407,7 @@ func (n *dfb) HTTPPathPrefix() string {
 }
 
 func (n *dfb) HeadlinePath() string {
-	return fmt.Sprintf("%s/news", n.APIPath())
+	return n.APIPath() + "/news"
 }
 
 func (n *dfb) HomeSideSwap() bool {
@@ -442,7 +443,7 @@ func (n *uefa) HTTPPathPrefix() string {
 }
 
 func (n *uefa) HeadlinePath() string {
-	return fmt.Sprintf("%s/news", n.APIPath())
+	return n.APIPath() + "/news"
 }
 
 func (n *uefa) HomeSideSwap() bool {
@@ -478,7 +479,7 @@ func (n *fifa) HTTPPathPrefix() string {
 }
 
 func (n *fifa) HeadlinePath() string {
-	return fmt.Sprintf("%s/news", n.APIPath())
+	return n.APIPath() + "/news"
 }
 
 func (n *fifa) HomeSideSwap() bool {
@@ -515,7 +516,7 @@ func (n *ncaaw) HTTPPathPrefix() string {
 }
 
 func (n *ncaaw) HeadlinePath() string {
-	return fmt.Sprintf("%s/news", n.APIPath())
+	return n.APIPath() + "/news"
 }
 
 func (n *ncaaw) HomeSideSwap() bool {
@@ -550,7 +551,7 @@ func (n *wnba) HTTPPathPrefix() string {
 }
 
 func (n *wnba) HeadlinePath() string {
-	return fmt.Sprintf("%s/news", n.APIPath())
+	return n.APIPath() + "/news"
 }
 
 func (n *wnba) HomeSideSwap() bool {
@@ -586,7 +587,7 @@ func (n *ligue) HTTPPathPrefix() string {
 }
 
 func (n *ligue) HeadlinePath() string {
-	return fmt.Sprintf("%s/news", n.APIPath())
+	return n.APIPath() + "/news"
 }
 
 func (n *ligue) HomeSideSwap() bool {
@@ -622,7 +623,7 @@ func (n *seriea) HTTPPathPrefix() string {
 }
 
 func (n *seriea) HeadlinePath() string {
-	return fmt.Sprintf("%s/news", n.APIPath())
+	return n.APIPath() + "/news"
 }
 
 func (n *seriea) HomeSideSwap() bool {
@@ -658,7 +659,7 @@ func (n *laliga) HTTPPathPrefix() string {
 }
 
 func (n *laliga) HeadlinePath() string {
-	return fmt.Sprintf("%s/news", n.APIPath())
+	return n.APIPath() + "/news"
 }
 
 func (n *laliga) HomeSideSwap() bool {
