@@ -26,7 +26,7 @@
     "node-fetch": ">=3.3.2",
     "node-forge": "^1.4.0",
     "normalize-url": ">=8.0.1",
-    "nth-check": "^2.1.1",
+    "nth-check": "^3.0.1",
     "path-parse": ">=1.0.7",
     "postcss": "^8.5.28",
     "react": ">=19.3.0",
