@@ -364,6 +364,9 @@ type AclRule struct {
 	// - "freeBusyReader" - Provides read access to free/busy information.
 	// - "reader" - Provides read access to the calendar. Private events will
 	// appear to users with reader access, but event details will be hidden.
+	// - "writerWithoutPrivateAccess" - Provides read and write access to the
+	// calendar. Private events will appear to users with
+	// writerWithoutPrivateAccess access, but event details will be hidden.
 	// - "writer" - Provides read and write access to the calendar. Private events
 	// will appear to users with writer access, and event details will be visible.
 	// Provides read access to the calendar's ACLs.
@@ -447,6 +450,10 @@ type Calendar struct {
 	Id string `json:"id,omitempty"`
 	// Kind: Type of the resource ("calendar#calendar").
 	Kind string `json:"kind,omitempty"`
+	// LabelProperties: Label properties defined on this calendar. If specified,
+	// overwrites the existing label properties. If not specified, the label
+	// properties remain unchanged.
+	LabelProperties *LabelProperties `json:"labelProperties,omitempty"`
 	// Location: Geographic location of the calendar as free-form text. Optional.
 	Location string `json:"location,omitempty"`
 	// Summary: Title of the calendar.
@@ -516,6 +523,9 @@ type CalendarListEntry struct {
 	// - "freeBusyReader" - Provides read access to free/busy information.
 	// - "reader" - Provides read access to the calendar. Private events will
 	// appear to users with reader access, but event details will be hidden.
+	// - "writerWithoutPrivateAccess" - Provides read and write access to the
+	// calendar. Private events will appear to users with
+	// writerWithoutPrivateAccess access, but event details will be hidden.
 	// - "writer" - Provides read and write access to the calendar. Private events
 	// will appear to users with writer access, and event details will be visible.
 	//
@@ -1190,6 +1200,15 @@ type Event struct {
 	EndTimeUnspecified bool `json:"endTimeUnspecified,omitempty"`
 	// Etag: ETag of the resource.
 	Etag string `json:"etag,omitempty"`
+	// EventLabelId: The ID of the event label assigned to the event. Optional.
+	// This refers to the ID of an entry in the labelProperties.eventLabels
+	// property of the calendar (see the Calendars.get endpoint.)
+	// This property supersedes the index-based colorId property. To set or change
+	// this property, you need to specify eventLabelVersion=1 in the parameters of
+	// the insert, import, update, and patch methods.
+	// Setting an empty string, or not setting this field at all, will remove the
+	// existing label from the event.
+	EventLabelId string `json:"eventLabelId,omitempty"`
 	// EventType: Specific type of the event. This cannot be modified after the
 	// event is created. Possible values are:
 	// - "birthday" - A special all-day event with an annual recurrence.
@@ -1350,6 +1369,12 @@ type Event struct {
 	// details.
 	// - "confidential" - The event is private. This value is provided for
 	// compatibility reasons.
+	// Note on recurring events: Changing the visibility of a single instance of a
+	// recurring event can affect all instances of the series. If the new setting
+	// is more restrictive (e.g. from public to private), it is applied to all
+	// instances. If the new setting is less restrictive (e.g. from private to
+	// public), the change is ignored. To make a recurring event less restrictive,
+	// you must update the parent recurring event.
 	Visibility string `json:"visibility,omitempty"`
 	// WorkingLocationProperties: Working location event data.
 	WorkingLocationProperties *EventWorkingLocationProperties `json:"workingLocationProperties,omitempty"`
@@ -1599,6 +1624,13 @@ func (s EventAttachment) MarshalJSON() ([]byte, error) {
 type EventAttendee struct {
 	// AdditionalGuests: Number of additional guests. Optional. The default is 0.
 	AdditionalGuests int64 `json:"additionalGuests,omitempty"`
+	// AsyncOperation: If present, indicates the status of an asynchronous
+	// operation ongoing for this attendee (e.g. listing of members of large
+	// attendee groups). Read-only. The default is to not be present.
+	// Possible values are:
+	// - "inProgress" - The asynchronous operation is in progress.
+	// - (not present) - Otherwise.
+	AsyncOperation string `json:"asyncOperation,omitempty"`
 	// Comment: The attendee's response comment. Optional.
 	Comment string `json:"comment,omitempty"`
 	// DisplayName: The attendee's name, if available. Optional.
@@ -1758,6 +1790,33 @@ func (s EventFocusTimeProperties) MarshalJSON() ([]byte, error) {
 }
 
 type EventLabel struct {
+	// BackgroundColor: Background color of the label in hexadecimal format, such
+	// as "#039be5". Events with this label are displayed in this color. Required.
+	BackgroundColor string `json:"backgroundColor,omitempty"`
+	// Id: The ID of the label. Optional when inserting a new label. If not
+	// provided, a unique ID will be generated. Required when updating a label.
+	// If provided, the ID must be unique within the calendar and follow UUID
+	// format.
+	Id string `json:"id,omitempty"`
+	// Name: Name of the label. Optional.
+	// If provided this must have at most 50 characters.
+	Name string `json:"name,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "BackgroundColor") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "BackgroundColor") to include in
+	// API requests with the JSON null value. By default, fields with empty values
+	// are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s EventLabel) MarshalJSON() ([]byte, error) {
+	type NoMethod EventLabel
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
 type EventOutOfOfficeProperties struct {
@@ -1918,6 +1977,9 @@ type Events struct {
 	// - "freeBusyReader" - The user has read access to free/busy information.
 	// - "reader" - The user has read access to the calendar. Private events will
 	// appear to users with reader access, but event details will be hidden.
+	// - "writerWithoutPrivateAccess" - The user has read and write access to the
+	// calendar. Private events will appear to users with
+	// writerWithoutPrivateAccess access, but event details will be hidden.
 	// - "writer" - The user has read and write access to the calendar. Private
 	// events will appear to users with writer access, and event details will be
 	// visible.
@@ -2111,6 +2173,28 @@ func (s FreeBusyResponse) MarshalJSON() ([]byte, error) {
 }
 
 type LabelProperties struct {
+	// EventLabels: Event labels defined on this calendar. If this is present when
+	// updating the calendar, it will replace the existing event labels.
+	// Extend the list to add a new event label, and remove entities from the list
+	// to delete a label from calendar.
+	// Each calendar can have a maximum of 200 labels.
+	EventLabels []*EventLabel `json:"eventLabels,omitempty"`
+	// ForceSendFields is a list of field names (e.g. "EventLabels") to
+	// unconditionally include in API requests. By default, fields with empty or
+	// default values are omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-ForceSendFields for more
+	// details.
+	ForceSendFields []string `json:"-"`
+	// NullFields is a list of field names (e.g. "EventLabels") to include in API
+	// requests with the JSON null value. By default, fields with empty values are
+	// omitted from API requests. See
+	// https://pkg.go.dev/google.golang.org/api#hdr-NullFields for more details.
+	NullFields []string `json:"-"`
+}
+
+func (s LabelProperties) MarshalJSON() ([]byte, error) {
+	type NoMethod LabelProperties
+	return gensupport.MarshalJSON(NoMethod(s), s.ForceSendFields, s.NullFields)
 }
 
 type Setting struct {
@@ -3388,6 +3472,10 @@ func (c *CalendarListListCall) MaxResults(maxResults int64) *CalendarListListCal
 //	"owner" - The user can read and modify events and access control lists.
 //	"reader" - The user can read events that are not private.
 //	"writer" - The user can read and modify events.
+//	"writerWithoutPrivateAccess" - The user can read and modify events that
+//
+// aren't private. The user can read free/busy information about private
+// events. The user can't modify private events.
 func (c *CalendarListListCall) MinAccessRole(minAccessRole string) *CalendarListListCall {
 	c.urlParams_.Set("minAccessRole", minAccessRole)
 	return c
@@ -3414,6 +3502,15 @@ func (c *CalendarListListCall) ShowHidden(showHidden bool) *CalendarListListCall
 	return c
 }
 
+// ShowOwnOrganizationOnly sets the optional parameter
+// "showOwnOrganizationOnly": Whether to show only entries for calendars from
+// the organization. This parameter is only applicable to Google Workspace
+// users.  The default is False.
+func (c *CalendarListListCall) ShowOwnOrganizationOnly(showOwnOrganizationOnly bool) *CalendarListListCall {
+	c.urlParams_.Set("showOwnOrganizationOnly", fmt.Sprint(showOwnOrganizationOnly))
+	return c
+}
+
 // SyncToken sets the optional parameter "syncToken": Token obtained from the
 // nextSyncToken field returned on the last page of results from the previous
 // list request. It makes the result of this list request contain only entries
@@ -3422,8 +3519,8 @@ func (c *CalendarListListCall) ShowHidden(showHidden bool) *CalendarListListCall
 // deleted and hidden since the previous list request will always be in the
 // result set and it is not allowed to set showDeleted neither showHidden to
 // False.
-// To ensure client state consistency minAccessRole query parameter cannot be
-// specified together with nextSyncToken.
+// To ensure client state consistency minAccessRole and showOwnOrganizationOnly
+// query parameters cannot be specified together with nextSyncToken.
 // If the syncToken expires, the server will respond with a 410 GONE response
 // code and the client should clear its storage and perform a full
 // synchronization without any syncToken.
@@ -3808,6 +3905,10 @@ func (c *CalendarListWatchCall) MaxResults(maxResults int64) *CalendarListWatchC
 //	"owner" - The user can read and modify events and access control lists.
 //	"reader" - The user can read events that are not private.
 //	"writer" - The user can read and modify events.
+//	"writerWithoutPrivateAccess" - The user can read and modify events that
+//
+// aren't private. The user can read free/busy information about private
+// events. The user can't modify private events.
 func (c *CalendarListWatchCall) MinAccessRole(minAccessRole string) *CalendarListWatchCall {
 	c.urlParams_.Set("minAccessRole", minAccessRole)
 	return c
@@ -3834,6 +3935,15 @@ func (c *CalendarListWatchCall) ShowHidden(showHidden bool) *CalendarListWatchCa
 	return c
 }
 
+// ShowOwnOrganizationOnly sets the optional parameter
+// "showOwnOrganizationOnly": Whether to show only entries for calendars from
+// the organization. This parameter is only applicable to Google Workspace
+// users.  The default is False.
+func (c *CalendarListWatchCall) ShowOwnOrganizationOnly(showOwnOrganizationOnly bool) *CalendarListWatchCall {
+	c.urlParams_.Set("showOwnOrganizationOnly", fmt.Sprint(showOwnOrganizationOnly))
+	return c
+}
+
 // SyncToken sets the optional parameter "syncToken": Token obtained from the
 // nextSyncToken field returned on the last page of results from the previous
 // list request. It makes the result of this list request contain only entries
@@ -3842,8 +3952,8 @@ func (c *CalendarListWatchCall) ShowHidden(showHidden bool) *CalendarListWatchCa
 // deleted and hidden since the previous list request will always be in the
 // result set and it is not allowed to set showDeleted neither showHidden to
 // False.
-// To ensure client state consistency minAccessRole query parameter cannot be
-// specified together with nextSyncToken.
+// To ensure client state consistency minAccessRole and showOwnOrganizationOnly
+// query parameters cannot be specified together with nextSyncToken.
 // If the syncToken expires, the server will respond with a 410 GONE response
 // code and the client should clear its storage and perform a full
 // synchronization without any syncToken.
@@ -4411,6 +4521,96 @@ func (c *CalendarsPatchCall) Do(opts ...googleapi.CallOption) (*Calendar, error)
 	return ret, nil
 }
 
+type CalendarsTransferOwnershipCall struct {
+	s          *Service
+	calendarId string
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
+}
+
+// TransferOwnership: Transfers a secondary calendar between users within a
+// Google Workspace organization. Requires user authentication with Manage
+// Calendars administrator privilege, and one of the following authorization
+// scopes:
+// - https://www.googleapis.com/auth/calendar
+// - https://www.googleapis.com/auth/calendar.calendars In the request, set
+// useAdminAccess to true. The secondary calendar must be active to be
+// transferred. Transferring disabled or deleted calendars isn't supported.
+//
+//   - calendarId: Calendar identifier. To retrieve calendar IDs, call the
+//     calendarList.list method.
+//   - newDataOwner: The email address of a user who will become the data owner
+//     of the calendar.
+//   - useAdminAccess: When true, the method runs using the user's Google
+//     Workspace administrator privileges. The calling user must be a Google
+//     Workspace administrator with the Manage Calendars privilege. This method
+//     currently only supports admin access, thus only true is accepted for this
+//     field.
+func (r *CalendarsService) TransferOwnership(calendarId string, newDataOwner string, useAdminAccess bool) *CalendarsTransferOwnershipCall {
+	c := &CalendarsTransferOwnershipCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.calendarId = calendarId
+	c.urlParams_.Set("newDataOwner", newDataOwner)
+	c.urlParams_.Set("useAdminAccess", fmt.Sprint(useAdminAccess))
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse for more
+// details.
+func (c *CalendarsTransferOwnershipCall) Fields(s ...googleapi.Field) *CalendarsTransferOwnershipCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method.
+func (c *CalendarsTransferOwnershipCall) Context(ctx context.Context) *CalendarsTransferOwnershipCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns a http.Header that can be modified by the caller to add
+// headers to the request.
+func (c *CalendarsTransferOwnershipCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *CalendarsTransferOwnershipCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := gensupport.SetHeaders(c.s.userAgent(), "", c.header_)
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "calendars/{calendarId}/transferOwnership")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"calendarId": c.calendarId,
+	})
+	c.s.logger.DebugContext(c.ctx_, "api request", "serviceName", apiName, "rpcName", "calendar.calendars.transferOwnership", "request", internallog.HTTPRequest(req, nil))
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "calendar.calendars.transferOwnership" call.
+func (c *CalendarsTransferOwnershipCall) Do(opts ...googleapi.CallOption) error {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if err != nil {
+		return err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return gensupport.WrapError(err)
+	}
+	c.s.logger.DebugContext(c.ctx_, "api response", "serviceName", apiName, "rpcName", "calendar.calendars.transferOwnership", "response", internallog.HTTPResponse(res, nil))
+	return nil
+}
+
 type CalendarsUpdateCall struct {
 	s          *Service
 	calendarId string
@@ -4976,6 +5176,17 @@ func (c *EventsImportCall) ConferenceDataVersion(conferenceDataVersion int64) *E
 	return c
 }
 
+// EventLabelVersion sets the optional parameter "eventLabelVersion": Version
+// number of the event label feature supported by the API client. Version 0
+// assumes no event label support and processes the colorId field for color
+// management. Version 1 enables support for event labels, and processes the
+// eventLabelId in the event's body. In this case, the colorId field is
+// ignored. The default is 0.
+func (c *EventsImportCall) EventLabelVersion(eventLabelVersion int64) *EventsImportCall {
+	c.urlParams_.Set("eventLabelVersion", fmt.Sprint(eventLabelVersion))
+	return c
+}
+
 // SupportsAttachments sets the optional parameter "supportsAttachments":
 // Whether API client performing operation supports event attachments.  The
 // default is False.
@@ -5097,6 +5308,17 @@ func (r *EventsService) Insert(calendarId string, event *Event) *EventsInsertCal
 // conferenceData. The default is 0.
 func (c *EventsInsertCall) ConferenceDataVersion(conferenceDataVersion int64) *EventsInsertCall {
 	c.urlParams_.Set("conferenceDataVersion", fmt.Sprint(conferenceDataVersion))
+	return c
+}
+
+// EventLabelVersion sets the optional parameter "eventLabelVersion": Version
+// number of the event label feature supported by the API client. Version 0
+// assumes no event label support and processes the colorId field for color
+// management. Version 1 enables support for event labels, and processes the
+// eventLabelId in the event's body. In this case, the colorId field is
+// ignored. The default is 0.
+func (c *EventsInsertCall) EventLabelVersion(eventLabelVersion int64) *EventsInsertCall {
+	c.urlParams_.Set("eventLabelVersion", fmt.Sprint(eventLabelVersion))
 	return c
 }
 
@@ -5964,6 +6186,17 @@ func (c *EventsPatchCall) ConferenceDataVersion(conferenceDataVersion int64) *Ev
 	return c
 }
 
+// EventLabelVersion sets the optional parameter "eventLabelVersion": Version
+// number of the event label feature supported by the API client. Version 0
+// assumes no event label support and processes the colorId field for color
+// management. Version 1 enables support for event labels, and processes the
+// eventLabelId in the event's body. In this case, the colorId field is
+// ignored. The default is 0.
+func (c *EventsPatchCall) EventLabelVersion(eventLabelVersion int64) *EventsPatchCall {
+	c.urlParams_.Set("eventLabelVersion", fmt.Sprint(eventLabelVersion))
+	return c
+}
+
 // MaxAttendees sets the optional parameter "maxAttendees": The maximum number
 // of attendees to include in the response. If there are more than the
 // specified number of attendees, only the participant is returned.
@@ -6266,6 +6499,17 @@ func (c *EventsUpdateCall) AlwaysIncludeEmail(alwaysIncludeEmail bool) *EventsUp
 // conferenceData. The default is 0.
 func (c *EventsUpdateCall) ConferenceDataVersion(conferenceDataVersion int64) *EventsUpdateCall {
 	c.urlParams_.Set("conferenceDataVersion", fmt.Sprint(conferenceDataVersion))
+	return c
+}
+
+// EventLabelVersion sets the optional parameter "eventLabelVersion": Version
+// number of the event label feature supported by the API client. Version 0
+// assumes no event label support and processes the colorId field for color
+// management. Version 1 enables support for event labels, and processes the
+// eventLabelId in the event's body. In this case, the colorId field is
+// ignored. The default is 0.
+func (c *EventsUpdateCall) EventLabelVersion(eventLabelVersion int64) *EventsUpdateCall {
+	c.urlParams_.Set("eventLabelVersion", fmt.Sprint(eventLabelVersion))
 	return c
 }
 
