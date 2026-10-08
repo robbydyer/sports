@@ -28,7 +28,7 @@
     "normalize-url": ">=9.0.1",
     "nth-check": "^3.0.1",
     "path-parse": ">=1.0.7",
-    "postcss": "^8.5.28",
+    "postcss": "^8.5.29",
     "react": ">=19.3.0",
     "react-bootstrap": "^2.10.10",
     "react-dev-utils": ">=11.0.4",
@@ -42,7 +42,7 @@
     "tar": ">=7.5.22",
     "tmpl": ">=1.0.5",
     "url-parse": ">=1.5.9",
-    "web-vitals": "^6.2.2",
+    "web-vitals": "^6.2.3",
     "ws": "^8.22.0"
   },
   "scripts": {
