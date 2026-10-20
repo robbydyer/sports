@@ -17,7 +17,7 @@ COPY ./internal/rgbmatrix-rpi/lib/rpi-rgb-led-matrix.BASE /tmp/rpi-rgb-led-matri
 RUN cd /tmp/rpi-rgb-led-matrix && \
     make
 
-FROM golangci/golangci-lint:v2.14.0
+FROM golangci/golangci-lint:v2.15.0
 
 RUN apt-get update && \
     apt-get install -y \
