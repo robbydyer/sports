@@ -366,7 +366,9 @@ func nestedQueryParams(message *descriptor.Message, field *descriptor.Field, pre
 							schema.Type = "integer"
 						}
 					case schema.AdditionalProperties != nil:
-						schema.Type = schema.AdditionalProperties.schemaCore.Type
+						if mapValueSchema, ok := schema.AdditionalProperties.(*openapiSchemaObject); ok {
+							schema.Type = mapValueSchema.Type
+						}
 					}
 					if schema.Type == "" || schema.Type == "object" {
 						// The map value has no primitive representation, so there is no
@@ -916,7 +918,7 @@ func transformAnyForJSON(schema *openapiSchemaObject, useJSONNames bool) {
 
 	for _, property := range *schema.Properties {
 		if property.Key == typeFieldName {
-			schema.AdditionalProperties = &openapiSchemaObject{}
+			schema.AdditionalProperties = openapiAdditionalPropertiesAllowed(true)
 			schema.Properties = &openapiSchemaObjectProperties{keyVal{
 				Key:   "@type",
 				Value: property.Value,
@@ -3074,7 +3076,9 @@ func protoComments(reg *descriptor.Registry, file *descriptor.File, outers []str
 		}
 		comments := ""
 		if loc.LeadingComments != nil {
-			comments = strings.TrimRight(*loc.LeadingComments, "\n")
+			// Comments from a proto file with CRLF line endings keep the \r.
+			comments = strings.ReplaceAll(*loc.LeadingComments, "\r\n", "\n")
+			comments = strings.TrimRight(comments, "\n")
 			comments = strings.TrimSpace(comments)
 			// TODO(ivucica): this is a hack to fix "// " being interpreted as "//".
 			// perhaps we should:
@@ -3086,7 +3090,7 @@ func protoComments(reg *descriptor.Registry, file *descriptor.File, outers []str
 			comments = removeInternalComments(comments)
 		}
 		if loc.TrailingComments != nil {
-			trailing := strings.TrimSpace(*loc.TrailingComments)
+			trailing := strings.TrimSpace(strings.ReplaceAll(*loc.TrailingComments, "\r\n", "\n"))
 			if comments == "" {
 				comments = trailing
 			} else {
@@ -3523,7 +3527,6 @@ func updateswaggerObjectFromJSONSchema(s *openapiSchemaObject, j *openapi_option
 		s.Items.Default = j.GetDefault()
 		s.Items.MaxProperties = j.GetMaxProperties()
 		s.Items.MinProperties = j.GetMinProperties()
-		s.Items.Required = j.GetRequired()
 		s.Items.Minimum = j.GetMinimum()
 		s.Items.Maximum = j.GetMaximum()
 		s.Items.ReadOnly = j.GetReadOnly()
@@ -3548,7 +3551,6 @@ func updateswaggerObjectFromJSONSchema(s *openapiSchemaObject, j *openapi_option
 		s.Default = j.GetDefault()
 		s.MaxProperties = j.GetMaxProperties()
 		s.MinProperties = j.GetMinProperties()
-		s.Required = j.GetRequired()
 		s.Minimum = j.GetMinimum()
 		s.Maximum = j.GetMaximum()
 		s.ReadOnly = j.GetReadOnly()
@@ -3567,6 +3569,11 @@ func updateswaggerObjectFromJSONSchema(s *openapiSchemaObject, j *openapi_option
 			s.Format = j.GetFormat()
 		}
 	}
+	// Required is not a constraint on the values, so for repeated fields it is
+	// kept on the field's schema rather than its items. That is where it is
+	// read from to mark the field as required in the parent message and as a
+	// query parameter.
+	s.Required = j.GetRequired()
 	s.UniqueItems = j.GetUniqueItems()
 	s.MaxItems = j.GetMaxItems()
 	s.MinItems = j.GetMinItems()
