@@ -146,6 +146,9 @@ type Registry struct {
 	// omitPackageDoc, if false, causes a package comment to be included in the generated code.
 	omitPackageDoc bool
 
+	// strictDeepWildcard, if true, makes generated patterns reject a deep wildcard ("**") that matches zero segments after a preceding segment.
+	strictDeepWildcard bool
+
 	// recursiveDepth sets the maximum depth of a field parameter
 	recursiveDepth int
 
@@ -565,6 +568,11 @@ func (r *Registry) SetAllowDeleteBody(allow bool) {
 	r.allowDeleteBody = allow
 }
 
+// IsAllowDeleteBody reports whether http delete methods may have a body.
+func (r *Registry) IsAllowDeleteBody() bool {
+	return r.allowDeleteBody
+}
+
 // SetAllowMerge controls whether generation one OpenAPI file out of multiple protos
 func (r *Registry) SetAllowMerge(allow bool) {
 	r.allowMerge = allow
@@ -783,6 +791,16 @@ func (r *Registry) SetGenerateUnboundMethods(generate bool) {
 // SetOmitPackageDoc controls whether the generated code contains a package comment (if set to false, it will contain one)
 func (r *Registry) SetOmitPackageDoc(omit bool) {
 	r.omitPackageDoc = omit
+}
+
+// SetStrictDeepWildcard controls whether generated patterns use runtime.WithStrictDeepWildcard
+func (r *Registry) SetStrictDeepWildcard(strict bool) {
+	r.strictDeepWildcard = strict
+}
+
+// GetStrictDeepWildcard returns whether generated patterns use runtime.WithStrictDeepWildcard
+func (r *Registry) GetStrictDeepWildcard() bool {
+	return r.strictDeepWildcard
 }
 
 // GetOmitPackageDoc returns whether a package comment will be omitted from the generated code
